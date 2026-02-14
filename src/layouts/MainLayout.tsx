@@ -41,9 +41,7 @@ export const MainLayout: React.FC = () => {
         { name: 'Reports', href: '/reports', icon: BarChart, roles: ['ADMIN', 'MANAGER'] },
     ];
 
-    const filteredNav = navigation.filter(item =>
-        !item.roles || (user && item.roles.includes(user.role))
-    );
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
@@ -89,28 +87,37 @@ export const MainLayout: React.FC = () => {
 
                 {/* Navigation */}
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto mt-2 custom-scrollbar">
-                    {filteredNav.map((item) => {
+                    {navigation.map((item) => {
                         const Icon = item.icon;
+                        // Check access: true if no roles defined, or if user has one of the required roles
+                        const hasAccess = !item.roles || (user && user.role && item.roles.includes(user.role));
+
                         return (
                             <NavLink
                                 key={item.name}
-                                to={item.href}
+                                to={hasAccess ? item.href : '#'}
+                                onClick={(e) => {
+                                    if (!hasAccess) {
+                                        e.preventDefault();
+                                    }
+                                }}
                                 title={isCollapsed ? item.name : undefined}
                                 className={({ isActive }) =>
                                     cn(
                                         'flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative',
-                                        isActive
+                                        isActive && hasAccess
                                             ? 'bg-blue-50 text-blue-700 shadow-sm'
                                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                                        !hasAccess && 'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-gray-600 grayscale',
                                         isCollapsed ? 'justify-center' : ''
                                     )
                                 }
                             >
-                                <Icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", !isCollapsed && "mr-3")} />
+                                <Icon className={cn("h-5 w-5 transition-transform", hasAccess && "group-hover:scale-110", !isCollapsed && "mr-3")} />
                                 {!isCollapsed && <span>{item.name}</span>}
 
                                 {/* Active Indicator Bar */}
-                                {isCollapsed && (
+                                {isCollapsed && hasAccess && (
                                     <NavLink
                                         to={item.href}
                                         className={({ isActive }) => isActive ? "absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-blue-600 rounded-r-full" : "hidden"}
@@ -132,12 +139,12 @@ export const MainLayout: React.FC = () => {
                         title="My Profile"
                     >
                         <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
-                            {user?.name.charAt(0)}
+                            {user?.name?.charAt(0) || 'U'}
                         </div>
                         {!isCollapsed && (
                             <div className="ml-3 overflow-hidden">
-                                <p className="text-sm font-semibold text-gray-700 truncate">{user?.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{user?.role.replace('_', ' ')}</p>
+                                <p className="text-sm font-semibold text-gray-700 truncate">{user?.name || 'User'}</p>
+                                <p className="text-xs text-gray-500 truncate">{user?.role?.replace('_', ' ') || ''}</p>
                             </div>
                         )}
                     </div>

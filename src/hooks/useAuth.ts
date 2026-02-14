@@ -1,26 +1,57 @@
 import { useAppStore } from '../app/store';
-import { authService } from '../services/auth.service';
+import { authApi } from '../services/auth.api';
 
 export const useAuth = () => {
     const { user, isAuthenticated, login, logout } = useAppStore();
 
-    const handleLogin = async (email: string, pass: string): Promise<string | null> => {
+    const handleLogin = async (username: string, pass: string): Promise<string | null> => {
         try {
-            const { user, token, refreshToken } = await authService.login(email, pass);
+            const response = await authApi.login(username, pass);
+            console.log('Login API response:', response);
+
+            // Handle both response structures (with or without user object)
+            // Backend currently returns { accessToken, refreshToken, expiresIn }
+            const { accessToken, refreshToken, expiresIn } = response as any;
+            // Type assertion used because authApi might return strict type but we want to be flexible for now
+
+            // Check for accessToken (renamed from token in some contexts)
+            const tokenToSave = accessToken || response.token;
+            const refreshTokenToSave = refreshToken || response.refreshToken;
+
+            if (!tokenToSave) {
+                throw new Error('Login failed: Missing access token');
+            }
+
             // Save to localStorage
-            localStorage.setItem('accessToken', token);
-            localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('accessToken', tokenToSave);
+            if (refreshTokenToSave) {
+                localStorage.setItem('refreshToken', refreshTokenToSave);
+            }
+            if (expiresIn) {
+                localStorage.setItem('expiresIn', String(expiresIn));
+            }
+
+            // Synthesize default user if missing (Project requirement: #3)
+            let userObj = response.user;
+            if (!userObj) {
+                userObj = {
+                    id: 'default-user-id',
+                    name: 'User',
+                    email: 'user@example.com',
+                    role: 'ADMIN', // Default role to show all pages
+                    avatarUrl: undefined
+                };
+            }
+
             // Update store
-            login(user, token);
+            login(userObj, tokenToSave);
             return null; // Success, no error
         } catch (error: any) {
             console.error('Login failed', error);
             // Return specific error message from backend if available
             if (error.response && error.response.data) {
-                // Assuming standard Spring Boot error structure or custom message
-                // Try to find a message field
                 const msg = error.response.data.message || error.response.data.error || JSON.stringify(error.response.data);
-                return msg;
+                return typeof msg === 'string' ? msg : JSON.stringify(msg);
             }
             return error.message || 'Login failed';
         }
@@ -28,7 +59,7 @@ export const useAuth = () => {
 
     const handleLogout = async () => {
         try {
-            await authService.logout();
+            await authApi.logout();
         } catch (error) {
             console.error('Logout error', error);
         } finally {

@@ -6,6 +6,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { storeService, type Store } from '../../services/mock/store.mock';
 import { StoreModal } from './StoreModal';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 
 export const StoreList = () => {
     const navigate = useNavigate();
@@ -18,6 +19,11 @@ export const StoreList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStore, setEditingStore] = useState<Store | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteStoreId, setDeleteStoreId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const loadStores = async () => {
         setIsLoading(true);
@@ -53,15 +59,22 @@ export const StoreList = () => {
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this store?')) return;
-        setIsLoading(true);
+    const handleDeleteClick = (id: string) => {
+        setDeleteStoreId(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteStoreId) return;
+        setIsDeleting(true);
         try {
-            await storeService.deleteStore(id);
+            await storeService.deleteStore(deleteStoreId);
+            setIsDeleteModalOpen(false);
             loadStores();
         } catch (error) {
             alert('Failed to delete store');
-            setIsLoading(false);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -142,8 +155,8 @@ export const StoreList = () => {
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize whitespace-nowrap ${statusFilter === status
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 {status === 'ALL' ? 'All Stores' : status}
@@ -240,7 +253,7 @@ export const StoreList = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => handleDelete(store.id)}
+                                                        onClick={() => handleDeleteClick(store.id)}
                                                         className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
                                                     >
                                                         <Trash2 size={16} />
@@ -324,7 +337,7 @@ export const StoreList = () => {
                                         <Edit2 size={16} />
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(store.id)}
+                                        onClick={() => handleDeleteClick(store.id)}
                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full"
                                     >
                                         <Trash2 size={16} />
@@ -342,6 +355,18 @@ export const StoreList = () => {
                 onSubmit={handleSubmit}
                 initialData={editingStore}
                 isLoading={isSaving}
+            />
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Store"
+                message="Are you sure you want to delete this store? This action cannot be undone."
+                confirmText="Delete Store"
+                cancelText="Cancel"
+                isLoading={isDeleting}
+                variant="danger"
             />
         </div>
     );
