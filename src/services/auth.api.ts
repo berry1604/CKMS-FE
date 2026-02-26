@@ -1,23 +1,69 @@
 import axiosClient from './axiosClient';
-import type { User } from '../types/user';
-
-export interface LoginResponse {
-    user: User;
-    token: string;
-    refreshToken: string;
-}
-
-export interface LogoutRequest {
-    refreshToken: string;
-}
+import type {
+    LoginResponse,
+    ActivateAccountRequest
+} from '../types/auth';
 
 export const authApi = {
     login: async (username: string, password: string): Promise<LoginResponse> => {
         const response = await axiosClient.post<LoginResponse>('/auth/login', { username, password });
+
+        // Save tokens to localStorage upon successful login
+        const { accessToken, refreshToken, token } = response.data as any;
+        const validAccessToken = accessToken || token;
+
+        if (validAccessToken) {
+            localStorage.setItem('accessToken', validAccessToken);
+        }
+        if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+        }
+
         return response.data;
     },
 
     logout: async (refreshToken: string) => {
-        await axiosClient.post('/auth/logout', { refreshToken });
+        try {
+            await axiosClient.post('/auth/logout', { refreshToken });
+        } finally {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+        }
+    },
+
+    refreshToken: async (refreshToken: string): Promise<LoginResponse> => {
+        // Send raw string as body, ensure correct content-type if backend expects plain text
+        const response = await axiosClient.post<LoginResponse>(
+            '/auth/refresh',
+            refreshToken,
+            { headers: { 'Content-Type': 'text/plain' } }
+        );
+
+        const { accessToken, refreshToken: newRefreshToken, token } = response.data as any;
+        const validAccessToken = accessToken || token;
+
+        if (validAccessToken) {
+            localStorage.setItem('accessToken', validAccessToken);
+        }
+        if (newRefreshToken) {
+            localStorage.setItem('refreshToken', newRefreshToken);
+        }
+
+        return response.data;
+    },
+
+    activateAccount: async (data: ActivateAccountRequest): Promise<string> => {
+        const response = await axiosClient.post<string>('/auth/activate', data);
+        return response.data;
+    },
+
+    forgotPassword: async (email: string): Promise<string> => {
+        const response = await axiosClient.post<string>('/auth/forgot-password', { email });
+        return response.data;
+    },
+
+    resetPassword: async (token: string, newPassword: string): Promise<string> => {
+        const response = await axiosClient.post<string>('/auth/reset-password', { token, newPassword });
+        return response.data;
     }
 };

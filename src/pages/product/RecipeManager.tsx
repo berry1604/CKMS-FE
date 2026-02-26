@@ -4,7 +4,8 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { productService, type Product } from '../../services/mock/product.mock';
+import { productApi } from '../../services/product.api';
+import type { ProductResponse as Product } from '../../types/product';
 import { recipeService, type Recipe } from '../../services/mock/recipe.mock';
 import { RecipeEditor } from './RecipeEditor';
 
@@ -20,10 +21,10 @@ export const RecipeManager = () => {
             setIsLoading(true);
             try {
                 const [prodRes, recipeRes] = await Promise.all([
-                    productService.getProducts(),
+                    productApi.getProducts(),
                     recipeService.getRecipes()
                 ]);
-                setProducts(prodRes.data);
+                setProducts(prodRes.data.content || []);
                 setRecipes(recipeRes.data);
             } catch (error) {
                 console.error('Failed to load data', error);
@@ -38,8 +39,8 @@ export const RecipeManager = () => {
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getRecipeForProduct = (productId: string) => {
-        return recipes.find(r => r.productId === productId);
+    const getRecipeForProduct = (productId: number) => {
+        return recipes.find(r => r.productId === String(productId));
     };
 
     const handleBack = () => {
@@ -94,13 +95,13 @@ export const RecipeManager = () => {
                                 <Card className="p-4 flex items-center justify-between hover:shadow-md transition-shadow">
                                     <div className="flex items-center space-x-4">
                                         <img
-                                            src={product.image}
+                                            src={product.imageUrl || ''}
                                             alt={product.name}
-                                            className="w-12 h-12 rounded-md object-cover"
+                                            className="w-12 h-12 rounded-md object-cover bg-gray-100"
                                         />
                                         <div>
                                             <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                                            <p className="text-sm text-gray-500">{product.category}</p>
+                                            <p className="text-sm text-gray-500">Cat {product.category?.id}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center space-x-6">

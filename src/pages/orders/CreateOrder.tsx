@@ -5,7 +5,8 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
-import { productService, type Product } from '../../services/mock/product.mock';
+import { productApi } from '../../services/product.api';
+import type { ProductResponse as Product } from '../../types/product';
 import { orderService, type OrderItem } from '../../services/mock/order.mock';
 
 export const CreateOrder = () => {
@@ -18,27 +19,27 @@ export const CreateOrder = () => {
     const [searchProduct, setSearchProduct] = useState('');
 
     useEffect(() => {
-        productService.getProducts().then(res => setProducts(res.data));
+        productApi.getProducts().then(res => setProducts(res.data.content || []));
     }, []);
 
-    const handleAddToCart = (productId: string) => {
+    const handleAddToCart = (productId: number) => {
         const product = products.find(p => p.id === productId);
         if (!product) return;
 
-        const existingItem = cart.find(item => item.productId === productId);
+        const existingItem = cart.find(item => item.productId === String(productId));
         if (existingItem) {
             const newCart = cart.map(item =>
-                item.productId === productId
+                item.productId === String(productId)
                     ? { ...item, quantity: item.quantity + 1 }
                     : item
             );
             setCart(newCart);
         } else {
             setCart([...cart, {
-                productId: product.id,
+                productId: String(product.id),
                 productName: product.name,
                 quantity: 1,
-                unit: product.unit,
+                unit: 'pcs',
                 price: product.price
             }]);
         }
@@ -83,7 +84,7 @@ export const CreateOrder = () => {
 
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchProduct.toLowerCase())
+        String(p.category?.id).includes(searchProduct)
     );
 
     return (
@@ -116,10 +117,10 @@ export const CreateOrder = () => {
                                 {filteredProducts.map(product => (
                                     <div key={product.id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col">
                                         <div className="h-32 bg-gray-100 relative">
-                                            {product.image ? (
-                                                <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                            {product.imageUrl ? (
+                                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
                                                     <Package size={24} />
                                                 </div>
                                             )}
@@ -133,12 +134,11 @@ export const CreateOrder = () => {
                                         <div className="p-3 flex-1 flex flex-col">
                                             <div className="flex justify-between items-start mb-1">
                                                 <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</h3>
-                                                <span className="font-bold text-gray-900 text-sm ml-2">${product.price}</span>
+                                                <span className="font-bold text-gray-900 text-sm ml-2">${product.price.toFixed(2)}</span>
                                             </div>
-                                            <p className="text-xs text-gray-500 mb-2">{product.category}</p>
+                                            <p className="text-xs text-gray-500 mb-2">Category: {product.category?.id}</p>
                                             <div className="mt-auto pt-2 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
-                                                <span>{product.unit}</span>
-                                                <span>Stock: {product.stock}</span>
+                                                <span>pcs</span>
                                             </div>
                                         </div>
                                     </div>

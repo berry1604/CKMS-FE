@@ -15,7 +15,9 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Bell
+    Bell,
+    Layers,
+    Tags
 } from 'lucide-react';
 
 export const MainLayout: React.FC = () => {
@@ -35,6 +37,8 @@ export const MainLayout: React.FC = () => {
         { name: 'Franchise Stores', href: '/stores', icon: Store, roles: ['ADMIN', 'MANAGER'] },
         { name: 'Central Kitchen', href: '/kitchen', icon: ChefHat, roles: ['ADMIN', 'KITCHEN_STAFF'] },
         { name: 'Products', href: '/products', icon: Package, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
+        { name: 'Categories', href: '/products/categories', icon: Tags, roles: ['ADMIN', 'MANAGER'] },
+        { name: 'Materials', href: '/products/materials', icon: Layers, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
         { name: 'Orders', href: '/orders', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
         { name: 'Billing', href: '/billing', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
         { name: 'Shipment', href: '/shipment', icon: Truck, roles: ['ADMIN', 'SUPPLY_COORDINATOR'] },

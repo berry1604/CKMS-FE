@@ -3,7 +3,7 @@ import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
-import { type Product } from '../../services/mock/product.mock';
+import type { ProductResponse as Product } from '../../types/product';
 import { recipeService, type Recipe, type RecipeItem } from '../../services/mock/recipe.mock';
 import { materialService, type Material } from '../../services/mock/material.mock';
 
@@ -80,7 +80,7 @@ export const RecipeEditor = ({ product, existingRecipe, onBack }: RecipeEditorPr
             const totalCost = recipeService.calculateCost(items);
             const recipeData: Partial<Recipe> = {
                 id: existingRecipe?.id,
-                productId: product.id,
+                productId: String(product.id),
                 productName: product.name,
                 items,
                 instructions,
@@ -107,7 +107,7 @@ export const RecipeEditor = ({ product, existingRecipe, onBack }: RecipeEditorPr
                 </Button>
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Edit Recipe</h1>
-                    <p className="text-gray-500">{product.name} ({product.sku})</p>
+                    <p className="text-gray-500">{product.name} (ID: {product.id})</p>
                 </div>
             </div>
 

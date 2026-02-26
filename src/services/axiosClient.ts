@@ -1,6 +1,7 @@
 import axios from 'axios';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+import toast from 'react-hot-toast';
+// Force BASE_URL to empty to use Vite proxy
+const BASE_URL = '';
 
 const axiosClient = axios.create({
     baseURL: `${BASE_URL}/api/v1`,
@@ -14,7 +15,12 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
-        if (token) {
+
+        // Do not attach token for public endpoints
+        const publicEndpoints = ['/auth/login', '/auth/forgot-password', '/auth/reset-password', '/auth/activate'];
+        const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
+
+        if (token && !isPublicEndpoint) {
             config.headers = config.headers ?? {};
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -35,10 +41,14 @@ axiosClient.interceptors.response.use(
             // Token expired or invalid
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
+            window.location.href = '/login';
+        } else if (error.response?.status === 403) {
+            toast.error('Access Denied. You do not have permission to perform this action.');
         }
 
         return Promise.reject(error);
     }
 );
+
 
 export default axiosClient;

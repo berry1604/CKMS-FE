@@ -4,10 +4,12 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Badge } from '../../components/ui/Badge';
+import { useNavigate } from 'react-router-dom';
 import { materialService, type Material } from '../../services/mock/material.mock';
 import { MaterialModal } from './MaterialModal';
 
 export const MaterialList = () => {
+    const navigate = useNavigate();
     const [materials, setMaterials] = useState<Material[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -157,6 +159,13 @@ export const MaterialList = () => {
                     </div>
                     <Button variant="outline">
                         <Filter size={16} className="mr-2" /> Filter
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        className="bg-red-50 text-red-600 hover:bg-red-100 hidden sm:flex"
+                        onClick={() => navigate('/products/beefsteak-materials')}
+                    >
+                        Ví dụ: Món Bò Bít Tết
                     </Button>
                     <Button onClick={handleCreate}>
                         <Plus size={16} className="mr-2" /> Add Material

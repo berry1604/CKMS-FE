@@ -10,40 +10,25 @@ export const useAuth = () => {
             console.log('Login API response:', response);
 
             // Handle both response structures (with or without user object)
-            // Backend currently returns { accessToken, refreshToken, expiresIn }
-            const { accessToken, refreshToken, expiresIn } = response as any;
             // Type assertion used because authApi might return strict type but we want to be flexible for now
+            const { expiresIn, accessTokenExpiresIn, userId } = response as any;
 
-            // Check for accessToken (renamed from token in some contexts)
-            const tokenToSave = accessToken || response.token;
-            const refreshTokenToSave = refreshToken || response.refreshToken;
-
-            if (!tokenToSave) {
-                throw new Error('Login failed: Missing access token');
+            const expiry = expiresIn || accessTokenExpiresIn;
+            if (expiry) {
+                localStorage.setItem('expiresIn', String(expiry));
             }
 
-            // Save to localStorage
-            localStorage.setItem('accessToken', tokenToSave);
-            if (refreshTokenToSave) {
-                localStorage.setItem('refreshToken', refreshTokenToSave);
-            }
-            if (expiresIn) {
-                localStorage.setItem('expiresIn', String(expiresIn));
-            }
-
-            // Synthesize default user if missing (Project requirement: #3)
-            let userObj = response.user;
-            if (!userObj) {
-                userObj = {
-                    id: 'default-user-id',
-                    name: 'User',
-                    email: 'user@example.com',
-                    role: 'ADMIN', // Default role to show all pages
-                    avatarUrl: undefined
-                };
-            }
+            // Synthesize user from LoginResponse
+            let userObj = {
+                id: String(response.id || userId || 'default-user-id'),
+                name: response.username || username,
+                email: response.email || `${username}@example.com`,
+                role: (response.roles && response.roles.length > 0 ? response.roles[0] : 'ADMIN') as any, // Default to first role or ADMIN
+                avatarUrl: undefined
+            };
 
             // Update store
+            const tokenToSave = response.accessToken || (response as any).token;
             login(userObj, tokenToSave);
             return null; // Success, no error
         } catch (error: any) {
@@ -59,7 +44,10 @@ export const useAuth = () => {
 
     const handleLogout = async () => {
         try {
-            await authApi.logout();
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (refreshToken) {
+                await authApi.logout(refreshToken);
+            }
         } catch (error) {
             console.error('Logout error', error);
         } finally {

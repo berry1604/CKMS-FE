@@ -4,13 +4,17 @@ import { AuthLayout } from '../layouts/AuthLayout';
 import { Login } from '../pages/auth/Login';
 import { Dashboard } from '../pages/dashboard/Dashboard';
 import { UsersList } from '../pages/users/UsersList';
+import { CreateUserPage } from '../pages/users/CreateUserPage';
 import { StoreList } from '../pages/franchise-store/StoreList';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
 import { ProductCatalog } from '../pages/product/ProductCatalog';
 import { MaterialList } from '../pages/product/MaterialList';
+import { BeefsteakMaterialsPage } from '../pages/product/BeefsteakMaterialsPage';
+import { CategoryList } from '../pages/product/CategoryList';
 import { RecipeManager } from '../pages/product/RecipeManager';
 import { OrderList } from '../pages/orders/OrderList';
 import { CreateOrder } from '../pages/orders/CreateOrder';
+import { ProductListExample } from '../pages/product/ProductListExample';
 import { ProductionSchedule } from '../pages/central-kitchen/ProductionSchedule';
 import { KitchenInventory } from '../pages/central-kitchen/KitchenInventory';
 import { ShipmentList } from '../pages/shipment/ShipmentList';
@@ -64,6 +68,7 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN']} />,
                         children: [
                             { index: true, element: <UsersList /> },
+                            { path: 'create', element: <CreateUserPage /> },
                             { path: 'roles', element: <ComingSoon /> }
                         ]
                     },
@@ -98,8 +103,10 @@ export const router = createBrowserRouter([
                         children: [
                             { index: true, element: <ProductCatalog /> },
                             { path: 'materials', element: <MaterialList /> },
-                            { path: 'categories', element: <ComingSoon /> },
-                            { path: 'recipes', element: <RecipeManager /> }
+                            { path: 'beefsteak-materials', element: <BeefsteakMaterialsPage /> },
+                            { path: 'categories', element: <CategoryList /> },
+                            { path: 'recipes', element: <RecipeManager /> },
+                            { path: 'example', element: <ProductListExample /> }
                         ]
                     },
 
