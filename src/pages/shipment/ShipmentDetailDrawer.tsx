@@ -3,7 +3,7 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Drawer } from '../../components/ui/Drawer';
-import { type Shipment } from '../../services/mock/shipment.mock';
+import { type Shipment } from './ShipmentList';
 
 interface ShipmentDetailDrawerProps {
     shipment: Shipment | null;
@@ -107,7 +107,7 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusUpdate
                             <div className="h-1 bg-gray-200 rounded-full relative">
                                 <div
                                     className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ${shipment.status === 'delivered' ? 'w-full bg-green-500' :
-                                            shipment.status === 'in_transit' ? 'w-1/2 bg-blue-500' : 'w-0'
+                                        shipment.status === 'in_transit' ? 'w-1/2 bg-blue-500' : 'w-0'
                                         }`}
                                 ></div>
                                 {shipment.status === 'in_transit' && (

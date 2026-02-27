@@ -5,11 +5,18 @@ import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { financeService, type Invoice, FINANCE_STATS } from '../../services/mock/finance.mock';
-import { InvoiceDetailDrawer } from './InvoiceDetailDrawer';
+import { InvoiceDetailDrawer, type Invoice } from './InvoiceDetailDrawer';
+import { billingApi } from '../../services/billing.api';
+import { useAuth } from '../../hooks/useAuth';
 
 export const BillingList = () => {
-    const [stats, setStats] = useState<typeof FINANCE_STATS | null>(null);
+    const { user } = useAuth();
+    const [_stats, _setStats] = useState<{ totalRevenue: number, outstanding: number, royalties: number, marketingFund: number } | null>({
+        totalRevenue: 0,
+        outstanding: 0,
+        royalties: 0,
+        marketingFund: 0
+    });
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -19,16 +26,24 @@ export const BillingList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
 
+    // Modals
+    const [showManualModal, setShowManualModal] = useState(false);
+    const [showBatchModal, setShowBatchModal] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    // Manual Statement form
+    const [manualForm, setManualForm] = useState({ storeId: '', periodStart: '', periodEnd: '' });
+
+    // Batch Statement form
+    const [batchForm, setBatchForm] = useState({ cycleName: '', periodStart: '', periodEnd: '' });
+
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [statsRes, invoicesRes] = await Promise.all([
-                financeService.getStats(),
-                financeService.getInvoices()
-            ]);
-            setStats(statsRes.data);
-            setInvoices(invoicesRes.data);
-            setFilteredInvoices(invoicesRes.data);
+            // Placeholder for future GET /invoices API
+            // For now, setting to empty data
+            setInvoices([]);
+            setFilteredInvoices([]);
         } catch (error) {
             console.error('Failed to fetch billing data', error);
         } finally {
@@ -55,11 +70,48 @@ export const BillingList = () => {
         setFilteredInvoices(result);
     }, [invoices, searchTerm, statusFilter]);
 
-    const handleStatusUpdate = async (id: string, status: Invoice['status']) => {
-        await financeService.updateInvoiceStatus(id, status);
-        fetchData();
-        if (selectedInvoice && selectedInvoice.id === id) {
-            setSelectedInvoice({ ...selectedInvoice, status });
+    const handleStatusUpdate = async (_id: string, _status: Invoice['status']) => {
+        // Placeholder for future update API
+        // if (selectedInvoice && selectedInvoice.id === id) {
+        //     setSelectedInvoice({ ...selectedInvoice, status });
+        // }
+    };
+
+    const handleGenerateManual = async () => {
+        if (!manualForm.storeId || !manualForm.periodStart || !manualForm.periodEnd) {
+            alert('Please fill all fields');
+            return;
+        }
+        setIsGenerating(true);
+        try {
+            await billingApi.generateManualStatement(Number(manualForm.storeId), manualForm.periodStart, manualForm.periodEnd);
+            alert('Billing statement generated successfully');
+            setShowManualModal(false);
+            setManualForm({ storeId: '', periodStart: '', periodEnd: '' });
+            fetchData();
+        } catch (error) {
+            alert('Failed to generate billing statement');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleGenerateBatch = async () => {
+        if (!batchForm.cycleName || !batchForm.periodStart || !batchForm.periodEnd) {
+            alert('Please fill all fields');
+            return;
+        }
+        setIsGenerating(true);
+        try {
+            await billingApi.generateBatchStatements(batchForm);
+            alert('Batch billing statements generated successfully');
+            setShowBatchModal(false);
+            setBatchForm({ cycleName: '', periodStart: '', periodEnd: '' });
+            fetchData();
+        } catch (error) {
+            alert('Failed to generate batch billing statements');
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -115,7 +167,22 @@ export const BillingList = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Billing & Invoices</h1>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Billing & Invoices</h1>
+
+                <div className="flex items-center gap-2">
+                    {(user?.role === 'ADMIN' || user?.role === 'SYSTEM') && (
+                        <Button variant="outline" onClick={() => setShowManualModal(true)}>
+                            Generate Manual
+                        </Button>
+                    )}
+                    {user?.role === 'SYSTEM' && (
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setShowBatchModal(true)}>
+                            Generate Batch
+                        </Button>
+                    )}
+                </div>
+            </div>
 
             {/* Stats Dashboard */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -123,7 +190,7 @@ export const BillingList = () => {
                     <div className="flex items-start justify-between p-4">
                         <div>
                             <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-                            <p className="text-2xl font-bold text-gray-900 mt-1">${stats?.totalRevenue.toLocaleString()}</p>
+                            <p className="text-2xl font-bold text-gray-900 mt-1">${_stats?.totalRevenue.toLocaleString()}</p>
                         </div>
                         <div className="p-2 bg-green-50 rounded-lg text-green-600">
                             <DollarSign size={20} />
@@ -134,7 +201,7 @@ export const BillingList = () => {
                     <div className="flex items-start justify-between p-4">
                         <div>
                             <p className="text-sm font-medium text-gray-500">Outstanding</p>
-                            <p className="text-2xl font-bold text-red-600 mt-1">${stats?.outstanding.toLocaleString()}</p>
+                            <p className="text-2xl font-bold text-red-600 mt-1">${_stats?.outstanding.toLocaleString()}</p>
                         </div>
                         <div className="p-2 bg-red-50 rounded-lg text-red-600">
                             <AlertCircle size={20} />
@@ -145,7 +212,7 @@ export const BillingList = () => {
                     <div className="flex items-start justify-between p-4">
                         <div>
                             <p className="text-sm font-medium text-gray-500">Royalties (YTD)</p>
-                            <p className="text-2xl font-bold text-purple-600 mt-1">${stats?.royalties.toLocaleString()}</p>
+                            <p className="text-2xl font-bold text-purple-600 mt-1">${_stats?.royalties.toLocaleString()}</p>
                         </div>
                         <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
                             <TrendingUp size={20} />
@@ -156,7 +223,7 @@ export const BillingList = () => {
                     <div className="flex items-start justify-between p-4">
                         <div>
                             <p className="text-sm font-medium text-gray-500">Marketing Fund</p>
-                            <p className="text-2xl font-bold text-blue-600 mt-1">${stats?.marketingFund.toLocaleString()}</p>
+                            <p className="text-2xl font-bold text-blue-600 mt-1">${_stats?.marketingFund.toLocaleString()}</p>
                         </div>
                         <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                             <PiggyBank size={20} />
@@ -209,6 +276,60 @@ export const BillingList = () => {
                 onClose={() => setSelectedInvoice(null)}
                 onStatusUpdate={handleStatusUpdate}
             />
+
+            {/* Manual Statement Modal */}
+            {showManualModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+                    <Card className="w-full max-w-md p-6 bg-white shadow-xl">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">Generate Manual Statement</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Store ID</label>
+                                <Input type="number" min="1" value={manualForm.storeId} onChange={e => setManualForm({ ...manualForm, storeId: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Period Start</label>
+                                <Input type="date" value={manualForm.periodStart} onChange={e => setManualForm({ ...manualForm, periodStart: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Period End</label>
+                                <Input type="date" value={manualForm.periodEnd} onChange={e => setManualForm({ ...manualForm, periodEnd: e.target.value })} />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-6">
+                            <Button variant="outline" onClick={() => setShowManualModal(false)} disabled={isGenerating}>Cancel</Button>
+                            <Button className="bg-blue-600 text-white" onClick={handleGenerateManual} isLoading={isGenerating}>Generate</Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* Batch Statement Modal */}
+            {showBatchModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+                    <Card className="w-full max-w-md p-6 bg-white shadow-xl">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">Generate Batch Statements</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Cycle Name</label>
+                                <Input placeholder="e.g. Q1-2024" value={batchForm.cycleName} onChange={e => setBatchForm({ ...batchForm, cycleName: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Period Start</label>
+                                <Input type="date" value={batchForm.periodStart} onChange={e => setBatchForm({ ...batchForm, periodStart: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Period End</label>
+                                <Input type="date" value={batchForm.periodEnd} onChange={e => setBatchForm({ ...batchForm, periodEnd: e.target.value })} />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-6">
+                            <Button variant="outline" onClick={() => setShowBatchModal(false)} disabled={isGenerating}>Cancel</Button>
+                            <Button className="bg-blue-600 text-white" onClick={handleGenerateBatch} isLoading={isGenerating}>Generate Batch</Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 };

@@ -3,8 +3,20 @@ import { DollarSign, ShoppingBag, Users, Activity, TrendingUp, AlertCircle, Chec
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { dashboardService } from '../../services/mock/dashboard.mock';
-import type { DashboardStats, RecentActivity } from '../../services/mock/dashboard.mock';
+export interface DashboardStats {
+    totalRevenue: number;
+    activeStores: number;
+    pendingOrders: number;
+    activeUsers: number;
+}
+export interface RecentActivity {
+    id: string;
+    action: string;
+    user: string;
+    time: string;
+    status: 'success' | 'warning' | 'error';
+    type: 'order' | 'inventory' | 'system' | 'user';
+}
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,24 +24,21 @@ export const Dashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     // Initialize with fallback/empty data to ensure UI renders immediately if needed
-    const [stats, setStats] = useState<DashboardStats>({
+    const [_stats, _setStats] = useState<DashboardStats>({
         totalRevenue: 0,
         activeStores: 0,
         pendingOrders: 0,
         activeUsers: 0
     });
-    const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+    const [recentActivity, _setRecentActivity] = useState<RecentActivity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const loadDashboardData = async () => {
             try {
-                const [statsRes, activityRes] = await Promise.all([
-                    dashboardService.getStats(user?.role),
-                    dashboardService.getRecentActivity()
-                ]);
-                setStats(statsRes.data);
-                setRecentActivity(activityRes.data);
+                // Placeholder for Dashboard API
+                // setStats(statsRes.data);
+                // setRecentActivity(activityRes.data);
             } catch (error) {
                 console.error('Failed to load dashboard data', error);
                 // In case of error, we can either keep the default empty state
@@ -125,7 +134,7 @@ export const Dashboard = () => {
                 {user?.role !== 'KITCHEN_STAFF' && (
                     <StatCard
                         title="Total Revenue"
-                        value={`$${stats?.totalRevenue.toLocaleString()}`}
+                        value={`$${_stats?.totalRevenue.toLocaleString()}`}
                         icon={DollarSign}
                         color="bg-green-500"
                         trend="+12%"
@@ -134,7 +143,7 @@ export const Dashboard = () => {
 
                 <StatCard
                     title={user?.role === 'MANAGER' ? 'My Store' : "Active Stores"}
-                    value={stats?.activeStores || 0}
+                    value={_stats?.activeStores || 0}
                     icon={ShoppingBag}
                     color="bg-blue-500"
                     trend={user?.role === 'ADMIN' ? '+2 this week' : undefined}
@@ -142,14 +151,14 @@ export const Dashboard = () => {
 
                 <StatCard
                     title={user?.role === 'KITCHEN_STAFF' ? 'Production Tasks' : "Pending Orders"}
-                    value={stats?.pendingOrders || 0}
+                    value={_stats?.pendingOrders || 0}
                     icon={Activity}
                     color="bg-orange-500"
                 />
 
                 <StatCard
                     title={user?.role === 'MANAGER' ? 'Staff Members' : "Active Users"}
-                    value={stats?.activeUsers || 0}
+                    value={_stats?.activeUsers || 0}
                     icon={Users}
                     color="bg-purple-500"
                 />

@@ -5,7 +5,16 @@ import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
-import { inventoryService, type InventoryItem } from '../../services/mock/inventory.mock';
+export interface InventoryItem {
+    id: string;
+    itemName: string;
+    type: 'material' | 'product' | 'packaging';
+    quantity: number;
+    unit: string;
+    minStockLevel: number;
+    locationId: string;
+    lastUpdated: string;
+}
 
 interface StoreInventoryProps {
     storeId: string;
@@ -22,9 +31,9 @@ export const StoreInventory = ({ storeId }: StoreInventoryProps) => {
     const loadInventory = async () => {
         setIsLoading(true);
         try {
-            const res = await inventoryService.getInventoryByLocation(storeId);
-            setInventory(res.data);
-            setFilteredInventory(res.data);
+            // Placeholder for GET /inventory API
+            setInventory([]);
+            setFilteredInventory([]);
         } catch (error) {
             console.error(error);
         } finally {
@@ -50,9 +59,9 @@ export const StoreInventory = ({ storeId }: StoreInventoryProps) => {
         setAdjustValue(item.quantity);
     };
 
-    const handleSaveAdjustment = async (id: string) => {
+    const handleSaveAdjustment = async (_id: string) => {
         try {
-            await inventoryService.updateStock(id, adjustValue, 'Manual Adjustment');
+            // Placeholder: Call update stock API here
             setAdjustingItem(null);
             loadInventory();
         } catch (error) {

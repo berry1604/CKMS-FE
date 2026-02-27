@@ -6,7 +6,7 @@ import { Store as StoreIcon, MapPin, User, Activity } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { type Store } from '../../services/mock/store.mock';
+import { type Store } from './StoreList';
 
 const storeSchema = z.object({
     name: z.string().min(1, 'Store Name is required'),

@@ -3,24 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Save, UserPlus, Mail, Shield } from 'lucide-react';
+import { ArrowLeft, Save, Tag, AlertCircle, Activity, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
-import { userService } from '../../services/user.service';
-import type { CreateUserRequest } from '../../types/user';
+import { categoryApi } from '../../services/category.api';
 
-const createUserSchema = z.object({
-    email: z.string().email('Invalid email address'),
-    fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-    roleId: z.number().min(1, 'Please select a role'),
-    storeId: z.number().optional(),
-    kitchenId: z.number().optional(),
+const createCategorySchema = z.object({
+    name: z.string().min(1, 'Category name is required').trim(),
+    description: z.string().optional(),
+    status: z.enum(['ACTIVE', 'INACTIVE'])
 });
 
-export const CreateUserPage = () => {
+type CreateCategoryFormData = z.infer<typeof createCategorySchema>;
+
+export const CreateCategoryPage = () => {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [backendError, setBackendError] = useState<string | null>(null);
@@ -28,29 +26,27 @@ export const CreateUserPage = () => {
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid },
-        reset
-    } = useForm<CreateUserRequest>({
-        resolver: zodResolver(createUserSchema),
+        formState: { errors, isValid }
+    } = useForm<CreateCategoryFormData>({
+        resolver: zodResolver(createCategorySchema),
         mode: 'onChange',
         defaultValues: {
-            email: '',
-            fullName: '',
-            roleId: 2 // Assuming 2 is MANAGER from schema. Can change accordingly.
+            name: '',
+            description: '',
+            status: 'ACTIVE'
         }
     });
 
-    const onSubmit = async (data: CreateUserRequest) => {
+    const onSubmit = async (data: CreateCategoryFormData) => {
         setBackendError(null);
         setIsSubmitting(true);
         try {
-            await userService.createUser(data);
-            toast.success('User created successfully');
-            reset();
-            navigate('/users');
+            await categoryApi.create(data);
+            toast.success('Category created successfully');
+            navigate('/products/categories');
         } catch (error: any) {
-            console.error('Create user error:', error);
-            const message = error.response?.data?.message || 'Failed to create user. Please try again.';
+            console.error('Create category error:', error);
+            const message = error.response?.data?.message || 'Failed to create category. Please try again.';
             setBackendError(message);
             toast.error(message);
         } finally {
@@ -64,17 +60,17 @@ export const CreateUserPage = () => {
             <div className="flex items-center gap-4">
                 <Button
                     variant="ghost"
-                    onClick={() => navigate('/users')}
+                    onClick={() => navigate('/products/categories')}
                     className="hover:bg-gray-100 rounded-full p-2 h-auto"
                 >
                     <ArrowLeft size={20} className="text-gray-600" />
                 </Button>
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                        <UserPlus size={24} className="text-blue-600" />
-                        Create New User
+                        <Tag size={24} className="text-blue-600" />
+                        Create Category
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Add a new user to the system and assign their role.</p>
+                    <p className="text-sm text-gray-500 mt-1">Add a new category for products or materials.</p>
                 </div>
             </div>
 
@@ -82,7 +78,7 @@ export const CreateUserPage = () => {
                 {backendError && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-3">
                         <div className="mt-0.5">
-                            <Shield size={18} className="text-red-500" />
+                            <AlertCircle size={18} className="text-red-500" />
                         </div>
                         <div>
                             <h3 className="font-semibold text-sm">Action Failed</h3>
@@ -95,47 +91,49 @@ export const CreateUserPage = () => {
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Email Address *</label>
+                                <label className="text-sm font-medium text-gray-700 block">Category Name *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail size={16} className="text-gray-400" />
+                                        <Tag size={16} className="text-gray-400" />
                                     </div>
                                     <input
-                                        type="email"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.email ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
-                                        placeholder="e.g. john@example.com"
-                                        {...register('email')}
+                                        type="text"
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.name ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                        placeholder="e.g. Beverages"
+                                        {...register('name')}
                                     />
                                 </div>
-                                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Full Name *</label>
-                                <Input
-                                    placeholder="e.g. John Doe"
-                                    error={errors.fullName?.message}
-                                    {...register('fullName')}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">System Role *</label>
+                                <label className="text-sm font-medium text-gray-700 block">Status *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Shield size={16} className="text-gray-400" />
+                                        <Activity size={16} className="text-gray-400" />
                                     </div>
                                     <select
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.roleId ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
-                                        {...register('roleId', { valueAsNumber: true })}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-white ${errors.status ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                        {...register('status')}
                                     >
-                                        <option value={1}>Administrator (ADMIN)</option>
-                                        <option value={2}>Manager (MANAGER)</option>
-                                        <option value={3}>Staff (STAFF)</option>
+                                        <option value="ACTIVE">Active</option>
+                                        <option value="INACTIVE">Inactive</option>
                                     </select>
                                 </div>
-                                {errors.roleId && <p className="text-red-500 text-xs mt-1">{errors.roleId.message}</p>}
-                                <p className="text-xs text-gray-500 mt-1">This role determines the user's permissions across the system.</p>
+                                {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status.message}</p>}
+                            </div>
+
+                            <div className="space-y-1 md:col-span-2">
+                                <label className="text-sm font-medium text-gray-700 block flex items-center gap-2">
+                                    <FileText size={16} className="text-gray-400" />
+                                    Description
+                                </label>
+                                <textarea
+                                    className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent resize-none h-24 mt-1 ${errors.description ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                    placeholder="Enter category description"
+                                    {...register('description')}
+                                />
+                                {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
                             </div>
                         </div>
                     </div>
@@ -144,7 +142,7 @@ export const CreateUserPage = () => {
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => navigate('/users')}
+                            onClick={() => navigate('/products/categories')}
                             disabled={isSubmitting}
                         >
                             Cancel
@@ -165,7 +163,7 @@ export const CreateUserPage = () => {
                             ) : (
                                 <div className="flex items-center gap-2">
                                     <Save size={18} />
-                                    Create User
+                                    Create Category
                                 </div>
                             )}
                         </Button>

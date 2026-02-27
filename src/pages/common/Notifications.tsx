@@ -2,7 +2,16 @@ import { useEffect, useState } from 'react';
 import { Bell, Check, Info, AlertTriangle, Package, Truck, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { notificationService, type Notification } from '../../services/mock/notifications.mock';
+export interface Notification {
+    id: string;
+    title: string;
+    description: string;
+    type: 'info' | 'warning' | 'error' | 'success';
+    category: 'system' | 'order' | 'inventory' | 'shipment' | 'account';
+    isRead: boolean;
+    timestamp: string;
+    link?: string;
+}
 import { useNavigate } from 'react-router-dom';
 
 export const Notifications = () => {
@@ -15,8 +24,8 @@ export const Notifications = () => {
         const loadNotifications = async () => {
             setIsLoading(true);
             try {
-                const res = await notificationService.getNotifications();
-                setNotifications(res.data);
+                // Placeholder for API call
+                setNotifications([]);
             } catch (error) {
                 console.error("Failed to load notifications", error);
             } finally {
@@ -28,14 +37,13 @@ export const Notifications = () => {
 
     const handleMarkRead = async (id: string, e?: React.MouseEvent) => {
         e?.stopPropagation();
-        // Optimistic update
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-        await notificationService.markAsRead(id);
+        // await markAsRead(id);
     };
 
     const handleMarkAllRead = async () => {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-        await notificationService.markAllAsRead();
+        // await markAllAsRead();
     };
 
     const handleNotificationClick = (notification: Notification) => {

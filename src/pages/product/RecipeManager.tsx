@@ -3,15 +3,12 @@ import { Search, Filter, ChevronRight } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
 import { productApi } from '../../services/product.api';
 import type { ProductResponse as Product } from '../../types/product';
-import { recipeService, type Recipe } from '../../services/mock/recipe.mock';
 import { RecipeEditor } from './RecipeEditor';
 
 export const RecipeManager = () => {
     const [products, setProducts] = useState<Product[]>([]);
-    const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -20,12 +17,8 @@ export const RecipeManager = () => {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                const [prodRes, recipeRes] = await Promise.all([
-                    productApi.getProducts(),
-                    recipeService.getRecipes()
-                ]);
+                const prodRes = await productApi.getProducts();
                 setProducts(prodRes.data.content || []);
-                setRecipes(recipeRes.data);
             } catch (error) {
                 console.error('Failed to load data', error);
             } finally {
@@ -39,22 +32,14 @@ export const RecipeManager = () => {
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getRecipeForProduct = (productId: number) => {
-        return recipes.find(r => r.productId === String(productId));
-    };
-
     const handleBack = () => {
         setSelectedProduct(null);
-        // Refresh data
-        recipeService.getRecipes().then(res => setRecipes(res.data));
     };
 
     if (selectedProduct) {
-        const existingRecipe = getRecipeForProduct(selectedProduct.id);
         return (
             <RecipeEditor
                 product={selectedProduct}
-                existingRecipe={existingRecipe}
                 onBack={handleBack}
             />
         );
@@ -85,7 +70,6 @@ export const RecipeManager = () => {
             ) : (
                 <div className="grid grid-cols-1 gap-4">
                     {filteredProducts.map(product => {
-                        const recipe = getRecipeForProduct(product.id);
                         return (
                             <div
                                 key={product.id}
@@ -101,20 +85,10 @@ export const RecipeManager = () => {
                                         />
                                         <div>
                                             <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                                            <p className="text-sm text-gray-500">Cat {product.category?.id}</p>
+                                            <p className="text-sm text-gray-500">Cat {product.category?.id ?? 'N/A'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center space-x-6">
-                                        <div className="text-right">
-                                            <p className="text-sm text-gray-500">Recipe Status</p>
-                                            <Badge variant={recipe?.status === 'active' ? 'success' : (recipe ? 'warning' : 'secondary')}>
-                                                {recipe ? recipe.status.toUpperCase() : 'NO RECIPE'}
-                                            </Badge>
-                                        </div>
-                                        <div className="text-right hidden sm:block">
-                                            <p className="text-sm text-gray-500">Cost</p>
-                                            <p className="font-medium">{recipe ? `$${recipe.totalCost.toFixed(2)}` : '-'}</p>
-                                        </div>
                                         <ChevronRight className="text-gray-400" />
                                     </div>
                                 </Card>

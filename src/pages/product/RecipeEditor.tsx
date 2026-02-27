@@ -4,33 +4,67 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import type { ProductResponse as Product } from '../../types/product';
-import { recipeService, type Recipe, type RecipeItem } from '../../services/mock/recipe.mock';
-import { materialService, type Material } from '../../services/mock/material.mock';
+export interface RecipeMaterial {
+    id: string;
+    name: string;
+    cost: number;
+    unit: string;
+}
+import { recipeApi } from '../../services/recipe.api';
+import type { RecipeDetailRequest, RecipeRequest } from '../../types/recipe';
 
 interface RecipeEditorProps {
     product: Product;
-    existingRecipe?: Recipe;
     onBack: () => void;
 }
 
-export const RecipeEditor = ({ product, existingRecipe, onBack }: RecipeEditorProps) => {
-    const [items, setItems] = useState<RecipeItem[]>([]);
+interface FormItem {
+    materialId: number;
+    materialName: string;
+    quantityNeeded: number;
+    unit: string;
+    costPerUnit: number;
+}
+
+export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
+    const [items, setItems] = useState<FormItem[]>([]);
     const [instructions, setInstructions] = useState('');
-    const [status, setStatus] = useState<Recipe['status']>('draft');
-    const [availableMaterials, setAvailableMaterials] = useState<Material[]>([]);
+    const [yieldValue, setYieldValue] = useState(1);
+    const [availableMaterials, setAvailableMaterials] = useState<RecipeMaterial[]>([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        materialService.getMaterials().then(res => setAvailableMaterials(res.data));
+        // Placeholder for GET /materials API
+        setAvailableMaterials([]);
     }, []);
 
     useEffect(() => {
-        if (existingRecipe) {
-            setItems(existingRecipe.items);
-            setInstructions(existingRecipe.instructions);
-            setStatus(existingRecipe.status);
-        }
-    }, [existingRecipe]);
+        const fetchRecipe = async () => {
+            setIsLoading(true);
+            try {
+                const res = await recipeApi.getActiveRecipe(product.id);
+                if (res.data) {
+                    const recipe = res.data;
+                    setInstructions(recipe.instructions || '');
+                    setYieldValue(recipe.yield || 1);
+                    setItems(recipe.recipeDetails.map(detail => ({
+                        materialId: detail.materialId,
+                        materialName: detail.materialName,
+                        quantityNeeded: detail.quantityNeeded,
+                        unit: detail.materialUnit,
+                        costPerUnit: detail.costPerUnit || 0
+                    })));
+                }
+            } catch (error: any) {
+                // Ignore 404 or other errors as it might just mean no active recipe exists
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchRecipe();
+    }, [product.id]);
 
     const handleAddItem = () => {
         // Add a default item placeholder
@@ -39,9 +73,9 @@ export const RecipeEditor = ({ product, existingRecipe, onBack }: RecipeEditorPr
         setItems([
             ...items,
             {
-                materialId: firstMat.id,
+                materialId: Number(firstMat.id),
                 materialName: firstMat.name,
-                quantity: 1,
+                quantityNeeded: 1,
                 unit: firstMat.unit,
                 costPerUnit: firstMat.cost
             }
@@ -54,20 +88,20 @@ export const RecipeEditor = ({ product, existingRecipe, onBack }: RecipeEditorPr
         setItems(newItems);
     };
 
-    const handleItemChange = (index: number, field: keyof RecipeItem, value: any) => {
+    const handleItemChange = (index: number, field: keyof FormItem, value: any) => {
         const newItems = [...items];
         const item = { ...newItems[index] };
 
         if (field === 'materialId') {
-            const mat = availableMaterials.find(m => m.id === value);
+            const mat = availableMaterials.find(m => String(m.id) === String(value));
             if (mat) {
-                item.materialId = mat.id;
+                item.materialId = Number(mat.id);
                 item.materialName = mat.name;
                 item.unit = mat.unit;
                 item.costPerUnit = mat.cost;
             }
-        } else if (field === 'quantity') {
-            item.quantity = Number(value);
+        } else if (field === 'quantityNeeded') {
+            item.quantityNeeded = Number(value);
         }
 
         newItems[index] = item;
@@ -77,27 +111,32 @@ export const RecipeEditor = ({ product, existingRecipe, onBack }: RecipeEditorPr
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const totalCost = recipeService.calculateCost(items);
-            const recipeData: Partial<Recipe> = {
-                id: existingRecipe?.id,
-                productId: String(product.id),
-                productName: product.name,
-                items,
+            const recipeDetails: RecipeDetailRequest[] = items.map(item => ({
+                materialId: item.materialId,
+                quantityNeeded: item.quantityNeeded
+            }));
+
+            const requestData: RecipeRequest = {
+                productId: product.id,
+                yield: yieldValue,
                 instructions,
-                status,
-                totalCost,
-                yield: 1
+                recipeDetails
             };
-            await recipeService.saveRecipe(recipeData);
+            await recipeApi.createRecipe(requestData);
             onBack();
         } catch (error) {
+            console.error(error);
             alert('Failed to save recipe');
         } finally {
             setIsSaving(false);
         }
     };
 
-    const totalCost = recipeService.calculateCost(items);
+    const totalCost = items.reduce((total, item) => total + (item.quantityNeeded * item.costPerUnit), 0);
+
+    if (isLoading) {
+        return <div className="text-center py-12 text-gray-500">Loading recipe...</div>;
+    }
 
     return (
         <div className="space-y-6">
@@ -145,15 +184,15 @@ export const RecipeEditor = ({ product, existingRecipe, onBack }: RecipeEditorPr
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
-                                                value={item.quantity}
-                                                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                                                value={item.quantityNeeded}
+                                                onChange={(e) => handleItemChange(index, 'quantityNeeded', e.target.value)}
                                             />
                                         </div>
                                         <div className="w-16 pb-2 text-sm text-gray-500">
                                             {item.unit}
                                         </div>
                                         <div className="w-24 pb-2 text-sm text-right font-medium">
-                                            ${(item.quantity * item.costPerUnit).toFixed(2)}
+                                            ${(item.quantityNeeded * item.costPerUnit).toFixed(2)}
                                         </div>
                                         <Button
                                             variant="ghost"
@@ -190,16 +229,14 @@ export const RecipeEditor = ({ product, existingRecipe, onBack }: RecipeEditorPr
                         <h3 className="font-semibold text-lg mb-4">Recipe Settings</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="text-sm font-medium mb-1 block">Status</label>
-                                <select
-                                    className="w-full rounded-md border border-gray-300 p-2"
-                                    value={status}
-                                    onChange={(e) => setStatus(e.target.value as any)}
-                                >
-                                    <option value="draft">Draft</option>
-                                    <option value="active">Active</option>
-                                    <option value="archived">Archived</option>
-                                </select>
+                                <label className="text-sm font-medium mb-1 block">Yield</label>
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    value={yieldValue}
+                                    onChange={(e) => setYieldValue(Number(e.target.value))}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Number of units this recipe produces</p>
                             </div>
 
                             <div className="pt-4 border-t">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { categoryApi } from '../../services/category.api';
@@ -11,6 +12,7 @@ export const CategoryList: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<CategoryResponse | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState<CategoryRequest>({
         name: '',
@@ -39,9 +41,7 @@ export const CategoryList: React.FC = () => {
     }, []);
 
     const openCreateModal = () => {
-        setFormData({ name: '', description: '', status: 'ACTIVE' });
-        setSelectedCategory(null);
-        setIsModalOpen(true);
+        navigate('/products/categories/create');
     };
 
     const openEditModal = (category: CategoryResponse) => {
@@ -165,8 +165,8 @@ export const CategoryList: React.FC = () => {
                                         <td className="p-4 text-sm text-gray-600">{category.description || '-'}</td>
                                         <td className="p-4">
                                             <span className={`px-3 py-1 text-xs font-semibold rounded-full ${category.status === 'ACTIVE'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-red-100 text-red-700'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-red-100 text-red-700'
                                                 }`}>
                                                 {category.status}
                                             </span>

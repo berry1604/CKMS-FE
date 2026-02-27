@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'MANAGER' | 'SUPPLY_COORDINATOR' | 'KITCHEN_STAFF' | 'STORE_STAFF';
+export type UserRole = 'ADMIN' | 'MANAGER' | 'SUPPLY_COORDINATOR' | 'KITCHEN_STAFF' | 'STORE_STAFF' | 'SYSTEM';
 
 export interface User {
     id: string;
@@ -14,10 +14,11 @@ export interface User {
 }
 
 export interface CreateUserRequest {
-    username: string;
     email: string;
     fullName: string;
     roleId: number;
+    storeId?: number;
+    kitchenId?: number;
 }
 
 export interface CreateUserResponse {

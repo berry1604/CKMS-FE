@@ -17,7 +17,8 @@ import {
     ChevronRight,
     Bell,
     Layers,
-    Tags
+    Tags,
+    ClipboardList
 } from 'lucide-react';
 
 export const MainLayout: React.FC = () => {
@@ -39,6 +40,7 @@ export const MainLayout: React.FC = () => {
         { name: 'Products', href: '/products', icon: Package, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
         { name: 'Categories', href: '/products/categories', icon: Tags, roles: ['ADMIN', 'MANAGER'] },
         { name: 'Materials', href: '/products/materials', icon: Layers, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
+        { name: 'Recipes', href: '/products/recipes', icon: ClipboardList, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
         { name: 'Orders', href: '/orders', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
         { name: 'Billing', href: '/billing', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
         { name: 'Shipment', href: '/shipment', icon: Truck, roles: ['ADMIN', 'SUPPLY_COORDINATOR'] },

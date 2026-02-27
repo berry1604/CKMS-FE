@@ -4,10 +4,12 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { UserModal } from './UserModal';
-import { userService } from '../../services/mock/user.mock';
 import type { User, UserRole } from '../../types/user';
 
+import { useNavigate } from 'react-router-dom';
+
 export const UsersList = () => {
+    const navigate = useNavigate();
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,8 +21,8 @@ export const UsersList = () => {
     const loadUsers = async () => {
         setIsLoading(true);
         try {
-            const response = await userService.getUsers();
-            setUsers(response.data);
+            // Placeholder: Call API get users
+            setUsers([]);
         } catch (error) {
             console.error(error);
         } finally {
@@ -40,8 +42,7 @@ export const UsersList = () => {
     });
 
     const handleCreate = () => {
-        setSelectedUser(null);
-        setIsModalOpen(true);
+        navigate('/users/create');
     };
 
     const handleEdit = (user: User) => {
@@ -50,19 +51,19 @@ export const UsersList = () => {
         setActiveMenu(null);
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (_id: string) => {
         if (confirm('Are you sure you want to delete this user?')) {
-            await userService.deleteUser(id);
+            // await deleteUser(_id);
             loadUsers();
         }
         setActiveMenu(null);
     };
 
-    const handleSubmit = async (data: any) => {
+    const handleSubmit = async (_data: any) => {
         if (selectedUser) {
-            await userService.updateUser(selectedUser.id, data);
+            // await updateUser(selectedUser.id, _data);
         } else {
-            await userService.createUser(data);
+            // await createUser(_data);
         }
         loadUsers();
     };
@@ -73,7 +74,8 @@ export const UsersList = () => {
             MANAGER: 'info',
             SUPPLY_COORDINATOR: 'warning',
             KITCHEN_STAFF: 'danger',
-            STORE_STAFF: 'success'
+            STORE_STAFF: 'success',
+            SYSTEM: 'default'
         };
         return colors[role];
     };

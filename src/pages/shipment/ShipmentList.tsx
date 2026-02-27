@@ -5,8 +5,17 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
-import { shipmentService, type Shipment } from '../../services/mock/shipment.mock';
-import { orderService } from '../../services/mock/order.mock';
+export interface Shipment {
+    id: string;
+    origin: string;
+    destination: string;
+    driver: string;
+    vehicle: string;
+    status: 'scheduled' | 'in_transit' | 'delivered' | 'delayed';
+    eta: string;
+    orderIds: string[];
+    updates?: { timestamp: string; location: string; details: string; }[];
+}
 import { ShipmentDetailDrawer } from './ShipmentDetailDrawer';
 
 export const ShipmentList = () => {
@@ -19,14 +28,15 @@ export const ShipmentList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
 
-    const fetchData = () => {
+    const fetchData = async () => {
         setIsLoading(true);
-        shipmentService.getShipments()
-            .then(res => {
-                setShipments(res.data);
-                setFilteredShipments(res.data);
-            })
-            .finally(() => setIsLoading(false));
+        try {
+            // Placeholder: Call API get shipments
+            setShipments([]);
+            setFilteredShipments([]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -50,9 +60,8 @@ export const ShipmentList = () => {
     }, [shipments, searchTerm, statusFilter]);
 
     const handleCreateShipment = async () => {
-        const response = await orderService.getOrdersByStatus('produced');
-        const readyOrders = response.data;
-
+        // Placeholder for GET ready orders API
+        const readyOrders: any[] = []; // response.data
         if (readyOrders.length === 0) {
             alert('No orders are ready for shipment (Status: Produced).');
             return;
@@ -62,18 +71,17 @@ export const ShipmentList = () => {
         if (!confirm(confirmMsg)) return;
 
         setIsLoading(true);
-        const orderIds = readyOrders.map(o => o.id);
-        await shipmentService.createShipment(
-            orderIds,
-            'Driver Bob',
-            'Van-101',
-            'Multiple Stores'
-        );
+        // const _orderIds = readyOrders.map(o => o.id);
+
+        // Placeholder: Call API to create shipment
+        // await createShipment(orderIds, ...);
+
         fetchData();
     };
 
     const handleStatusUpdate = async (id: string, status: Shipment['status']) => {
-        await shipmentService.updateStatus(id, status);
+        // Placeholder: Call API update shipment status
+        // await updateStatus(id, status);
         fetchData();
         if (selectedShipment && selectedShipment.id === id) {
             // Optimistic update for drawer

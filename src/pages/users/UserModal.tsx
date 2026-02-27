@@ -41,7 +41,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
             reset({
                 name: user.name,
                 email: user.email,
-                role: user.role,
+                role: user.role as 'ADMIN' | 'MANAGER' | 'SUPPLY_COORDINATOR' | 'KITCHEN_STAFF' | 'STORE_STAFF',
             });
         } else {
             reset({

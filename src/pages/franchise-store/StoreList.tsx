@@ -4,7 +4,15 @@ import { Plus, Search, Filter, Store as StoreIcon, Edit2, Trash2, ChevronRight, 
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { storeService, type Store } from '../../services/mock/store.mock';
+export interface Store {
+    id: string;
+    name: string;
+    location: string;
+    manager: string;
+    revenue: number;
+    status: 'active' | 'inactive' | 'pending';
+    inventoryStatus: 'good' | 'warning' | 'critical';
+}
 import { StoreModal } from './StoreModal';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 
@@ -28,8 +36,8 @@ export const StoreList = () => {
     const loadStores = async () => {
         setIsLoading(true);
         try {
-            const response = await storeService.getStores();
-            setStores(response.data);
+            // Placeholder for GET /stores API
+            setStores([]);
         } catch (error) {
             console.error(error);
         } finally {
@@ -50,8 +58,7 @@ export const StoreList = () => {
     });
 
     const handleCreate = () => {
-        setEditingStore(null);
-        setIsModalOpen(true);
+        navigate('/stores/create');
     };
 
     const handleEdit = (store: Store) => {
@@ -68,7 +75,7 @@ export const StoreList = () => {
         if (!deleteStoreId) return;
         setIsDeleting(true);
         try {
-            await storeService.deleteStore(deleteStoreId);
+            // Placeholder: Call actual DELETE API here
             setIsDeleteModalOpen(false);
             loadStores();
         } catch (error) {
@@ -78,13 +85,14 @@ export const StoreList = () => {
         }
     };
 
-    const handleSubmit = async (data: any) => {
+    const handleSubmit = async (_data: any) => {
         setIsSaving(true);
         try {
+            // Placeholder: Call actual POST/PUT API here
             if (editingStore) {
-                await storeService.updateStore(editingStore.id, data);
+                // await updateStore(editingStore.id, data);
             } else {
-                await storeService.createStore(data);
+                // await createStore(data);
             }
             setIsModalOpen(false);
             loadStores();

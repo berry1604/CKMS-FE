@@ -1,36 +1,45 @@
 import { useEffect, useState } from 'react';
-import { Plus, AlertCircle, Search, Filter, Eye } from 'lucide-react';
+import { Plus, Search, Filter, Eye } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Badge } from '../../components/ui/Badge';
-import { orderService, type Order } from '../../services/mock/order.mock';
-import { kitchenService } from '../../services/mock/kitchen.mock';
+import { storeOrderApi } from '../../services/storeOrderApi';
+import type { StoreOrderResponse } from '../../types/storeOrder';
 import { OrderDetailDrawer } from './OrderDetailDrawer';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 export const OrderList = () => {
     const navigate = useNavigate();
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+    const { user } = useAuth();
+    const [orders, setOrders] = useState<StoreOrderResponse[]>([]);
+    const [filteredOrders, setFilteredOrders] = useState<StoreOrderResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | Order['status']>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
 
     // Drawer State
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [selectedOrder, setSelectedOrder] = useState<StoreOrderResponse | null>(null);
 
-    const fetchData = () => {
+    const fetchData = async () => {
         setIsLoading(true);
-        orderService.getOrders()
-            .then(res => {
-                setOrders(res.data);
-                setFilteredOrders(res.data);
-            })
-            .finally(() => setIsLoading(false));
+        try {
+            const apiCall = user?.role === 'ADMIN' || user?.role === 'MANAGER'
+                ? storeOrderApi.getAllOrders()
+                : storeOrderApi.getMyOrders();
+
+            const res = await apiCall;
+            setOrders(res.content || []);
+            setFilteredOrders(res.content || []);
+        } catch (error) {
+            console.error('Failed to fetch orders:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -43,73 +52,55 @@ export const OrderList = () => {
         if (searchQuery) {
             const lowerQuery = searchQuery.toLowerCase();
             result = result.filter(o =>
-                o.id.toLowerCase().includes(lowerQuery) ||
-                o.storeName.toLowerCase().includes(lowerQuery)
+                String(o.orderId).includes(lowerQuery) ||
+                String(o.storeId).includes(lowerQuery)
             );
         }
 
         if (statusFilter !== 'all') {
-            result = result.filter(o => o.status === statusFilter);
+            result = result.filter(o => o.status.toLowerCase() === statusFilter.toLowerCase());
         }
 
         setFilteredOrders(result);
     }, [orders, searchQuery, statusFilter]);
 
-    const handleApproveOrder = async (orderId: string) => {
-        if (!confirm('Approve this order and send to kitchen?')) return;
+    const handleStatusUpdate = async (orderId: number, status: string) => {
         setIsLoading(true);
-        await orderService.updateStatus(orderId, 'approved');
-
-        // Trigger kitchen task creation (Mocking items for now as they are not fully in mock DB)
-        await kitchenService.createTaskFromOrder(orderId, [
-            { name: 'Signature Coffee Blend', quantity: 20 },
-            { name: 'Milk', quantity: 50 }
-        ]);
-
-        await orderService.updateStatus(orderId, 'scheduled');
-        fetchData();
-
-        // Update selected order if open
-        if (selectedOrder && selectedOrder.id === orderId) {
-            setSelectedOrder(prev => prev ? { ...prev, status: 'scheduled' } : null);
-        }
-    };
-
-    const handleStatusUpdate = async (orderId: string, status: string) => {
-        // Generic status update wrapper for Drawer
-        if (status === 'approved') {
-            await handleApproveOrder(orderId);
-        } else {
-            setIsLoading(true);
-            await orderService.updateStatus(orderId, status as any);
+        try {
+            await storeOrderApi.updateOrderStatus(orderId, status);
             fetchData();
-            if (selectedOrder && selectedOrder.id === orderId) {
-                setSelectedOrder(prev => prev ? { ...prev, status: status as any } : null);
+            if (selectedOrder && selectedOrder.orderId === orderId) {
+                // Refresh selected order exactly or close modal to refresh it simply
+                setSelectedOrder(null);
             }
+        } catch (error) {
+            console.error('Failed to update status', error);
+            alert('Failed to update order status');
+            setIsLoading(false);
         }
     };
 
-    const columns: Column<Order>[] = [
+    const columns: Column<StoreOrderResponse>[] = [
         {
             header: 'Order ID',
-            accessorKey: 'id',
+            accessorKey: 'orderId',
             className: 'font-medium text-gray-900',
-            cell: (order) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">{order.id}</span>
+            cell: (order) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">{order.orderId}</span>
         },
         {
-            header: 'Store',
-            accessorKey: 'storeName',
-            cell: (order) => <span className="font-medium text-gray-800">{order.storeName}</span>
+            header: 'Store ID',
+            accessorKey: 'storeId',
+            cell: (order) => <span className="font-medium text-gray-800">{order.storeId}</span>
         },
         {
             header: 'Date',
-            accessorKey: 'date',
-            cell: (order) => <span className="text-gray-500 text-sm">{order.date}</span>
+            accessorKey: 'orderDate',
+            cell: (order) => <span className="text-gray-500 text-sm">{new Date(order.orderDate).toLocaleDateString()}</span>
         },
         {
             header: 'Items',
-            accessorKey: 'itemsCount',
-            cell: (order) => <Badge variant="secondary" className="font-normal">{order.itemsCount} items</Badge>
+            accessorKey: 'orderDetails',
+            cell: (order) => <Badge variant="secondary" className="font-normal">{order.orderDetails?.length || 0} items</Badge>
         },
         {
             header: 'Total',
@@ -118,22 +109,10 @@ export const OrderList = () => {
             cell: (order) => <span className="text-gray-900">${order.totalAmount.toFixed(2)}</span>
         },
         {
-            header: 'Priority',
-            cell: (order) => {
-                return (
-                    order.priority === 'high' ?
-                        <span className="flex items-center text-red-600 font-bold text-xs uppercase tracking-wider bg-red-50 px-2 py-1 rounded-full w-fit">
-                            <AlertCircle size={12} className="mr-1" /> High
-                        </span> :
-                        <span className="text-gray-500 capitalize text-sm">{order.priority}</span>
-                );
-            }
-        },
-        {
             header: 'Status',
             cell: (order) => {
+                const statusStr = order.status?.toLowerCase() || 'unknown';
                 const colors: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "info" | "danger"> = {
-                    draft: 'default',
                     submitted: 'warning',
                     approved: 'info',
                     scheduled: 'info',
@@ -141,11 +120,10 @@ export const OrderList = () => {
                     produced: 'success',
                     ready_for_delivery: 'secondary',
                     shipping: 'primary',
-                    delivered: 'success',
                     completed: 'success',
                     cancelled: 'danger'
                 };
-                return <Badge variant={colors[order.status] || 'default'}>{order.status.replace('_', ' ').toUpperCase()}</Badge>;
+                return <Badge variant={colors[statusStr] || 'default'}>{statusStr.replace('_', ' ').toUpperCase()}</Badge>;
             }
         },
         {
@@ -203,7 +181,7 @@ export const OrderList = () => {
                 <DataTable
                     data={filteredOrders}
                     columns={columns}
-                    keyExtractor={(order: Order) => order.id}
+                    keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
                     isLoading={isLoading}
                     onRowClick={(order) => setSelectedOrder(order)}
                 />

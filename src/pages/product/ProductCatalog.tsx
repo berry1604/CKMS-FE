@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Package, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -12,6 +13,7 @@ import { useProducts } from '../../hooks/useProducts';
 import toast from 'react-hot-toast';
 
 export const ProductCatalog = () => {
+    const navigate = useNavigate();
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -40,8 +42,7 @@ export const ProductCatalog = () => {
     }, [localSearch, setSearch, setPage]);
 
     const handleCreate = () => {
-        setEditingProduct(null);
-        setIsModalOpen(true);
+        navigate('/products/create');
     };
 
     const handleEdit = (product: Product) => {

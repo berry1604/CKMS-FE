@@ -9,10 +9,8 @@ export interface StoreOrderRequest {
 }
 
 export interface OrderDetailResponse {
-    id: number;
     productId: number;
     productName: string;
-    unit: string;
     quantity: number;
     unitPrice: number;
     subTotal: number;
@@ -24,7 +22,6 @@ export interface StoreOrderResponse {
     createdByUserId: number;
     orderDate: string; // ISO 8601 string
     status: string;    // Enum string like SUBMITTED, APPROVED, etc.
-    batchId?: number;
     totalAmount: number;
     orderDetails: OrderDetailResponse[];
 }
