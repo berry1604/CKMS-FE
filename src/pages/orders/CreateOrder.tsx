@@ -5,30 +5,31 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
-import { productService, type Product } from '../../services/mock/product.mock';
-import { orderService, type OrderItem } from '../../services/mock/order.mock';
+import { productApi } from '../../services/product.api';
+import type { ProductResponse as Product } from '../../types/product';
+import { storeOrderApi } from '../../services/storeOrderApi';
+import type { OrderItemRequest } from '../../types/storeOrder';
 
 export const CreateOrder = () => {
     const navigate = useNavigate();
     const [products, setProducts] = useState<Product[]>([]);
-    const [cart, setCart] = useState<OrderItem[]>([]);
-    const [storeName, setStoreName] = useState('My Store');
-    const [priority, setPriority] = useState<'normal' | 'high' | 'low'>('normal');
+    const [cart, setCart] = useState<(OrderItemRequest & { productName: string, price: number, unit: string })[]>([]);
+    const [storeId, setStoreId] = useState<string>('1');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchProduct, setSearchProduct] = useState('');
 
     useEffect(() => {
-        productService.getProducts().then(res => setProducts(res.data));
+        productApi.getProducts().then(res => setProducts(res.data.content || []));
     }, []);
 
-    const handleAddToCart = (productId: string) => {
+    const handleAddToCart = (productId: number) => {
         const product = products.find(p => p.id === productId);
         if (!product) return;
 
-        const existingItem = cart.find(item => item.productId === productId);
+        const existingItem = cart.find(item => item.productId === product.id);
         if (existingItem) {
             const newCart = cart.map(item =>
-                item.productId === productId
+                item.productId === product.id
                     ? { ...item, quantity: item.quantity + 1 }
                     : item
             );
@@ -38,13 +39,13 @@ export const CreateOrder = () => {
                 productId: product.id,
                 productName: product.name,
                 quantity: 1,
-                unit: product.unit,
+                unit: 'pcs',
                 price: product.price
             }]);
         }
     };
 
-    const handleQuantityChange = (productId: string, val: number) => {
+    const handleQuantityChange = (productId: number, val: number) => {
         if (val <= 0) {
             setCart(cart.filter(i => i.productId !== productId));
         } else {
@@ -52,7 +53,7 @@ export const CreateOrder = () => {
         }
     };
 
-    const handleRemove = (productId: string) => {
+    const handleRemove = (productId: number) => {
         setCart(cart.filter(i => i.productId !== productId));
     };
 
@@ -62,19 +63,24 @@ export const CreateOrder = () => {
 
     const handleSubmit = async () => {
         if (cart.length === 0) return;
+        if (!storeId || isNaN(Number(storeId))) {
+            alert('Please enter a valid numeric Store ID');
+            return;
+        }
         if (!confirm('Submit this order?')) return;
 
         setIsSubmitting(true);
         try {
-            await orderService.createOrder({
-                storeName,
-                priority,
-                items: cart,
-                totalAmount: calculateTotal(),
-                itemsCount: cart.length
+            await storeOrderApi.createOrder({
+                storeId: Number(storeId),
+                items: cart.map(item => ({
+                    productId: item.productId,
+                    quantity: item.quantity
+                }))
             });
             navigate('/orders');
         } catch (error) {
+            console.error('Failed to submit order', error);
             alert('Failed to submit order');
         } finally {
             setIsSubmitting(false);
@@ -83,7 +89,7 @@ export const CreateOrder = () => {
 
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchProduct.toLowerCase())
+        String(p.category?.id).includes(searchProduct)
     );
 
     return (
@@ -116,10 +122,10 @@ export const CreateOrder = () => {
                                 {filteredProducts.map(product => (
                                     <div key={product.id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col">
                                         <div className="h-32 bg-gray-100 relative">
-                                            {product.image ? (
-                                                <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                            {product.imageUrl ? (
+                                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
                                                     <Package size={24} />
                                                 </div>
                                             )}
@@ -133,12 +139,11 @@ export const CreateOrder = () => {
                                         <div className="p-3 flex-1 flex flex-col">
                                             <div className="flex justify-between items-start mb-1">
                                                 <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</h3>
-                                                <span className="font-bold text-gray-900 text-sm ml-2">${product.price}</span>
+                                                <span className="font-bold text-gray-900 text-sm ml-2">${product.price.toFixed(2)}</span>
                                             </div>
-                                            <p className="text-xs text-gray-500 mb-2">{product.category}</p>
+                                            <p className="text-xs text-gray-500 mb-2">Category: {product.category?.id}</p>
                                             <div className="mt-auto pt-2 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
-                                                <span>{product.unit}</span>
-                                                <span>Stock: {product.stock}</span>
+                                                <span>pcs</span>
                                             </div>
                                         </div>
                                     </div>
@@ -220,20 +225,15 @@ export const CreateOrder = () => {
 
                             <div className="space-y-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Store Name</label>
-                                    <Input value={storeName} onChange={(e) => setStoreName(e.target.value)} className="bg-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Priority</label>
-                                    <select
-                                        className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={priority}
-                                        onChange={(e) => setPriority(e.target.value as any)}
-                                    >
-                                        <option value="normal">Normal</option>
-                                        <option value="high">High</option>
-                                        <option value="low">Low</option>
-                                    </select>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Store ID</label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={storeId}
+                                        onChange={(e) => setStoreId(e.target.value)}
+                                        className="bg-white"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">Select the store destination for this order</p>
                                 </div>
                                 <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-2" onClick={handleSubmit} disabled={isSubmitting || cart.length === 0} isLoading={isSubmitting}>
                                     <Save size={16} className="mr-2" /> Submit Order

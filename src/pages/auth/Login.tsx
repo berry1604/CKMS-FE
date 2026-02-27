@@ -6,6 +6,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { CustomToast } from '../../components/ui/CustomToast';
+import { authApi } from '../../services/auth.api';
 
 const loginSchema = z.object({
     username: z.string().min(1, 'Username is required'),
@@ -18,6 +21,9 @@ export const Login: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
+    const [showForgot, setShowForgot] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
+    const [resetMessage, setResetMessage] = useState<string | null>(null);
 
     const {
         register,
@@ -27,18 +33,75 @@ export const Login: React.FC = () => {
         resolver: zodResolver(loginSchema),
         defaultValues: {
             username: 'admin',
-            password: '123456', // Updated default to match user's comment
+            password: 'admin',
         },
     });
 
     const onSubmit = async (data: LoginForm) => {
         setError(null);
-        const errorMsg = await login(data.username, data.password);
+        // Loading toast
+        const toastId = toast.loading('Logging in...');
 
-        if (!errorMsg) {
-            navigate('/');
-        } else {
-            setError(errorMsg);
+        try {
+            const errorMsg = await login(data.username, data.password);
+
+            if (!errorMsg) {
+                // Success
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        title="Login Successful"
+                        message="Redirecting to dashboard..."
+                        type="success"
+                    />
+                ), { duration: 3000, id: toastId });
+
+                // Navigate after short delay to let user see the toast
+                setTimeout(() => navigate('/'), 800);
+            } else {
+                // Error handled by login hook returning message
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        title="Login Failed"
+                        message={errorMsg}
+                        type="error"
+                    />
+                ), { duration: 5000, id: toastId });
+                setError(errorMsg);
+            }
+        } catch (err) {
+            // Unexpected error (login hook catches most, but just in case)
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    title="Error"
+                    message="An unexpected error occurred"
+                    type="error"
+                />
+            ), { id: toastId });
+        }
+    };
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setResetMessage(null);
+
+        if (!resetEmail) {
+            setResetMessage('Please enter your email');
+            return;
+        }
+
+        const toastId = toast.loading('Sending reset link...');
+
+        try {
+            await authApi.forgotPassword(resetEmail);
+            toast.success('Reset link sent successfully', { id: toastId });
+            setResetMessage('Password reset link has been sent to your email');
+            setResetEmail('');
+        } catch (error: any) {
+            toast.error(error.message || 'Something went wrong', { id: toastId });
+            setResetMessage(error.message || 'Something went wrong');
         }
     };
 
@@ -93,10 +156,49 @@ export const Login: React.FC = () => {
                 </Button>
             </form>
 
+            <div className="text-right">
+                <button
+                    type="button"
+                    onClick={() => setShowForgot(!showForgot)}
+                    className="text-sm text-amber-400 hover:underline"
+                >
+                    Forgot Password?
+                </button>
+            </div>
+
+            {showForgot && (
+                <form onSubmit={handleResetPassword} className="space-y-4 mt-4">
+                    <div>
+                        <Input
+                            label="Email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            className="bg-white/5 border-white/10 text-white"
+                            labelClassName="text-gray-300 uppercase text-xs tracking-wider"
+                        />
+                    </div>
+
+                    {resetMessage && (
+                        <div className="text-sm text-green-400 bg-green-900/20 border border-green-900/50 p-3 rounded-md">
+                            {resetMessage}
+                        </div>
+                    )}
+
+                    <Button
+                        type="submit"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2"
+                    >
+                        Send Reset Link
+                    </Button>
+                </form>
+            )}
+
             <div className="mt-4 text-center text-xs text-gray-400">
                 <p>Demo Credentials:</p>
-                <p>Username: admin</p>
-                <p>Password: any</p>
+                <p>Username: admin / manager / staff</p>
+                <p>Password: admin / manager / staff</p>
             </div>
         </div>
     );

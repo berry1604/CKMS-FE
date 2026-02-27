@@ -2,8 +2,23 @@ import { useEffect, useState } from 'react';
 import { Download, TrendingUp, TrendingDown, DollarSign, ShoppingBag, Users, Store } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { reportService, type SalesData, type StorePerformance, type ProductPerformance } from '../../services/mock/reports.mock';
-
+export interface SalesData {
+    month: string;
+    revenue: number;
+    expenses: number;
+    profit: number;
+}
+export interface StorePerformance {
+    storeName: string;
+    revenue: number;
+    orders: number;
+    rating: number;
+}
+export interface ProductPerformance {
+    name: string;
+    sales: number;
+    growth: number;
+}
 export const ReportsDashboard = () => {
     const [salesData, setSalesData] = useState<SalesData[]>([]);
     const [topStores, setTopStores] = useState<StorePerformance[]>([]);
@@ -14,14 +29,10 @@ export const ReportsDashboard = () => {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                const [salesRes, storesRes, productsRes] = await Promise.all([
-                    reportService.getSalesOverview(),
-                    reportService.getTopStores(),
-                    reportService.getTopProducts()
-                ]);
-                setSalesData(salesRes.data);
-                setTopStores(storesRes.data);
-                setTopProducts(productsRes.data);
+                // Placeholder for actual reporting APIs
+                setSalesData([]);
+                setTopStores([]);
+                setTopProducts([]);
             } catch (error) {
                 console.error("Failed to load report data", error);
             } finally {

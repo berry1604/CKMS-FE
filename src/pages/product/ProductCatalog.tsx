@@ -1,38 +1,48 @@
-import { useEffect, useState } from 'react';
-import { Plus, Filter, Search, Package, Tag, Edit2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Package, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { DataTable, type Column } from '../../components/ui/DataTable';
-import { productService, type Product } from '../../services/mock/product.mock';
+import { productApi } from '../../services/product.api';
+import type { ProductResponse as Product } from '../../types/product';
 import { ProductModal } from './ProductModal';
+import { useProducts } from '../../hooks/useProducts';
+import toast from 'react-hot-toast';
 
 export const ProductCatalog = () => {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft' | 'archived'>('all');
-
+    const navigate = useNavigate();
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    const fetchData = () => {
-        setIsLoading(true);
-        productService.getProducts()
-            .then(res => setProducts(res.data))
-            .finally(() => setIsLoading(false));
-    };
+    // Custom Web Hook
+    const {
+        products,
+        pageableInfo,
+        isLoading,
+        page,
+        setPage,
+        setSearch,
+        refetch
+    } = useProducts(10);
+
+    // Use a local state for input delay (debounce)
+    const [localSearch, setLocalSearch] = useState('');
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        const timeoutId = setTimeout(() => {
+            setSearch(localSearch);
+            setPage(0); // Reset to page 0 on search
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [localSearch, setSearch, setPage]);
 
     const handleCreate = () => {
-        setEditingProduct(null);
-        setIsModalOpen(true);
+        navigate('/products/create');
     };
 
     const handleEdit = (product: Product) => {
@@ -40,15 +50,16 @@ export const ProductCatalog = () => {
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: number) => {
         if (!confirm('Are you sure you want to delete this product?')) return;
-        setIsLoading(true);
         try {
-            await productService.deleteProduct(id);
-            fetchData();
-        } catch (error) {
-            alert('Failed to delete product');
-            setIsLoading(false);
+            await productApi.deleteProduct(id);
+            toast.success('Product deleted successfully');
+            refetch();
+        } catch (error: any) {
+            if (error.response?.status !== 401 && error.response?.status !== 403) {
+                toast.error(error.response?.data?.message || 'Failed to delete product');
+            }
         }
     };
 
@@ -56,26 +67,22 @@ export const ProductCatalog = () => {
         setIsSaving(true);
         try {
             if (editingProduct) {
-                await productService.updateProduct(editingProduct.id, data);
+                await productApi.updateProduct(editingProduct.id, data);
             } else {
-                await productService.createProduct(data);
+                await productApi.createProduct(data);
             }
             setIsModalOpen(false);
-            fetchData();
-        } catch (error) {
-            alert('Failed to save product');
+            refetch();
+            toast.success('Product saved successfully');
+        } catch (error: any) {
+            if (error.response?.status !== 401 && error.response?.status !== 403) {
+                toast.error(error.response?.data?.message || 'Failed to save product');
+            }
         } finally {
             setIsSaving(false);
         }
     };
 
-    const filteredProducts = products.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.sku?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
 
     // Desktop Columns
     const columns: Column<Product>[] = [
@@ -84,8 +91,8 @@ export const ProductCatalog = () => {
             cell: (row) => (
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                        {row.image ? (
-                            <img src={row.image} alt={row.name} className="h-full w-full object-cover" />
+                        {row.imageUrl ? (
+                            <img src={row.imageUrl} alt={row.name} className="h-full w-full object-cover" />
                         ) : (
                             <div className="h-full w-full flex items-center justify-center text-gray-400">
                                 <Package size={16} />
@@ -94,7 +101,7 @@ export const ProductCatalog = () => {
                     </div>
                     <div>
                         <div className="font-medium text-gray-900">{row.name}</div>
-                        <div className="text-xs text-gray-500 font-mono">{row.sku}</div>
+                        <div className="text-xs text-gray-500 font-mono">ID: {row.id}</div>
                     </div>
                 </div>
             )
@@ -105,33 +112,26 @@ export const ProductCatalog = () => {
             cell: (row) => (
                 <div className="flex items-center gap-1.5 text-gray-600">
                     <Tag size={14} />
-                    <span>{row.category}</span>
+                    <span>{row.category?.name || 'Uncategorized'}</span>
                 </div>
             )
         },
         {
-            header: 'Price',
-            accessorKey: 'price',
-            cell: (row) => <span className="font-medium text-gray-900">${row.price.toFixed(2)}</span>
-        },
-        {
-            header: 'Stock',
-            accessorKey: 'stock',
+            header: 'Price / Unit',
             cell: (row) => (
-                <div className="flex items-center gap-2">
-                    <span className={`font-medium ${row.stock <= 10 ? 'text-red-600' : 'text-gray-900'}`}>
-                        {row.stock}
-                    </span>
-                    <span className="text-gray-500 text-xs">{row.unit}</span>
+                <div>
+                    <span className="font-medium text-gray-900">${row.price.toLocaleString()}</span>
+                    <span className="text-gray-500 text-sm ml-1">/ {row.unit}</span>
                 </div>
             )
         },
         {
             header: 'Status',
-            accessorKey: 'status',
+            accessorKey: 'isActive',
             cell: (row) => (
-                <Badge variant={row.status === 'active' ? 'success' : row.status === 'draft' ? 'warning' : 'secondary'}>
-                    {row.status.toUpperCase()}
+                <Badge variant={row.isActive ? 'success' : 'secondary'} className="flex items-center w-max gap-1">
+                    {row.isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                    {row.isActive ? 'Active' : 'Inactive'}
                 </Badge>
             )
         },
@@ -165,54 +165,65 @@ export const ProductCatalog = () => {
             </div>
 
             {/* Toolbar */}
-            <Card className="border-0 shadow-sm ring-1 ring-gray-200">
-                <div className="p-4 flex flex-col md:flex-row gap-4 justify-between items-center">
-                    <div className="relative w-full md:w-80">
+            <Card className="border-0 shadow-sm ring-1 ring-gray-200 overflow-hidden">
+                <div className="p-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-gray-100 bg-white">
+                    <div className="relative w-full md:w-96">
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <Input
-                            placeholder="Search products by name, SKU..."
-                            className="pl-10"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search products by name..."
+                            className="pl-10 w-full"
+                            value={localSearch}
+                            onChange={(e) => setLocalSearch(e.target.value)}
                         />
-                    </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                        <Filter size={16} className="text-gray-400 mr-1" />
-                        <span className="text-sm text-gray-500 mr-2">Status:</span>
-                        {['all', 'active', 'draft', 'archived'].map(status => (
-                            <button
-                                key={status}
-                                onClick={() => setStatusFilter(status as any)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap
-                                    ${statusFilter === status
-                                        ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-                            </button>
-                        ))}
                     </div>
                 </div>
 
                 {/* Desktop View */}
-                <div className="hidden md:block border-t border-gray-100">
+                <div className="hidden md:block">
                     <DataTable
-                        data={filteredProducts}
+                        data={products}
                         columns={columns}
                         isLoading={isLoading}
                         keyExtractor={item => item.id}
                     />
                 </div>
+
+                {/* Pagination Controls */}
+                {pageableInfo && pageableInfo.totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-gray-50 border-t border-gray-100">
+                        <div className="text-sm text-gray-500 mb-4 sm:mb-0">
+                            Showing page <span className="font-medium">{page + 1}</span> of <span className="font-medium">{pageableInfo.totalPages}</span> ({pageableInfo.totalElements} items)
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={pageableInfo.first || isLoading}
+                            >
+                                <ChevronLeft size={16} /> Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={pageableInfo.last || isLoading}
+                            >
+                                Next <ChevronRight size={16} />
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
 
             {/* Mobile View (Grid of Cards) */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                     <Card key={product.id} className="overflow-hidden flex flex-col shadow-sm border-gray-200">
                         <div className="p-4 flex gap-4">
                             <div className="h-20 w-20 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                {product.image ? (
-                                    <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                                {product.imageUrl ? (
+                                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                                 ) : (
                                     <div className="h-full w-full flex items-center justify-center text-gray-400">
                                         <Package size={20} />
@@ -222,14 +233,13 @@ export const ProductCatalog = () => {
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-start">
                                     <h3 className="font-semibold text-gray-900 truncate pr-2">{product.name}</h3>
-                                    <Badge variant={product.status === 'active' ? 'success' : product.status === 'draft' ? 'warning' : 'secondary'} className="text-[10px] px-1.5 py-0.5">
-                                        {product.status}
+                                    <Badge variant={product.isActive ? 'success' : 'secondary'} className="text-[10px] px-1.5 py-0.5">
+                                        {product.isActive ? 'ACTIVE' : 'INACTIVE'}
                                     </Badge>
                                 </div>
-                                <p className="text-xs text-gray-500 font-mono mt-0.5">{product.sku}</p>
+                                <p className="text-xs text-gray-500 font-mono mt-0.5">Cat: {product.category?.name || 'Uncategorized'}</p>
                                 <div className="mt-2 flex items-center justify-between">
-                                    <span className="font-bold text-gray-900 text-lg">${product.price.toFixed(2)}</span>
-                                    <span className="text-sm text-gray-500">{product.stock} {product.unit} left</span>
+                                    <span className="font-bold text-gray-900 text-lg">${product.price.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/ {product.unit}</span></span>
                                 </div>
                             </div>
                         </div>
@@ -243,13 +253,12 @@ export const ProductCatalog = () => {
                         </div>
                     </Card>
                 ))}
-                {!isLoading && filteredProducts.length === 0 && (
+                {!isLoading && products.length === 0 && (
                     <div className="text-center py-12 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300">
                         No products found.
                     </div>
                 )}
             </div>
-
 
             <ProductModal
                 isOpen={isModalOpen}

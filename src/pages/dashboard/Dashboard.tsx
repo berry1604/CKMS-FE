@@ -3,30 +3,52 @@ import { DollarSign, ShoppingBag, Users, Activity, TrendingUp, AlertCircle, Chec
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { dashboardService } from '../../services/mock/dashboard.mock';
-import type { DashboardStats, RecentActivity } from '../../services/mock/dashboard.mock';
+export interface DashboardStats {
+    totalRevenue: number;
+    activeStores: number;
+    pendingOrders: number;
+    activeUsers: number;
+}
+export interface RecentActivity {
+    id: string;
+    action: string;
+    user: string;
+    time: string;
+    status: 'success' | 'warning' | 'error';
+    type: 'order' | 'inventory' | 'system' | 'user';
+}
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [stats, setStats] = useState<DashboardStats | null>(null);
-    const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+    // Initialize with fallback/empty data to ensure UI renders immediately if needed
+    const [_stats, _setStats] = useState<DashboardStats>({
+        totalRevenue: 0,
+        activeStores: 0,
+        pendingOrders: 0,
+        activeUsers: 0
+    });
+    const [recentActivity, _setRecentActivity] = useState<RecentActivity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const loadDashboardData = async () => {
             try {
-                const [statsRes, activityRes] = await Promise.all([
-                    dashboardService.getStats(user?.role),
-                    dashboardService.getRecentActivity()
-                ]);
-                setStats(statsRes.data);
-                setRecentActivity(activityRes.data);
+                // Placeholder for Dashboard API
+                // setStats(statsRes.data);
+                // setRecentActivity(activityRes.data);
             } catch (error) {
                 console.error('Failed to load dashboard data', error);
+                // In case of error, we can either keep the default empty state
+                // or set specific "error" state data if requirements change.
+                // For now, the requirements say "show placeholder/empty state", which the default provided above covers.
+                // If we want to show MOCK data specifically on failure (if API was real but failed):
+                // setStats(MOCK_STATS); // We'd need to import MOCK_STATS or similar.
+                // Since dashboardService IS the mock, if it fails, it's a deeper issue, but we'll stick to non-blocking.
             } finally {
+                // Ensure loading is always turned off
                 setIsLoading(false);
             }
         };
@@ -34,9 +56,7 @@ export const Dashboard = () => {
         if (user) loadDashboardData();
     }, [user]);
 
-    if (isLoading) {
-        return <div className="p-12 text-center text-gray-500">Loading Dashboard...</div>;
-    }
+    // Removed blocking loading check: if (isLoading) return ...
 
     const StatCard = ({ title, value, icon: Icon, color, trend }: { title: string; value: string | number; icon: any; color: string, trend?: string }) => (
         <Card className="flex flex-col p-5 border-0 shadow-sm ring-1 ring-gray-100 hover:shadow-md transition-shadow">
@@ -51,7 +71,9 @@ export const Dashboard = () => {
                 )}
             </div>
             <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">{value}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    {value !== undefined && value !== null ? value : '-'}
+                </h3>
                 <p className="text-sm font-medium text-gray-500">{title}</p>
             </div>
         </Card>
@@ -77,9 +99,16 @@ export const Dashboard = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">{currentDate}</p>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                        Welcome back, {user?.name || 'User'}!
-                    </h1>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                            Welcome back, {user?.name || 'User'}!
+                        </h1>
+                        {isLoading && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full animate-pulse">
+                                Updating...
+                            </span>
+                        )}
+                    </div>
                     <p className="text-gray-500 mt-1">Here's what's happening in your franchise today.</p>
                 </div>
                 <div className="flex gap-3">
@@ -105,7 +134,7 @@ export const Dashboard = () => {
                 {user?.role !== 'KITCHEN_STAFF' && (
                     <StatCard
                         title="Total Revenue"
-                        value={`$${stats?.totalRevenue.toLocaleString()}`}
+                        value={`$${_stats?.totalRevenue.toLocaleString()}`}
                         icon={DollarSign}
                         color="bg-green-500"
                         trend="+12%"
@@ -114,7 +143,7 @@ export const Dashboard = () => {
 
                 <StatCard
                     title={user?.role === 'MANAGER' ? 'My Store' : "Active Stores"}
-                    value={stats?.activeStores || 0}
+                    value={_stats?.activeStores || 0}
                     icon={ShoppingBag}
                     color="bg-blue-500"
                     trend={user?.role === 'ADMIN' ? '+2 this week' : undefined}
@@ -122,14 +151,14 @@ export const Dashboard = () => {
 
                 <StatCard
                     title={user?.role === 'KITCHEN_STAFF' ? 'Production Tasks' : "Pending Orders"}
-                    value={stats?.pendingOrders || 0}
+                    value={_stats?.pendingOrders || 0}
                     icon={Activity}
                     color="bg-orange-500"
                 />
 
                 <StatCard
                     title={user?.role === 'MANAGER' ? 'Staff Members' : "Active Users"}
-                    value={stats?.activeUsers || 0}
+                    value={_stats?.activeUsers || 0}
                     icon={Users}
                     color="bg-purple-500"
                 />

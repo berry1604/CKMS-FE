@@ -4,7 +4,7 @@ import { ArrowLeft, Box, ShoppingCart, MapPin, Phone, Mail } from 'lucide-react'
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { storeService, type Store } from '../../services/mock/store.mock';
+import { type Store } from './StoreList';
 import { StoreInventory } from './StoreInventory';
 
 export const StoreDetails = () => {
@@ -16,10 +16,9 @@ export const StoreDetails = () => {
 
     useEffect(() => {
         if (id) {
-            storeService.getStoreById(id)
-                .then(res => setStore(res.data))
-                .catch(() => navigate('/stores'))
-                .finally(() => setIsLoading(false));
+            // Placeholder for GET /stores/:id API
+            setStore(null);
+            setIsLoading(false);
         }
     }, [id, navigate]);
 

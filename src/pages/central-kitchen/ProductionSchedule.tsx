@@ -1,14 +1,27 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, CheckCircle, Clock, PlayCircle, List, ChevronLeft, ChevronRight, Plus, Search, Filter } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
-import { kitchenService, type ProductionTask } from '../../services/mock/kitchen.mock';
+export interface ProductionTask {
+    id: string;
+    productName: string;
+    quantity: number;
+    unit: string;
+    dueDate: string;
+    dueTime: string;
+    status: 'pending' | 'in_progress' | 'completed';
+    assignedTo: string;
+    orderId?: string;
+    recipeId?: string;
+}
 import { Drawer } from '../../components/ui/Drawer';
 
 export const ProductionSchedule = () => {
+    const navigate = useNavigate();
     const [tasks, setTasks] = useState<ProductionTask[]>([]);
     const [filteredTasks, setFilteredTasks] = useState<ProductionTask[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -18,38 +31,8 @@ export const ProductionSchedule = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | ProductionTask['status']>('all');
 
-    // Create Task State
-    const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
-    const [newTask, setNewTask] = useState<Partial<ProductionTask>>({
-        productName: '',
-        quantity: 0,
-        unit: 'units',
-        dueDate: new Date().toISOString().split('T')[0],
-        dueTime: '12:00',
-        assignedTo: ''
-    });
-
     const handleCreateTask = async () => {
-        if (!newTask.productName || !newTask.quantity || !newTask.assignedTo) return;
-
-        setIsLoading(true);
-        try {
-            await kitchenService.createTask(newTask as any);
-            await loadTasks();
-            setIsCreateDrawerOpen(false);
-            setNewTask({
-                productName: '',
-                quantity: 0,
-                unit: 'units',
-                dueDate: new Date().toISOString().split('T')[0],
-                dueTime: '12:00',
-                assignedTo: ''
-            });
-        } catch (error) {
-            console.error('Failed to create task', error);
-        } finally {
-            setIsLoading(false);
-        }
+        navigate('/kitchen/create-task');
     };
 
     useEffect(() => {
@@ -77,16 +60,19 @@ export const ProductionSchedule = () => {
         setFilteredTasks(result);
     }, [searchQuery, statusFilter, tasks]);
 
-    const loadTasks = () => {
+    const loadTasks = async () => {
         setIsLoading(true);
-        kitchenService.getProductionSchedule()
-            .then(res => setTasks(res.data))
-            .finally(() => setIsLoading(false));
+        try {
+            // Placeholder for GET /production-schedule API
+            setTasks([]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleStatusUpdate = async (taskId: string, newStatus: ProductionTask['status']) => {
         try {
-            await kitchenService.updateTaskStatus(taskId, newStatus);
+            // Placeholder: Update status via API
             loadTasks();
             if (selectedTask && selectedTask.id === taskId) {
                 setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
@@ -290,7 +276,7 @@ export const ProductionSchedule = () => {
                     </div>
                     <Button
                         className="shrink-0 shadow-sm bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => setIsCreateDrawerOpen(true)}
+                        onClick={handleCreateTask}
                     >
                         <Plus size={18} className="mr-2" /> Create Task
                     </Button>
@@ -422,67 +408,6 @@ export const ProductionSchedule = () => {
                 )}
             </Drawer>
 
-            {/* Create Task Drawer */}
-            <Drawer
-                isOpen={isCreateDrawerOpen}
-                onClose={() => setIsCreateDrawerOpen(false)}
-                title="Create New Task"
-                description="Manually add a new production task to the schedule."
-                width="max-w-md"
-                footer={
-                    <div className="flex justify-end gap-3 w-full">
-                        <Button variant="outline" onClick={() => setIsCreateDrawerOpen(false)}>Cancel</Button>
-                        <Button onClick={handleCreateTask} isLoading={isLoading}>Create Task</Button>
-                    </div>
-                }
-            >
-                <div className="space-y-5">
-                    <Input
-                        label="Product Name"
-                        placeholder="e.g. Beef Steak"
-                        value={newTask.productName}
-                        onChange={(e) => setNewTask({ ...newTask, productName: e.target.value })}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Quantity"
-                            type="number"
-                            placeholder="e.g. 50"
-                            value={newTask.quantity || ''}
-                            onChange={(e) => setNewTask({ ...newTask, quantity: Number(e.target.value) })}
-                        />
-                        <Input
-                            label="Unit"
-                            placeholder="e.g. portions"
-                            value={newTask.unit}
-                            onChange={(e) => setNewTask({ ...newTask, unit: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Due Date"
-                            type="date"
-                            value={newTask.dueDate}
-                            onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                        />
-                        <Input
-                            label="Due Time"
-                            type="time"
-                            value={newTask.dueTime}
-                            onChange={(e) => setNewTask({ ...newTask, dueTime: e.target.value })}
-                        />
-                    </div>
-
-                    <Input
-                        label="Assigned To"
-                        placeholder="e.g. Chef John"
-                        value={newTask.assignedTo}
-                        onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })}
-                    />
-                </div>
-            </Drawer>
         </div>
     );
 };

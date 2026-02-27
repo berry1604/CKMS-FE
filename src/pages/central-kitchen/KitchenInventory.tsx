@@ -3,7 +3,7 @@ import { AlertTriangle, TrendingUp, Save, Filter } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
-import { inventoryService, type InventoryItem } from '../../services/mock/inventory.mock';
+import { type InventoryItem } from '../franchise-store/StoreInventory';
 
 export const KitchenInventory = () => {
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -14,8 +14,8 @@ export const KitchenInventory = () => {
     const loadInventory = async () => {
         setIsLoading(true);
         try {
-            const res = await inventoryService.getInventoryByLocation('kitchen');
-            setInventory(res.data);
+            // Placeholder for GET /inventory?location=kitchen
+            setInventory([]);
         } catch (error) {
             console.error(error);
         } finally {
@@ -32,9 +32,9 @@ export const KitchenInventory = () => {
         setAdjustValue(item.quantity);
     };
 
-    const handleSaveAdjustment = async (id: string) => {
+    const handleSaveAdjustment = async (_id: string) => {
         try {
-            await inventoryService.updateStock(id, adjustValue, 'Manual Adjustment');
+            // Placeholder: Call update stock API here
             setAdjustingItem(null);
             loadInventory();
         } catch (error) {

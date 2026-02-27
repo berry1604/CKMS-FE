@@ -3,7 +3,19 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Drawer } from '../../components/ui/Drawer';
-import { type Invoice } from '../../services/mock/finance.mock';
+export interface Invoice {
+    id: string;
+    storeName: string;
+    amount: number;
+    status: 'paid' | 'pending' | 'overdue' | 'cancelled';
+    date: string;
+    dueDate: string;
+    items: {
+        description: string;
+        quantity: number;
+        price: number;
+    }[];
+}
 
 interface InvoiceDetailDrawerProps {
     invoice: Invoice | null;

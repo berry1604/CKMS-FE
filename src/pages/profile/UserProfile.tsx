@@ -7,8 +7,6 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../hooks/useAuth';
-import { userService } from '../../services/mock/user.mock';
-import type { User as UserType } from '../../types/user';
 
 const profileSchema = z.object({
     name: z.string().min(2, 'Name is required'),
@@ -58,23 +56,20 @@ export const UserProfile = () => {
         }
     }, [user, setValue]);
 
-    const onSubmit = async (data: ProfileFormValues) => {
+    const onSubmit = async (_data: ProfileFormValues) => {
         if (!user) return;
         setIsLoading(true);
         setSuccessMessage('');
 
         try {
-            const updates: Partial<UserType> = {
-                name: data.name,
-                email: data.email,
-                phone: data.phone,
-                address: data.address,
-                bio: data.bio
-            };
-
             // In a real app, password would be handled separately or require current password
 
-            await userService.updateUser(user.id, updates);
+            // await updateUser(user.id, {
+            //     name: data.name,
+            //     email: data.email,
+            //     phone: data.phone,
+            //     address: data.address,
+            // });
 
             // Optimistically update local showing (in real app, assume context updates or we re-fetch)
             // For now, let's just show success

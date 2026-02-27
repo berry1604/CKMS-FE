@@ -3,13 +3,13 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Drawer } from '../../components/ui/Drawer';
-import { type Order } from '../../services/mock/order.mock';
+import type { StoreOrderResponse } from '../../types/storeOrder';
 
 interface OrderDetailDrawerProps {
-    order: Order | null;
+    order: StoreOrderResponse | null;
     isOpen: boolean;
     onClose: () => void;
-    onStatusUpdate?: (orderId: string, status: string) => void;
+    onStatusUpdate?: (orderId: number, status: string) => void;
 }
 
 export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: OrderDetailDrawerProps) => {
@@ -17,7 +17,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
 
     const getStatusStep = (status: string) => {
         const steps = ['submitted', 'approved', 'scheduled', 'in_production', 'produced', 'shipping', 'completed'];
-        return steps.indexOf(status) + 1;
+        return steps.indexOf(status.toLowerCase()) + 1;
     };
 
     const currentStep = getStatusStep(order.status);
@@ -33,13 +33,13 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
                 </Button>
             </div>
             <div className="flex gap-2">
-                {order.status === 'submitted' && onStatusUpdate && (
-                    <Button onClick={() => onStatusUpdate(order.id, 'approved')}>
+                {(order.status === 'SUBMITTED' || order.status === 'submitted') && onStatusUpdate && (
+                    <Button onClick={() => onStatusUpdate(order.orderId, 'approved')}>
                         Approve Order
                     </Button>
                 )}
-                {order.status === 'shipping' && onStatusUpdate && (
-                    <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => onStatusUpdate(order.id, 'completed')}>
+                {(order.status === 'SHIPPING' || order.status === 'shipping') && onStatusUpdate && (
+                    <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => onStatusUpdate(order.orderId, 'completed')}>
                         Confirm Receipt
                     </Button>
                 )}
@@ -54,8 +54,8 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
         <Drawer
             isOpen={isOpen}
             onClose={onClose}
-            title={`Order #${order.id}`}
-            description={`${order.storeName} • ${order.date}`}
+            title={`Order #${order.orderId}`}
+            description={`Store ID: ${order.storeId} • ${new Date(order.orderDate).toLocaleDateString()}`}
             width="max-w-4xl"
             footer={footer}
         >
@@ -66,19 +66,12 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
                         <div>
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Status</p>
                             <Badge variant={
-                                order.status === 'completed' ? 'success' :
-                                    order.status === 'cancelled' ? 'danger' :
-                                        order.status === 'in_production' ? 'primary' : 'info'
+                                order.status === 'COMPLETED' ? 'success' :
+                                    order.status === 'CANCELLED' ? 'danger' :
+                                        order.status === 'IN_PRODUCTION' ? 'primary' : 'info'
                             } className="text-sm px-3 py-1">
                                 {order.status.toUpperCase().replace('_', ' ')}
                             </Badge>
-                        </div>
-                        <div className="h-8 w-px bg-gray-200 mx-2"></div>
-                        <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Priority</p>
-                            <span className={`font-medium capitalize ${order.priority === 'high' ? 'text-red-600 flex items-center gap-1' : 'text-gray-900'}`}>
-                                {order.priority}
-                            </span>
                         </div>
                     </div>
                     <div className="text-right">
@@ -143,13 +136,13 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
-                            {order.items && order.items.length > 0 ? (
-                                order.items.map((item, idx) => (
+                            {order.orderDetails && order.orderDetails.length > 0 ? (
+                                order.orderDetails.map((item, idx) => (
                                     <tr key={idx} className="hover:bg-gray-50/50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.productName}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{item.quantity} {item.unit}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${item.price}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-right">${(item.quantity * item.price).toFixed(2)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.productName || `Product #${item.productId}`}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{item.quantity} units</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${item.unitPrice?.toFixed(2) || '0.00'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-right">${item.subTotal?.toFixed(2) || (item.quantity * (item.unitPrice || 0)).toFixed(2)}</td>
                                     </tr>
                                 ))
                             ) : (
@@ -173,12 +166,12 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
                         <h4 className="text-sm font-medium text-gray-900 mb-3">Delivery Information</h4>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-gray-500">Store</span>
-                                <span className="font-medium text-gray-900">{order.storeName}</span>
+                                <span className="text-gray-500">Store ID</span>
+                                <span className="font-medium text-gray-900">{order.storeId}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-500">Date</span>
-                                <span className="font-medium text-gray-900">{order.date}</span>
+                                <span className="font-medium text-gray-900">{new Date(order.orderDate).toLocaleDateString()}</span>
                             </div>
                         </div>
                     </Card>

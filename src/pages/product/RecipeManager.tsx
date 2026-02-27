@@ -3,14 +3,12 @@ import { Search, Filter, ChevronRight } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
-import { productService, type Product } from '../../services/mock/product.mock';
-import { recipeService, type Recipe } from '../../services/mock/recipe.mock';
+import { productApi } from '../../services/product.api';
+import type { ProductResponse as Product } from '../../types/product';
 import { RecipeEditor } from './RecipeEditor';
 
 export const RecipeManager = () => {
     const [products, setProducts] = useState<Product[]>([]);
-    const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -19,12 +17,8 @@ export const RecipeManager = () => {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                const [prodRes, recipeRes] = await Promise.all([
-                    productService.getProducts(),
-                    recipeService.getRecipes()
-                ]);
-                setProducts(prodRes.data);
-                setRecipes(recipeRes.data);
+                const prodRes = await productApi.getProducts();
+                setProducts(prodRes.data.content || []);
             } catch (error) {
                 console.error('Failed to load data', error);
             } finally {
@@ -38,22 +32,14 @@ export const RecipeManager = () => {
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getRecipeForProduct = (productId: string) => {
-        return recipes.find(r => r.productId === productId);
-    };
-
     const handleBack = () => {
         setSelectedProduct(null);
-        // Refresh data
-        recipeService.getRecipes().then(res => setRecipes(res.data));
     };
 
     if (selectedProduct) {
-        const existingRecipe = getRecipeForProduct(selectedProduct.id);
         return (
             <RecipeEditor
                 product={selectedProduct}
-                existingRecipe={existingRecipe}
                 onBack={handleBack}
             />
         );
@@ -84,7 +70,6 @@ export const RecipeManager = () => {
             ) : (
                 <div className="grid grid-cols-1 gap-4">
                     {filteredProducts.map(product => {
-                        const recipe = getRecipeForProduct(product.id);
                         return (
                             <div
                                 key={product.id}
@@ -94,26 +79,16 @@ export const RecipeManager = () => {
                                 <Card className="p-4 flex items-center justify-between hover:shadow-md transition-shadow">
                                     <div className="flex items-center space-x-4">
                                         <img
-                                            src={product.image}
+                                            src={product.imageUrl || ''}
                                             alt={product.name}
-                                            className="w-12 h-12 rounded-md object-cover"
+                                            className="w-12 h-12 rounded-md object-cover bg-gray-100"
                                         />
                                         <div>
                                             <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                                            <p className="text-sm text-gray-500">{product.category}</p>
+                                            <p className="text-sm text-gray-500">Cat {product.category?.id ?? 'N/A'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center space-x-6">
-                                        <div className="text-right">
-                                            <p className="text-sm text-gray-500">Recipe Status</p>
-                                            <Badge variant={recipe?.status === 'active' ? 'success' : (recipe ? 'warning' : 'secondary')}>
-                                                {recipe ? recipe.status.toUpperCase() : 'NO RECIPE'}
-                                            </Badge>
-                                        </div>
-                                        <div className="text-right hidden sm:block">
-                                            <p className="text-sm text-gray-500">Cost</p>
-                                            <p className="font-medium">{recipe ? `$${recipe.totalCost.toFixed(2)}` : '-'}</p>
-                                        </div>
                                         <ChevronRight className="text-gray-400" />
                                     </div>
                                 </Card>

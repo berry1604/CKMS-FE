@@ -4,14 +4,23 @@ import { AuthLayout } from '../layouts/AuthLayout';
 import { Login } from '../pages/auth/Login';
 import { Dashboard } from '../pages/dashboard/Dashboard';
 import { UsersList } from '../pages/users/UsersList';
+import { CreateUserPage } from '../pages/users/CreateUserPage';
 import { StoreList } from '../pages/franchise-store/StoreList';
+import { CreateStorePage } from '../pages/franchise-store/CreateStorePage';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
 import { ProductCatalog } from '../pages/product/ProductCatalog';
+import { CreateProductPage } from '../pages/product/CreateProductPage';
 import { MaterialList } from '../pages/product/MaterialList';
+import { CreateMaterialPage } from '../pages/product/CreateMaterialPage';
+import { BeefsteakMaterialsPage } from '../pages/product/BeefsteakMaterialsPage';
+import { CategoryList } from '../pages/product/CategoryList';
+import { CreateCategoryPage } from '../pages/product/CreateCategoryPage';
 import { RecipeManager } from '../pages/product/RecipeManager';
 import { OrderList } from '../pages/orders/OrderList';
 import { CreateOrder } from '../pages/orders/CreateOrder';
+import { ProductListExample } from '../pages/product/ProductListExample';
 import { ProductionSchedule } from '../pages/central-kitchen/ProductionSchedule';
+import { CreateTaskPage } from '../pages/central-kitchen/CreateTaskPage';
 import { KitchenInventory } from '../pages/central-kitchen/KitchenInventory';
 import { ShipmentList } from '../pages/shipment/ShipmentList';
 import { BillingList } from '../pages/billing/BillingList';
@@ -64,6 +73,7 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN']} />,
                         children: [
                             { index: true, element: <UsersList /> },
+                            { path: 'create', element: <CreateUserPage /> },
                             { path: 'roles', element: <ComingSoon /> }
                         ]
                     },
@@ -74,6 +84,7 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
                         children: [
                             { index: true, element: <StoreList /> },
+                            { path: 'create', element: <CreateStorePage /> },
                             { path: ':id', element: <StoreDetails /> },
                             { path: 'inventory', element: <ComingSoon /> },
                             { path: 'orders', element: <ComingSoon /> }
@@ -86,6 +97,7 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'KITCHEN_STAFF']} />,
                         children: [
                             { index: true, element: <ProductionSchedule /> },
+                            { path: 'create-task', element: <CreateTaskPage /> },
                             { path: 'inventory', element: <KitchenInventory /> },
                             { path: 'production', element: <ComingSoon /> }
                         ]
@@ -97,9 +109,14 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'KITCHEN_STAFF']} />,
                         children: [
                             { index: true, element: <ProductCatalog /> },
+                            { path: 'create', element: <CreateProductPage /> },
                             { path: 'materials', element: <MaterialList /> },
-                            { path: 'categories', element: <ComingSoon /> },
-                            { path: 'recipes', element: <RecipeManager /> }
+                            { path: 'materials/create', element: <CreateMaterialPage /> },
+                            { path: 'beefsteak-materials', element: <BeefsteakMaterialsPage /> },
+                            { path: 'categories', element: <CategoryList /> },
+                            { path: 'categories/create', element: <CreateCategoryPage /> },
+                            { path: 'recipes', element: <RecipeManager /> },
+                            { path: 'example', element: <ProductListExample /> }
                         ]
                     },
 
