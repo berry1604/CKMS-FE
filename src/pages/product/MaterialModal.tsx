@@ -9,8 +9,7 @@ import type { MaterialResponse, MaterialRequest } from '../../types/material';
 
 const materialSchema = z.object({
     name: z.string().min(1, 'Name is required'),
-    unit: z.enum(['KG', 'G', 'L', 'ML', 'PCS', 'BOX', 'PACK']),
-    minStockLevel: z.number().min(0, 'Min stock cannot be negative'),
+    unit: z.enum(['KG', 'GRAM', 'LITER', 'ML', 'PIECE']),
 });
 
 type MaterialFormData = z.infer<typeof materialSchema>;
@@ -29,7 +28,6 @@ export const MaterialModal = ({ isOpen, onClose, onSubmit, initialData, isLoadin
         defaultValues: {
             name: '',
             unit: 'KG',
-            minStockLevel: 0,
         }
     });
 
@@ -38,13 +36,11 @@ export const MaterialModal = ({ isOpen, onClose, onSubmit, initialData, isLoadin
             reset({
                 name: initialData.name,
                 unit: initialData.unit,
-                minStockLevel: initialData.minStockLevel,
             });
         } else {
             reset({
                 name: '',
                 unit: 'KG',
-                minStockLevel: 0,
             });
         }
     }, [initialData, reset, isOpen]);
@@ -79,30 +75,20 @@ export const MaterialModal = ({ isOpen, onClose, onSubmit, initialData, isLoadin
                     {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Unit *</label>
                         <select
                             {...register('unit')}
-                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-10 w-full rounded-md border border-gray-300 bg-zinc-900/50 px-3 py-2 text-sm ring-offset-background placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <option value="KG">Kilogram (KG)</option>
-                            <option value="G">Gram (G)</option>
-                            <option value="L">Liter (L)</option>
+                            <option value="GRAM">Gram (GRAM)</option>
+                            <option value="LITER">Liter (LITER)</option>
                             <option value="ML">Milliliter (ML)</option>
-                            <option value="PCS">Pieces (PCS)</option>
-                            <option value="BOX">Box</option>
-                            <option value="PACK">Pack</option>
+                            <option value="PIECE">Pieces (PIECE)</option>
                         </select>
                         {errors.unit && <p className="text-red-500 text-xs">{errors.unit.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Min Stock Level *</label>
-                        <Input
-                            type="number"
-                            {...register('minStockLevel', { valueAsNumber: true })}
-                        />
-                        {errors.minStockLevel && <p className="text-red-500 text-xs">{errors.minStockLevel.message}</p>}
                     </div>
                 </div>
             </form>

@@ -82,7 +82,7 @@ export const MaterialList = () => {
         },
         {
             header: 'Material Name',
-            cell: (row) => <div className="font-medium text-gray-900">{row.name}</div>
+            cell: (row) => <div className="font-medium text-gray-200">{row.name}</div>
         },
         {
             header: 'Unit',
@@ -103,7 +103,7 @@ export const MaterialList = () => {
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="text-blue-600 hover:text-blue-800 p-1 h-auto"
+                        className="text-amber-600 hover:text-amber-500 p-1 h-auto"
                         onClick={() => handleEdit(row)}
                     >
                         <Edit size={16} />
@@ -124,7 +124,7 @@ export const MaterialList = () => {
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold text-gray-900">Material Management</h1>
+                <h1 className="text-2xl font-bold text-gray-200">Material Management</h1>
                 <div className="flex space-x-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:w-64">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />

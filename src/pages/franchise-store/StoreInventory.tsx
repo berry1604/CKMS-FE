@@ -74,12 +74,12 @@ export const StoreInventory = ({ storeId }: StoreInventoryProps) => {
             header: 'Item Details',
             cell: (row) => (
                 <div className="flex items-center gap-3">
-                    <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
+                    <div className="bg-amber-500/10 p-2 rounded-lg text-amber-600">
                         <Package size={20} />
                     </div>
                     <div>
-                        <p className="font-medium text-gray-900">{row.itemName}</p>
-                        <p className="text-xs text-gray-500">ID: {row.id.slice(0, 8)}</p>
+                        <p className="font-medium text-gray-200">{row.itemName}</p>
+                        <p className="text-xs text-gray-400">ID: {row.id.slice(0, 8)}</p>
                     </div>
                 </div>
             )
@@ -118,8 +118,8 @@ export const StoreInventory = ({ storeId }: StoreInventoryProps) => {
                 const isLowStock = row.quantity <= row.minStockLevel;
                 return (
                     <div className="flex items-center gap-2">
-                        <span className={`font-semibold ${isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
-                            {row.quantity} <span className="text-xs font-normal text-gray-500">{row.unit}</span>
+                        <span className={`font-semibold ${isLowStock ? 'text-red-600' : 'text-gray-200'}`}>
+                            {row.quantity} <span className="text-xs font-normal text-gray-400">{row.unit}</span>
                         </span>
                         {isLowStock && (
                             <Badge variant="danger" size="sm" className="flex items-center gap-1">
@@ -133,13 +133,13 @@ export const StoreInventory = ({ storeId }: StoreInventoryProps) => {
         {
             header: 'Min Level',
             accessorKey: 'minStockLevel',
-            cell: (row) => <span className="text-gray-500">{row.minStockLevel} {row.unit}</span>
+            cell: (row) => <span className="text-gray-400">{row.minStockLevel} {row.unit}</span>
         },
         {
             header: 'Actions',
             cell: (row) => (
                 adjustingItem !== row.id && (
-                    <Button variant="ghost" size="sm" onClick={() => handleAdjust(row)} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                    <Button variant="ghost" size="sm" onClick={() => handleAdjust(row)} className="text-amber-600 hover:text-amber-500 hover:bg-amber-500/10">
                         Adjust Stock
                     </Button>
                 )
@@ -148,18 +148,18 @@ export const StoreInventory = ({ storeId }: StoreInventoryProps) => {
     ];
 
     return (
-        <Card className="border-0 shadow-none ring-1 ring-gray-200 sm:mx-0 -mx-4 rounded-none sm:rounded-lg overflow-hidden">
-            <div className="p-4 border-b border-gray-100 bg-white">
+        <Card className="border-0 shadow-none ring-1 ring-zinc-700 sm:mx-0 -mx-4 rounded-none sm:rounded-lg overflow-hidden">
+            <div className="p-4 border-b border-zinc-800 bg-zinc-900/50">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Current Inventory</h3>
-                        <p className="text-sm text-gray-500">Manage stock levels and adjustments.</p>
+                        <h3 className="text-lg font-semibold text-gray-200">Current Inventory</h3>
+                        <p className="text-sm text-gray-400">Manage stock levels and adjustments.</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" className="bg-white">
+                        <Button variant="outline" size="sm" className="bg-zinc-900/50">
                             <TrendingUp size={16} className="mr-2 text-green-600" /> Stock In
                         </Button>
-                        <Button variant="outline" size="sm" className="bg-white">
+                        <Button variant="outline" size="sm" className="bg-zinc-900/50">
                             <TrendingDown size={16} className="mr-2 text-orange-600" /> Stock Out
                         </Button>
                         <Button size="sm">
@@ -173,7 +173,7 @@ export const StoreInventory = ({ storeId }: StoreInventoryProps) => {
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <Input
                             placeholder="Search inventory..."
-                            className="pl-10 bg-gray-50 border-gray-200"
+                            className="pl-10 bg-zinc-900/80 border-zinc-700"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />

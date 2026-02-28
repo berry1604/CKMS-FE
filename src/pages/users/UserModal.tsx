@@ -11,7 +11,7 @@ import type { User as UserType } from '../../types/user';
 const userSchema = z.object({
     name: z.string().min(2, 'Name is required'),
     email: z.string().email('Invalid email'),
-    role: z.enum(['ADMIN', 'MANAGER', 'SUPPLY_COORDINATOR', 'KITCHEN_STAFF', 'STORE_STAFF'] as const),
+    role: z.enum(['ADMIN', 'MANAGER', 'STAFF', 'COORDINATOR', 'STORE_STAFF'] as const),
 });
 
 type UserForm = z.infer<typeof userSchema>;
@@ -41,7 +41,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
             reset({
                 name: user.name,
                 email: user.email,
-                role: user.role as 'ADMIN' | 'MANAGER' | 'SUPPLY_COORDINATOR' | 'KITCHEN_STAFF' | 'STORE_STAFF',
+                role: user.role as 'ADMIN' | 'MANAGER' | 'STAFF' | 'COORDINATOR' | 'STORE_STAFF',
             });
         } else {
             reset({
@@ -77,8 +77,8 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
             <form className="space-y-8">
                 {/* Section 1: Basic Info */}
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-800 font-medium pb-2 border-b border-gray-100">
-                        <Briefcase size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-200 font-medium pb-2 border-b border-zinc-800">
+                        <Briefcase size={18} className="text-amber-500" />
                         <h3>Professional Information</h3>
                     </div>
 
@@ -104,23 +104,23 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
 
                 {/* Section 2: Roles */}
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-800 font-medium pb-2 border-b border-gray-100">
-                        <Shield size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-200 font-medium pb-2 border-b border-zinc-800">
+                        <Shield size={18} className="text-amber-500" />
                         <h3>Role & Permissions</h3>
                     </div>
 
-                    <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 space-y-3">
+                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 space-y-3">
                         <div className="relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Role</label>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Assigned Role</label>
                             <div className="relative">
                                 <select
-                                    className="flex h-11 w-full rounded-md border border-gray-300 bg-white pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 appearance-none transition-shadow"
+                                    className="flex h-11 w-full rounded-md border border-zinc-700 bg-zinc-900/50 pl-3 pr-10 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 appearance-none transition-shadow"
                                     {...register('role')}
                                 >
                                     <option value="ADMIN">Admin (Full Access)</option>
                                     <option value="MANAGER">Manager (Store & Operations)</option>
-                                    <option value="SUPPLY_COORDINATOR">Supply Coordinator (Logistics)</option>
-                                    <option value="KITCHEN_STAFF">Kitchen Staff (Production)</option>
+                                    <option value="STAFF">Staff (General Operations)</option>
+                                    <option value="COORDINATOR">Coordinator (Logistics)</option>
                                     <option value="STORE_STAFF">Store Staff (Sales & Orders)</option>
                                 </select>
                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -131,7 +131,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                             </div>
                         </div>
 
-                        <div className="flex gap-2 p-3 bg-blue-50/50 rounded text-xs text-blue-800">
+                        <div className="flex gap-2 p-3 bg-amber-500/10 rounded text-xs text-amber-500">
                             <Key size={14} className="mt-0.5" />
                             <p>Assigning a role will automatically grant the corresponding permissions to this user.</p>
                         </div>
@@ -140,12 +140,12 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                 </div>
 
                 {/* Additional Info Box */}
-                <div className="bg-green-50 rounded-lg p-4 flex items-start gap-3 border border-green-100">
-                    <CheckCircle2 size={18} className="text-green-600 mt-0.5" />
+                <div className="bg-green-500/10 rounded-lg p-4 flex items-start gap-3 border border-green-500/20">
+                    <CheckCircle2 size={18} className="text-green-500 mt-0.5" />
                     <div>
-                        <h4 className="text-sm font-semibold text-green-900">Account Activation</h4>
-                        <p className="text-xs text-green-700 mt-1 leading-relaxed">
-                            An invitation email will be sent to <strong>{user?.email || 'the provided email'}</strong> with instructions to set their password and active their account.
+                        <h4 className="text-sm font-semibold text-green-400">Account Activation</h4>
+                        <p className="text-xs text-green-500/80 mt-1 leading-relaxed">
+                            An invitation email will be sent to <strong className="text-green-400/90">{user?.email || 'the provided email'}</strong> with instructions to set their password and active their account.
                         </p>
                     </div>
                 </div>

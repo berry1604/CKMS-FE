@@ -1,4 +1,4 @@
-export type UnitType = 'KG' | 'G' | 'L' | 'ML' | 'PCS' | 'BOX' | 'PACK';
+export type UnitType = 'KG' | 'GRAM' | 'LITER' | 'ML' | 'PIECE';
 
 export interface MaterialResponse {
     id: number;
@@ -13,7 +13,6 @@ export interface MaterialResponse {
 export interface MaterialRequest {
     name: string;
     unit: UnitType;
-    minStockLevel: number;
 }
 
 export interface ApiResponse<T> {

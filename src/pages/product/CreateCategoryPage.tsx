@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +11,7 @@ import { Card } from '../../components/ui/Card';
 import { categoryApi } from '../../services/category.api';
 
 const createCategorySchema = z.object({
+    categoryId: z.string().min(1, 'Category ID is required').trim(),
     name: z.string().min(1, 'Category name is required').trim(),
     description: z.string().optional(),
     status: z.enum(['ACTIVE', 'INACTIVE'])
@@ -20,29 +21,63 @@ type CreateCategoryFormData = z.infer<typeof createCategorySchema>;
 
 export const CreateCategoryPage = () => {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const isEditMode = !!id;
+
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(isEditMode);
     const [backendError, setBackendError] = useState<string | null>(null);
 
     const {
         register,
         handleSubmit,
+        reset,
         formState: { errors, isValid }
     } = useForm<CreateCategoryFormData>({
         resolver: zodResolver(createCategorySchema),
         mode: 'onChange',
         defaultValues: {
+            categoryId: '',
             name: '',
             description: '',
             status: 'ACTIVE'
         }
     });
 
+    useEffect(() => {
+        const fetchCategory = async () => {
+            if (!isEditMode) return;
+            try {
+                const data = await categoryApi.getById(Number(id));
+                reset({
+                    categoryId: data.categoryId || '',
+                    name: data.name,
+                    description: data.description || '',
+                    status: data.status as 'ACTIVE' | 'INACTIVE'
+                });
+            } catch (error) {
+                console.error('Failed to fetch category details:', error);
+                toast.error('Failed to load category data');
+                navigate('/products/categories');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCategory();
+    }, [id, isEditMode, reset, navigate]);
+
     const onSubmit = async (data: CreateCategoryFormData) => {
         setBackendError(null);
         setIsSubmitting(true);
         try {
-            await categoryApi.create(data);
-            toast.success('Category created successfully');
+            if (isEditMode) {
+                await categoryApi.update(Number(id), data);
+                toast.success('Category updated successfully');
+            } else {
+                await categoryApi.create(data);
+                toast.success('Category created successfully');
+            }
             navigate('/products/categories');
         } catch (error: any) {
             console.error('Create category error:', error);
@@ -54,6 +89,14 @@ export const CreateCategoryPage = () => {
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-[60vh]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6 max-w-4xl mx-auto pb-10">
             {/* Header */}
@@ -61,20 +104,22 @@ export const CreateCategoryPage = () => {
                 <Button
                     variant="ghost"
                     onClick={() => navigate('/products/categories')}
-                    className="hover:bg-gray-100 rounded-full p-2 h-auto"
+                    className="hover:bg-zinc-800/80 rounded-full p-2 h-auto"
                 >
-                    <ArrowLeft size={20} className="text-gray-600" />
+                    <ArrowLeft size={20} className="text-gray-400" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                        <Tag size={24} className="text-blue-600" />
-                        Create Category
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight flex items-center gap-2">
+                        <Tag size={24} className="text-amber-600" />
+                        {isEditMode ? 'Edit Category' : 'Create Category'}
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Add a new category for products or materials.</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                        {isEditMode ? 'Update the details of the existing category.' : 'Add a new category for products or materials.'}
+                    </p>
                 </div>
             </div>
 
-            <Card className="p-6 md:p-8 border-0 shadow-sm ring-1 ring-gray-200 bg-white">
+            <Card className="p-6 md:p-8 border-0 shadow-sm ring-1 ring-zinc-700 bg-zinc-900/50">
                 {backendError && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-3">
                         <div className="mt-0.5">
@@ -91,14 +136,31 @@ export const CreateCategoryPage = () => {
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Category Name *</label>
+                                <label className="text-sm font-medium text-gray-300 block">Category ID *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Tag size={16} className="text-gray-400" />
                                     </div>
                                     <input
                                         type="text"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.name ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.categoryId ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
+                                        placeholder="e.g. CAT-001"
+                                        disabled={isEditMode}
+                                        {...register('categoryId')}
+                                    />
+                                </div>
+                                {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId.message}</p>}
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-300 block">Category Name *</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Tag size={16} className="text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.name ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
                                         placeholder="e.g. Beverages"
                                         {...register('name')}
                                     />
@@ -107,13 +169,13 @@ export const CreateCategoryPage = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Status *</label>
+                                <label className="text-sm font-medium text-gray-300 block">Status *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Activity size={16} className="text-gray-400" />
                                     </div>
                                     <select
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-white ${errors.status ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-900/50 ${errors.status ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
                                         {...register('status')}
                                     >
                                         <option value="ACTIVE">Active</option>
@@ -124,12 +186,12 @@ export const CreateCategoryPage = () => {
                             </div>
 
                             <div className="space-y-1 md:col-span-2">
-                                <label className="text-sm font-medium text-gray-700 block flex items-center gap-2">
+                                <label className="text-sm font-medium text-gray-300 block flex items-center gap-2">
                                     <FileText size={16} className="text-gray-400" />
                                     Description
                                 </label>
                                 <textarea
-                                    className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent resize-none h-24 mt-1 ${errors.description ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                    className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent resize-none h-24 mt-1 ${errors.description ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
                                     placeholder="Enter category description"
                                     {...register('description')}
                                 />
@@ -138,7 +200,7 @@ export const CreateCategoryPage = () => {
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex justify-end gap-3">
+                    <div className="pt-6 border-t border-zinc-800 flex justify-end gap-3">
                         <Button
                             type="button"
                             variant="outline"
@@ -149,7 +211,7 @@ export const CreateCategoryPage = () => {
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white min-w-[140px]"
+                            className="bg-amber-600 hover:bg-blue-700 text-white min-w-[140px]"
                             disabled={isSubmitting || !isValid}
                         >
                             {isSubmitting ? (
@@ -163,7 +225,7 @@ export const CreateCategoryPage = () => {
                             ) : (
                                 <div className="flex items-center gap-2">
                                     <Save size={18} />
-                                    Create Category
+                                    {isEditMode ? 'Update Category' : 'Create Category'}
                                 </div>
                             )}
                         </Button>

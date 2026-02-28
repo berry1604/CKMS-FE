@@ -11,12 +11,12 @@ interface CardProps {
 export const Card = ({ children, className = '', title, action, onClick }: CardProps) => {
     return (
         <div
-            className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ${className} ${onClick ? 'cursor-pointer' : ''}`}
+            className={`bg-zinc-900 rounded-xl shadow-sm border border-zinc-800 overflow-hidden ${className} ${onClick ? 'cursor-pointer' : ''}`}
             onClick={onClick}
         >
             {(title || action) && (
-                <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
-                    {title && <h3 className="font-semibold text-gray-800 text-lg">{title}</h3>}
+                <div className="px-6 py-4 border-b border-zinc-800/50 flex justify-between items-center">
+                    {title && <h3 className="font-semibold text-gray-200 text-lg">{title}</h3>}
                     {action && <div>{action}</div>}
                 </div>
             )}

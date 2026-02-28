@@ -1,5 +1,6 @@
 export interface CategoryResponse {
     id: number;
+    categoryId?: string; // or number based on backend, using string as safe fallback if it's an input code
     name: string;
     description: string;
     status: string;
@@ -8,6 +9,7 @@ export interface CategoryResponse {
 }
 
 export interface CategoryRequest {
+    categoryId?: string;
     name: string;
     description?: string;
     status?: string;
