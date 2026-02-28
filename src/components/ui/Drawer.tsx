@@ -53,17 +53,17 @@ export const Drawer = ({
             {/* Drawer Panel */}
             <div
                 ref={drawerRef}
-                className={`relative w-full ${width} h-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out bg-white animate-in slide-in-from-right duration-300`}
+                className={`relative w-full ${width} h-full bg-zinc-900 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out animate-in slide-in-from-right duration-300`}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between px-6 py-6 border-b border-gray-100">
+                <div className="flex items-start justify-between px-6 py-6 border-b border-zinc-800">
                     <div>
-                        {title && <h2 className="text-xl font-semibold text-gray-900">{title}</h2>}
-                        {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
+                        {title && <h2 className="text-xl font-semibold text-gray-200">{title}</h2>}
+                        {description && <p className="mt-1 text-sm text-gray-400">{description}</p>}
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 -mr-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-2 -mr-2 text-gray-400 hover:text-gray-300 hover:bg-zinc-800 rounded-full transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -76,7 +76,7 @@ export const Drawer = ({
 
                 {/* Footer */}
                 {footer && (
-                    <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                    <div className="px-6 py-4 border-t border-zinc-800 bg-zinc-900/50">
                         {footer}
                     </div>
                 )}

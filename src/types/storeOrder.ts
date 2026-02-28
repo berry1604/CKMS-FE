@@ -22,6 +22,7 @@ export interface StoreOrderResponse {
     createdByUserId: number;
     orderDate: string; // ISO 8601 string
     status: string;    // Enum string like SUBMITTED, APPROVED, etc.
+    batchId?: number;
     totalAmount: number;
     orderDetails: OrderDetailResponse[];
 }
@@ -60,6 +61,11 @@ export interface ApiResponse<T> {
     message: string;
     data: T;
     timestamp: string;
+}
+
+export interface StoreSimpleResponse {
+    id: number;
+    name: string;
 }
 
 export interface OrderQueryParams {

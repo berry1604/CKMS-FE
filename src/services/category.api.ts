@@ -12,6 +12,11 @@ export const categoryApi = {
         return response.data.data;
     },
 
+    getById: async (id: number): Promise<CategoryResponse> => {
+        const response = await axiosClient.get<CategoryApiResponse<CategoryResponse>>(`/categories/${id}`);
+        return response.data.data;
+    },
+
     update: async (id: number, data: CategoryRequest): Promise<CategoryResponse> => {
         const response = await axiosClient.patch<CategoryApiResponse<CategoryResponse>>(`/categories/${id}`, data);
         return response.data.data;

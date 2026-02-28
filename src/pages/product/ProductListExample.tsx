@@ -62,7 +62,7 @@ export const ProductListExample: React.FC = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => (
-                        <div key={product.id} className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-amber-500/50 transition-colors">
+                        <div key={product.id} className="bg-zinc-900/50/5 border border-white/10 rounded-xl p-5 hover:border-amber-500/50 transition-colors">
                             <div className="flex justify-between items-start mb-4">
                                 <h3 className="text-lg font-semibold text-white">{product.name}</h3>
                                 <span className={`px-2 py-1 text-xs rounded-full ${product.isActive

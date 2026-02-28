@@ -3,7 +3,8 @@ import type {
     StoreOrderRequest,
     StoreOrderResponse,
     PageResponse,
-    OrderQueryParams
+    OrderQueryParams,
+    StoreSimpleResponse
 } from '../types/storeOrder';
 
 export const storeOrderApi = {
@@ -69,11 +70,27 @@ export const storeOrderApi = {
      */
     updateOrderStatus: async (id: number | string, status: string): Promise<StoreOrderResponse> => {
         try {
-            const response = await axiosClient.patch<StoreOrderResponse>(`/orders/${id}/status`, { status });
+            const payload: Record<string, string> = { status: status.toUpperCase() };
+            const response = await axiosClient.patch<StoreOrderResponse>(`/orders/${id}/status`, payload);
             return response.data;
         } catch (error) {
             console.error(`Error updating order status ${id}:`, error);
             throw error;
+        }
+    },
+
+    /**
+     * Get simple stores list for dropdown
+     */
+    getMyStores: async (): Promise<StoreSimpleResponse[]> => {
+        try {
+            // Placeholder: Assume there's an API for this
+            const response = await axiosClient.get<{ data: StoreSimpleResponse[] } | StoreSimpleResponse[]>('/stores');
+            // Support both wrapped ApiResponse or direct array
+            return Array.isArray(response.data) ? response.data : response.data.data;
+        } catch (error) {
+            console.error(`Error fetching stores:`, error);
+            return [];
         }
     }
 };

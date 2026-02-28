@@ -91,7 +91,7 @@ export const UserProfile = () => {
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+            <h1 className="text-2xl font-bold text-gray-200">My Profile</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Profile Card */}
@@ -103,16 +103,16 @@ export const UserProfile = () => {
                                 alt={user.name}
                                 className="w-32 h-32 rounded-full mb-4 ring-4 ring-gray-50 object-cover"
                             />
-                            <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
-                            <p className="text-gray-500">{user.email}</p>
+                            <h2 className="text-2xl font-bold text-gray-200">{user.name}</h2>
+                            <p className="text-gray-400">{user.email}</p>
 
                             <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
+                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-sm font-medium">
                                     <Shield size={14} className="mr-1.5" />
                                     {user.role}
                                 </div>
                                 {user.joinDate && (
-                                    <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm">
+                                    <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-400 text-sm">
                                         <Calendar size={14} className="mr-1.5" />
                                         Joined {user.joinDate}
                                     </div>
@@ -120,15 +120,15 @@ export const UserProfile = () => {
                             </div>
                         </div>
 
-                        <div className="mt-8 text-left space-y-4 pt-6 border-t border-gray-100">
+                        <div className="mt-8 text-left space-y-4 pt-6 border-t border-zinc-800">
                             <div>
                                 <p className="text-xs text-gray-400 uppercase font-semibold">Contact Info</p>
                                 <div className="mt-2 space-y-3">
-                                    <div className="flex items-start text-sm text-gray-600">
+                                    <div className="flex items-start text-sm text-gray-400">
                                         <Phone size={16} className="mr-2 mt-0.5 text-gray-400" />
                                         <span>{user.phone || 'No phone added'}</span>
                                     </div>
-                                    <div className="flex items-start text-sm text-gray-600">
+                                    <div className="flex items-start text-sm text-gray-400">
                                         <MapPin size={16} className="mr-2 mt-0.5 text-gray-400" />
                                         <span>{user.address || 'No address added'}</span>
                                     </div>
@@ -137,7 +137,7 @@ export const UserProfile = () => {
 
                             <div>
                                 <p className="text-xs text-gray-400 uppercase font-semibold">Bio</p>
-                                <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                                <p className="mt-2 text-sm text-gray-400 leading-relaxed">
                                     {user.bio || 'No bio provided.'}
                                 </p>
                             </div>
@@ -157,7 +157,7 @@ export const UserProfile = () => {
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">
                                         Full Name
                                     </label>
                                     <div className="relative">
@@ -173,7 +173,7 @@ export const UserProfile = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">
                                         Email Address
                                     </label>
                                     <div className="relative">
@@ -190,7 +190,7 @@ export const UserProfile = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">
                                         Phone Number
                                     </label>
                                     <div className="relative">
@@ -207,7 +207,7 @@ export const UserProfile = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">
                                         Address
                                     </label>
                                     <div className="relative">
@@ -225,7 +225,7 @@ export const UserProfile = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-300 mb-1">
                                     Bio
                                 </label>
                                 <div className="relative">
@@ -234,20 +234,20 @@ export const UserProfile = () => {
                                     </div>
                                     <textarea
                                         {...register('bio')}
-                                        className="w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[100px]"
+                                        className="w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500 min-h-[100px]"
                                         placeholder="Tell us a little about yourself..."
                                     />
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t border-gray-100">
-                                <h3 className="text-sm font-medium text-gray-900 mb-4 flex items-center">
-                                    <Lock size={16} className="mr-2 text-blue-600" />
+                            <div className="pt-6 border-t border-zinc-800">
+                                <h3 className="text-sm font-medium text-gray-200 mb-4 flex items-center">
+                                    <Lock size={16} className="mr-2 text-amber-600" />
                                     Security Settings
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">
                                             New Password
                                         </label>
                                         <Input
@@ -259,7 +259,7 @@ export const UserProfile = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">
                                             Confirm New Password
                                         </label>
                                         <Input

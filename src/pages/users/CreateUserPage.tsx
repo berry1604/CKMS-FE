@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,20 +10,35 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { userService } from '../../services/user.service';
+import { roleApi } from '../../services/role.api';
 import type { CreateUserRequest } from '../../types/user';
+import type { RoleResponse } from '../../types/role';
 
 const createUserSchema = z.object({
     email: z.string().email('Invalid email address'),
     fullName: z.string().min(2, 'Full name must be at least 2 characters'),
     roleId: z.number().min(1, 'Please select a role'),
-    storeId: z.number().optional(),
     kitchenId: z.number().optional(),
+    storeId: z.number().optional(),
 });
 
 export const CreateUserPage = () => {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [backendError, setBackendError] = useState<string | null>(null);
+    const [roles, setRoles] = useState<RoleResponse[]>([]);
+
+    useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const data = await roleApi.getAllRoles();
+                setRoles(data);
+            } catch (error) {
+                console.error('Failed to fetch roles:', error);
+            }
+        };
+        fetchRoles();
+    }, []);
 
     const {
         register,
@@ -36,7 +51,7 @@ export const CreateUserPage = () => {
         defaultValues: {
             email: '',
             fullName: '',
-            roleId: 2 // Assuming 2 is MANAGER from schema. Can change accordingly.
+            roleId: 0
         }
     });
 
@@ -65,22 +80,22 @@ export const CreateUserPage = () => {
                 <Button
                     variant="ghost"
                     onClick={() => navigate('/users')}
-                    className="hover:bg-gray-100 rounded-full p-2 h-auto"
+                    className="hover:bg-zinc-800 rounded-full p-2 h-auto"
                 >
-                    <ArrowLeft size={20} className="text-gray-600" />
+                    <ArrowLeft size={20} className="text-gray-400" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                        <UserPlus size={24} className="text-blue-600" />
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight flex items-center gap-2">
+                        <UserPlus size={24} className="text-amber-500" />
                         Create New User
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Add a new user to the system and assign their role.</p>
+                    <p className="text-sm text-gray-400 mt-1">Add a new user to the system and assign their role.</p>
                 </div>
             </div>
 
-            <Card className="p-6 md:p-8 border-0 shadow-sm ring-1 ring-gray-200 bg-white">
+            <Card className="p-6 md:p-8 border-0 shadow-sm ring-1 ring-zinc-800 bg-zinc-900/50">
                 {backendError && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-3">
+                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg flex items-start gap-3">
                         <div className="mt-0.5">
                             <Shield size={18} className="text-red-500" />
                         </div>
@@ -95,14 +110,14 @@ export const CreateUserPage = () => {
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Email Address *</label>
+                                <label className="text-sm font-medium text-gray-300 block">Email Address *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Mail size={16} className="text-gray-400" />
                                     </div>
                                     <input
                                         type="email"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.email ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm bg-zinc-900/50 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:border-transparent transition-all ${errors.email ? 'border-red-500/50 focus:ring-red-500 ring-1 ring-red-500/20' : 'border-zinc-700 focus:ring-amber-500 focus:border-amber-500'}`}
                                         placeholder="e.g. john@example.com"
                                         {...register('email')}
                                     />
@@ -111,7 +126,7 @@ export const CreateUserPage = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Full Name *</label>
+                                <label className="text-sm font-medium text-gray-300 block">Full Name *</label>
                                 <Input
                                     placeholder="e.g. John Doe"
                                     error={errors.fullName?.message}
@@ -120,27 +135,52 @@ export const CreateUserPage = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">System Role *</label>
+                                <label className="text-sm font-medium text-gray-300 block">System Role *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Shield size={16} className="text-gray-400" />
                                     </div>
                                     <select
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.roleId ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm bg-zinc-900/50 text-gray-200 focus:outline-none focus:ring-1 focus:border-transparent transition-all appearance-none ${errors.roleId ? 'border-red-500/50 focus:ring-red-500 ring-1 ring-red-500/20' : 'border-zinc-700 focus:ring-amber-500 focus:border-amber-500'}`}
                                         {...register('roleId', { valueAsNumber: true })}
                                     >
-                                        <option value={1}>Administrator (ADMIN)</option>
-                                        <option value={2}>Manager (MANAGER)</option>
-                                        <option value={3}>Staff (STAFF)</option>
+                                        <option value={0} disabled>Select a role...</option>
+                                        {roles.map(role => (
+                                            <option key={role.roleId} value={role.roleId}>
+                                                {role.roleName?.replace(/_/g, ' ') || `Role ${role.roleId}`}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 {errors.roleId && <p className="text-red-500 text-xs mt-1">{errors.roleId.message}</p>}
-                                <p className="text-xs text-gray-500 mt-1">This role determines the user's permissions across the system.</p>
+                                <p className="text-xs text-gray-400 mt-1">This role determines the user's permissions across the system.</p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-300 block">Kitchen ID (Optional)</label>
+                                <Input
+                                    type="number"
+                                    placeholder="e.g. 1"
+                                    error={errors.kitchenId?.message}
+                                    {...register('kitchenId', { valueAsNumber: true })}
+                                />
+                                <p className="text-xs text-gray-400 mt-1">Required for Kitchen Staff/Managers.</p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-300 block">Store ID (Optional)</label>
+                                <Input
+                                    type="number"
+                                    placeholder="e.g. 1"
+                                    error={errors.storeId?.message}
+                                    {...register('storeId', { valueAsNumber: true })}
+                                />
+                                <p className="text-xs text-gray-400 mt-1">Required for Store Staff/Managers.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex justify-end gap-3">
+                    <div className="pt-6 border-t border-zinc-800 flex justify-end gap-3">
                         <Button
                             type="button"
                             variant="outline"
@@ -151,7 +191,7 @@ export const CreateUserPage = () => {
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white min-w-[140px]"
+                            className="bg-amber-600 hover:bg-amber-700 text-white min-w-[140px]"
                             disabled={isSubmitting || !isValid}
                         >
                             {isSubmitting ? (

@@ -96,7 +96,7 @@ export const ShipmentList = () => {
             className: 'font-medium',
             cell: (s) => (
                 <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{s.id}</span>
+                    <span className="font-mono text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">{s.id}</span>
                 </div>
             )
         },
@@ -104,9 +104,9 @@ export const ShipmentList = () => {
             header: 'Route',
             cell: (s) => (
                 <div className="flex items-center gap-2 text-sm">
-                    <span className="text-gray-500">{s.origin}</span>
+                    <span className="text-gray-400">{s.origin}</span>
                     <ArrowRight size={14} className="text-gray-300" />
-                    <span className="font-medium text-gray-900">{s.destination}</span>
+                    <span className="font-medium text-gray-200">{s.destination}</span>
                 </div>
             )
         },
@@ -114,8 +114,8 @@ export const ShipmentList = () => {
             header: 'Driver / Vehicle',
             cell: (s) => (
                 <div>
-                    <p className="text-sm font-medium text-gray-900">{s.driver}</p>
-                    <p className="text-xs text-gray-500">{s.vehicle}</p>
+                    <p className="text-sm font-medium text-gray-200">{s.driver}</p>
+                    <p className="text-xs text-gray-400">{s.vehicle}</p>
                 </div>
             )
         },
@@ -123,7 +123,7 @@ export const ShipmentList = () => {
             header: 'ETA',
             accessorKey: 'eta',
             cell: (s) => (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Calendar size={14} />
                     <span>{s.eta}</span>
                 </div>
@@ -145,7 +145,7 @@ export const ShipmentList = () => {
             header: 'Actions',
             cell: (s) => (
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedShipment(s)} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedShipment(s)} className="text-amber-600 hover:text-amber-500 hover:bg-amber-500/10">
                         <Eye size={16} />
                     </Button>
                 </div>
@@ -157,16 +157,16 @@ export const ShipmentList = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Shipment Tracking</h1>
-                    <p className="text-sm text-gray-500 mt-1">Monitor logistics, update statuses, and track deliveries.</p>
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Shipment Tracking</h1>
+                    <p className="text-sm text-gray-400 mt-1">Monitor logistics, update statuses, and track deliveries.</p>
                 </div>
-                <Button onClick={handleCreateShipment} className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                <Button onClick={handleCreateShipment} className="shrink-0 bg-amber-600 hover:bg-blue-700 text-white shadow-sm">
                     <Truck className="mr-2 h-4 w-4" /> Schedule Shipment
                 </Button>
             </div>
 
-            <Card className="border-0 shadow-sm ring-1 ring-gray-200">
-                <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <Card className="border-0 shadow-sm ring-1 ring-zinc-700">
+                <div className="p-4 border-b border-zinc-800 flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div className="relative w-full md:w-80">
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <Input
@@ -178,15 +178,15 @@ export const ShipmentList = () => {
                     </div>
                     <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                         <Filter size={16} className="text-gray-400 mr-1" />
-                        <span className="text-sm text-gray-500 mr-2">Status:</span>
+                        <span className="text-sm text-gray-400 mr-2">Status:</span>
                         {['all', 'scheduled', 'in_transit', 'delivered', 'delayed'].map(status => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap
                                     ${statusFilter === status
-                                        ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                        ? 'bg-amber-500/10 border-blue-200 text-amber-500'
+                                        : 'bg-zinc-900/50 border-zinc-700 text-gray-400 hover:bg-zinc-900/80'}`}
                             >
                                 {status === 'all' ? 'All' : status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}
                             </button>

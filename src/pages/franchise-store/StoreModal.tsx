@@ -78,8 +78,8 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
             <form className="space-y-8">
                 {/* Section 1: Basic Info */}
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-800 font-medium pb-2 border-b border-gray-100">
-                        <StoreIcon size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
+                        <StoreIcon size={18} className="text-amber-600" />
                         <h3>Store Details</h3>
                     </div>
 
@@ -104,8 +104,8 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
 
                 {/* Section 2: Management */}
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-800 font-medium pb-2 border-b border-gray-100">
-                        <User size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
+                        <User size={18} className="text-amber-600" />
                         <h3>Management</h3>
                     </div>
 
@@ -120,8 +120,8 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
 
                 {/* Section 3: Status */}
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-800 font-medium pb-2 border-b border-gray-100">
-                        <Activity size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
+                        <Activity size={18} className="text-amber-600" />
                         <h3>Operational Status</h3>
                     </div>
 
@@ -134,8 +134,8 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                                     ${
                                     // @ts-ignore
                                     register('status').value === status // Note: Simple check logic might need watching 'status' via useWatch if we want instant style update
-                                        ? 'border-blue-500 bg-blue-50'
-                                        : 'border-gray-100 hover:border-gray-200'
+                                        ? 'border-amber-500 bg-amber-500/10'
+                                        : 'border-zinc-800 hover:border-zinc-700'
                                     }
                                 `}
                             >
@@ -146,11 +146,11 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                                     className="sr-only peer"
                                 />
                                 <div className="flex items-center justify-center w-full">
-                                    <span className="capitalize text-sm font-medium peer-checked:text-blue-700">
+                                    <span className="capitalize text-sm font-medium peer-checked:text-amber-500">
                                         {status}
                                     </span>
                                 </div>
-                                <div className="absolute inset-0 rounded-lg ring-2 ring-transparent peer-checked:ring-blue-500 peer-checked:bg-blue-50/10 pointer-events-none" />
+                                <div className="absolute inset-0 rounded-lg ring-2 ring-transparent peer-checked:ring-amber-500 peer-checked:bg-amber-500/10/10 pointer-events-none" />
                             </label>
                         ))}
                     </div>

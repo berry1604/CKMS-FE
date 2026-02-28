@@ -86,8 +86,8 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
 
                 {/* Basic Info */}
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-800 font-medium pb-2 border-b border-gray-100">
-                        <Package size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
+                        <Package size={18} className="text-amber-600" />
                         <h3>Basic Information</h3>
                     </div>
                     <div className="space-y-4">
@@ -123,7 +123,7 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                                 label="Selling Price"
                                 type="number"
                                 step="0.01"
-                                icon={<span className="text-gray-500 font-bold">$</span>}
+                                icon={<span className="text-gray-400 font-bold">$</span>}
                                 error={errors.price?.message}
                                 {...register('price', { valueAsNumber: true })}
                             />

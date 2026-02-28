@@ -2,9 +2,11 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { MainLayout } from '../layouts/MainLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { Login } from '../pages/auth/Login';
+import { VerifyEmail } from '../pages/auth/VerifyEmail';
 import { Dashboard } from '../pages/dashboard/Dashboard';
 import { UsersList } from '../pages/users/UsersList';
 import { CreateUserPage } from '../pages/users/CreateUserPage';
+import { RolesList } from '../pages/users/RolesList';
 import { StoreList } from '../pages/franchise-store/StoreList';
 import { CreateStorePage } from '../pages/franchise-store/CreateStorePage';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
@@ -28,6 +30,7 @@ import { ReportsDashboard } from '../pages/reports/ReportsDashboard';
 import { UserProfile } from '../pages/profile/UserProfile';
 import { Notifications } from '../pages/common/Notifications';
 import { ComingSoon } from '../components/ComingSoon';
+import { WarehouseFulfillment } from '../pages/warehouse/WarehouseFulfillment';
 import { useAuth } from '../hooks/useAuth';
 import type { UserRole } from '../types/user';
 
@@ -36,7 +39,8 @@ const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: UserRole[] }) => {
 
     if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-    if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    const userRoleStr = typeof user?.role === 'string' ? user.role.replace('ROLE_', '') : '';
+    if (allowedRoles && userRoleStr && !allowedRoles.includes(userRoleStr as any)) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center">
                 <h2 className="text-2xl font-bold text-red-600 mb-2">Unauthorized Access</h2>
@@ -57,6 +61,10 @@ export const router = createBrowserRouter([
         ]
     },
     {
+        path: '/verify-email',
+        element: <VerifyEmail />
+    },
+    {
         path: '/',
         element: <MainLayout />,
         children: [
@@ -74,7 +82,7 @@ export const router = createBrowserRouter([
                         children: [
                             { index: true, element: <UsersList /> },
                             { path: 'create', element: <CreateUserPage /> },
-                            { path: 'roles', element: <ComingSoon /> }
+                            { path: 'roles', element: <RolesList /> }
                         ]
                     },
 
@@ -91,10 +99,10 @@ export const router = createBrowserRouter([
                         ]
                     },
 
-                    // Central Kitchen Module (Admin, Kitchen Staff)
+                    // Central Kitchen Module (Admin, Manager, Kitchen Staff)
                     {
                         path: 'kitchen',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'KITCHEN_STAFF']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'KITCHEN_STAFF']} />,
                         children: [
                             { index: true, element: <ProductionSchedule /> },
                             { path: 'create-task', element: <CreateTaskPage /> },
@@ -115,6 +123,7 @@ export const router = createBrowserRouter([
                             { path: 'beefsteak-materials', element: <BeefsteakMaterialsPage /> },
                             { path: 'categories', element: <CategoryList /> },
                             { path: 'categories/create', element: <CreateCategoryPage /> },
+                            { path: 'categories/:id/edit', element: <CreateCategoryPage /> },
                             { path: 'recipes', element: <RecipeManager /> },
                             { path: 'example', element: <ProductListExample /> }
                         ]
@@ -127,6 +136,15 @@ export const router = createBrowserRouter([
                         children: [
                             { index: true, element: <OrderList /> },
                             { path: 'create', element: <CreateOrder /> }
+                        ]
+                    },
+
+                    // Warehouse Module
+                    {
+                        path: 'warehouse',
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+                        children: [
+                            { path: 'fulfillment', element: <WarehouseFulfillment /> }
                         ]
                     },
 

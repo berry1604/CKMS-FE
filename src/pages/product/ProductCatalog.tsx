@@ -90,7 +90,7 @@ export const ProductCatalog = () => {
             header: 'Product',
             cell: (row) => (
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                    <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-zinc-700">
                         {row.imageUrl ? (
                             <img src={row.imageUrl} alt={row.name} className="h-full w-full object-cover" />
                         ) : (
@@ -100,8 +100,8 @@ export const ProductCatalog = () => {
                         )}
                     </div>
                     <div>
-                        <div className="font-medium text-gray-900">{row.name}</div>
-                        <div className="text-xs text-gray-500 font-mono">ID: {row.id}</div>
+                        <div className="font-medium text-gray-200">{row.name}</div>
+                        <div className="text-xs text-gray-400 font-mono">ID: {row.id}</div>
                     </div>
                 </div>
             )
@@ -110,7 +110,7 @@ export const ProductCatalog = () => {
             header: 'Category',
             accessorKey: 'category',
             cell: (row) => (
-                <div className="flex items-center gap-1.5 text-gray-600">
+                <div className="flex items-center gap-1.5 text-gray-400">
                     <Tag size={14} />
                     <span>{row.category?.name || 'Uncategorized'}</span>
                 </div>
@@ -120,8 +120,8 @@ export const ProductCatalog = () => {
             header: 'Price / Unit',
             cell: (row) => (
                 <div>
-                    <span className="font-medium text-gray-900">${row.price.toLocaleString()}</span>
-                    <span className="text-gray-500 text-sm ml-1">/ {row.unit}</span>
+                    <span className="font-medium text-gray-200">${row.price.toLocaleString()}</span>
+                    <span className="text-gray-400 text-sm ml-1">/ {row.unit}</span>
                 </div>
             )
         },
@@ -139,7 +139,7 @@ export const ProductCatalog = () => {
             header: 'Actions',
             cell: (row) => (
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(row)} className="text-blue-600 hover:text-blue-700">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(row)} className="text-amber-600 hover:text-amber-500">
                         <Edit2 size={16} />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(row.id)} className="text-red-600 hover:text-red-700">
@@ -156,17 +156,17 @@ export const ProductCatalog = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Product Catalog</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage your product inventory and pricing.</p>
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Product Catalog</h1>
+                    <p className="text-sm text-gray-400 mt-1">Manage your product inventory and pricing.</p>
                 </div>
-                <Button onClick={handleCreate} className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                <Button onClick={handleCreate} className="shrink-0 bg-amber-600 hover:bg-blue-700 text-white shadow-sm">
                     <Plus size={18} className="mr-2" /> Add Product
                 </Button>
             </div>
 
             {/* Toolbar */}
-            <Card className="border-0 shadow-sm ring-1 ring-gray-200 overflow-hidden">
-                <div className="p-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-gray-100 bg-white">
+            <Card className="border-0 shadow-sm ring-1 ring-zinc-700 overflow-hidden">
+                <div className="p-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-zinc-800 bg-zinc-900/50">
                     <div className="relative w-full md:w-96">
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <Input
@@ -190,8 +190,8 @@ export const ProductCatalog = () => {
 
                 {/* Pagination Controls */}
                 {pageableInfo && pageableInfo.totalPages > 1 && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-gray-50 border-t border-gray-100">
-                        <div className="text-sm text-gray-500 mb-4 sm:mb-0">
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-zinc-900/80 border-t border-zinc-800">
+                        <div className="text-sm text-gray-400 mb-4 sm:mb-0">
                             Showing page <span className="font-medium">{page + 1}</span> of <span className="font-medium">{pageableInfo.totalPages}</span> ({pageableInfo.totalElements} items)
                         </div>
                         <div className="flex gap-2">
@@ -219,9 +219,9 @@ export const ProductCatalog = () => {
             {/* Mobile View (Grid of Cards) */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
                 {products.map((product) => (
-                    <Card key={product.id} className="overflow-hidden flex flex-col shadow-sm border-gray-200">
+                    <Card key={product.id} className="overflow-hidden flex flex-col shadow-sm border-zinc-700">
                         <div className="p-4 flex gap-4">
-                            <div className="h-20 w-20 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                            <div className="h-20 w-20 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-zinc-700">
                                 {product.imageUrl ? (
                                     <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
                                 ) : (
@@ -232,18 +232,18 @@ export const ProductCatalog = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-start">
-                                    <h3 className="font-semibold text-gray-900 truncate pr-2">{product.name}</h3>
+                                    <h3 className="font-semibold text-gray-200 truncate pr-2">{product.name}</h3>
                                     <Badge variant={product.isActive ? 'success' : 'secondary'} className="text-[10px] px-1.5 py-0.5">
                                         {product.isActive ? 'ACTIVE' : 'INACTIVE'}
                                     </Badge>
                                 </div>
-                                <p className="text-xs text-gray-500 font-mono mt-0.5">Cat: {product.category?.name || 'Uncategorized'}</p>
+                                <p className="text-xs text-gray-400 font-mono mt-0.5">Cat: {product.category?.name || 'Uncategorized'}</p>
                                 <div className="mt-2 flex items-center justify-between">
-                                    <span className="font-bold text-gray-900 text-lg">${product.price.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/ {product.unit}</span></span>
+                                    <span className="font-bold text-gray-200 text-lg">${product.price.toLocaleString()} <span className="text-xs text-gray-400 font-normal">/ {product.unit}</span></span>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-gray-50 px-4 py-3 border-t border-gray-100 flex justify-end gap-3">
+                        <div className="bg-zinc-900/80 px-4 py-3 border-t border-zinc-800 flex justify-end gap-3">
                             <Button variant="outline" size="sm" onClick={() => handleEdit(product)} className="flex-1">
                                 Edit
                             </Button>
@@ -254,7 +254,7 @@ export const ProductCatalog = () => {
                     </Card>
                 ))}
                 {!isLoading && products.length === 0 && (
-                    <div className="text-center py-12 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300">
+                    <div className="text-center py-12 text-gray-400 bg-zinc-900/50 rounded-lg border border-dashed border-gray-300">
                         No products found.
                     </div>
                 )}

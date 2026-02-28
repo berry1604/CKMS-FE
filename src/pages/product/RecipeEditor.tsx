@@ -11,7 +11,9 @@ export interface RecipeMaterial {
     unit: string;
 }
 import { recipeApi } from '../../services/recipe.api';
+import { materialApi } from '../../services/material.api';
 import type { RecipeDetailRequest, RecipeRequest } from '../../types/recipe';
+import toast from 'react-hot-toast';
 
 interface RecipeEditorProps {
     product: Product;
@@ -35,8 +37,20 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Placeholder for GET /materials API
-        setAvailableMaterials([]);
+        const fetchMaterials = async () => {
+            try {
+                const data = await materialApi.getAll();
+                setAvailableMaterials(data.map(m => ({
+                    id: String(m.id),
+                    name: m.name,
+                    cost: 0, // Set cost to 0 as it's not present in MaterialResponse
+                    unit: m.unit
+                })));
+            } catch (error) {
+                console.error('Failed to load materials', error);
+            }
+        };
+        fetchMaterials();
     }, []);
 
     useEffect(() => {
@@ -109,6 +123,21 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
     };
 
     const handleSave = async () => {
+        if (!instructions.trim()) {
+            toast.error("Vui lòng nhập Hướng dẫn (Instructions).");
+            return;
+        }
+
+        if (items.length === 0) {
+            toast.error("Vui lòng thêm ít nhất 1 Nguyên liệu (Ingredient).");
+            return;
+        }
+
+        if (yieldValue <= 0) {
+            toast.error("Sản lượng (Yield) phải lớn hơn 0.");
+            return;
+        }
+
         setIsSaving(true);
         try {
             const recipeDetails: RecipeDetailRequest[] = items.map(item => ({
@@ -123,10 +152,12 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                 recipeDetails
             };
             await recipeApi.createRecipe(requestData);
+            toast.success("Tạo công thức thành công!");
             onBack();
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            alert('Failed to save recipe');
+            const message = error.response?.data?.message || 'Lưu công thức thất bại. Vui lòng kiểm tra lại.';
+            toast.error(message);
         } finally {
             setIsSaving(false);
         }
@@ -135,7 +166,7 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
     const totalCost = items.reduce((total, item) => total + (item.quantityNeeded * item.costPerUnit), 0);
 
     if (isLoading) {
-        return <div className="text-center py-12 text-gray-500">Loading recipe...</div>;
+        return <div className="text-center py-12 text-gray-400">Loading recipe...</div>;
     }
 
     return (
@@ -145,8 +176,8 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                     <ArrowLeft size={20} />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Edit Recipe</h1>
-                    <p className="text-gray-500">{product.name} (ID: {product.id})</p>
+                    <h1 className="text-2xl font-bold text-gray-200">Edit Recipe</h1>
+                    <p className="text-gray-400">{product.name} (ID: {product.id})</p>
                 </div>
             </div>
 
@@ -161,15 +192,15 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                         </div>
 
                         {items.length === 0 ? (
-                            <p className="text-gray-500 text-center py-6">No ingredients added yet.</p>
+                            <p className="text-gray-400 text-center py-6">No ingredients added yet.</p>
                         ) : (
                             <div className="space-y-3">
                                 {items.map((item, index) => (
-                                    <div key={index} className="flex items-end gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <div key={index} className="flex items-end gap-3 p-3 bg-zinc-900/80 rounded-lg">
                                         <div className="flex-1">
-                                            <label className="text-xs text-gray-500 mb-1 block">Material</label>
+                                            <label className="text-xs text-gray-400 mb-1 block">Material</label>
                                             <select
-                                                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                                                className="flex h-10 w-full rounded-md border border-gray-300 bg-zinc-900/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                                                 value={item.materialId}
                                                 onChange={(e) => handleItemChange(index, 'materialId', e.target.value)}
                                             >
@@ -179,7 +210,7 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                             </select>
                                         </div>
                                         <div className="w-24">
-                                            <label className="text-xs text-gray-500 mb-1 block">Qty</label>
+                                            <label className="text-xs text-gray-400 mb-1 block">Qty</label>
                                             <Input
                                                 type="number"
                                                 min="0"
@@ -188,7 +219,7 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                                 onChange={(e) => handleItemChange(index, 'quantityNeeded', e.target.value)}
                                             />
                                         </div>
-                                        <div className="w-16 pb-2 text-sm text-gray-500">
+                                        <div className="w-16 pb-2 text-sm text-gray-400">
                                             {item.unit}
                                         </div>
                                         <div className="w-24 pb-2 text-sm text-right font-medium">
@@ -208,15 +239,15 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                         )}
 
                         <div className="mt-6 flex justify-end items-center pt-4 border-t">
-                            <span className="text-gray-500 mr-2">Total Estimated Cost:</span>
-                            <span className="text-xl font-bold text-gray-900">${totalCost.toFixed(2)}</span>
+                            <span className="text-gray-400 mr-2">Total Estimated Cost:</span>
+                            <span className="text-xl font-bold text-gray-200">${totalCost.toFixed(2)}</span>
                         </div>
                     </Card>
 
                     <Card className="p-6">
                         <h3 className="font-semibold text-lg mb-4">Instructions</h3>
                         <textarea
-                            className="w-full min-h-[150px] rounded-md border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full min-h-[150px] rounded-md border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                             placeholder="Enter preparation instructions..."
                             value={instructions}
                             onChange={(e) => setInstructions(e.target.value)}
@@ -236,7 +267,7 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                     value={yieldValue}
                                     onChange={(e) => setYieldValue(Number(e.target.value))}
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Number of units this recipe produces</p>
+                                <p className="text-xs text-gray-400 mt-1">Number of units this recipe produces</p>
                             </div>
 
                             <div className="pt-4 border-t">

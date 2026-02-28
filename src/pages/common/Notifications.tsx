@@ -75,17 +75,17 @@ export const Notifications = () => {
         if (type === 'warning') return 'text-orange-600 bg-orange-100';
         if (type === 'error') return 'text-red-600 bg-red-100';
         if (type === 'success') return 'text-green-600 bg-green-100';
-        return 'text-blue-600 bg-blue-100';
+        return 'text-amber-600 bg-amber-500/20';
     };
 
-    if (isLoading) return <div className="p-12 text-center text-gray-500">Loading notifications...</div>;
+    if (isLoading) return <div className="p-12 text-center text-gray-400">Loading notifications...</div>;
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-                    <p className="text-gray-500 mt-1">Manage system alerts and updates.</p>
+                    <h1 className="text-2xl font-bold text-gray-200">Notifications</h1>
+                    <p className="text-gray-400 mt-1">Manage system alerts and updates.</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleMarkAllRead}>
@@ -95,14 +95,14 @@ export const Notifications = () => {
             </div>
 
             {/* Filters */}
-            <div className="flex border-b border-gray-200 space-x-6">
+            <div className="flex border-b border-zinc-700 space-x-6">
                 {['all', 'unread', 'system', 'order'].map((f) => (
                     <button
                         key={f}
                         onClick={() => setFilter(f as any)}
                         className={`pb-3 text-sm font-medium capitalize transition-colors border-b-2 ${filter === f
-                            ? 'border-blue-600 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-amber-600 text-amber-600'
+                            : 'border-transparent text-gray-400 hover:text-gray-300'
                             }`}
                     >
                         {f}
@@ -113,10 +113,10 @@ export const Notifications = () => {
             {/* List */}
             <div className="space-y-3">
                 {filteredNotifications.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                    <div className="text-center py-12 bg-zinc-900/80 rounded-lg border border-dashed border-zinc-700">
                         <Bell size={48} className="mx-auto text-gray-300 mb-3" />
-                        <h3 className="text-lg font-medium text-gray-900">No notifications</h3>
-                        <p className="text-gray-500">You're all caught up!</p>
+                        <h3 className="text-lg font-medium text-gray-200">No notifications</h3>
+                        <p className="text-gray-400">You're all caught up!</p>
                     </div>
                 ) : (
                     filteredNotifications.map((notification) => (
@@ -126,7 +126,7 @@ export const Notifications = () => {
                             className={`cursor-pointer group`}
                         >
                             <Card
-                                className={`p-4 transition-all hover:shadow-md ${!notification.isRead ? 'bg-blue-50/30 border-blue-100 ring-1 ring-blue-50' : 'bg-white group-hover:bg-gray-50'}`}
+                                className={`p-4 transition-all hover:shadow-md ${!notification.isRead ? 'bg-amber-500/10/30 border-blue-100 ring-1 ring-blue-50' : 'bg-zinc-900/50 group-hover:bg-zinc-900/80'}`}
                             >
                                 <div className="flex gap-4">
                                     <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getColor(notification.type)}`}>
@@ -134,18 +134,18 @@ export const Notifications = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start">
-                                            <h4 className={`text-sm font-semibold truncate ${!notification.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
+                                            <h4 className={`text-sm font-semibold truncate ${!notification.isRead ? 'text-gray-200' : 'text-gray-300'}`}>
                                                 {notification.title}
                                             </h4>
                                             <span className="text-xs text-gray-400 whitespace-nowrap ml-2">{notification.timestamp}</span>
                                         </div>
-                                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notification.description}</p>
+                                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">{notification.description}</p>
 
                                         {!notification.isRead && (
                                             <div className="mt-2 flex justify-end md:justify-start">
                                                 <button
                                                     onClick={(e) => handleMarkRead(notification.id, e)}
-                                                    className="text-xs font-medium text-blue-600 hover:underline z-10 relative"
+                                                    className="text-xs font-medium text-amber-600 hover:underline z-10 relative"
                                                 >
                                                     Mark as read
                                                 </button>

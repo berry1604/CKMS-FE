@@ -28,9 +28,14 @@ export const OrderList = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
+            const params: any = {};
+            if (statusFilter !== 'all') {
+                params.status = statusFilter.toUpperCase();
+            }
+
             const apiCall = user?.role === 'ADMIN' || user?.role === 'MANAGER'
-                ? storeOrderApi.getAllOrders()
-                : storeOrderApi.getMyOrders();
+                ? storeOrderApi.getAllOrders(params)
+                : storeOrderApi.getMyOrders(params);
 
             const res = await apiCall;
             setOrders(res.content || []);
@@ -44,7 +49,7 @@ export const OrderList = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [statusFilter]);
 
     useEffect(() => {
         let result = orders;
@@ -57,12 +62,8 @@ export const OrderList = () => {
             );
         }
 
-        if (statusFilter !== 'all') {
-            result = result.filter(o => o.status.toLowerCase() === statusFilter.toLowerCase());
-        }
-
         setFilteredOrders(result);
-    }, [orders, searchQuery, statusFilter]);
+    }, [orders, searchQuery]);
 
     const handleStatusUpdate = async (orderId: number, status: string) => {
         setIsLoading(true);
@@ -84,18 +85,18 @@ export const OrderList = () => {
         {
             header: 'Order ID',
             accessorKey: 'orderId',
-            className: 'font-medium text-gray-900',
-            cell: (order) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">{order.orderId}</span>
+            className: 'font-medium text-gray-200',
+            cell: (order) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-400">{order.orderId}</span>
         },
         {
             header: 'Store ID',
             accessorKey: 'storeId',
-            cell: (order) => <span className="font-medium text-gray-800">{order.storeId}</span>
+            cell: (order) => <span className="font-medium text-gray-300">{order.storeId}</span>
         },
         {
             header: 'Date',
             accessorKey: 'orderDate',
-            cell: (order) => <span className="text-gray-500 text-sm">{new Date(order.orderDate).toLocaleDateString()}</span>
+            cell: (order) => <span className="text-gray-400 text-sm">{new Date(order.orderDate).toLocaleDateString()}</span>
         },
         {
             header: 'Items',
@@ -106,7 +107,7 @@ export const OrderList = () => {
             header: 'Total',
             accessorKey: 'totalAmount',
             className: 'font-bold',
-            cell: (order) => <span className="text-gray-900">${order.totalAmount.toFixed(2)}</span>
+            cell: (order) => <span className="text-gray-200">${order.totalAmount.toFixed(2)}</span>
         },
         {
             header: 'Status',
@@ -114,14 +115,12 @@ export const OrderList = () => {
                 const statusStr = order.status?.toLowerCase() || 'unknown';
                 const colors: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "info" | "danger"> = {
                     submitted: 'warning',
-                    approved: 'info',
-                    scheduled: 'info',
-                    in_production: 'primary',
-                    produced: 'success',
-                    ready_for_delivery: 'secondary',
-                    shipping: 'primary',
-                    completed: 'success',
-                    cancelled: 'danger'
+                    rejected: 'danger',
+                    grouped: 'info',
+                    confirmed: 'info',
+                    preparing: 'primary',
+                    ready: 'secondary',
+                    completed: 'success'
                 };
                 return <Badge variant={colors[statusStr] || 'default'}>{statusStr.replace('_', ' ').toUpperCase()}</Badge>;
             }
@@ -130,7 +129,7 @@ export const OrderList = () => {
             header: 'Actions',
             cell: (order) => (
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)} className="text-amber-600 hover:text-amber-500 hover:bg-amber-500/10">
                         <Eye size={16} />
                     </Button>
                 </div>
@@ -142,16 +141,16 @@ export const OrderList = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Order Management</h1>
-                    <p className="text-sm text-gray-500 mt-1">Track and manage store orders.</p>
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Order Management</h1>
+                    <p className="text-sm text-gray-400 mt-1">Track and manage store orders.</p>
                 </div>
-                <Button onClick={() => navigate('/orders/create')} className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                <Button onClick={() => navigate('/orders/create')} className="shrink-0 bg-amber-600 hover:bg-blue-700 text-white shadow-sm">
                     <Plus className="mr-2 h-4 w-4" /> Create Order
                 </Button>
             </div>
 
-            <Card className="border-0 shadow-sm ring-1 ring-gray-200">
-                <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <Card className="border-0 shadow-sm ring-1 ring-zinc-700">
+                <div className="p-4 border-b border-zinc-800 flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div className="relative w-full md:w-80">
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <Input
@@ -163,15 +162,15 @@ export const OrderList = () => {
                     </div>
                     <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                         <Filter size={16} className="text-gray-400 mr-1" />
-                        <span className="text-sm text-gray-500 mr-2">Status:</span>
-                        {['all', 'submitted', 'approved', 'in_production', 'completed'].map(status => (
+                        <span className="text-sm text-gray-400 mr-2">Status:</span>
+                        {['all', 'submitted', 'confirmed', 'preparing', 'ready', 'completed', 'rejected'].map(status => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status as any)}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap
                                     ${statusFilter === status
-                                        ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                        ? 'bg-amber-500/10 border-blue-200 text-amber-500'
+                                        : 'bg-zinc-900/50 border-zinc-700 text-gray-400 hover:bg-zinc-900/80'}`}
                             >
                                 {status === 'all' ? 'All' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                             </button>

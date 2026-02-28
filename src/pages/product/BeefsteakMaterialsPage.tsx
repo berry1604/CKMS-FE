@@ -41,8 +41,8 @@ export const BeefsteakMaterialsPage = () => {
                         <Package size={16} />
                     </div>
                     <div>
-                        <p className="font-medium text-gray-900">{row.name}</p>
-                        <p className="text-xs text-gray-500">{row.category}</p>
+                        <p className="font-medium text-gray-200">{row.name}</p>
+                        <p className="text-xs text-gray-400">{row.category}</p>
                     </div>
                 </div>
             )
@@ -59,7 +59,7 @@ export const BeefsteakMaterialsPage = () => {
         {
             header: 'Đơn Giá / Đv',
             cell: (row) => (
-                <div className="text-gray-600">
+                <div className="text-gray-400">
                     {row.costPerUnit.toLocaleString('vi-VN')} ₫
                 </div>
             )
@@ -67,7 +67,7 @@ export const BeefsteakMaterialsPage = () => {
         {
             header: 'Thành Tiền',
             cell: (row) => (
-                <div className="font-medium text-gray-900">
+                <div className="font-medium text-gray-200">
                     {(row.quantity * row.costPerUnit).toLocaleString('vi-VN')} ₫
                 </div>
             )
@@ -93,16 +93,16 @@ export const BeefsteakMaterialsPage = () => {
                     <Button
                         variant="ghost"
                         onClick={() => navigate('/products/materials')}
-                        className="hover:bg-gray-100 rounded-full p-2 h-auto"
+                        className="hover:bg-zinc-800/80 rounded-full p-2 h-auto"
                     >
-                        <ArrowLeft size={20} className="text-gray-600" />
+                        <ArrowLeft size={20} className="text-gray-400" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-gray-200 tracking-tight flex items-center gap-2">
                             <ChefHat size={26} className="text-red-600" />
                             Định mức Nguyên Liệu: Bò Bít Tết (Beefsteak)
                         </h1>
-                        <p className="text-sm text-gray-500 mt-1">Danh sách chi tiết các nguyên vật liệu để chế biến 1 phần Bò bít tết chuẩn 250g.</p>
+                        <p className="text-sm text-gray-400 mt-1">Danh sách chi tiết các nguyên vật liệu để chế biến 1 phần Bò bít tết chuẩn 250g.</p>
                     </div>
                 </div>
                 <Button className="bg-red-600 hover:bg-red-700 text-white shadow-sm gap-2">
@@ -113,47 +113,47 @@ export const BeefsteakMaterialsPage = () => {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="p-6 border-0 shadow-sm ring-1 ring-gray-100 bg-gradient-to-br from-white to-red-50/30">
+                <Card className="p-6 border-0 shadow-sm ring-1 ring-zinc-800 bg-gradient-to-br from-white to-red-50/30">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
                             <DollarSign size={24} />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Tổng Chi Phí (Giá Vốn)</p>
-                            <h3 className="text-2xl font-bold text-gray-900">{totalCost.toLocaleString('vi-VN')} ₫</h3>
+                            <p className="text-sm font-medium text-gray-400">Tổng Chi Phí (Giá Vốn)</p>
+                            <h3 className="text-2xl font-bold text-gray-200">{totalCost.toLocaleString('vi-VN')} ₫</h3>
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-6 border-0 shadow-sm ring-1 ring-gray-100">
+                <Card className="p-6 border-0 shadow-sm ring-1 ring-zinc-800">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+                        <div className="w-12 h-12 bg-amber-500/20 rounded-2xl flex items-center justify-center text-amber-600">
                             <Package size={24} />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Số lượng thành phần</p>
-                            <h3 className="text-2xl font-bold text-gray-900">{beefsteakMaterials.length} Món</h3>
+                            <p className="text-sm font-medium text-gray-400">Số lượng thành phần</p>
+                            <h3 className="text-2xl font-bold text-gray-200">{beefsteakMaterials.length} Món</h3>
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-6 border-0 shadow-sm ring-1 ring-gray-100">
+                <Card className="p-6 border-0 shadow-sm ring-1 ring-zinc-800">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
                             <Scale size={24} />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Trọng lượng thịt chính</p>
-                            <h3 className="text-2xl font-bold text-gray-900">250 gram</h3>
+                            <p className="text-sm font-medium text-gray-400">Trọng lượng thịt chính</p>
+                            <h3 className="text-2xl font-bold text-gray-200">250 gram</h3>
                         </div>
                     </div>
                 </Card>
             </div>
 
             {/* Materials Table */}
-            <Card className="border-0 shadow-sm ring-1 ring-gray-200 bg-white overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-900">Bảng Bill of Materials (BOM)</h3>
+            <Card className="border-0 shadow-sm ring-1 ring-zinc-700 bg-zinc-900/50 overflow-hidden">
+                <div className="p-6 border-b border-zinc-800">
+                    <h3 className="text-lg font-semibold text-gray-200">Bảng Bill of Materials (BOM)</h3>
                 </div>
                 <div className="p-0">
                     <DataTable

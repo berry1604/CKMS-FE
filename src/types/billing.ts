@@ -7,20 +7,58 @@ export interface BatchBillingStatementRequest {
 export interface BillingStatementResponse {
     statementId: number;
     storeId: number;
-    cycleStart: string;
-    cycleEnd: string;
+    cycleName: string;
+    periodStart: string;
+    periodEnd: string;
     totalAmount: number;
-    status: string; // Enum: PENDING, PAID, OVERDUE, etc.
-    paidAt?: string;
-    paymentMethodId?: number;
+    status: string;
+    invoiceCount: number;
 }
 
 export interface BatchBillingStatementResponse {
     message?: string;
-    // You can expand this based on the actual BE response.
-    // Commonly it might contain generated statements or a summary
-    statementsGenerated?: number;
-    statements?: BillingStatementResponse[];
+    // Fields can be expanded later
+}
+
+export interface BillingStatementSummaryResponse {
+    statementId: number;
+    cycleName: string;
+    totalAmount: number;
+    status: string;
+    issuedAt: string;
+}
+
+export interface StoreSimpleResponse {
+    id: number;
+    name: string;
+}
+
+export interface InvoiceDetailResponse {
+    invoiceId?: number;
+    amount?: number;
+}
+
+export interface BillingStatementDetailResponse {
+    statementId: number;
+    store: StoreSimpleResponse;
+    periodStart: string;
+    periodEnd: string;
+    totalAmount: number;
+    status: string;
+    paidAt: string | null;
+    invoices: InvoiceDetailResponse[];
+}
+
+export interface PaymentStatementRequest {
+    paymentMethod?: string;
+    referenceCode?: string;
+    amount?: number;
+}
+
+export interface PaymentStatementResponse {
+    statementId: number;
+    status: string;
+    paidAt: string;
 }
 
 export interface ApiResponse<T> {

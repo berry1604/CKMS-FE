@@ -59,7 +59,7 @@ export const Dashboard = () => {
     // Removed blocking loading check: if (isLoading) return ...
 
     const StatCard = ({ title, value, icon: Icon, color, trend }: { title: string; value: string | number; icon: any; color: string, trend?: string }) => (
-        <Card className="flex flex-col p-5 border-0 shadow-sm ring-1 ring-gray-100 hover:shadow-md transition-shadow">
+        <Card className="flex flex-col p-5 border-0 shadow-sm ring-1 ring-zinc-800 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
                 <div className={`p-3 rounded-xl ${color} text-white`}>
                     <Icon size={22} />
@@ -71,10 +71,10 @@ export const Dashboard = () => {
                 )}
             </div>
             <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                <h3 className="text-2xl font-bold text-gray-200 mb-1">
                     {value !== undefined && value !== null ? value : '-'}
                 </h3>
-                <p className="text-sm font-medium text-gray-500">{title}</p>
+                <p className="text-sm font-medium text-gray-400">{title}</p>
             </div>
         </Card>
     );
@@ -82,12 +82,12 @@ export const Dashboard = () => {
     const QuickAction = ({ label, icon: Icon, onClick, color }: { label: string; icon: any; onClick: () => void, color: string }) => (
         <button
             onClick={onClick}
-            className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:bg-gray-50 hover:border-gray-200 transition-all group"
+            className="flex flex-col items-center justify-center p-4 bg-zinc-900/50 rounded-xl shadow-sm border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-all group"
         >
             <div className={`p-3 rounded-full ${color} text-white mb-2 group-hover:scale-110 transition-transform`}>
                 <Icon size={20} />
             </div>
-            <span className="text-sm font-medium text-gray-700">{label}</span>
+            <span className="text-sm font-medium text-gray-300">{label}</span>
         </button>
     );
 
@@ -98,18 +98,18 @@ export const Dashboard = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">{currentDate}</p>
+                    <p className="text-sm font-medium text-gray-400 mb-1">{currentDate}</p>
                     <div className="flex items-center gap-2">
-                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                        <h1 className="text-3xl font-bold text-gray-200 tracking-tight">
                             Welcome back, {user?.name || 'User'}!
                         </h1>
                         {isLoading && (
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full animate-pulse">
+                            <span className="text-xs bg-amber-500/10 text-amber-500 px-2 py-1 rounded-full animate-pulse">
                                 Updating...
                             </span>
                         )}
                     </div>
-                    <p className="text-gray-500 mt-1">Here's what's happening in your franchise today.</p>
+                    <p className="text-gray-400 mt-1">Here's what's happening in your franchise today.</p>
                 </div>
                 <div className="flex gap-3">
                     <Button onClick={() => navigate('/notifications')} variant="outline">
@@ -166,13 +166,13 @@ export const Dashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Revenue Chart */}
-                <Card title="Revenue Trends" className="lg:col-span-2 border-0 shadow-sm ring-1 ring-gray-200">
+                <Card title="Revenue Trends" className="lg:col-span-2 border-0 shadow-sm ring-1 ring-zinc-800 bg-zinc-900/50">
                     <div className="h-64 flex items-end justify-between px-4 mt-6 gap-2">
                         {[65, 59, 80, 81, 56, 55, 40, 70, 75, 60, 90, 85].map((val, idx) => (
                             <div key={idx} className="w-full flex-1 flex flex-col items-center gap-2 group">
                                 <div className="w-full relative h-48 flex items-end justify-center">
                                     <div
-                                        className="w-full max-w-[30px] bg-blue-500 rounded-t-md opacity-80 group-hover:opacity-100 transition-all duration-300"
+                                        className="w-full max-w-[30px] bg-amber-500 rounded-t-md opacity-80 group-hover:opacity-100 transition-all duration-300"
                                         style={{ height: `${val}%` }}
                                     ></div>
                                 </div>
@@ -183,8 +183,8 @@ export const Dashboard = () => {
                 </Card>
 
                 {/* Recent Activity */}
-                <Card title="Recent Activity" className="border-0 shadow-sm ring-1 ring-gray-200 h-full">
-                    <div className="space-y-0 divide-y divide-gray-100 mt-2">
+                <Card title="Recent Activity" className="border-0 shadow-sm ring-1 ring-zinc-800 bg-zinc-900/50 h-full">
+                    <div className="space-y-0 divide-y divide-zinc-800 mt-2">
                         {recentActivity.map((activity) => (
                             <div key={activity.id} className="flex items-start py-4 first:pt-0 last:pb-0">
                                 <div className="mr-3 mt-0.5">
@@ -193,9 +193,9 @@ export const Dashboard = () => {
                                     {activity.status === 'error' && <AlertCircle className="text-red-500" size={16} />}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                                    <p className="text-sm font-medium text-gray-200">{activity.action}</p>
                                     <div className="flex items-center mt-1">
-                                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-600 font-bold mr-2">
+                                        <div className="h-5 w-5 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] text-gray-400 font-bold mr-2">
                                             {activity.user.charAt(0)}
                                         </div>
                                         <p className="text-xs text-gray-500">by {activity.user} • {activity.time}</p>
@@ -207,8 +207,8 @@ export const Dashboard = () => {
                             <p className="text-center text-gray-500 py-4">No recent activity.</p>
                         )}
                     </div>
-                    <div className="mt-4 pt-4 border-t border-gray-50 text-center">
-                        <Button variant="ghost" size="sm" className="w-full text-blue-600">View All Activity</Button>
+                    <div className="mt-4 pt-4 border-t border-zinc-800 text-center">
+                        <Button variant="ghost" size="sm" className="w-full text-amber-500">View All Activity</Button>
                     </div>
                 </Card>
             </div>

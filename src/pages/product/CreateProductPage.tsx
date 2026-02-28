@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +9,9 @@ import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { productApi } from '../../services/product.api';
+import { categoryApi } from '../../services/category.api';
 import { useProducts } from '../../hooks/useProducts';
+import type { CategoryResponse } from '../../types/category';
 
 const createProductSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -27,6 +29,23 @@ export const CreateProductPage = () => {
     const [backendError, setBackendError] = useState<string | null>(null);
     const { refetch } = useProducts(10); // Optional, we can just navigate, but refetching is good
 
+    // Fetch categories for dropdown
+    const [categories, setCategories] = useState<CategoryResponse[]>([]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await categoryApi.getAll();
+                // Filter only active categories if backend supports it, else just map
+                setCategories(data);
+            } catch (error) {
+                console.error('Failed to load categories', error);
+                toast.error('Failed to load categories for selection');
+            }
+        };
+        fetchCategories();
+    }, []);
+
     const {
         register,
         handleSubmit,
@@ -37,7 +56,7 @@ export const CreateProductPage = () => {
         mode: 'onChange',
         defaultValues: {
             name: '',
-            categoryId: 1,
+            categoryId: 0, // Will force user to select one
             price: 0,
             unit: 'KG',
             description: ''
@@ -45,6 +64,11 @@ export const CreateProductPage = () => {
     });
 
     const onSubmit = async (data: CreateProductFormData) => {
+        if (!data.categoryId || data.categoryId === 0) {
+            toast.error("Vui lòng chọn Category!");
+            return;
+        }
+
         setBackendError(null);
         setIsSubmitting(true);
         try {
@@ -70,20 +94,20 @@ export const CreateProductPage = () => {
                 <Button
                     variant="ghost"
                     onClick={() => navigate('/products')}
-                    className="hover:bg-gray-100 rounded-full p-2 h-auto"
+                    className="hover:bg-zinc-800/80 rounded-full p-2 h-auto"
                 >
-                    <ArrowLeft size={20} className="text-gray-600" />
+                    <ArrowLeft size={20} className="text-gray-400" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                        <Package size={24} className="text-blue-600" />
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight flex items-center gap-2">
+                        <Package size={24} className="text-amber-600" />
                         Add New Product
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Create a new product record in the catalog.</p>
+                    <p className="text-sm text-gray-400 mt-1">Create a new product record in the catalog.</p>
                 </div>
             </div>
 
-            <Card className="p-6 md:p-8 border-0 shadow-sm ring-1 ring-gray-200 bg-white">
+            <Card className="p-6 md:p-8 border-0 shadow-sm ring-1 ring-zinc-700 bg-zinc-900/50">
                 {backendError && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-3">
                         <div className="mt-0.5">
@@ -100,14 +124,14 @@ export const CreateProductPage = () => {
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Product Name *</label>
+                                <label className="text-sm font-medium text-gray-300 block">Product Name *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Package size={16} className="text-gray-400" />
                                     </div>
                                     <input
                                         type="text"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.name ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.name ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
                                         placeholder="e.g. Signature Coffee"
                                         {...register('name')}
                                     />
@@ -116,23 +140,28 @@ export const CreateProductPage = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Category ID *</label>
+                                <label className="text-sm font-medium text-gray-300 block">Category *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Tag size={16} className="text-gray-400" />
                                     </div>
-                                    <input
-                                        type="number"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.categoryId ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
-                                        placeholder="1"
+                                    <select
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-900/50 ${errors.categoryId ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
                                         {...register('categoryId', { valueAsNumber: true })}
-                                    />
+                                    >
+                                        <option value={0} disabled>-- Select Category --</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>
+                                                {cat.categoryId ? `[${cat.categoryId}] ${cat.name}` : cat.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId.message}</p>}
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Selling Price *</label>
+                                <label className="text-sm font-medium text-gray-300 block">Selling Price *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <DollarSign size={16} className="text-gray-400" />
@@ -140,7 +169,7 @@ export const CreateProductPage = () => {
                                     <input
                                         type="number"
                                         step="0.01"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.price ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.price ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
                                         placeholder="0.00"
                                         {...register('price', { valueAsNumber: true })}
                                     />
@@ -149,25 +178,31 @@ export const CreateProductPage = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 block">Unit *</label>
+                                <label className="text-sm font-medium text-gray-300 block">Unit *</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Box size={16} className="text-gray-400" />
                                     </div>
-                                    <input
-                                        type="text"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.unit ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
-                                        placeholder="e.g. KG, PCS"
+                                    <select
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.unit ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
                                         {...register('unit')}
-                                    />
+                                    >
+                                        <option value="KG">KG</option>
+                                        <option value="GRAM">GRAM</option>
+                                        <option value="LITER">LITER</option>
+                                        <option value="ML">ML</option>
+                                        <option value="PIECE">PIECE</option>
+                                        <option value="BOTTLE">BOTTLE</option>
+                                        <option value="BOX">BOX</option>
+                                    </select>
                                 </div>
                                 {errors.unit && <p className="text-red-500 text-xs mt-1">{errors.unit.message}</p>}
                             </div>
 
                             <div className="space-y-1 md:col-span-2">
-                                <label className="text-sm font-medium text-gray-700 block">Description</label>
+                                <label className="text-sm font-medium text-gray-300 block">Description</label>
                                 <textarea
-                                    className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.description ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-blue-500'}`}
+                                    className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.description ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
                                     placeholder="e.g. A rich and smooth coffee blend"
                                     rows={3}
                                     {...register('description')}
@@ -177,7 +212,7 @@ export const CreateProductPage = () => {
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex justify-end gap-3">
+                    <div className="pt-6 border-t border-zinc-800 flex justify-end gap-3">
                         <Button
                             type="button"
                             variant="outline"
@@ -188,7 +223,7 @@ export const CreateProductPage = () => {
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white min-w-[140px]"
+                            className="bg-amber-600 hover:bg-blue-700 text-white min-w-[140px]"
                             disabled={isSubmitting || !isValid}
                         >
                             {isSubmitting ? (

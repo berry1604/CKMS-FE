@@ -126,12 +126,12 @@ export const StoreList = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Franchise Stores</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage store locations and performance.</p>
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Franchise Stores</h1>
+                    <p className="text-sm text-gray-400 mt-1">Manage store locations and performance.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="bg-white px-3 py-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600 shadow-sm">
-                        <span className="text-gray-900 font-bold">{stores.length}</span> Total Stores
+                    <div className="bg-zinc-900/50 px-3 py-1.5 rounded-md border border-zinc-700 text-sm font-medium text-gray-400 shadow-sm">
+                        <span className="text-gray-200 font-bold">{stores.length}</span> Total Stores
                     </div>
                     <Button onClick={handleCreate} className="shadow-sm">
                         <Plus className="mr-2 h-4 w-4" /> Register New Store
@@ -149,7 +149,7 @@ export const StoreList = () => {
                         <input
                             type="text"
                             placeholder="Search store, location, or manager..."
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -157,14 +157,14 @@ export const StoreList = () => {
 
                     <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                         <Filter size={16} className="text-gray-400 hidden md:block" />
-                        <span className="text-sm text-gray-500 whitespace-nowrap hidden md:block">Filter by Status:</span>
+                        <span className="text-sm text-gray-400 whitespace-nowrap hidden md:block">Filter by Status:</span>
                         {(['ALL', 'active', 'pending', 'inactive'] as const).map((status) => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize whitespace-nowrap ${statusFilter === status
-                                    ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-amber-500/20 text-amber-500'
+                                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
                                     }`}
                             >
                                 {status === 'ALL' ? 'All Stores' : status}
@@ -176,11 +176,11 @@ export const StoreList = () => {
 
             {/* Desktop Table View */}
             <div className="hidden md:block">
-                <Card className="overflow-hidden shadow-sm border-gray-200 p-0">
+                <Card className="overflow-hidden shadow-sm border-zinc-700 p-0">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                                <tr className="bg-zinc-900/80/50 border-b border-zinc-800 text-xs uppercase text-gray-400 font-semibold tracking-wider">
                                     <th className="px-6 py-4">Store Name</th>
                                     <th className="px-6 py-4">Manager</th>
                                     <th className="px-6 py-4">Revenue</th>
@@ -189,19 +189,19 @@ export const StoreList = () => {
                                     <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
+                            <tbody className="divide-y divide-zinc-800">
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
                                             <div className="flex flex-col items-center justify-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mb-2"></div>
                                                 Loading stores...
                                             </div>
                                         </td>
                                     </tr>
                                 ) : filteredStores.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
                                             No stores found matching your criteria.
                                         </td>
                                     </tr>
@@ -209,17 +209,17 @@ export const StoreList = () => {
                                     filteredStores.map((store) => (
                                         <tr
                                             key={store.id}
-                                            className="hover:bg-blue-50/30 transition-colors group cursor-pointer"
+                                            className="hover:bg-amber-500/10/30 transition-colors group cursor-pointer"
                                             onClick={() => navigate(`/stores/${store.id}`)}
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center">
-                                                    <div className="bg-blue-50 p-2 rounded-lg mr-3 text-blue-600">
+                                                    <div className="bg-amber-500/10 p-2 rounded-lg mr-3 text-amber-600">
                                                         <StoreIcon size={20} />
                                                     </div>
                                                     <div>
-                                                        <div className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{store.name}</div>
-                                                        <div className="text-gray-500 text-xs flex items-center mt-0.5">
+                                                        <div className="font-medium text-gray-200 group-hover:text-amber-600 transition-colors">{store.name}</div>
+                                                        <div className="text-gray-400 text-xs flex items-center mt-0.5">
                                                             <MapPin size={10} className="mr-1" />
                                                             {store.location}
                                                         </div>
@@ -227,13 +227,13 @@ export const StoreList = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center text-sm text-gray-700">
+                                                <div className="flex items-center text-sm text-gray-300">
                                                     <User size={14} className="mr-2 text-gray-400" />
                                                     {store.manager}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center text-sm font-medium text-gray-900">
+                                                <div className="flex items-center text-sm font-medium text-gray-200">
                                                     <DollarSign size={14} className="mr-1 text-gray-400" />
                                                     {store.revenue.toLocaleString()}
                                                 </div>
@@ -254,7 +254,7 @@ export const StoreList = () => {
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleEdit(store)}
-                                                        className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                                        className="h-8 w-8 p-0 text-gray-400 hover:text-amber-600 hover:bg-amber-500/10"
                                                     >
                                                         <Edit2 size={16} />
                                                     </Button>
@@ -262,7 +262,7 @@ export const StoreList = () => {
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleDeleteClick(store.id)}
-                                                        className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
                                                     >
                                                         <Trash2 size={16} />
                                                     </Button>
@@ -287,9 +287,9 @@ export const StoreList = () => {
             {/* Mobile Grid View */}
             <div className="md:hidden grid grid-cols-1 gap-4">
                 {isLoading ? (
-                    <div className="text-center py-10 text-gray-500">Loading...</div>
+                    <div className="text-center py-10 text-gray-400">Loading...</div>
                 ) : filteredStores.length === 0 ? (
-                    <div className="text-center py-10 text-gray-500">No stores found.</div>
+                    <div className="text-center py-10 text-gray-400">No stores found.</div>
                 ) : (
                     filteredStores.map((store) => (
                         <Card
@@ -299,12 +299,12 @@ export const StoreList = () => {
                         >
                             <div className="flex justify-between items-start mb-3">
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                                    <div className="bg-amber-500/20 p-2 rounded-lg text-amber-600">
                                         <StoreIcon size={20} />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-gray-900">{store.name}</h3>
-                                        <div className="text-xs text-gray-500 flex items-center">
+                                        <h3 className="font-semibold text-gray-200">{store.name}</h3>
+                                        <div className="text-xs text-gray-400 flex items-center">
                                             <MapPin size={10} className="mr-1" />
                                             {store.location}
                                         </div>
@@ -316,21 +316,21 @@ export const StoreList = () => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-gray-50 p-2 rounded border border-gray-100">
-                                    <div className="text-xs text-gray-500 mb-1 flex items-center">
+                                <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
+                                    <div className="text-xs text-gray-400 mb-1 flex items-center">
                                         <User size={10} className="mr-1" /> Manager
                                     </div>
-                                    <div className="text-sm font-medium text-gray-900 truncate">{store.manager}</div>
+                                    <div className="text-sm font-medium text-gray-200 truncate">{store.manager}</div>
                                 </div>
-                                <div className="bg-gray-50 p-2 rounded border border-gray-100">
-                                    <div className="text-xs text-gray-500 mb-1 flex items-center">
+                                <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
+                                    <div className="text-xs text-gray-400 mb-1 flex items-center">
                                         <DollarSign size={10} className="mr-1" /> Revenue
                                     </div>
-                                    <div className="text-sm font-medium text-gray-900">${store.revenue.toLocaleString()}</div>
+                                    <div className="text-sm font-medium text-gray-200">${store.revenue.toLocaleString()}</div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div className="flex items-center justify-between pt-3 border-t border-zinc-800">
                                 <div className="flex items-center gap-2">
                                     <Package size={14} className="text-gray-400" />
                                     <Badge variant={getInventoryVariant(store.inventoryStatus)} size="sm">
@@ -340,7 +340,7 @@ export const StoreList = () => {
                                 <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                                     <button
                                         onClick={() => handleEdit(store)}
-                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full"
+                                        className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-500/10 rounded-full"
                                     >
                                         <Edit2 size={16} />
                                     </button>

@@ -16,7 +16,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
     if (!order) return null;
 
     const getStatusStep = (status: string) => {
-        const steps = ['submitted', 'approved', 'scheduled', 'in_production', 'produced', 'shipping', 'completed'];
+        const steps = ['submitted', 'grouped', 'confirmed', 'preparing', 'ready', 'completed'];
         return steps.indexOf(status.toLowerCase()) + 1;
     };
 
@@ -34,13 +34,13 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
             </div>
             <div className="flex gap-2">
                 {(order.status === 'SUBMITTED' || order.status === 'submitted') && onStatusUpdate && (
-                    <Button onClick={() => onStatusUpdate(order.orderId, 'approved')}>
-                        Approve Order
+                    <Button onClick={() => onStatusUpdate(order.orderId, 'confirmed')}>
+                        Confirm Order
                     </Button>
                 )}
-                {(order.status === 'SHIPPING' || order.status === 'shipping') && onStatusUpdate && (
+                {(order.status === 'READY' || order.status === 'ready') && onStatusUpdate && (
                     <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => onStatusUpdate(order.orderId, 'completed')}>
-                        Confirm Receipt
+                        Finish Order
                     </Button>
                 )}
                 <Button variant="outline" onClick={onClose}>
@@ -61,100 +61,106 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
         >
             <div className="space-y-6">
                 {/* Status Badge & Priority */}
-                <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="flex justify-between items-center bg-zinc-900/80 p-4 rounded-lg border border-zinc-800">
                     <div className="flex items-center gap-4">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Status</p>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Status</p>
                             <Badge variant={
                                 order.status === 'COMPLETED' ? 'success' :
-                                    order.status === 'CANCELLED' ? 'danger' :
-                                        order.status === 'IN_PRODUCTION' ? 'primary' : 'info'
+                                    order.status === 'REJECTED' ? 'danger' :
+                                        order.status === 'PREPARING' ? 'primary' : 'info'
                             } className="text-sm px-3 py-1">
                                 {order.status.toUpperCase().replace('_', ' ')}
                             </Badge>
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Amount</p>
-                        <p className="text-xl font-bold text-gray-900">${order.totalAmount.toFixed(2)}</p>
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Amount</p>
+                        <p className="text-xl font-bold text-gray-200">${order.totalAmount.toFixed(2)}</p>
                     </div>
                 </div>
 
                 {/* Progress Bar */}
-                <Card className="p-6 border-gray-200 shadow-sm">
-                    <div className="relative">
-                        <div className="overflow-hidden h-2 mb-6 text-xs flex rounded-full bg-gray-100">
-                            <div style={{ width: `${(currentStep / 7) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-600 transition-all duration-500"></div>
+                <Card className="p-6 border-zinc-700 shadow-sm">
+                    {order.status !== 'REJECTED' ? (
+                        <div className="relative">
+                            <div className="overflow-hidden h-2 mb-6 text-xs flex rounded-full bg-gray-100">
+                                <div style={{ width: `${(currentStep / 6) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-amber-600 transition-all duration-500"></div>
+                            </div>
+                            <div className="flex justify-between text-xs font-medium text-gray-400">
+                                <div className={`flex flex-col items-center gap-2 ${currentStep >= 1 ? 'text-amber-600' : ''}`}>
+                                    <div className={`p-2 rounded-full ${currentStep >= 1 ? 'bg-amber-500/10' : 'bg-zinc-900/80'}`}>
+                                        <Clock size={16} />
+                                    </div>
+                                    <span>Submitted</span>
+                                </div>
+                                <div className={`flex flex-col items-center gap-2 ${currentStep >= 3 ? 'text-amber-600' : ''}`}>
+                                    <div className={`p-2 rounded-full ${currentStep >= 3 ? 'bg-amber-500/10' : 'bg-zinc-900/80'}`}>
+                                        <CheckCircle size={16} />
+                                    </div>
+                                    <span>Confirmed</span>
+                                </div>
+                                <div className={`flex flex-col items-center gap-2 ${currentStep >= 4 ? 'text-amber-600' : ''}`}>
+                                    <div className={`p-2 rounded-full ${currentStep >= 4 ? 'bg-amber-500/10' : 'bg-zinc-900/80'}`}>
+                                        <Package size={16} />
+                                    </div>
+                                    <span>Preparing</span>
+                                </div>
+                                <div className={`flex flex-col items-center gap-2 ${currentStep >= 5 ? 'text-amber-600' : ''}`}>
+                                    <div className={`p-2 rounded-full ${currentStep >= 5 ? 'bg-amber-500/10' : 'bg-zinc-900/80'}`}>
+                                        <Truck size={16} />
+                                    </div>
+                                    <span>Ready</span>
+                                </div>
+                                <div className={`flex flex-col items-center gap-2 ${currentStep >= 6 ? 'text-green-600' : ''}`}>
+                                    <div className={`p-2 rounded-full ${currentStep >= 6 ? 'bg-green-50' : 'bg-zinc-900/80'}`}>
+                                        <CheckCircle size={16} />
+                                    </div>
+                                    <span>Completed</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex justify-between text-xs font-medium text-gray-500">
-                            <div className={`flex flex-col items-center gap-2 ${currentStep >= 1 ? 'text-blue-600' : ''}`}>
-                                <div className={`p-2 rounded-full ${currentStep >= 1 ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                                    <Clock size={16} />
-                                </div>
-                                <span>Submitted</span>
-                            </div>
-                            <div className={`flex flex-col items-center gap-2 ${currentStep >= 2 ? 'text-blue-600' : ''}`}>
-                                <div className={`p-2 rounded-full ${currentStep >= 2 ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                                    <CheckCircle size={16} />
-                                </div>
-                                <span>Approved</span>
-                            </div>
-                            <div className={`flex flex-col items-center gap-2 ${currentStep >= 4 ? 'text-blue-600' : ''}`}>
-                                <div className={`p-2 rounded-full ${currentStep >= 4 ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                                    <Package size={16} />
-                                </div>
-                                <span>Production</span>
-                            </div>
-                            <div className={`flex flex-col items-center gap-2 ${currentStep >= 6 ? 'text-blue-600' : ''}`}>
-                                <div className={`p-2 rounded-full ${currentStep >= 6 ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                                    <Truck size={16} />
-                                </div>
-                                <span>Shipping</span>
-                            </div>
-                            <div className={`flex flex-col items-center gap-2 ${currentStep >= 7 ? 'text-green-600' : ''}`}>
-                                <div className={`p-2 rounded-full ${currentStep >= 7 ? 'bg-green-50' : 'bg-gray-50'}`}>
-                                    <CheckCircle size={16} />
-                                </div>
-                                <span>Completed</span>
-                            </div>
+                    ) : (
+                        <div className="flex items-center gap-4 text-red-500 justify-center font-semibold">
+                            This order was rejected.
                         </div>
-                    </div>
+                    )}
                 </Card>
 
                 {/* Order Items */}
-                <Card className="overflow-hidden border-gray-200 shadow-sm">
-                    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                        <h3 className="font-semibold text-gray-900">Order Items</h3>
+                <Card className="overflow-hidden border-zinc-700 shadow-sm">
+                    <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/80/50">
+                        <h3 className="font-semibold text-gray-200">Order Items</h3>
                     </div>
-                    <table className="min-w-full divide-y divide-gray-100">
-                        <thead className="bg-white">
+                    <table className="min-w-full divide-y divide-zinc-800">
+                        <thead className="bg-zinc-900/50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Product</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Quantity</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Total</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-100">
+                        <tbody className="bg-zinc-900/50 divide-y divide-zinc-800">
                             {order.orderDetails && order.orderDetails.length > 0 ? (
                                 order.orderDetails.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50/50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.productName || `Product #${item.productId}`}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{item.quantity} units</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${item.unitPrice?.toFixed(2) || '0.00'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-right">${item.subTotal?.toFixed(2) || (item.quantity * (item.unitPrice || 0)).toFixed(2)}</td>
+                                    <tr key={idx} className="hover:bg-zinc-900/80/50">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200">{item.productName || `Product #${item.productId}`}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 text-right">{item.quantity} units</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 text-right">${item.unitPrice?.toFixed(2) || '0.00'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-200 text-right">${item.subTotal?.toFixed(2) || (item.quantity * (item.unitPrice || 0)).toFixed(2)}</td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">No items available</td>
+                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-400">No items available</td>
                                 </tr>
                             )}
                         </tbody>
-                        <tfoot className="bg-gray-50/50">
+                        <tfoot className="bg-zinc-900/80/50">
                             <tr>
-                                <td colSpan={3} className="px-6 py-4 text-right font-medium text-gray-500">Subtotal</td>
-                                <td className="px-6 py-4 text-right font-bold text-gray-900">${order.totalAmount.toFixed(2)}</td>
+                                <td colSpan={3} className="px-6 py-4 text-right font-medium text-gray-400">Subtotal</td>
+                                <td className="px-6 py-4 text-right font-bold text-gray-200">${order.totalAmount.toFixed(2)}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -162,22 +168,22 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
 
                 {/* Additional Info */}
                 <div className="grid grid-cols-2 gap-6">
-                    <Card className="p-4 border-gray-200 shadow-sm">
-                        <h4 className="text-sm font-medium text-gray-900 mb-3">Delivery Information</h4>
+                    <Card className="p-4 border-zinc-700 shadow-sm">
+                        <h4 className="text-sm font-medium text-gray-200 mb-3">Delivery Information</h4>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-gray-500">Store ID</span>
-                                <span className="font-medium text-gray-900">{order.storeId}</span>
+                                <span className="text-gray-400">Store ID</span>
+                                <span className="font-medium text-gray-200">{order.storeId}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-gray-500">Date</span>
-                                <span className="font-medium text-gray-900">{new Date(order.orderDate).toLocaleDateString()}</span>
+                                <span className="text-gray-400">Date</span>
+                                <span className="font-medium text-gray-200">{new Date(order.orderDate).toLocaleDateString()}</span>
                             </div>
                         </div>
                     </Card>
-                    <Card className="p-4 border-gray-200 shadow-sm">
-                        <h4 className="text-sm font-medium text-gray-900 mb-3">Notes</h4>
-                        <p className="text-sm text-gray-500 italic">No special instructions provided for this order.</p>
+                    <Card className="p-4 border-zinc-700 shadow-sm">
+                        <h4 className="text-sm font-medium text-gray-200 mb-3">Notes</h4>
+                        <p className="text-sm text-gray-400 italic">No special instructions provided for this order.</p>
                     </Card>
                 </div>
             </div>
