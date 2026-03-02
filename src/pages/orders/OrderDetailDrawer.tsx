@@ -1,4 +1,5 @@
-import { Package, Clock, CheckCircle, Truck, Printer, Download } from 'lucide-react';
+import { useState } from 'react';
+import { Package, Clock, CheckCircle, Truck, Printer, Download, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -10,9 +11,11 @@ interface OrderDetailDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     onStatusUpdate?: (orderId: number, status: string) => void;
+    onCancelOrder?: (orderId: number) => void;
 }
 
-export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: OrderDetailDrawerProps) => {
+export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCancelOrder }: OrderDetailDrawerProps) => {
+    const [isCancelling, setIsCancelling] = useState(false);
     if (!order) return null;
 
     const getStatusStep = (status: string) => {
@@ -21,6 +24,19 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
     };
 
     const currentStep = getStatusStep(order.status);
+
+    const canCancel = ['SUBMITTED'].includes(order.status?.toUpperCase());
+    const canReject = ['SUBMITTED'].includes(order.status?.toUpperCase());
+
+    const handleCancel = async () => {
+        if (!confirm('Are you sure you want to cancel this order?')) return;
+        setIsCancelling(true);
+        try {
+            await onCancelOrder?.(order.orderId);
+        } finally {
+            setIsCancelling(false);
+        }
+    };
 
     const footer = (
         <div className="flex justify-between w-full">
@@ -33,6 +49,25 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate }: Or
                 </Button>
             </div>
             <div className="flex gap-2">
+                {canCancel && onCancelOrder && (
+                    <Button
+                        variant="outline"
+                        className="text-red-500 border-red-500/30 hover:bg-red-500/10"
+                        onClick={handleCancel}
+                        disabled={isCancelling}
+                    >
+                        <XCircle size={16} className="mr-2" />
+                        {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+                    </Button>
+                )}
+                {canReject && onStatusUpdate && (
+                    <Button
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                        onClick={() => onStatusUpdate(order.orderId, 'REJECTED')}
+                    >
+                        Reject
+                    </Button>
+                )}
                 {(order.status === 'SUBMITTED' || order.status === 'submitted') && onStatusUpdate && (
                     <Button onClick={() => onStatusUpdate(order.orderId, 'confirmed')}>
                         Confirm Order

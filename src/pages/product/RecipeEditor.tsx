@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Power } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
+import { Badge } from '../../components/ui/Badge';
 import type { ProductResponse as Product } from '../../types/product';
 export interface RecipeMaterial {
     id: string;
@@ -35,6 +36,9 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
     const [availableMaterials, setAvailableMaterials] = useState<RecipeMaterial[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [recipeId, setRecipeId] = useState<number | null>(null);
+    const [recipeStatus, setRecipeStatus] = useState<string>('');
+    const [isToggling, setIsToggling] = useState(false);
 
     useEffect(() => {
         const fetchMaterials = async () => {
@@ -60,6 +64,8 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                 const res = await recipeApi.getActiveRecipe(product.id);
                 if (res.data) {
                     const recipe = res.data;
+                    setRecipeId(recipe.id);
+                    setRecipeStatus(recipe.status || '');
                     setInstructions(recipe.instructions || '');
                     setYieldValue(recipe.yield || 1);
                     setItems(recipe.recipeDetails.map(detail => ({
@@ -259,6 +265,45 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                     <Card className="p-6">
                         <h3 className="font-semibold text-lg mb-4">Recipe Settings</h3>
                         <div className="space-y-4">
+                            {/* Status */}
+                            {recipeId && (
+                                <div className="pb-4 border-b border-zinc-800">
+                                    <label className="text-sm font-medium mb-2 block">Status</label>
+                                    <div className="flex items-center justify-between">
+                                        <Badge variant={recipeStatus === 'ACTIVE' ? 'success' : 'warning'}>
+                                            {recipeStatus || 'N/A'}
+                                        </Badge>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={isToggling}
+                                            onClick={async () => {
+                                                if (!recipeId) return;
+                                                setIsToggling(true);
+                                                try {
+                                                    const newActive = recipeStatus !== 'ACTIVE';
+                                                    const res = await recipeApi.toggleRecipeStatus(recipeId, newActive);
+                                                    setRecipeStatus(res.data.status);
+                                                    toast.success(`Recipe ${newActive ? 'activated' : 'deactivated'} successfully`);
+                                                } catch (error: any) {
+                                                    const msg = error.response?.data?.message || 'Failed to toggle status';
+                                                    toast.error(msg);
+                                                } finally {
+                                                    setIsToggling(false);
+                                                }
+                                            }}
+                                            className={recipeStatus === 'ACTIVE'
+                                                ? 'text-red-400 hover:bg-red-500/10 border-red-500/30'
+                                                : 'text-green-400 hover:bg-green-500/10 border-green-500/30'
+                                            }
+                                        >
+                                            <Power size={14} className="mr-1.5" />
+                                            {isToggling ? '...' : (recipeStatus === 'ACTIVE' ? 'Deactivate' : 'Activate')}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="text-sm font-medium mb-1 block">Yield</label>
                                 <Input

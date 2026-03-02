@@ -18,6 +18,10 @@ export const CreateTaskPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [backendError, setBackendError] = useState<string | null>(null);
+    const [plannedDate, setPlannedDate] = useState(() => {
+        const today = new Date();
+        return today.toISOString().split('T')[0]; // YYYY-MM-DD
+    });
 
     // Manage orders fetch
     const [orders, setOrders] = useState<StoreOrderResponse[]>([]);
@@ -68,6 +72,7 @@ export const CreateTaskPage = () => {
         setIsSubmitting(true);
         try {
             await productionPlanApi.createProductionPlan({
+                plannedDate,
                 storeOrderIds: Array.from(selectedOrderIds)
             });
 
@@ -186,6 +191,19 @@ export const CreateTaskPage = () => {
                                 Đã chọn: {selectedOrderIds.size} / {orders.length}
                             </div>
                         </div>
+                    </div>
+
+                    {/* Planned Date */}
+                    <div className="p-4 bg-zinc-900/80 border border-zinc-700 rounded-xl">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Ngày sản xuất dự kiến *</label>
+                        <input
+                            type="date"
+                            value={plannedDate}
+                            onChange={(e) => setPlannedDate(e.target.value)}
+                            className="w-full max-w-xs px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            required
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Chọn ngày dự kiến bắt đầu sản xuất</p>
                     </div>
 
                     <div className="border border-zinc-700 rounded-xl overflow-hidden shadow-sm">

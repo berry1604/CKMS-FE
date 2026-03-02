@@ -116,7 +116,7 @@ export const BillingDetailDrawer = ({ statementId, isOpen, onClose, onPaid }: Bi
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-lg text-gray-200">{detail.store?.name || `Store #${detail.store?.id}`}</h3>
-                                    <p className="text-sm text-gray-400">Bill To</p>
+                                    <p className="text-sm text-gray-400">{detail.cycleName || 'Bill To'}</p>
                                 </div>
                             </div>
                             <div className="flex flex-col items-end">
@@ -156,10 +156,20 @@ export const BillingDetailDrawer = ({ statementId, isOpen, onClose, onPaid }: Bi
                         </div>
 
                         {detail.paidAt && (
-                            <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20">
+                            <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20 space-y-1">
                                 <p className="text-sm text-green-400 font-medium">
                                     Paid at: {new Date(detail.paidAt).toLocaleString('vi-VN')}
                                 </p>
+                                {detail.paymentMethod && (
+                                    <p className="text-sm text-green-400/80">
+                                        Method: {detail.paymentMethod}
+                                    </p>
+                                )}
+                                {detail.referenceCode && (
+                                    <p className="text-sm text-green-400/80">
+                                        Ref: {detail.referenceCode}
+                                    </p>
+                                )}
                             </div>
                         )}
 
@@ -171,6 +181,8 @@ export const BillingDetailDrawer = ({ statementId, isOpen, onClose, onPaid }: Bi
                                         <thead>
                                             <tr className="bg-zinc-900/80">
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Invoice ID</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Order</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
                                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
                                             </tr>
                                         </thead>
@@ -182,6 +194,25 @@ export const BillingDetailDrawer = ({ statementId, isOpen, onClose, onPaid }: Bi
                                                             #{inv.invoiceId}
                                                         </span>
                                                     </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                        {inv.orderId ? (
+                                                            <div>
+                                                                <span className="font-mono text-xs">Order #{inv.orderId}</span>
+                                                                {inv.orderDate && (
+                                                                    <div className="text-xs text-gray-500 mt-0.5">
+                                                                        {new Date(inv.orderDate).toLocaleDateString('vi-VN')}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ) : '—'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                        {inv.status ? (
+                                                            <Badge variant={inv.status === 'PAID' ? 'success' : 'warning'} size="sm">
+                                                                {inv.status}
+                                                            </Badge>
+                                                        ) : '—'}
+                                                    </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-200 text-right">
                                                         {inv.amount?.toLocaleString('vi-VN')} VND
                                                     </td>
@@ -190,7 +221,7 @@ export const BillingDetailDrawer = ({ statementId, isOpen, onClose, onPaid }: Bi
                                         </tbody>
                                         <tfoot className="bg-zinc-900/80">
                                             <tr>
-                                                <td className="px-6 py-4 text-right text-base font-bold text-gray-200">Total</td>
+                                                <td colSpan={3} className="px-6 py-4 text-right text-base font-bold text-gray-200">Total</td>
                                                 <td className="px-6 py-4 text-right text-base font-bold text-amber-600">
                                                     {detail.totalAmount?.toLocaleString('vi-VN')} VND
                                                 </td>
@@ -231,6 +262,16 @@ export const BillingDetailDrawer = ({ statementId, isOpen, onClose, onPaid }: Bi
                                     placeholder="e.g. TXN-12345"
                                     value={payForm.referenceCode}
                                     onChange={e => setPayForm({ ...payForm, referenceCode: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Amount (optional)</label>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    placeholder={detail?.totalAmount ? `${detail.totalAmount.toLocaleString('vi-VN')} VND` : 'Enter amount'}
+                                    value={payForm.amount || ''}
+                                    onChange={e => setPayForm({ ...payForm, amount: e.target.value ? Number(e.target.value) : undefined })}
                                 />
                             </div>
                         </div>

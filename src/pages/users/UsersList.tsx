@@ -1,76 +1,112 @@
-import { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, Search, Filter, MoreVertical, Mail, Calendar, CheckCircle } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Plus, Edit2, Trash2, Search, Filter, MoreVertical, Mail, Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { UserModal } from './UserModal';
-import type { User } from '../../types/user';
+import type { UserResponse } from '../../types/user';
+import { userService } from '../../services/user.service';
 import { roleApi } from '../../services/role.api';
 import type { RoleResponse } from '../../types/role';
+import { toast } from 'react-hot-toast';
 
 import { useNavigate } from 'react-router-dom';
 
 export const UsersList = () => {
     const navigate = useNavigate();
-    const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<UserResponse[]>([]);
     const [roles, setRoles] = useState<RoleResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('ALL');
-    const [activeMenu, setActiveMenu] = useState<string | null>(null);
+    const [activeMenu, setActiveMenu] = useState<number | null>(null);
 
-    const loadData = async () => {
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const pageSize = 10;
+
+    const loadUsers = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Placeholder: Call API get users
-            setUsers([]);
+            const response = await userService.getUsers({
+                page: currentPage,
+                size: pageSize,
+                role: roleFilter !== 'ALL' ? roleFilter : undefined,
+                search: searchTerm || undefined,
+            });
+            const pageData = response.data;
+            setUsers(pageData.content);
+            setTotalPages(pageData.totalPages);
+            setTotalElements(pageData.totalElements);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to load users');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [currentPage, roleFilter, searchTerm]);
+
+    const loadRoles = async () => {
+        try {
             const fetchedRoles = await roleApi.getAllRoles();
             setRoles(fetchedRoles);
         } catch (error) {
             console.error(error);
-        } finally {
-            setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        loadData();
+        loadRoles();
     }, []);
 
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
-        return matchesSearch && matchesRole;
-    });
+    useEffect(() => {
+        loadUsers();
+    }, [loadUsers]);
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [roleFilter, searchTerm]);
 
     const handleCreate = () => {
         navigate('/users/create');
     };
 
-    const handleEdit = (user: User) => {
+    const handleEdit = (user: UserResponse) => {
         setSelectedUser(user);
         setIsModalOpen(true);
         setActiveMenu(null);
     };
 
-    const handleDelete = async (_id: string) => {
+    const handleDelete = async (id: number) => {
         if (confirm('Are you sure you want to delete this user?')) {
-            // await deleteUser(_id);
-            loadData();
+            try {
+                await userService.deleteUser(id);
+                toast.success('User deleted successfully');
+                loadUsers();
+            } catch (error) {
+                console.error(error);
+                toast.error('Failed to delete user');
+            }
         }
         setActiveMenu(null);
     };
 
     const handleSubmit = async (_data: any) => {
         if (selectedUser) {
-            // await updateUser(selectedUser.id, _data);
-        } else {
-            // await createUser(_data);
+            try {
+                await userService.updateUser(selectedUser.id, _data);
+                toast.success('User updated successfully');
+                loadUsers();
+            } catch (error) {
+                console.error(error);
+                toast.error('Failed to update user');
+            }
         }
-        loadData();
     };
 
     const getRoleColor = (role: string) => {
@@ -84,6 +120,9 @@ export const UsersList = () => {
         return colors[role] || 'secondary';
     };
 
+    const startItem = currentPage * pageSize + 1;
+    const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -94,7 +133,7 @@ export const UsersList = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="bg-zinc-900/50 px-3 py-1.5 rounded-md border border-zinc-800 text-sm font-medium text-gray-400 shadow-sm">
-                        <span className="text-gray-200 font-bold">{users.length}</span> Total Users
+                        <span className="font-bold text-gray-200">{totalElements}</span> Total Users
                     </div>
                     <Button onClick={handleCreate} className="shadow-sm">
                         <Plus className="mr-2 h-4 w-4" /> Add Member
@@ -161,27 +200,25 @@ export const UsersList = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : filteredUsers.length === 0 ? (
+                                ) : users.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
                                             No members found matching your criteria.
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredUsers.map((user) => (
+                                    users.map((user) => (
                                         <tr key={user.id} className="hover:bg-zinc-800/50 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center">
                                                     <div className="relative">
-                                                        <img
-                                                            src={user.avatarUrl}
-                                                            alt=""
-                                                            className="h-10 w-10 rounded-full object-cover ring-2 ring-zinc-800 shadow-sm"
-                                                        />
-                                                        <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-zinc-800 rounded-full"></div>
+                                                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-zinc-800 shadow-sm">
+                                                            {(user.fullName || user.username || '?').charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 ${user.isActive ? 'bg-green-500' : 'bg-gray-500'} border-2 border-zinc-800 rounded-full`}></div>
                                                     </div>
                                                     <div className="ml-4">
-                                                        <div className="font-semibold text-gray-200">{user.name}</div>
+                                                        <div className="font-semibold text-gray-200">{user.fullName || user.username}</div>
                                                         <div className="text-gray-400 text-xs flex items-center mt-0.5">
                                                             <Mail size={10} className="mr-1" />
                                                             {user.email}
@@ -190,20 +227,27 @@ export const UsersList = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <Badge variant={getRoleColor(user.role)} className="shadow-sm">
-                                                    {user.role.replace('_', ' ')}
+                                                <Badge variant={getRoleColor(user.roleName)} className="shadow-sm">
+                                                    {user.roleName?.replace(/_/g, ' ') || 'N/A'}
                                                 </Badge>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center text-sm font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md w-fit">
-                                                    <CheckCircle size={12} className="mr-1.5" />
-                                                    Active
-                                                </div>
+                                                {user.isActive ? (
+                                                    <div className="flex items-center text-sm font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md w-fit">
+                                                        <CheckCircle size={12} className="mr-1.5" />
+                                                        Active
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center text-sm font-medium text-red-400 bg-red-500/10 px-2 py-1 rounded-md w-fit">
+                                                        <XCircle size={12} className="mr-1.5" />
+                                                        Inactive
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center text-sm text-gray-400">
                                                     <Calendar size={14} className="mr-2 text-gray-500" />
-                                                    {user.joinDate || 'N/A'}
+                                                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -225,10 +269,30 @@ export const UsersList = () => {
 
                     {/* Pagination */}
                     <div className="bg-zinc-900/80 px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
-                        <span className="text-sm text-gray-400">Showing <span className="font-medium text-gray-200">1</span> to <span className="font-medium text-gray-200">{filteredUsers.length}</span> of <span className="font-medium text-gray-200">{filteredUsers.length}</span> members</span>
+                        <span className="text-sm text-gray-400">
+                            {totalElements > 0 ? (
+                                <>Showing <span className="font-medium text-gray-200">{startItem}</span> to <span className="font-medium text-gray-200">{endItem}</span> of <span className="font-medium text-gray-200">{totalElements}</span> members</>
+                            ) : (
+                                'No members found'
+                            )}
+                        </span>
                         <div className="flex gap-2">
-                            <Button variant="outline" size="sm" disabled>Previous</Button>
-                            <Button variant="outline" size="sm" disabled>Next</Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === 0}
+                                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage >= totalPages - 1}
+                                onClick={() => setCurrentPage((p) => p + 1)}
+                            >
+                                Next
+                            </Button>
                         </div>
                     </div>
                 </Card>
@@ -238,20 +302,18 @@ export const UsersList = () => {
             <div className="md:hidden grid grid-cols-1 gap-4">
                 {isLoading ? (
                     <div className="text-center py-10 text-gray-500">Loading...</div>
-                ) : filteredUsers.length === 0 ? (
+                ) : users.length === 0 ? (
                     <div className="text-center py-10 text-gray-500">No members found.</div>
                 ) : (
-                    filteredUsers.map((user) => (
+                    users.map((user) => (
                         <Card key={user.id} className="p-4 relative border-zinc-800 bg-zinc-900/50">
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center space-x-3">
-                                    <img
-                                        src={user.avatarUrl}
-                                        alt=""
-                                        className="h-12 w-12 rounded-full object-cover ring-2 ring-zinc-800"
-                                    />
+                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-base ring-2 ring-zinc-800">
+                                        {(user.fullName || user.username || '?').charAt(0).toUpperCase()}
+                                    </div>
                                     <div>
-                                        <h3 className="text-base font-semibold text-gray-200">{user.name}</h3>
+                                        <h3 className="text-base font-semibold text-gray-200">{user.fullName || user.username}</h3>
                                         <div className="text-sm text-gray-400 flex items-center">
                                             <Mail size={12} className="mr-1" />
                                             {user.email}
@@ -267,12 +329,18 @@ export const UsersList = () => {
                             </div>
 
                             <div className="mt-4 flex flex-wrap gap-2 items-center">
-                                <Badge variant={getRoleColor(user.role)} className="shadow-none">
-                                    {user.role.replace('_', ' ')}
+                                <Badge variant={getRoleColor(user.roleName)} className="shadow-none">
+                                    {user.roleName?.replace(/_/g, ' ') || 'N/A'}
                                 </Badge>
-                                <div className="flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md">
-                                    <CheckCircle size={10} className="mr-1" /> Active
-                                </div>
+                                {user.isActive ? (
+                                    <div className="flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md">
+                                        <CheckCircle size={10} className="mr-1" /> Active
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center text-xs font-medium text-red-400 bg-red-500/10 px-2 py-1 rounded-md">
+                                        <XCircle size={10} className="mr-1" /> Inactive
+                                    </div>
+                                )}
                             </div>
 
                             {/* Mobile Dropdown Menu */}

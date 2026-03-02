@@ -40,6 +40,7 @@ export const MainLayout: React.FC = () => {
         { name: 'Users', href: '/users', icon: Users, roles: ['ADMIN'] },
         { name: 'Roles', href: '/users/roles', icon: Shield, roles: ['ADMIN'] },
         { name: 'Franchise Stores', href: '/stores', icon: Store, roles: ['ADMIN', 'MANAGER'] },
+        { name: 'Store Inventory', href: '/stores/inventory', icon: Database, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
         { name: 'Production Plan', href: '/kitchen', icon: ChefHat, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
         { name: 'Kitchen Inventory', href: '/kitchen/inventory', icon: Database, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
         { name: 'Products', href: '/products', icon: Package, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },

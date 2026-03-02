@@ -92,5 +92,24 @@ export const storeOrderApi = {
             console.error(`Error fetching stores:`, error);
             return [];
         }
+    },
+
+    /**
+     * Update an existing order
+     * PUT /orders/:id
+     * Security: hasAuthority('CREATE_STORE_ORDER')
+     */
+    updateOrder: async (id: number | string, data: StoreOrderRequest): Promise<StoreOrderResponse> => {
+        const response = await axiosClient.put<StoreOrderResponse>(`/orders/${id}`, data);
+        return response.data;
+    },
+
+    /**
+     * Cancel an order (soft-delete)
+     * DELETE /orders/:id
+     * Security: hasAuthority('CREATE_STORE_ORDER')
+     */
+    cancelOrder: async (id: number | string): Promise<void> => {
+        await axiosClient.delete(`/orders/${id}`);
     }
 };

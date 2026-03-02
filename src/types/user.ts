@@ -29,6 +29,26 @@ export interface CreateUserResponse {
     isActive: boolean;
 }
 
+export interface UserResponse {
+    id: number;
+    username: string;
+    email: string;
+    fullName: string;
+    roleName: string;
+    storeName?: string;
+    kitchenName?: string;
+    isActive: boolean;
+    createdAt?: string;
+}
+
+export interface GetUsersParams {
+    page?: number;
+    size?: number;
+    role?: string;
+    status?: string;
+    search?: string;
+}
+
 export interface AuthState {
     user: User | null;
     isAuthenticated: boolean;

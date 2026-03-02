@@ -10,6 +10,7 @@ import type { StoreOrderResponse } from '../../types/storeOrder';
 import { OrderDetailDrawer } from './OrderDetailDrawer';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { toast } from 'react-hot-toast';
 
 export const OrderList = () => {
     const navigate = useNavigate();
@@ -22,13 +23,22 @@ export const OrderList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
 
+    // Pagination
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+
     // Drawer State
     const [selectedOrder, setSelectedOrder] = useState<StoreOrderResponse | null>(null);
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const params: any = {};
+            const params: any = {
+                page,
+                size: 10,
+                sortBy: 'orderDate',
+                sortDir: 'desc'
+            };
             if (statusFilter !== 'all') {
                 params.status = statusFilter.toUpperCase();
             }
@@ -40,8 +50,10 @@ export const OrderList = () => {
             const res = await apiCall;
             setOrders(res.content || []);
             setFilteredOrders(res.content || []);
+            setTotalPages(res.totalPages || 0);
         } catch (error) {
             console.error('Failed to fetch orders:', error);
+            toast.error('Failed to load orders');
         } finally {
             setIsLoading(false);
         }
@@ -49,6 +61,10 @@ export const OrderList = () => {
 
     useEffect(() => {
         fetchData();
+    }, [statusFilter, page]);
+
+    useEffect(() => {
+        setPage(0);
     }, [statusFilter]);
 
     useEffect(() => {
@@ -69,15 +85,27 @@ export const OrderList = () => {
         setIsLoading(true);
         try {
             await storeOrderApi.updateOrderStatus(orderId, status);
+            toast.success(`Order #${orderId} status updated to ${status}`);
             fetchData();
             if (selectedOrder && selectedOrder.orderId === orderId) {
-                // Refresh selected order exactly or close modal to refresh it simply
                 setSelectedOrder(null);
             }
         } catch (error) {
             console.error('Failed to update status', error);
-            alert('Failed to update order status');
+            toast.error('Failed to update order status');
             setIsLoading(false);
+        }
+    };
+
+    const handleCancelOrder = async (orderId: number) => {
+        try {
+            await storeOrderApi.cancelOrder(orderId);
+            toast.success(`Order #${orderId} has been cancelled`);
+            setSelectedOrder(null);
+            fetchData();
+        } catch (error: any) {
+            console.error('Failed to cancel order', error);
+            toast.error(error.response?.data?.message || 'Failed to cancel order');
         }
     };
 
@@ -184,6 +212,33 @@ export const OrderList = () => {
                     isLoading={isLoading}
                     onRowClick={(order) => setSelectedOrder(order)}
                 />
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="p-4 border-t border-zinc-800 flex items-center justify-between">
+                        <span className="text-sm text-gray-400">
+                            Page {page + 1} of {totalPages}
+                        </span>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={page === 0}
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={page >= totalPages - 1}
+                                onClick={() => setPage(p => p + 1)}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
 
             <OrderDetailDrawer
@@ -191,6 +246,7 @@ export const OrderList = () => {
                 isOpen={!!selectedOrder}
                 onClose={() => setSelectedOrder(null)}
                 onStatusUpdate={handleStatusUpdate}
+                onCancelOrder={handleCancelOrder}
             />
         </div>
     );

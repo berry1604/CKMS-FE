@@ -1,4 +1,5 @@
 export interface ProductionPlanRequest {
+    plannedDate: string; // Required, format: "YYYY-MM-DD"
     storeOrderIds: number[];
 }
 

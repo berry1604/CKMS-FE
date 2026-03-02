@@ -6,7 +6,7 @@ import { Store as StoreIcon, MapPin, User, Activity } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { type Store } from './StoreList';
+import type { StoreResponse } from '../../types/store';
 
 const storeSchema = z.object({
     name: z.string().min(1, 'Store Name is required'),
@@ -21,7 +21,7 @@ interface StoreModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: StoreFormData) => void;
-    initialData?: Store | null;
+    initialData?: StoreResponse | null;
     isLoading?: boolean;
 }
 
@@ -40,9 +40,9 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
         if (initialData) {
             reset({
                 name: initialData.name,
-                location: initialData.location,
-                manager: initialData.manager,
-                status: initialData.status
+                location: initialData.address || '',
+                manager: initialData.managerName || '',
+                status: initialData.isActive ? 'active' : 'inactive'
             });
         } else {
             reset({
