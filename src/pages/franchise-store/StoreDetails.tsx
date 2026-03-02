@@ -4,26 +4,45 @@ import { ArrowLeft, Box, ShoppingCart, MapPin, Phone, Mail } from 'lucide-react'
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { type Store } from './StoreList';
+import type { StoreResponse } from '../../types/store';
+import { storeApi } from '../../services/store.api';
 import { StoreInventory } from './StoreInventory';
+import { toast } from 'react-hot-toast';
 
 export const StoreDetails = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [store, setStore] = useState<Store | null>(null);
+    const [store, setStore] = useState<StoreResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Overview');
 
     useEffect(() => {
         if (id) {
-            // Placeholder for GET /stores/:id API
-            setStore(null);
-            setIsLoading(false);
+            const loadStore = async () => {
+                setIsLoading(true);
+                try {
+                    const response = await storeApi.getStoreById(Number(id));
+                    setStore(response.data);
+                } catch (error) {
+                    console.error(error);
+                    toast.error('Không thể tải thông tin cửa hàng');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            loadStore();
         }
-    }, [id, navigate]);
+    }, [id]);
 
     if (isLoading) return <div className="p-8 text-center text-gray-400">Loading Store Details...</div>;
-    if (!store) return null;
+    if (!store) return (
+        <div className="p-8 text-center text-gray-400">
+            <p>Store not found.</p>
+            <Button variant="ghost" className="mt-4" onClick={() => navigate('/stores')}>
+                <ArrowLeft size={16} className="mr-2" /> Back to Stores
+            </Button>
+        </div>
+    );
 
     return (
         <div className="space-y-6">
@@ -34,43 +53,38 @@ export const StoreDetails = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-200">{store.name}</h1>
                     <div className="flex items-center text-gray-400 text-sm mt-1">
-                        <MapPin size={14} className="mr-1" /> {store.location}
+                        <MapPin size={14} className="mr-1" /> {store.address}
                     </div>
                 </div>
-                <Badge variant={store.status === 'active' ? 'success' : 'secondary'} className="ml-auto">
-                    {store.status.toUpperCase()}
+                <Badge variant={store.isActive ? 'success' : 'secondary'} className="ml-auto">
+                    {store.isActive ? 'ACTIVE' : 'INACTIVE'}
                 </Badge>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card title="Contact Info">
                     <div className="space-y-3">
-                        <p className="font-medium text-gray-200">{store.manager}</p>
+                        <p className="font-medium text-gray-200">{store.managerName || 'No manager assigned'}</p>
                         <div className="flex items-center text-gray-400 text-sm">
-                            <Phone size={14} className="mr-2" /> (555) 123-4567
+                            <Phone size={14} className="mr-2" /> {store.phone || 'N/A'}
                         </div>
                         <div className="flex items-center text-gray-400 text-sm">
-                            <Mail size={14} className="mr-2" /> store@{store.id}.franchise.com
+                            <Mail size={14} className="mr-2" /> {store.email || 'N/A'}
                         </div>
                     </div>
                 </Card>
 
-                <Card title="Performance">
+                <Card title="Store Info">
                     <div className="space-y-4">
                         <div>
-                            <p className="text-sm text-gray-400">Current Revenue</p>
-                            <p className="text-2xl font-bold text-gray-200">${store.revenue.toLocaleString()}</p>
+                            <p className="text-sm text-gray-400">Store ID</p>
+                            <p className="text-lg font-bold text-gray-200">#{store.id}</p>
                         </div>
-
-                        {/* Mock Progress Bar */}
                         <div>
-                            <div className="flex justify-between text-xs mb-1">
-                                <span>Monthly Target</span>
-                                <span>75%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div className="bg-amber-600 h-2 rounded-full" style={{ width: '75%' }}></div>
-                            </div>
+                            <p className="text-sm text-gray-400">Created At</p>
+                            <p className="text-sm text-gray-200">
+                                {store.createdAt ? new Date(store.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
+                            </p>
                         </div>
                     </div>
                 </Card>
@@ -120,7 +134,7 @@ export const StoreDetails = () => {
                     </div>
                 )}
                 {activeTab === 'Inventory' && (
-                    <StoreInventory storeId={store.id} />
+                    <StoreInventory />
                 )}
                 {activeTab === 'Orders' && (
                     <div className="h-64 bg-zinc-900/80 rounded-lg border-2 border-dashed border-zinc-700 flex items-center justify-center text-gray-400">

@@ -22,4 +22,13 @@ export const recipeApi = {
             throw error;
         }
     },
+
+    toggleRecipeStatus: async (recipeId: number, active: boolean): Promise<ApiResponse<RecipeResponse>> => {
+        const response = await axiosClient.patch<ApiResponse<RecipeResponse>>(
+            `/recipes/${recipeId}/status`,
+            null,
+            { params: { active } }
+        );
+        return response.data;
+    },
 };

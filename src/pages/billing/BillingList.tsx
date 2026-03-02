@@ -9,6 +9,7 @@ import { BillingDetailDrawer } from './InvoiceDetailDrawer';
 import { billingApi } from '../../services/billing.api';
 import { toast } from 'react-hot-toast';
 import type { BillingStatementSummaryResponse } from '../../types/billing';
+import type { BatchBillingStatementResponse } from '../../types/billing';
 
 type BillingStatus = 'all' | 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED';
 
@@ -36,15 +37,24 @@ export const BillingList = () => {
     // Batch Statement form
     const [batchForm, setBatchForm] = useState({ cycleName: '', periodStart: '', periodEnd: '' });
 
+    // Store ID filter
+    const [storeIdFilter, setStoreIdFilter] = useState('');
+
+    // Batch result
+    const [_batchResult, setBatchResult] = useState<BatchBillingStatementResponse | null>(null);
+
     const fetchStatements = useCallback(async () => {
         setIsLoading(true);
         try {
-            const params: { status?: string; page?: number; size?: number } = {
+            const params: { storeId?: number; status?: string; page?: number; size?: number } = {
                 page,
                 size: 10,
             };
             if (statusFilter !== 'all') {
                 params.status = statusFilter;
+            }
+            if (storeIdFilter) {
+                params.storeId = Number(storeIdFilter);
             }
             const res = await billingApi.getStatements(params);
             setStatements(res.content || []);
@@ -56,7 +66,7 @@ export const BillingList = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [page, statusFilter]);
+    }, [page, statusFilter, storeIdFilter]);
 
     useEffect(() => {
         fetchStatements();
@@ -65,7 +75,7 @@ export const BillingList = () => {
     // Reset page when filter changes
     useEffect(() => {
         setPage(0);
-    }, [statusFilter]);
+    }, [statusFilter, storeIdFilter]);
 
     const handleGenerateManual = async () => {
         if (!manualForm.storeId || !manualForm.periodStart || !manualForm.periodEnd) {
@@ -94,8 +104,9 @@ export const BillingList = () => {
         }
         setIsGenerating(true);
         try {
-            await billingApi.generateBatchStatements(batchForm);
-            toast.success('Batch billing statements generated successfully!');
+            const result = await billingApi.generateBatchStatements(batchForm);
+            setBatchResult(result);
+            toast.success(`Batch completed: ${result.successCount} success, ${result.failureCount} failed`);
             setShowBatchModal(false);
             setBatchForm({ cycleName: '', periodStart: '', periodEnd: '' });
             fetchStatements();
@@ -125,6 +136,10 @@ export const BillingList = () => {
                     #{s.statementId}
                 </span>
             )
+        },
+        {
+            header: 'Store',
+            cell: (s) => <span className="text-gray-200">{s.storeName || `Store #${s.storeId || '—'}`}</span>
         },
         {
             header: 'Cycle Name',
@@ -259,6 +274,17 @@ export const BillingList = () => {
                                 {opt.label}
                             </button>
                         ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-400">Store ID:</span>
+                        <Input
+                            type="number"
+                            min="1"
+                            placeholder="All stores"
+                            className="w-32 h-8 text-sm"
+                            value={storeIdFilter}
+                            onChange={e => setStoreIdFilter(e.target.value)}
+                        />
                     </div>
                 </div>
 

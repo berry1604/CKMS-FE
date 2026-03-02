@@ -38,7 +38,7 @@ export const CategoryList: React.FC = () => {
     };
 
     const openEditModal = (category: CategoryResponse) => {
-        navigate(`/products/categories/${category.id}/edit`);
+        navigate(`/products/categories/${category.id}/edit`, { state: { category } });
     };
 
     const openDeleteModal = (category: CategoryResponse) => {

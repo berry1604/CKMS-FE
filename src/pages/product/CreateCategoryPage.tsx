@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { categoryApi } from '../../services/category.api';
+import type { CategoryResponse } from '../../types/category';
 
 const createCategorySchema = z.object({
     categoryId: z.string().min(1, 'Category ID is required').trim(),
@@ -44,16 +45,33 @@ export const CreateCategoryPage = () => {
         }
     });
 
+    const location = useLocation();
+    const categoryFromState = (location.state as any)?.category as CategoryResponse | undefined;
+
     useEffect(() => {
         const fetchCategory = async () => {
             if (!isEditMode) return;
+
+            // If we got category data from route state, use it directly
+            if (categoryFromState) {
+                reset({
+                    categoryId: categoryFromState.categoryId || String(categoryFromState.id),
+                    name: categoryFromState.name,
+                    description: categoryFromState.description || '',
+                    status: (categoryFromState.status as 'ACTIVE' | 'INACTIVE') || 'ACTIVE'
+                });
+                setIsLoading(false);
+                return;
+            }
+
+            // Fallback: fetch from API
             try {
                 const data = await categoryApi.getById(Number(id));
                 reset({
-                    categoryId: data.categoryId || '',
+                    categoryId: data.categoryId || String(data.id),
                     name: data.name,
                     description: data.description || '',
-                    status: data.status as 'ACTIVE' | 'INACTIVE'
+                    status: (data.status as 'ACTIVE' | 'INACTIVE') || 'ACTIVE'
                 });
             } catch (error) {
                 console.error('Failed to fetch category details:', error);
@@ -65,7 +83,7 @@ export const CreateCategoryPage = () => {
         };
 
         fetchCategory();
-    }, [id, isEditMode, reset, navigate]);
+    }, [id, isEditMode, reset, navigate, categoryFromState]);
 
     const onSubmit = async (data: CreateCategoryFormData) => {
         setBackendError(null);

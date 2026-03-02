@@ -10,6 +10,7 @@ import { RolesList } from '../pages/users/RolesList';
 import { StoreList } from '../pages/franchise-store/StoreList';
 import { CreateStorePage } from '../pages/franchise-store/CreateStorePage';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
+import { StoreInventoryPage } from '../pages/franchise-store/StoreInventoryPage';
 import { ProductCatalog } from '../pages/product/ProductCatalog';
 import { CreateProductPage } from '../pages/product/CreateProductPage';
 import { MaterialList } from '../pages/product/MaterialList';
@@ -89,12 +90,12 @@ export const router = createBrowserRouter([
                     // Franchise Store Module (Admin, Manager)
                     {
                         path: 'stores',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'STORE_STAFF']} />,
                         children: [
                             { index: true, element: <StoreList /> },
                             { path: 'create', element: <CreateStorePage /> },
                             { path: ':id', element: <StoreDetails /> },
-                            { path: 'inventory', element: <ComingSoon /> },
+                            { path: 'inventory', element: <StoreInventoryPage /> },
                             { path: 'orders', element: <ComingSoon /> }
                         ]
                     },

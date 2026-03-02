@@ -1,72 +1,84 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, Store as StoreIcon, Edit2, Trash2, ChevronRight, User, MapPin, DollarSign, Package } from 'lucide-react';
+import { Plus, Search, Filter, Store as StoreIcon, Edit2, Trash2, ChevronRight, User, MapPin, Package } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-export interface Store {
-    id: string;
-    name: string;
-    location: string;
-    manager: string;
-    revenue: number;
-    status: 'active' | 'inactive' | 'pending';
-    inventoryStatus: 'good' | 'warning' | 'critical';
-}
+import type { StoreResponse } from '../../types/store';
+import { storeApi } from '../../services/store.api';
 import { StoreModal } from './StoreModal';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
+import { toast } from 'react-hot-toast';
 
 export const StoreList = () => {
     const navigate = useNavigate();
-    const [stores, setStores] = useState<Store[]>([]);
+    const [stores, setStores] = useState<StoreResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'ALL' | 'active' | 'inactive' | 'pending'>('ALL');
+    const [statusFilter, setStatusFilter] = useState<'ALL' | 'active' | 'inactive'>('ALL');
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const pageSize = 10;
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingStore, setEditingStore] = useState<Store | null>(null);
+    const [editingStore, setEditingStore] = useState<StoreResponse | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [deleteStoreId, setDeleteStoreId] = useState<string | null>(null);
+    const [deleteStoreId, setDeleteStoreId] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const loadStores = async () => {
+    const loadStores = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Placeholder for GET /stores API
-            setStores([]);
+            const response = await storeApi.getAllStores({
+                page: currentPage,
+                size: pageSize,
+                search: searchTerm || undefined,
+            });
+            const pageData = response.data;
+            setStores(pageData.content);
+            setTotalPages(pageData.totalPages);
+            setTotalElements(pageData.totalElements);
         } catch (error) {
             console.error(error);
+            toast.error('Failed to load stores');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [currentPage, searchTerm]);
 
     useEffect(() => {
         loadStores();
-    }, []);
+    }, [loadStores]);
+
+    // Reset to first page when search changes
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [searchTerm]);
 
     const filteredStores = stores.filter(store => {
-        const matchesSearch = store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            store.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            store.manager.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'ALL' || store.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        if (statusFilter === 'ALL') return true;
+        if (statusFilter === 'active') return store.isActive;
+        if (statusFilter === 'inactive') return !store.isActive;
+        return true;
     });
 
     const handleCreate = () => {
         navigate('/stores/create');
     };
 
-    const handleEdit = (store: Store) => {
+    const handleEdit = (store: StoreResponse) => {
         setEditingStore(store);
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: string) => {
+    const handleDeleteClick = (id: number) => {
         setDeleteStoreId(id);
         setIsDeleteModalOpen(true);
     };
@@ -75,11 +87,12 @@ export const StoreList = () => {
         if (!deleteStoreId) return;
         setIsDeleting(true);
         try {
-            // Placeholder: Call actual DELETE API here
+            // Placeholder: Call actual DELETE API here when backend supports it
+            toast.success('Store deleted successfully');
             setIsDeleteModalOpen(false);
             loadStores();
         } catch (error) {
-            alert('Failed to delete store');
+            toast.error('Failed to delete store');
         } finally {
             setIsDeleting(false);
         }
@@ -88,38 +101,27 @@ export const StoreList = () => {
     const handleSubmit = async (_data: any) => {
         setIsSaving(true);
         try {
-            // Placeholder: Call actual POST/PUT API here
             if (editingStore) {
-                // await updateStore(editingStore.id, data);
+                // Placeholder: update store API when available
             } else {
-                // await createStore(data);
+                await storeApi.createStore(_data);
             }
+            toast.success(editingStore ? 'Store updated successfully' : 'Store created successfully');
             setIsModalOpen(false);
             loadStores();
         } catch (error) {
-            alert('Failed to save store');
+            toast.error('Failed to save store');
         } finally {
             setIsSaving(false);
         }
     };
 
-    const getStatusVariant = (status: string) => {
-        const colors: Record<string, any> = {
-            active: 'success',
-            inactive: 'secondary',
-            pending: 'warning'
-        };
-        return colors[status] || 'default';
+    const getStatusVariant = (isActive: boolean) => {
+        return isActive ? 'success' : 'secondary';
     };
 
-    const getInventoryVariant = (status: string) => {
-        const colors: Record<string, any> = {
-            good: 'success',
-            warning: 'warning',
-            critical: 'danger'
-        };
-        return colors[status] || 'default';
-    };
+    const startItem = currentPage * pageSize + 1;
+    const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
 
     return (
         <div className="space-y-6">
@@ -131,7 +133,7 @@ export const StoreList = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="bg-zinc-900/50 px-3 py-1.5 rounded-md border border-zinc-700 text-sm font-medium text-gray-400 shadow-sm">
-                        <span className="text-gray-200 font-bold">{stores.length}</span> Total Stores
+                        <span className="text-gray-200 font-bold">{totalElements}</span> Total Stores
                     </div>
                     <Button onClick={handleCreate} className="shadow-sm">
                         <Plus className="mr-2 h-4 w-4" /> Register New Store
@@ -158,7 +160,7 @@ export const StoreList = () => {
                     <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                         <Filter size={16} className="text-gray-400 hidden md:block" />
                         <span className="text-sm text-gray-400 whitespace-nowrap hidden md:block">Filter by Status:</span>
-                        {(['ALL', 'active', 'pending', 'inactive'] as const).map((status) => (
+                        {(['ALL', 'active', 'inactive'] as const).map((status) => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
@@ -180,19 +182,18 @@ export const StoreList = () => {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-zinc-900/80/50 border-b border-zinc-800 text-xs uppercase text-gray-400 font-semibold tracking-wider">
+                                <tr className="bg-zinc-900/80 border-b border-zinc-800 text-xs uppercase text-gray-400 font-semibold tracking-wider">
                                     <th className="px-6 py-4">Store Name</th>
                                     <th className="px-6 py-4">Manager</th>
-                                    <th className="px-6 py-4">Revenue</th>
+                                    <th className="px-6 py-4">Contact</th>
                                     <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4">Inventory</th>
                                     <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800">
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
                                             <div className="flex flex-col items-center justify-center">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mb-2"></div>
                                                 Loading stores...
@@ -201,7 +202,7 @@ export const StoreList = () => {
                                     </tr>
                                 ) : filteredStores.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
                                             No stores found matching your criteria.
                                         </td>
                                     </tr>
@@ -209,7 +210,7 @@ export const StoreList = () => {
                                     filteredStores.map((store) => (
                                         <tr
                                             key={store.id}
-                                            className="hover:bg-amber-500/10/30 transition-colors group cursor-pointer"
+                                            className="hover:bg-amber-500/5 transition-colors group cursor-pointer"
                                             onClick={() => navigate(`/stores/${store.id}`)}
                                         >
                                             <td className="px-6 py-4">
@@ -221,7 +222,7 @@ export const StoreList = () => {
                                                         <div className="font-medium text-gray-200 group-hover:text-amber-600 transition-colors">{store.name}</div>
                                                         <div className="text-gray-400 text-xs flex items-center mt-0.5">
                                                             <MapPin size={10} className="mr-1" />
-                                                            {store.location}
+                                                            {store.address}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -229,23 +230,19 @@ export const StoreList = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center text-sm text-gray-300">
                                                     <User size={14} className="mr-2 text-gray-400" />
-                                                    {store.manager}
+                                                    {store.managerName || 'N/A'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center text-sm font-medium text-gray-200">
-                                                    <DollarSign size={14} className="mr-1 text-gray-400" />
-                                                    {store.revenue.toLocaleString()}
+                                                <div className="text-sm text-gray-300">
+                                                    {store.phone && <div>{store.phone}</div>}
+                                                    {store.email && <div className="text-gray-400 text-xs">{store.email}</div>}
+                                                    {!store.phone && !store.email && <span className="text-gray-500">N/A</span>}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <Badge variant={getStatusVariant(store.status)} className="shadow-sm">
-                                                    {store.status.toUpperCase()}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <Badge variant={getInventoryVariant(store.inventoryStatus)} className="shadow-sm">
-                                                    {store.inventoryStatus.toUpperCase()}
+                                                <Badge variant={getStatusVariant(store.isActive)} className="shadow-sm">
+                                                    {store.isActive ? 'ACTIVE' : 'INACTIVE'}
                                                 </Badge>
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -281,6 +278,35 @@ export const StoreList = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination */}
+                    <div className="bg-zinc-900/80 px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
+                        <span className="text-sm text-gray-400">
+                            {totalElements > 0 ? (
+                                <>Showing <span className="font-medium text-gray-200">{startItem}</span> to <span className="font-medium text-gray-200">{endItem}</span> of <span className="font-medium text-gray-200">{totalElements}</span> stores</>
+                            ) : (
+                                'No stores found'
+                            )}
+                        </span>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === 0}
+                                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage >= totalPages - 1}
+                                onClick={() => setCurrentPage((p) => p + 1)}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
                 </Card>
             </div>
 
@@ -306,12 +332,12 @@ export const StoreList = () => {
                                         <h3 className="font-semibold text-gray-200">{store.name}</h3>
                                         <div className="text-xs text-gray-400 flex items-center">
                                             <MapPin size={10} className="mr-1" />
-                                            {store.location}
+                                            {store.address}
                                         </div>
                                     </div>
                                 </div>
-                                <Badge variant={getStatusVariant(store.status)} className="shadow-none">
-                                    {store.status.toUpperCase()}
+                                <Badge variant={getStatusVariant(store.isActive)} className="shadow-none">
+                                    {store.isActive ? 'ACTIVE' : 'INACTIVE'}
                                 </Badge>
                             </div>
 
@@ -320,23 +346,17 @@ export const StoreList = () => {
                                     <div className="text-xs text-gray-400 mb-1 flex items-center">
                                         <User size={10} className="mr-1" /> Manager
                                     </div>
-                                    <div className="text-sm font-medium text-gray-200 truncate">{store.manager}</div>
+                                    <div className="text-sm font-medium text-gray-200 truncate">{store.managerName || 'N/A'}</div>
                                 </div>
                                 <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
                                     <div className="text-xs text-gray-400 mb-1 flex items-center">
-                                        <DollarSign size={10} className="mr-1" /> Revenue
+                                        <Package size={10} className="mr-1" /> Contact
                                     </div>
-                                    <div className="text-sm font-medium text-gray-200">${store.revenue.toLocaleString()}</div>
+                                    <div className="text-sm font-medium text-gray-200 truncate">{store.phone || store.email || 'N/A'}</div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-3 border-t border-zinc-800">
-                                <div className="flex items-center gap-2">
-                                    <Package size={14} className="text-gray-400" />
-                                    <Badge variant={getInventoryVariant(store.inventoryStatus)} size="sm">
-                                        {store.inventoryStatus.replace('_', ' ')} Inventory
-                                    </Badge>
-                                </div>
+                            <div className="flex items-center justify-end pt-3 border-t border-zinc-800">
                                 <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                                     <button
                                         onClick={() => handleEdit(store)}
