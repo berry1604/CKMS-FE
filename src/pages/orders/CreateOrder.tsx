@@ -8,7 +8,14 @@ import { Badge } from '../../components/ui/Badge';
 import { productApi } from '../../services/product.api';
 import type { ProductResponse as Product } from '../../types/product';
 import { storeOrderApi } from '../../services/storeOrderApi';
-import type { OrderItemRequest, StoreSimpleResponse } from '../../types/storeOrder';
+import { storeApi } from '../../services/store.api';
+import type { OrderItemRequest } from '../../types/storeOrder';
+import toast from 'react-hot-toast';
+
+interface StoreOption {
+    id: number;
+    name: string;
+}
 
 export const CreateOrder = () => {
     const navigate = useNavigate();
@@ -17,15 +24,25 @@ export const CreateOrder = () => {
     const [storeId, setStoreId] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchProduct, setSearchProduct] = useState('');
-    const [stores, setStores] = useState<StoreSimpleResponse[]>([]);
+    const [stores, setStores] = useState<StoreOption[]>([]);
+
+    const [storeLoadFailed, setStoreLoadFailed] = useState(false);
 
     useEffect(() => {
         productApi.getProducts().then(res => setProducts(res.data.content || []));
-        storeOrderApi.getMyStores().then(res => {
-            setStores(res || []);
-            if (res && res.length > 0) {
-                setStoreId(String(res[0].id));
+        storeApi.getAllStores().then(res => {
+            const storeList = res.data?.content || [];
+            const mapped = storeList.map((s: any) => ({
+                id: s.id ?? s.storeId,
+                name: s.name ?? s.storeName ?? `Store #${s.id ?? s.storeId}`
+            }));
+            setStores(mapped);
+            if (mapped.length > 0) {
+                setStoreId(String(mapped[0].id));
             }
+        }).catch(err => {
+            console.error('Failed to load stores:', err);
+            setStoreLoadFailed(true);
         });
     }, []);
 
@@ -69,26 +86,41 @@ export const CreateOrder = () => {
     };
 
     const handleSubmit = async () => {
-        if (cart.length === 0) return;
-        if (!storeId || isNaN(Number(storeId))) {
-            alert('Please enter a valid numeric Store ID');
+        if (cart.length === 0) {
+            toast.error('Giỏ hàng trống. Vui lòng thêm sản phẩm.');
             return;
         }
-        if (!confirm('Submit this order?')) return;
+        if (!storeId) {
+            toast.error('Vui lòng chọn cửa hàng.');
+            return;
+        }
+        const numericStoreId = Number(storeId);
+
+        if (!numericStoreId || isNaN(numericStoreId)) {
+            toast.error(`Store ID không hợp lệ: "${storeId}"`);
+            return;
+        }
+        if (!confirm('Xác nhận đặt đơn hàng này?')) return;
+
+        const payload = {
+            storeId: numericStoreId,
+            items: cart.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity
+            }))
+        };
 
         setIsSubmitting(true);
         try {
-            await storeOrderApi.createOrder({
-                storeId: Number(storeId),
-                items: cart.map(item => ({
-                    productId: item.productId,
-                    quantity: item.quantity
-                }))
-            });
+            await storeOrderApi.createOrder(payload);
+            toast.success('Đặt đơn hàng thành công!');
             navigate('/orders');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to submit order', error);
-            alert('Failed to submit order');
+            const backendMsg = error.response?.data?.message
+                || error.response?.data?.error
+                || error.message;
+            toast.error(`Đặt đơn hàng thất bại: ${backendMsg}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -107,8 +139,8 @@ export const CreateOrder = () => {
                     <ArrowLeft size={20} className="text-gray-400" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Create New Order</h1>
-                    <p className="text-sm text-gray-400">Select products to replenish your store inventory.</p>
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Tạo Đơn hàng mới</h1>
+                    <p className="text-sm text-gray-400">Chọn sản phẩm để đặt hàng cho cửa hàng.</p>
                 </div>
             </div>
 
@@ -118,7 +150,7 @@ export const CreateOrder = () => {
                     <Card className="flex-1 flex flex-col border-0 shadow-sm ring-1 ring-zinc-700 overflow-hidden bg-zinc-900/50">
                         <div className="p-4 border-b border-zinc-800 bg-zinc-900/50 sticky top-0 z-10">
                             <Input
-                                placeholder="Search products by name or category..."
+                                placeholder="Tìm kiếm sản phẩm..."
                                 value={searchProduct}
                                 onChange={(e) => setSearchProduct(e.target.value)}
                                 icon={<SearchIcon size={16} className="text-gray-400" />}
@@ -146,11 +178,11 @@ export const CreateOrder = () => {
                                         <div className="p-3 flex-1 flex flex-col">
                                             <div className="flex justify-between items-start mb-1">
                                                 <h3 className="font-semibold text-gray-200 text-sm line-clamp-2">{product.name}</h3>
-                                                <span className="font-bold text-gray-200 text-sm ml-2">${product.price.toFixed(2)}</span>
+                                                <span className="font-bold text-gray-200 text-sm ml-2">{product.price.toLocaleString()}đ</span>
                                             </div>
-                                            <p className="text-xs text-gray-400 mb-2">Category: {product.category?.id}</p>
+                                            <p className="text-xs text-gray-400 mb-2">{product.category?.name || 'Chưa phân loại'}</p>
                                             <div className="mt-auto pt-2 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
-                                                <span>pcs</span>
+                                                <span>{product.unit || 'pcs'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -165,15 +197,15 @@ export const CreateOrder = () => {
                     <Card className="flex-1 flex flex-col border-0 shadow-sm ring-1 ring-zinc-700 overflow-hidden bg-zinc-900/50">
                         <div className="p-4 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
                             <ShoppingCart size={18} className="text-amber-600" />
-                            <h2 className="font-bold text-gray-200">Current Order</h2>
-                            <Badge variant="secondary" className="ml-auto">{cart.length} items</Badge>
+                            <h2 className="font-bold text-gray-200">Đơn hàng</h2>
+                            <Badge variant="secondary" className="ml-auto">{cart.length} sản phẩm</Badge>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-900/50">
                             {cart.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-2 opacity-60">
                                     <ShoppingCart size={40} />
-                                    <p className="text-sm">Your cart is empty</p>
+                                    <p className="text-sm">Giỏ hàng trống</p>
                                 </div>
                             ) : (
                                 cart.map(item => (
@@ -184,9 +216,9 @@ export const CreateOrder = () => {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between">
                                                 <p className="font-medium text-gray-200 text-sm truncate pr-2">{item.productName}</p>
-                                                <span className="font-bold text-gray-200 text-sm">${(item.quantity * item.price).toFixed(2)}</span>
+                                                <span className="font-bold text-gray-200 text-sm">{(item.quantity * item.price).toLocaleString()}đ</span>
                                             </div>
-                                            <p className="text-xs text-gray-400 mb-2">${item.price} / {item.unit}</p>
+                                            <p className="text-xs text-gray-400 mb-2">{item.price.toLocaleString()}đ / {item.unit}</p>
                                             <div className="flex items-center gap-2">
                                                 <div className="flex items-center bg-zinc-900/50 rounded border border-zinc-700 h-7">
                                                     <button
@@ -215,16 +247,16 @@ export const CreateOrder = () => {
                         <div className="p-4 bg-zinc-900/80 border-t border-zinc-700 space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400">Subtotal</span>
-                                    <span className="font-medium">${calculateTotal().toFixed(2)}</span>
+                                    <span className="text-gray-400">Tạm tính</span>
+                                    <span className="font-medium">{calculateTotal().toLocaleString()}đ</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400">Tax (0%)</span>
-                                    <span className="font-medium">$0.00</span>
+                                    <span className="text-gray-400">Thuế (0%)</span>
+                                    <span className="font-medium">0đ</span>
                                 </div>
                                 <div className="pt-2 border-t border-zinc-700 flex justify-between text-base">
-                                    <span className="font-bold text-gray-200">Total</span>
-                                    <span className="font-bold text-amber-600 text-lg">${calculateTotal().toFixed(2)}</span>
+                                    <span className="font-bold text-gray-200">Tổng cộng</span>
+                                    <span className="font-bold text-amber-600 text-lg">{calculateTotal().toLocaleString()}đ</span>
                                 </div>
                             </div>
 
@@ -232,21 +264,41 @@ export const CreateOrder = () => {
 
                             <div className="space-y-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Store ID</label>
-                                    <select
-                                        value={storeId}
-                                        onChange={(e) => setStoreId(e.target.value)}
-                                        className="w-full bg-zinc-900 border border-zinc-700 text-gray-200 text-sm rounded-md focus:ring-amber-500 focus:border-amber-500 p-2.5"
-                                    >
-                                        <option value="" disabled>Select a store</option>
-                                        {stores.map(store => (
-                                            <option key={store.id} value={store.id}>{store.name}</option>
-                                        ))}
-                                    </select>
-                                    <p className="text-xs text-gray-400 mt-1">Select the store destination for this order</p>
+                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Cửa hàng</label>
+                                    {storeLoadFailed || stores.length === 0 ? (
+                                        <>
+                                            <input
+                                                type="number"
+                                                value={storeId}
+                                                onChange={(e) => setStoreId(e.target.value)}
+                                                placeholder="Nhập Store ID (VD: 1)"
+                                                className="w-full bg-zinc-900 border border-zinc-700 text-gray-200 text-sm rounded-md focus:ring-amber-500 focus:border-amber-500 p-2.5"
+                                            />
+                                            <p className="text-xs text-amber-500 mt-1">
+                                                {storeLoadFailed
+                                                    ? 'Không thể tải danh sách cửa hàng (thiếu quyền). Nhập Store ID thủ công.'
+                                                    : 'Chưa có cửa hàng nào. Nhập Store ID thủ công.'
+                                                }
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <select
+                                                value={storeId}
+                                                onChange={(e) => setStoreId(e.target.value)}
+                                                className="w-full bg-zinc-900 border border-zinc-700 text-gray-200 text-sm rounded-md focus:ring-amber-500 focus:border-amber-500 p-2.5"
+                                            >
+                                                <option value="" disabled>-- Chọn cửa hàng --</option>
+                                                {stores.map(store => (
+                                                    <option key={store.id} value={store.id}>{store.name}</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-xs text-gray-400 mt-1">Chọn cửa hàng nhận đơn hàng</p>
+                                        </>
+                                    )}
                                 </div>
-                                <Button className="w-full bg-amber-600 hover:bg-blue-700 text-white shadow-sm mt-2" onClick={handleSubmit} disabled={isSubmitting || cart.length === 0} isLoading={isSubmitting}>
-                                    <Save size={16} className="mr-2" /> Submit Order
+                                <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm mt-2" onClick={handleSubmit} disabled={isSubmitting || cart.length === 0} isLoading={isSubmitting}>
+                                    <Save size={16} className="mr-2" /> Đặt hàng
                                 </Button>
                             </div>
                         </div>

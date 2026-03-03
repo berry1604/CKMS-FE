@@ -84,10 +84,24 @@ export const storeOrderApi = {
      */
     getMyStores: async (): Promise<StoreSimpleResponse[]> => {
         try {
-            // Placeholder: Assume there's an API for this
-            const response = await axiosClient.get<{ data: StoreSimpleResponse[] } | StoreSimpleResponse[]>('/stores');
-            // Support both wrapped ApiResponse or direct array
-            return Array.isArray(response.data) ? response.data : response.data.data;
+            const response = await axiosClient.get<any>('/stores');
+            // Backend returns ApiResponse<Page<StoreResponse>> with data.content
+            const resData = response.data;
+            let stores: any[] = [];
+
+            if (resData?.data?.content) {
+                // ApiResponse<Page<StoreResponse>>
+                stores = resData.data.content;
+            } else if (resData?.content) {
+                // Page<StoreResponse> directly
+                stores = resData.content;
+            } else if (Array.isArray(resData?.data)) {
+                stores = resData.data;
+            } else if (Array.isArray(resData)) {
+                stores = resData;
+            }
+
+            return stores.map((s: any) => ({ id: s.id, name: s.name || s.storeName || `Store #${s.id}` }));
         } catch (error) {
             console.error(`Error fetching stores:`, error);
             return [];

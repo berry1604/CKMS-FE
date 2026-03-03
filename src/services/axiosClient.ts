@@ -31,6 +31,9 @@ axiosClient.interceptors.request.use(
     }
 );
 
+// Debounce 403 toast to avoid spamming when multiple API calls fail at once
+let last403Toast = 0;
+
 // Response interceptor: handle errors
 axiosClient.interceptors.response.use(
     (response) => {
@@ -43,7 +46,11 @@ axiosClient.interceptors.response.use(
             localStorage.removeItem('refreshToken');
             window.location.href = '/login';
         } else if (error.response?.status === 403) {
-            toast.error('Access Denied. You do not have permission to perform this action.');
+            const now = Date.now();
+            if (now - last403Toast > 3000) {
+                last403Toast = now;
+                toast.error('Bạn không có quyền thực hiện thao tác này. Vui lòng liên hệ Admin.');
+            }
         }
 
         return Promise.reject(error);

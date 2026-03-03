@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { Calendar as CalendarIcon, CheckCircle, Clock, PlayCircle, List, ChevronLeft, ChevronRight, Plus, Search, Filter, Ban, CheckSquare } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -12,12 +13,13 @@ import type { ProductionPlanSummaryResponse, ProductionPlanDetailResponse } from
 import toast from 'react-hot-toast';
 
 export const ProductionSchedule = () => {
+    const { user, hasAuthority } = useAuth();
     const navigate = useNavigate();
     const [plans, setPlans] = useState<ProductionPlanSummaryResponse[]>([]);
     const [filteredPlans, setFilteredPlans] = useState<ProductionPlanSummaryResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-    
+    const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'completed'>('list');
+
     const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
     const [selectedPlanDetail, setSelectedPlanDetail] = useState<ProductionPlanDetailResponse | null>(null);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
@@ -70,7 +72,7 @@ export const ProductionSchedule = () => {
             setPlans(data.sort((a, b) => b.planId - a.planId));
         } catch (error) {
             console.error('Failed to load plans:', error);
-            toast.error('Failed to load production plans');
+            toast.error('Không thể tải kế hoạch sản xuất');
         } finally {
             setIsLoading(false);
         }
@@ -83,37 +85,47 @@ export const ProductionSchedule = () => {
             setSelectedPlanDetail(detail);
         } catch (error) {
             console.error('Failed to load plan detail:', error);
-            toast.error('Failed to load plan details');
+            toast.error('Không thể tải chi tiết kế hoạch');
             setSelectedPlanId(null);
         } finally {
             setIsDetailLoading(false);
         }
     };
 
-    const handleStatusAction = async (action: 'ready' | 'start' | 'finish' | 'cancel') => {
-        if (!selectedPlanDetail) return;
+    const handleStatusAction = async (action: 'ready' | 'start' | 'finish' | 'cancel', planIdOverride?: number, versionOverride?: number) => {
+        const id = planIdOverride || selectedPlanDetail?.planId;
+        const version = versionOverride !== undefined ? versionOverride : selectedPlanDetail?.version;
+
+        if (!id) return;
+
         try {
             switch (action) {
                 case 'ready':
-                    await productionPlanApi.readyProductionPlan(selectedPlanDetail.planId);
+                    await productionPlanApi.readyProductionPlan(id);
                     break;
                 case 'start':
-                    await productionPlanApi.startProductionPlan(selectedPlanDetail.planId, selectedPlanDetail.version);
+                    await productionPlanApi.startProductionPlan(id, version);
                     break;
                 case 'finish':
-                    await productionPlanApi.finishProductionPlan(selectedPlanDetail.planId, selectedPlanDetail.version);
+                    await productionPlanApi.finishProductionPlan(id, version);
                     break;
                 case 'cancel':
-                    if (confirm('Are you sure you want to cancel this plan?')) {
-                        await productionPlanApi.cancelProductionPlan(selectedPlanDetail.planId, selectedPlanDetail.version, true);
+                    if (confirm('Bạn có chắc chắn muốn hủy kế hoạch này không?')) {
+                        await productionPlanApi.cancelProductionPlan(id, version, true);
                     } else {
                         return;
                     }
                     break;
             }
-            toast.success(`Plan marked as ${action}`);
+            if (action === 'finish') {
+                toast.success('Kế hoạch đã hoàn thành. Sản phẩm đã được cập nhật vào kho.');
+            } else {
+                toast.success('Cập nhật trạng thái thành công');
+            }
             loadPlans();
-            loadPlanDetail(selectedPlanDetail.planId);
+            if (selectedPlanId === id) {
+                loadPlanDetail(id);
+            }
         } catch (error: any) {
             const msg = error.response?.data?.message || `Failed to ${action} plan`;
             toast.error(msg);
@@ -125,19 +137,27 @@ export const ProductionSchedule = () => {
         const s = status?.toUpperCase() || 'UNKNOWN';
         let variant: "default" | "primary" | "secondary" | "success" | "warning" | "info" | "danger" = 'default';
         let Icon = Clock;
-        
+
         switch (s) {
             case 'DRAFT': variant = 'warning'; Icon = Clock; break;
-            case 'READY': variant = 'info'; Icon = CheckSquare; break;
-            case 'IN_PROGRESS': variant = 'primary'; Icon = PlayCircle; break;
+            case 'PLANNED': variant = 'warning'; Icon = Clock; break;
+            case 'READY_TO_PRODUCE': variant = 'info'; Icon = CheckSquare; break;
+            case 'IN_PRODUCTION': variant = 'primary'; Icon = PlayCircle; break;
             case 'COMPLETED': variant = 'success'; Icon = CheckCircle; break;
+            case 'FINISHED': variant = 'success'; Icon = CheckCircle; break;
             case 'CANCELLED': variant = 'danger'; Icon = Ban; break;
         }
 
         return (
             <Badge variant={variant} className="flex items-center gap-1.5 w-max">
                 <Icon size={12} />
-                {s.replace('_', ' ')}
+                {s === 'DRAFT' ? 'NHÁP' :
+                    s === 'PLANNED' ? 'ĐANG LÊN KẾ HOẠCH' :
+                        s === 'READY_TO_PRODUCE' ? 'SẴN SÀNG' :
+                            s === 'IN_PRODUCTION' ? 'ĐANG SẢN XUẤT' :
+                                s === 'COMPLETED' ? 'HOÀN THÀNH' :
+                                    s === 'FINISHED' ? 'HOÀN THÀNH' :
+                                        s === 'CANCELLED' ? 'ĐÃ HỦY' : s.replace('_', ' ')}
             </Badge>
         );
     };
@@ -145,43 +165,43 @@ export const ProductionSchedule = () => {
     // List View Columns
     const columns: Column<ProductionPlanSummaryResponse>[] = [
         {
-            header: 'Plan ID',
+            header: 'Mã Kế Hoạch',
             accessorKey: 'planId',
             cell: (row) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-400">#{row.planId}</span>
         },
         {
-            header: 'Plan Name / Batch',
+            header: 'Tên Kế Hoạch / Mã Lô',
             cell: (row) => (
                 <div>
-                    <h4 className="font-medium text-gray-200">{row.planName || 'Unnamed Plan'}</h4>
-                    {row.batchCode && <p className="text-xs text-gray-400">Batch: {row.batchCode}</p>}
+                    <h4 className="font-medium text-gray-200">{row.planName || 'Kế hoạch chưa đặt tên'}</h4>
+                    {row.batchCode && <p className="text-xs text-gray-400">Lô: {row.batchCode}</p>}
                 </div>
             )
         },
         {
-            header: 'Status',
+            header: 'Trạng Thái',
             cell: (row) => getStatusBadge(row.status)
         },
         {
-            header: 'Kitchen ID',
+            header: 'Mã Bếp',
             accessorKey: 'kitchenId',
-            cell: (row) => <span className="text-sm text-gray-300">{row.kitchenId || 'Standard Kitchen'}</span>
+            cell: (row) => <span className="text-sm text-gray-300">{row.kitchenId || 'Bếp mặc định'}</span>
         },
         {
-            header: 'Created At',
+            header: 'Ngày Tạo',
             accessorKey: 'createdAt',
             cell: (row) => (
                 <div className="flex flex-col">
-                    <span className="text-gray-200 text-sm">{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}</span>
-                    <span className="text-xs text-gray-400">{row.createdAt ? new Date(row.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                    <span className="text-gray-200 text-sm">{row.createdAt ? new Date(row.createdAt).toLocaleDateString('vi-VN') : '-'}</span>
+                    <span className="text-xs text-gray-400">{row.createdAt ? new Date(row.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                 </div>
             )
         },
         {
-            header: 'Actions',
+            header: 'Thao Tác',
             cell: (row) => (
                 <Button variant="ghost" size="sm" onClick={() => setSelectedPlanId(row.planId)}>
-                    View
+                    Xem
                 </Button>
             )
         }
@@ -224,9 +244,9 @@ export const ProductionSchedule = () => {
                                 onClick={() => setSelectedPlanId(plan.planId)}
                                 className={`w-full text-left px-2 py-1 rounded text-xs border border-transparent shadow-sm truncate
                                     ${plan.status === 'COMPLETED' ? 'bg-green-600 text-white hover:bg-green-700' :
-                                    plan.status === 'IN_PROGRESS' ? 'bg-amber-600 text-white hover:bg-blue-700' :
-                                    plan.status === 'CANCELLED' ? 'bg-red-600 text-white hover:bg-red-700' :
-                                    'bg-zinc-700 text-white hover:bg-zinc-600'}`}
+                                        plan.status === 'IN_PRODUCTION' ? 'bg-amber-600 text-white hover:bg-blue-700' :
+                                            plan.status === 'CANCELLED' ? 'bg-red-600 text-white hover:bg-red-700' :
+                                                'bg-zinc-700 text-white hover:bg-zinc-600'}`}
                             >
                                 <span className="opacity-90 font-medium text-[10px] mr-1">
                                     {plan.createdAt ? new Date(plan.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
@@ -257,7 +277,7 @@ export const ProductionSchedule = () => {
                                 onClick={() => setCurrentDate(new Date())}
                                 className="px-3 text-sm font-medium text-gray-300 hover:bg-zinc-900/80"
                             >
-                                Today
+                                Hôm nay
                             </button>
                             <button
                                 onClick={() => setCurrentDate(new Date(year, month + 1))}
@@ -271,7 +291,7 @@ export const ProductionSchedule = () => {
                     </div>
                 </div>
                 <div className="grid grid-cols-7 border-b border-zinc-700">
-                    {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                    {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map(day => (
                         <div key={day} className="py-2 text-center text-xs font-semibold text-gray-400 tracking-wider">
                             {day}
                         </div>
@@ -284,12 +304,104 @@ export const ProductionSchedule = () => {
         );
     };
 
+    const renderCompletedView = () => {
+        const inProgressPlans = plans.filter(p => p.status === 'IN_PRODUCTION');
+        const completedPlans = plans.filter(p => p.status === 'COMPLETED' || p.status === 'FINISHED');
+
+        return (
+            <div className="space-y-6">
+                {/* Active Production Section */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
+                            <PlayCircle size={20} className="text-amber-500" /> Đang Sản Xuất
+                        </h3>
+                        <Badge variant="warning">{inProgressPlans.length} Kế hoạch</Badge>
+                    </div>
+
+                    {inProgressPlans.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {inProgressPlans.map(plan => (
+                                <Card key={plan.planId} className="p-4 border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 transition-colors">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div>
+                                            <h4 className="font-bold text-gray-100">{plan.planName}</h4>
+                                            <p className="text-xs text-gray-400 font-mono">#{plan.planId} | {plan.batchCode}</p>
+                                        </div>
+                                        {getStatusBadge(plan.status)}
+                                    </div>
+                                    <div className="space-y-2 mb-4">
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-gray-500">Bắt đầu lúc:</span>
+                                            <span className="text-gray-300">{plan.createdAt ? new Date(plan.createdAt).toLocaleTimeString('vi-VN') : '-'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            className="flex-1 text-xs"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setSelectedPlanId(plan.planId)}
+                                        >
+                                            <Search size={14} className="mr-1" /> Chi tiết
+                                        </Button>
+                                        <Button
+                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs"
+                                            size="sm"
+                                            onClick={() => handleStatusAction('finish', plan.planId, plan.version)}
+                                        >
+                                            <CheckCircle size={14} className="mr-1" /> Hoàn thành
+                                        </Button>
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-12 text-center border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
+                            <div className="mx-auto w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mb-3">
+                                <PlayCircle size={24} className="text-gray-500" />
+                            </div>
+                            <p className="text-gray-400">Không có kế hoạch nào đang sản xuất.</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Completion History Section */}
+                <div className="space-y-4 pt-4 border-t border-zinc-800">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
+                            <CheckCircle size={20} className="text-green-500" /> Lịch Sử Hoàn Thành
+                        </h3>
+                    </div>
+
+                    <Card className="border-0 shadow-sm ring-1 ring-zinc-700">
+                        <DataTable
+                            data={completedPlans}
+                            columns={columns.slice(0, 5).concat([
+                                {
+                                    header: 'Thao Tác',
+                                    cell: (row) => (
+                                        <Button variant="ghost" size="sm" onClick={() => setSelectedPlanId(row.planId)}>
+                                            Xem lại
+                                        </Button>
+                                    )
+                                }
+                            ])}
+                            isLoading={isLoading}
+                            keyExtractor={item => String(item.planId)}
+                        />
+                    </Card>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Production Schedule</h1>
-                    <p className="text-sm text-gray-400 mt-1">Manage kitchen production plans and requirements.</p>
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Lịch Sản Xuất</h1>
+                    <p className="text-sm text-gray-400 mt-1">Quản lý các kế hoạch và yêu cầu sản xuất của bếp.</p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <div className="flex bg-gray-100 p-1 rounded-lg w-full md:w-auto">
@@ -297,20 +409,26 @@ export const ProductionSchedule = () => {
                             onClick={() => setViewMode('list')}
                             className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${viewMode === 'list' ? 'bg-zinc-900/50 text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
                         >
-                            <List size={16} /> List View
+                            <List size={16} /> Danh sách
                         </button>
                         <button
                             onClick={() => setViewMode('calendar')}
                             className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${viewMode === 'calendar' ? 'bg-zinc-900/50 text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
                         >
-                            <CalendarIcon size={16} /> Calendar
+                            <CalendarIcon size={16} /> Lịch
+                        </button>
+                        <button
+                            onClick={() => setViewMode('completed')}
+                            className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${viewMode === 'completed' ? 'bg-zinc-900/50 text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                        >
+                            <CheckCircle size={16} /> Hoàn tất
                         </button>
                     </div>
                     <Button
                         className="shrink-0 shadow-sm bg-amber-600 hover:bg-blue-700 text-white"
                         onClick={handleCreateTask}
                     >
-                        <Plus size={18} className="mr-2" /> Create Plan
+                        <Plus size={18} className="mr-2" /> Tạo Kế Hoạch
                     </Button>
                 </div>
             </div>
@@ -321,7 +439,7 @@ export const ProductionSchedule = () => {
                         <div className="relative w-full md:w-80">
                             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                             <Input
-                                placeholder="Search plan name, batch..."
+                                placeholder="Tìm tên kế hoạch, mã lô..."
                                 className="pl-10"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -329,8 +447,8 @@ export const ProductionSchedule = () => {
                         </div>
                         <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                             <Filter size={16} className="text-gray-400 mr-1" />
-                            <span className="text-sm text-gray-400 mr-2">Status:</span>
-                            {['all', 'draft', 'ready', 'in_progress', 'completed', 'cancelled'].map(status => (
+                            <span className="text-sm text-gray-400 mr-2">Trạng thái:</span>
+                            {['all', 'planned', 'ready_to_produce', 'in_production', 'finished', 'cancelled'].map(status => (
                                 <button
                                     key={status}
                                     onClick={() => setStatusFilter(status as any)}
@@ -339,7 +457,12 @@ export const ProductionSchedule = () => {
                                             ? 'bg-amber-500/10 border-blue-200 text-amber-500'
                                             : 'bg-zinc-900/50 border-zinc-700 text-gray-400 hover:bg-zinc-900/80'}`}
                                 >
-                                    {status === 'all' ? 'All Plans' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    {status === 'all' ? 'Tất cả' :
+                                        status === 'planned' ? 'Đang lên KH' :
+                                            status === 'ready_to_produce' ? 'Sẵn sàng' :
+                                                status === 'in_production' ? 'Đang làm' :
+                                                    status === 'finished' ? 'Xong' :
+                                                        status === 'cancelled' ? 'Đã hủy' : status}
                                 </button>
                             ))}
                         </div>
@@ -354,59 +477,60 @@ export const ProductionSchedule = () => {
             )}
 
             {viewMode === 'calendar' && renderCalendar()}
+            {viewMode === 'completed' && renderCompletedView()}
 
             <Drawer
                 isOpen={!!selectedPlanId}
                 onClose={() => setSelectedPlanId(null)}
-                title={selectedPlanDetail?.planName || 'Plan Details'}
-                description={selectedPlanDetail?.batchCode ? `Batch: ${selectedPlanDetail.batchCode}` : 'Production plan details'}
+                title={selectedPlanDetail?.planName || 'Chi Tiết Kế Hoạch'}
+                description={selectedPlanDetail?.batchCode ? `Mã lô: ${selectedPlanDetail.batchCode}` : 'Chi tiết kế hoạch sản xuất'}
                 width="max-w-2xl"
                 footer={
-                    selectedPlanDetail && selectedPlanDetail.status !== 'COMPLETED' && selectedPlanDetail.status !== 'CANCELLED' && (
+                    selectedPlanDetail && selectedPlanDetail.status !== 'COMPLETED' && selectedPlanDetail.status !== 'FINISHED' && selectedPlanDetail.status !== 'CANCELLED' && (
                         <div className="flex flex-col gap-3 w-full">
-                            <h4 className="font-medium text-gray-200 text-sm">Actions</h4>
+                            <h4 className="font-medium text-gray-200 text-sm">Thao Tác</h4>
                             <div className="flex gap-2">
-                                {selectedPlanDetail.status === 'DRAFT' && (
+                                {(selectedPlanDetail.status === 'DRAFT' || selectedPlanDetail.status === 'PLANNED') && (
                                     <>
                                         <Button
                                             className="flex-1"
                                             variant="primary"
                                             onClick={() => handleStatusAction('ready')}
                                         >
-                                            Mark as Ready
+                                            Đánh dấu Sẵn sàng
                                         </Button>
                                         <Button
                                             className="flex-1"
                                             variant="danger"
                                             onClick={() => handleStatusAction('cancel')}
                                         >
-                                            Cancel Plan
+                                            Hủy Kế Hoạch
                                         </Button>
                                     </>
                                 )}
-                                {selectedPlanDetail.status === 'READY' && (
+                                {selectedPlanDetail.status === 'READY_TO_PRODUCE' && (
                                     <>
                                         <Button
                                             className="flex-1 bg-amber-600 hover:bg-blue-700 text-white"
                                             onClick={() => handleStatusAction('start')}
                                         >
-                                            Start Production
+                                            Bắt Đầu Sản Xuất
                                         </Button>
                                         <Button
                                             className="flex-1"
                                             variant="danger"
                                             onClick={() => handleStatusAction('cancel')}
                                         >
-                                            Cancel Plan
+                                            Hủy Kế Hoạch
                                         </Button>
                                     </>
                                 )}
-                                {selectedPlanDetail.status === 'IN_PROGRESS' && (
+                                {selectedPlanDetail.status === 'IN_PRODUCTION' && (
                                     <Button
                                         className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                                         onClick={() => handleStatusAction('finish')}
                                     >
-                                        Complete Production
+                                        Hoàn Thành Sản Xuất
                                     </Button>
                                 )}
                             </div>
@@ -415,31 +539,31 @@ export const ProductionSchedule = () => {
                 }
             >
                 {isDetailLoading ? (
-                    <div className="p-8 text-center text-gray-400">Loading details...</div>
+                    <div className="p-8 text-center text-gray-400">Đang tải chi tiết...</div>
                 ) : selectedPlanDetail ? (
                     <div className="space-y-6">
                         <div className="bg-amber-500/10 p-4 rounded-xl border border-blue-100 flex justify-between items-center">
                             <div>
-                                <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">Current Status</p>
+                                <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">Trạng Thái Hiện Tại</p>
                                 {getStatusBadge(selectedPlanDetail.status)}
                             </div>
                             <div className="text-right">
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Created</p>
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Ngày Tạo</p>
                                 <div className="flex items-center gap-2 text-gray-200 font-medium">
                                     <CalendarIcon size={16} className="text-gray-400" />
-                                    <span>{new Date(selectedPlanDetail.createdAt).toLocaleString()}</span>
+                                    <span>{new Date(selectedPlanDetail.createdAt).toLocaleString('vi-VN')}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="space-y-4">
-                            <h4 className="font-semibold text-gray-200">Material Requirements</h4>
+                            <h4 className="font-semibold text-gray-200">Yêu Cầu Nguyên Liệu</h4>
                             {selectedPlanDetail.materials && selectedPlanDetail.materials.length > 0 ? (
                                 <table className="min-w-full divide-y divide-zinc-800 bg-zinc-900/50 rounded-lg overflow-hidden border border-zinc-800">
                                     <thead className="bg-zinc-800/50">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Material</th>
-                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Required Qty</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Nguyên Liệu</th>
+                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Số Lượng Yêu Cầu</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-zinc-800">
@@ -455,24 +579,24 @@ export const ProductionSchedule = () => {
                                 </table>
                             ) : (
                                 <div className="p-4 text-center border border-zinc-800 rounded-lg bg-zinc-900/50 text-gray-400 text-sm">
-                                    No materials required for this plan.
+                                    Không có yêu cầu nguyên liệu cho kế hoạch này.
                                 </div>
                             )}
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-lg shadow-sm">
-                                <span className="text-xs text-gray-400 block mb-1">Kitchen ID</span>
-                                <span className="font-medium text-gray-200">{selectedPlanDetail.kitchenId || 'Standard'}</span>
+                                <span className="text-xs text-gray-400 block mb-1">Mã Bếp</span>
+                                <span className="font-medium text-gray-200">{selectedPlanDetail.kitchenId || 'Mặc định'}</span>
                             </div>
                             <div className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-lg shadow-sm">
-                                <span className="text-xs text-gray-400 block mb-1">Coordinator User ID</span>
-                                <span className="font-medium text-gray-200">{selectedPlanDetail.coordinatorUserId || 'Auto-Assigned'}</span>
+                                <span className="text-xs text-gray-400 block mb-1">ID Người Điều Phối</span>
+                                <span className="font-medium text-gray-200">{selectedPlanDetail.coordinatorUserId || 'Tự động gán'}</span>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="p-8 text-center text-gray-400">Error loading plan configuration.</div>
+                    <div className="p-8 text-center text-gray-400">Lỗi khi tải cấu hình kế hoạch.</div>
                 )}
             </Drawer>
         </div>

@@ -14,7 +14,7 @@ import { toast } from 'react-hot-toast';
 
 export const OrderList = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { hasAuthority } = useAuth();
     const [orders, setOrders] = useState<StoreOrderResponse[]>([]);
     const [filteredOrders, setFilteredOrders] = useState<StoreOrderResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +43,10 @@ export const OrderList = () => {
                 params.status = statusFilter.toUpperCase();
             }
 
-            const apiCall = user?.role === 'ADMIN' || user?.role === 'MANAGER'
+            // Admin, Manager, Coordinator, or someone who inherently has VIEW_STORE_ORDER
+            const canViewAll = hasAuthority('VIEW_STORE_ORDER') || hasAuthority('COORDINATOR') || hasAuthority('ADMIN') || hasAuthority('MANAGER');
+
+            const apiCall = canViewAll
                 ? storeOrderApi.getAllOrders(params)
                 : storeOrderApi.getMyOrders(params);
 

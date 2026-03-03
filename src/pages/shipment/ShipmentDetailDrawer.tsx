@@ -23,21 +23,28 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
             'DELIVERED': 'success',
             'CANCELLED': 'danger'
         };
-        return <Badge variant={colors[status] || 'default'} className="text-sm px-3 py-1">{status.replace('_', ' ')}</Badge>;
+        const labels: Record<string, string> = {
+            'PENDING': 'CHỜ XỬ LÝ',
+            'PREPARED': 'ĐÃ CHUẨN BỊ',
+            'IN_TRANSIT': 'ĐANG GIAO',
+            'DELIVERED': 'ĐÃ GIAO',
+            'CANCELLED': 'ĐÃ HỦY'
+        };
+        return <Badge variant={colors[status] || 'default'} className="text-sm px-3 py-1">{labels[status] || status.replace('_', ' ')}</Badge>;
     };
 
     const steps = [
-        { key: 'PENDING', label: 'Pending', icon: Clock, time: shipment.createdAt },
-        { key: 'PREPARED', label: 'Prepared', icon: Package, time: undefined },
-        { key: 'IN_TRANSIT', label: 'In Transit', icon: Truck, time: shipment.shippedAt },
-        { key: 'DELIVERED', label: 'Delivered', icon: CheckCircle, time: shipment.deliveredAt },
+        { key: 'PENDING', label: 'Chờ xử lý', icon: Clock, time: shipment.createdAt },
+        { key: 'PREPARED', label: 'Đã chuẩn bị', icon: Package, time: undefined },
+        { key: 'IN_TRANSIT', label: 'Đang giao', icon: Truck, time: shipment.shippedAt },
+        { key: 'DELIVERED', label: 'Đã giao', icon: CheckCircle, time: shipment.deliveredAt },
     ];
     const statusOrder = ['PENDING', 'PREPARED', 'IN_TRANSIT', 'DELIVERED'];
     const currentIdx = statusOrder.indexOf(shipment.status);
 
     const footer = (
         <div className="flex justify-between w-full">
-            <Button variant="outline" onClick={onClose}>Close</Button>
+            <Button variant="outline" onClick={onClose}>Đóng</Button>
             <div className="flex gap-2">
                 {shipment.status === 'PENDING' && onStatusAction && (
                     <>
@@ -45,13 +52,13 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
                             className="bg-red-600 hover:bg-red-700 text-white"
                             onClick={() => onStatusAction(shipment.shipmentId, 'cancel')}
                         >
-                            <XCircle size={16} className="mr-2" /> Cancel
+                            <XCircle size={16} className="mr-2" /> Hủy Đơn
                         </Button>
                         <Button
                             className="bg-blue-600 hover:bg-blue-700 text-white"
                             onClick={() => onStatusAction(shipment.shipmentId, 'prepare')}
                         >
-                            <Package size={16} className="mr-2" /> Mark Prepared
+                            <Package size={16} className="mr-2" /> Đã Chuẩn Bị
                         </Button>
                     </>
                 )}
@@ -61,13 +68,13 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
                             className="bg-red-600 hover:bg-red-700 text-white"
                             onClick={() => onStatusAction(shipment.shipmentId, 'cancel')}
                         >
-                            <XCircle size={16} className="mr-2" /> Cancel
+                            <XCircle size={16} className="mr-2" /> Hủy Đơn
                         </Button>
                         <Button
                             className="bg-amber-600 hover:bg-amber-700 text-white"
                             onClick={() => onStatusAction(shipment.shipmentId, 'transit')}
                         >
-                            <Truck size={16} className="mr-2" /> Start Transit
+                            <Truck size={16} className="mr-2" /> Bắt Đầu Giao
                         </Button>
                     </>
                 )}
@@ -76,7 +83,7 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
                         className="bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => onStatusAction(shipment.shipmentId, 'confirm')}
                     >
-                        <CheckCircle size={16} className="mr-2" /> Confirm Delivery
+                        <CheckCircle size={16} className="mr-2" /> Xác Nhận Đã Giao
                     </Button>
                 )}
             </div>
@@ -87,8 +94,8 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
         <Drawer
             isOpen={isOpen}
             onClose={onClose}
-            title={`Shipment #${shipment.shipmentId}`}
-            description={`${shipment.storeName || `Store #${shipment.storeId}`} • Created ${new Date(shipment.createdAt).toLocaleDateString('vi-VN')}`}
+            title={`Đơn Vận Chuyển #${shipment.shipmentId}`}
+            description={`${shipment.storeName || `Cửa hàng #${shipment.storeId}`} • Tạo ngày ${new Date(shipment.createdAt).toLocaleDateString('vi-VN')}`}
             width="max-w-3xl"
             footer={footer}
         >
@@ -96,12 +103,12 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
                 {/* Status & Info Header */}
                 <div className="bg-zinc-900/80 rounded-xl p-6 border border-zinc-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Status</p>
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Trạng thái</p>
                         {getStatusBadge(shipment.status)}
                     </div>
                     {shipment.shippingFee != null && shipment.shippingFee > 0 && (
                         <div className="text-right">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Shipping Fee</p>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Cước phí</p>
                             <p className="text-lg font-bold text-gray-200">{shipment.shippingFee.toLocaleString('vi-VN')}₫</p>
                         </div>
                     )}
@@ -110,7 +117,7 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
                 {/* Driver Info */}
                 {(shipment.driverName || shipment.driverPhone || shipment.vehicleInfo) && (
                     <Card className="p-4 border-zinc-700">
-                        <h4 className="text-sm font-medium text-gray-200 mb-3">Driver Information</h4>
+                        <h4 className="text-sm font-medium text-gray-200 mb-3">Thông Tin Tài Xế</h4>
                         <div className="grid grid-cols-3 gap-4 text-sm">
                             {shipment.driverName && (
                                 <div className="flex items-center gap-2">
@@ -166,14 +173,14 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
                 ) : (
                     <div className="bg-red-500/10 rounded-xl p-6 border border-red-500/20 text-center space-y-2">
                         <XCircle className="mx-auto text-red-500" size={32} />
-                        <p className="text-red-400 font-semibold">Shipment has been cancelled</p>
+                        <p className="text-red-400 font-semibold">Đơn vận chuyển đã bị hủy</p>
                     </div>
                 )}
 
                 {/* Note */}
                 {shipment.note && (
                     <Card className="p-4 border-zinc-700">
-                        <h4 className="text-sm font-medium text-gray-200 mb-2">Note</h4>
+                        <h4 className="text-sm font-medium text-gray-200 mb-2">Ghi chú</h4>
                         <p className="text-sm text-gray-400">{shipment.note}</p>
                     </Card>
                 )}
@@ -181,7 +188,7 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
                 {/* Order IDs */}
                 <Card className="border-zinc-700 shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/80">
-                        <h3 className="font-semibold text-gray-200">Included Orders</h3>
+                        <h3 className="font-semibold text-gray-200">Đơn Hàng Bao Gồm</h3>
                     </div>
                     <div className="divide-y divide-zinc-800">
                         {shipment.storeOrderIds?.map(orderId => (
@@ -189,44 +196,44 @@ export const ShipmentDetailDrawer = ({ shipment, isOpen, onClose, onStatusAction
                                 <div className="p-1.5 bg-amber-500/10 text-amber-500 rounded">
                                     <Package size={16} />
                                 </div>
-                                <span className="text-sm font-medium text-gray-200">Order #{orderId}</span>
+                                <span className="text-sm font-medium text-gray-200">Đơn hàng #{orderId}</span>
                             </div>
                         ))}
                         {(!shipment.storeOrderIds || shipment.storeOrderIds.length === 0) && (
-                            <div className="px-6 py-8 text-center text-sm text-gray-400">No orders linked</div>
+                            <div className="px-6 py-8 text-center text-sm text-gray-400">Không có đơn hàng nào</div>
                         )}
                     </div>
                 </Card>
 
                 {/* Timeline */}
                 <Card className="p-4 border-zinc-700">
-                    <h4 className="text-sm font-medium text-gray-200 mb-3">Timeline</h4>
+                    <h4 className="text-sm font-medium text-gray-200 mb-3">Lịch Sử Trạng Thái</h4>
                     <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-gray-400">Created</span>
+                            <span className="text-gray-400">Thời gian tạo</span>
                             <span className="font-medium text-gray-200">{new Date(shipment.createdAt).toLocaleString('vi-VN')}</span>
                         </div>
                         {shipment.createdByUsername && (
                             <div className="flex justify-between">
-                                <span className="text-gray-400">Created By</span>
+                                <span className="text-gray-400">Người tạo</span>
                                 <span className="font-medium text-gray-200">{shipment.createdByUsername}</span>
                             </div>
                         )}
                         {shipment.shippedAt && (
                             <div className="flex justify-between">
-                                <span className="text-gray-400">Shipped</span>
+                                <span className="text-gray-400">Bắt đầu giao</span>
                                 <span className="font-medium text-gray-200">{new Date(shipment.shippedAt).toLocaleString('vi-VN')}</span>
                             </div>
                         )}
                         {shipment.deliveredAt && (
                             <div className="flex justify-between">
-                                <span className="text-gray-400">Delivered</span>
+                                <span className="text-gray-400">Đã giao tận nơi</span>
                                 <span className="font-medium text-green-400">{new Date(shipment.deliveredAt).toLocaleString('vi-VN')}</span>
                             </div>
                         )}
                         {shipment.confirmedByUsername && (
                             <div className="flex justify-between">
-                                <span className="text-gray-400">Confirmed By</span>
+                                <span className="text-gray-400">Người xác nhận</span>
                                 <span className="font-medium text-gray-200">{shipment.confirmedByUsername}</span>
                             </div>
                         )}

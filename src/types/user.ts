@@ -5,6 +5,7 @@ export interface User {
     name: string;
     email: string;
     role: UserRole;
+    authorities?: string[];
     avatarUrl?: string;
     phone?: string;
     address?: string;
@@ -35,7 +36,9 @@ export interface UserResponse {
     email: string;
     fullName: string;
     roleName: string;
+    storeId?: number;
     storeName?: string;
+    kitchenId?: number;
     kitchenName?: string;
     isActive: boolean;
     createdAt?: string;

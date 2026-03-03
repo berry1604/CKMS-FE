@@ -69,16 +69,17 @@ export const KitchenInventory = () => {
 
         setIsImporting(true);
         try {
-            const basePayload = {
-                quantity: importQuantity,
-                ...(expiryDate ? { expiryDate } : {})
-            };
-
             const requestPayload = [{
-                ...basePayload,
-                itemId: selectedItemId,
-                ...(importType === 'MATERIAL' ? { materialId: selectedItemId } : { productId: selectedItemId })
+                itemId: Number(selectedItemId),
+                quantity: Number(importQuantity),
+                ...(expiryDate ? { expiryDate: expiryDate } : {}),
+                ...(importType === 'MATERIAL'
+                    ? { materialId: Number(selectedItemId) }
+                    : { productId: Number(selectedItemId) }
+                )
             }];
+
+            console.log('Import payload:', JSON.stringify(requestPayload));
 
             if (importType === 'MATERIAL') {
                 await kitchenInventoryApi.importMaterials(WAREHOUSE_ID, requestPayload);
@@ -93,9 +94,14 @@ export const KitchenInventory = () => {
             setExpiryDate('');
             setSelectedItemId(0);
             loadInventory();
-        } catch (error) {
-            toast.error('Gặp lỗi khi nhập kho. Vui lòng thử lại.');
-            console.error(error);
+        } catch (error: any) {
+            console.error('Import error:', error);
+            const backendMsg = error.response?.data?.message
+                || error.response?.data?.data
+                || error.response?.data?.error
+                || error.message
+                || 'Lỗi không xác định';
+            toast.error(`Nhập kho thất bại: ${typeof backendMsg === 'object' ? JSON.stringify(backendMsg) : backendMsg}`);
         } finally {
             setIsImporting(false);
         }

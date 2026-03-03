@@ -98,19 +98,24 @@ export const StoreList = () => {
         }
     };
 
-    const handleSubmit = async (_data: any) => {
+    const handleSubmit = async (data: any) => {
         setIsSaving(true);
         try {
             if (editingStore) {
-                // Placeholder: update store API when available
-            } else {
-                await storeApi.createStore(_data);
+                // Backend chưa có API update store
+                // Tạo store mới với thông tin cập nhật
+                toast.error('Backend chưa hỗ trợ cập nhật cửa hàng. Vui lòng tạo cửa hàng mới.');
+                setIsSaving(false);
+                return;
             }
-            toast.success(editingStore ? 'Store updated successfully' : 'Store created successfully');
+            await storeApi.createStore(data);
+            toast.success('Tạo cửa hàng thành công!');
             setIsModalOpen(false);
+            setEditingStore(null);
             loadStores();
-        } catch (error) {
-            toast.error('Failed to save store');
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'Lỗi khi lưu cửa hàng';
+            toast.error(msg);
         } finally {
             setIsSaving(false);
         }
