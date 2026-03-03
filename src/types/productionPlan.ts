@@ -11,6 +11,7 @@ export interface ProductionPlanResponse {
     status: string;
     createdAt: string;
     coordinatorUserId: number;
+    version?: number;
 }
 
 export interface ProductionPlanSummaryResponse {
@@ -21,6 +22,7 @@ export interface ProductionPlanSummaryResponse {
     status: string;
     createdAt: string;
     coordinatorUserId: number;
+    version?: number;
 }
 
 export interface MaterialRequirementResponse {

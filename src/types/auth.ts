@@ -11,6 +11,7 @@ export interface LoginResponse {
     username?: string;
     email?: string;
     roles?: string[];
+    authorities?: string[];
     type?: string;
     expiresIn?: number;
     accessTokenExpiresIn?: number;

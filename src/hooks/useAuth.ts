@@ -18,12 +18,16 @@ export const useAuth = () => {
                 localStorage.setItem('expiresIn', String(expiry));
             }
 
-            // Synthesize user from LoginResponse
+            // Synthesize user from LoginResponse: Use roles array from backend
+            const responseAny = response as any;
+            let userRole = responseAny.roleName || (response.roles && response.roles.length > 0 ? response.roles[0] : '');
+
             let userObj = {
                 id: String(response.id || userId || 'default-user-id'),
-                name: response.username || username,
+                name: responseAny.fullName || response.username || username,
                 email: response.email || `${username}@example.com`,
-                role: (response.roles && response.roles.length > 0 ? response.roles[0] : 'ADMIN') as any, // Default to first role or ADMIN
+                role: userRole as any,
+                authorities: response.authorities || responseAny.privileges || [],
                 avatarUrl: undefined
             };
 
@@ -58,10 +62,48 @@ export const useAuth = () => {
         }
     };
 
+    const hasAuthority = (authority: string): boolean => {
+        const normalizedAuthority = authority.toUpperCase();
+
+        let userRoleStr = user?.role || '';
+        let authoritiesArr = user?.authorities || [];
+
+        // Fallback: extract role directly from token if it's missing in store
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                const decoded = JSON.parse(jsonPayload);
+                if (decoded.roles && Array.isArray(decoded.roles) && decoded.roles.length > 0) {
+                    // Update role from JWT if explicitly found
+                    if (!userRoleStr) userRoleStr = decoded.roles[0];
+                    if (authoritiesArr.length === 0) authoritiesArr = decoded.roles;
+                }
+            } catch (e) {
+                // Ignore parse errors
+            }
+        }
+
+        if (!userRoleStr && authoritiesArr.length === 0) return false;
+
+        const userRole = userRoleStr.toUpperCase().replace('ROLE_', '');
+
+        // Check role (e.g., ADMIN, KITCHEN_STAFF)
+        if (userRole === normalizedAuthority) return true;
+
+        // Check specific authorities/privileges (e.g., EXECUTE_PRODUCTION)
+        return authoritiesArr.some(a => a.toUpperCase() === normalizedAuthority) || false;
+    };
+
     return {
         user,
         isAuthenticated,
         login: handleLogin,
         logout: handleLogout,
+        hasAuthority
     };
 };

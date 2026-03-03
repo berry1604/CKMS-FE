@@ -35,23 +35,23 @@ export const MainLayout: React.FC = () => {
     };
 
     const navigation = [
-        { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-        { name: 'Notifications', href: '/notifications', icon: Bell },
-        { name: 'Users', href: '/users', icon: Users, roles: ['ADMIN'] },
-        { name: 'Roles', href: '/users/roles', icon: Shield, roles: ['ADMIN'] },
-        { name: 'Franchise Stores', href: '/stores', icon: Store, roles: ['ADMIN', 'MANAGER'] },
-        { name: 'Store Inventory', href: '/stores/inventory', icon: Database, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
-        { name: 'Production Plan', href: '/kitchen', icon: ChefHat, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
-        { name: 'Kitchen Inventory', href: '/kitchen/inventory', icon: Database, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
-        { name: 'Products', href: '/products', icon: Package, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
-        { name: 'Categories', href: '/products/categories', icon: Tags, roles: ['ADMIN', 'MANAGER'] },
-        { name: 'Materials', href: '/products/materials', icon: Layers, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
-        { name: 'Recipes', href: '/products/recipes', icon: ClipboardList, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
-        { name: 'Warehouse Fulfillment', href: '/warehouse/fulfillment', icon: Warehouse, roles: ['ADMIN', 'MANAGER'] },
-        { name: 'Orders', href: '/orders', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
-        { name: 'Billing', href: '/billing', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
-        { name: 'Shipment', href: '/shipment', icon: Truck, roles: ['ADMIN', 'SUPPLY_COORDINATOR'] },
-        { name: 'Reports', href: '/reports', icon: BarChart, roles: ['ADMIN', 'MANAGER'] },
+        { name: 'Tổng quan', href: '/', icon: LayoutDashboard },
+        { name: 'Thông báo', href: '/notifications', icon: Bell },
+        { name: 'Người dùng', href: '/users', icon: Users, roles: ['ADMIN'] },
+        { name: 'Vai trò & Quyền', href: '/users/roles', icon: Shield, roles: ['ADMIN'] },
+        { name: 'Cửa hàng Nhượng quyền', href: '/stores', icon: Store, roles: ['ADMIN', 'MANAGER'] },
+        { name: 'Kho Cửa hàng', href: '/stores/inventory', icon: Database, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
+        { name: 'Kế hoạch Sản xuất', href: '/kitchen', icon: ChefHat, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF', 'COORDINATOR'] },
+        { name: 'Kho Bếp trung tâm', href: '/kitchen/inventory', icon: Database, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF', 'COORDINATOR'] },
+        { name: 'Sản phẩm', href: '/products', icon: Package, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
+        { name: 'Danh mục', href: '/products/categories', icon: Tags, roles: ['ADMIN', 'MANAGER'] },
+        { name: 'Nguyên liệu', href: '/products/materials', icon: Layers, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
+        { name: 'Công thức', href: '/products/recipes', icon: ClipboardList, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
+        { name: 'Điều phối Kho', href: '/warehouse/fulfillment', icon: Warehouse, roles: ['ADMIN', 'MANAGER'] },
+        { name: 'Đơn hàng', href: '/orders', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
+        { name: 'Thanh toán & Hóa đơn', href: '/billing', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
+        { name: 'Giao hàng', href: '/shipment', icon: Truck, roles: ['ADMIN', 'SUPPLY_COORDINATOR'] },
+        { name: 'Báo cáo', href: '/reports', icon: BarChart, roles: ['ADMIN', 'MANAGER'] },
     ];
 
 
@@ -98,39 +98,29 @@ export const MainLayout: React.FC = () => {
                     </button>
                 )}
 
-                {/* Navigation */}
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto mt-2 custom-scrollbar">
                     {navigation.map((item) => {
                         const Icon = item.icon;
-                        // Check access: true if no roles defined, or if user has one of the required roles
-                        const userRoleStr = typeof user?.role === 'string' ? user.role.replace('ROLE_', '') : '';
-                        const hasAccess = !item.roles || (userRoleStr && item.roles.includes(userRoleStr as any));
-
                         return (
                             <NavLink
                                 key={item.name}
-                                to={hasAccess ? item.href : '#'}
-                                onClick={(e) => {
-                                    if (!hasAccess) {
-                                        e.preventDefault();
-                                    }
-                                }}
+                                to={item.href}
                                 title={isCollapsed ? item.name : undefined}
                                 className={({ isActive }) =>
                                     cn(
                                         'flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative',
                                         isCollapsed ? 'justify-center' : '',
-                                        hasAccess
-                                            ? (isActive ? 'bg-amber-500/10 text-amber-500 shadow-sm' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200')
-                                            : 'opacity-40 cursor-not-allowed text-gray-600 pointer-events-none select-none'
+                                        isActive ? 'bg-amber-500/10 text-amber-500 shadow-sm' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
                                     )
                                 }
                             >
-                                <Icon className={cn("h-5 w-5 transition-transform", hasAccess && "group-hover:scale-110", !isCollapsed && "mr-3")} />
-                                {!isCollapsed && <span>{item.name}</span>}
+                                <Icon className={cn("h-5 w-5 transition-transform", "group-hover:scale-110", !isCollapsed && "mr-3")} />
+                                {!isCollapsed && (
+                                    <span className="flex-1 truncate">{item.name}</span>
+                                )}
 
                                 {/* Active Indicator Bar */}
-                                {isCollapsed && hasAccess && (
+                                {isCollapsed && (
                                     <NavLink
                                         to={item.href}
                                         className={({ isActive }) => isActive ? "absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-amber-600 rounded-r-full" : "hidden"}
@@ -149,15 +139,15 @@ export const MainLayout: React.FC = () => {
                             isCollapsed ? "justify-center" : "px-3"
                         )}
                         onClick={() => navigate('/profile')}
-                        title="My Profile"
+                        title="Hồ sơ cá nhân"
                     >
                         <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold shadow-sm">
                             {user?.name?.charAt(0) || 'U'}
                         </div>
                         {!isCollapsed && (
                             <div className="ml-3 overflow-hidden">
-                                <p className="text-sm font-semibold text-gray-200 truncate">{user?.name || 'User'}</p>
-                                <p className="text-xs text-gray-400 truncate">{user?.role?.replace('_', ' ') || ''}</p>
+                                <p className="text-sm font-semibold text-gray-200 truncate">{user?.name || 'Người dùng'}</p>
+                                <p className="text-xs text-gray-400 truncate">{user?.role?.replace('ROLE_', '').replace('_', ' ') || ''}</p>
                             </div>
                         )}
                     </div>
@@ -167,7 +157,7 @@ export const MainLayout: React.FC = () => {
                             className="flex items-center w-full px-3 py-2 mt-3 text-sm font-medium text-red-500 rounded-lg hover:bg-red-500/10 transition-colors"
                         >
                             <LogOut className="mr-3 h-4 w-4" />
-                            Sign out
+                            Đăng xuất
                         </button>
                     )}
                 </div>

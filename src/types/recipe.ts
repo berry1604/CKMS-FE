@@ -5,9 +5,9 @@ export interface RecipeDetailRequest {
 
 export interface RecipeRequest {
     productId: number;
-    yield: number;
-    instructions: string;
     recipeDetails: RecipeDetailRequest[];
+    instructions: string;
+    yield: number;
 }
 
 export interface RecipeDetailResponse {
@@ -16,17 +16,13 @@ export interface RecipeDetailResponse {
     materialName: string;
     materialUnit: string;
     quantityNeeded: number;
-    costPerUnit?: number;
 }
 
 export interface RecipeResponse {
     id: number;
     productId: number;
     productName: string;
-    yield: number;
-    instructions: string;
     status: string;
-    totalCost: number;
     recipeDetails: RecipeDetailResponse[];
     createdAt: string;
     updatedAt: string;

@@ -5,12 +5,6 @@ import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import type { ProductResponse as Product } from '../../types/product';
-export interface RecipeMaterial {
-    id: string;
-    name: string;
-    cost: number;
-    unit: string;
-}
 import { recipeApi } from '../../services/recipe.api';
 import { materialApi } from '../../services/material.api';
 import type { RecipeDetailRequest, RecipeRequest } from '../../types/recipe';
@@ -21,33 +15,37 @@ interface RecipeEditorProps {
     onBack: () => void;
 }
 
+interface MaterialOption {
+    id: number;
+    name: string;
+    unit: string;
+}
+
 interface FormItem {
     materialId: number;
     materialName: string;
     quantityNeeded: number;
     unit: string;
-    costPerUnit: number;
 }
 
 export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
     const [items, setItems] = useState<FormItem[]>([]);
-    const [instructions, setInstructions] = useState('');
-    const [yieldValue, setYieldValue] = useState(1);
-    const [availableMaterials, setAvailableMaterials] = useState<RecipeMaterial[]>([]);
+    const [availableMaterials, setAvailableMaterials] = useState<MaterialOption[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [recipeId, setRecipeId] = useState<number | null>(null);
     const [recipeStatus, setRecipeStatus] = useState<string>('');
     const [isToggling, setIsToggling] = useState(false);
+    const [instructions, setInstructions] = useState<string>('');
+    const [recipeYield, setRecipeYield] = useState<number>(1);
 
     useEffect(() => {
         const fetchMaterials = async () => {
             try {
                 const data = await materialApi.getAll();
                 setAvailableMaterials(data.map(m => ({
-                    id: String(m.id),
+                    id: m.id,
                     name: m.name,
-                    cost: 0, // Set cost to 0 as it's not present in MaterialResponse
                     unit: m.unit
                 })));
             } catch (error) {
@@ -66,18 +64,15 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                     const recipe = res.data;
                     setRecipeId(recipe.id);
                     setRecipeStatus(recipe.status || '');
-                    setInstructions(recipe.instructions || '');
-                    setYieldValue(recipe.yield || 1);
                     setItems(recipe.recipeDetails.map(detail => ({
                         materialId: detail.materialId,
                         materialName: detail.materialName,
                         quantityNeeded: detail.quantityNeeded,
-                        unit: detail.materialUnit,
-                        costPerUnit: detail.costPerUnit || 0
+                        unit: detail.materialUnit
                     })));
                 }
-            } catch (error: any) {
-                // Ignore 404 or other errors as it might just mean no active recipe exists
+            } catch {
+                // No active recipe exists — that's fine
             } finally {
                 setIsLoading(false);
             }
@@ -87,17 +82,15 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
     }, [product.id]);
 
     const handleAddItem = () => {
-        // Add a default item placeholder
         if (availableMaterials.length === 0) return;
         const firstMat = availableMaterials[0];
         setItems([
             ...items,
             {
-                materialId: Number(firstMat.id),
+                materialId: firstMat.id,
                 materialName: firstMat.name,
                 quantityNeeded: 1,
-                unit: firstMat.unit,
-                costPerUnit: firstMat.cost
+                unit: firstMat.unit
             }
         ]);
     };
@@ -115,10 +108,9 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
         if (field === 'materialId') {
             const mat = availableMaterials.find(m => String(m.id) === String(value));
             if (mat) {
-                item.materialId = Number(mat.id);
+                item.materialId = mat.id;
                 item.materialName = mat.name;
                 item.unit = mat.unit;
-                item.costPerUnit = mat.cost;
             }
         } else if (field === 'quantityNeeded') {
             item.quantityNeeded = Number(value);
@@ -129,33 +121,29 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
     };
 
     const handleSave = async () => {
-        if (!instructions.trim()) {
-            toast.error("Vui lòng nhập Hướng dẫn (Instructions).");
-            return;
-        }
-
         if (items.length === 0) {
-            toast.error("Vui lòng thêm ít nhất 1 Nguyên liệu (Ingredient).");
+            toast.error("Vui lòng thêm ít nhất 1 nguyên liệu.");
             return;
         }
 
-        if (yieldValue <= 0) {
-            toast.error("Sản lượng (Yield) phải lớn hơn 0.");
+        const hasInvalid = items.some(item => item.quantityNeeded <= 0);
+        if (hasInvalid) {
+            toast.error("Số lượng nguyên liệu phải lớn hơn 0.");
             return;
         }
 
         setIsSaving(true);
         try {
-            const recipeDetails: RecipeDetailRequest[] = items.map(item => ({
+            const details: RecipeDetailRequest[] = items.map(item => ({
                 materialId: item.materialId,
                 quantityNeeded: item.quantityNeeded
             }));
 
             const requestData: RecipeRequest = {
                 productId: product.id,
-                yield: yieldValue,
-                instructions,
-                recipeDetails
+                recipeDetails: details,
+                instructions: instructions || `Công thức cho ${product.name}`,
+                yield: recipeYield
             };
             await recipeApi.createRecipe(requestData);
             toast.success("Tạo công thức thành công!");
@@ -169,10 +157,8 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
         }
     };
 
-    const totalCost = items.reduce((total, item) => total + (item.quantityNeeded * item.costPerUnit), 0);
-
     if (isLoading) {
-        return <div className="text-center py-12 text-gray-400">Loading recipe...</div>;
+        return <div className="text-center py-12 text-gray-400">Đang tải công thức...</div>;
     }
 
     return (
@@ -182,41 +168,46 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                     <ArrowLeft size={20} />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-200">Edit Recipe</h1>
+                    <h1 className="text-2xl font-bold text-gray-200">Thiết lập Công thức</h1>
                     <p className="text-gray-400">{product.name} (ID: {product.id})</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main: Ingredient List */}
                 <div className="lg:col-span-2 space-y-6">
                     <Card className="p-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-semibold text-lg">Ingredients</h3>
+                            <h3 className="font-semibold text-lg">Định mức Nguyên liệu</h3>
                             <Button size="sm" onClick={handleAddItem}>
-                                <Plus size={16} className="mr-2" /> Add Ingredient
+                                <Plus size={16} className="mr-2" /> Thêm nguyên liệu
                             </Button>
                         </div>
 
                         {items.length === 0 ? (
-                            <p className="text-gray-400 text-center py-6">No ingredients added yet.</p>
+                            <p className="text-gray-400 text-center py-6">Chưa có nguyên liệu nào. Nhấn "Thêm nguyên liệu" để bắt đầu.</p>
                         ) : (
                             <div className="space-y-3">
+                                <div className="flex items-center gap-3 px-3 text-xs text-gray-500 font-medium uppercase">
+                                    <div className="flex-1">Nguyên liệu</div>
+                                    <div className="w-28">Số lượng</div>
+                                    <div className="w-16">Đơn vị</div>
+                                    <div className="w-10"></div>
+                                </div>
                                 {items.map((item, index) => (
-                                    <div key={index} className="flex items-end gap-3 p-3 bg-zinc-900/80 rounded-lg">
+                                    <div key={index} className="flex items-center gap-3 p-3 bg-zinc-900/80 rounded-lg">
                                         <div className="flex-1">
-                                            <label className="text-xs text-gray-400 mb-1 block">Material</label>
                                             <select
-                                                className="flex h-10 w-full rounded-md border border-gray-300 bg-zinc-900/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                                                className="flex h-10 w-full rounded-md border border-zinc-700 bg-zinc-900/50 text-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                                                 value={item.materialId}
                                                 onChange={(e) => handleItemChange(index, 'materialId', e.target.value)}
                                             >
                                                 {availableMaterials.map(m => (
-                                                    <option key={m.id} value={m.id}>{m.name} (${m.cost}/{m.unit})</option>
+                                                    <option key={m.id} value={m.id}>{m.name}</option>
                                                 ))}
                                             </select>
                                         </div>
-                                        <div className="w-24">
-                                            <label className="text-xs text-gray-400 mb-1 block">Qty</label>
+                                        <div className="w-28">
                                             <Input
                                                 type="number"
                                                 min="0"
@@ -225,11 +216,8 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                                 onChange={(e) => handleItemChange(index, 'quantityNeeded', e.target.value)}
                                             />
                                         </div>
-                                        <div className="w-16 pb-2 text-sm text-gray-400">
+                                        <div className="w-16 text-sm text-gray-400 text-center">
                                             {item.unit}
-                                        </div>
-                                        <div className="w-24 pb-2 text-sm text-right font-medium">
-                                            ${(item.quantityNeeded * item.costPerUnit).toFixed(2)}
                                         </div>
                                         <Button
                                             variant="ghost"
@@ -243,35 +231,21 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                 ))}
                             </div>
                         )}
-
-                        <div className="mt-6 flex justify-end items-center pt-4 border-t">
-                            <span className="text-gray-400 mr-2">Total Estimated Cost:</span>
-                            <span className="text-xl font-bold text-gray-200">${totalCost.toFixed(2)}</span>
-                        </div>
-                    </Card>
-
-                    <Card className="p-6">
-                        <h3 className="font-semibold text-lg mb-4">Instructions</h3>
-                        <textarea
-                            className="w-full min-h-[150px] rounded-md border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                            placeholder="Enter preparation instructions..."
-                            value={instructions}
-                            onChange={(e) => setInstructions(e.target.value)}
-                        />
                     </Card>
                 </div>
 
+                {/* Sidebar: Settings */}
                 <div className="space-y-6">
                     <Card className="p-6">
-                        <h3 className="font-semibold text-lg mb-4">Recipe Settings</h3>
+                        <h3 className="font-semibold text-lg mb-4">Thông tin Công thức</h3>
                         <div className="space-y-4">
                             {/* Status */}
                             {recipeId && (
                                 <div className="pb-4 border-b border-zinc-800">
-                                    <label className="text-sm font-medium mb-2 block">Status</label>
+                                    <label className="text-sm font-medium mb-2 block">Trạng thái</label>
                                     <div className="flex items-center justify-between">
                                         <Badge variant={recipeStatus === 'ACTIVE' ? 'success' : 'warning'}>
-                                            {recipeStatus || 'N/A'}
+                                            {recipeStatus === 'ACTIVE' ? 'Đang hoạt động' : recipeStatus === 'INACTIVE' ? 'Ngừng hoạt động' : recipeStatus || 'N/A'}
                                         </Badge>
                                         <Button
                                             variant="outline"
@@ -284,9 +258,9 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                                     const newActive = recipeStatus !== 'ACTIVE';
                                                     const res = await recipeApi.toggleRecipeStatus(recipeId, newActive);
                                                     setRecipeStatus(res.data.status);
-                                                    toast.success(`Recipe ${newActive ? 'activated' : 'deactivated'} successfully`);
+                                                    toast.success(`Công thức đã được ${newActive ? 'kích hoạt' : 'vô hiệu hóa'} thành công`);
                                                 } catch (error: any) {
-                                                    const msg = error.response?.data?.message || 'Failed to toggle status';
+                                                    const msg = error.response?.data?.message || 'Không thể thay đổi trạng thái';
                                                     toast.error(msg);
                                                 } finally {
                                                     setIsToggling(false);
@@ -298,27 +272,60 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                             }
                                         >
                                             <Power size={14} className="mr-1.5" />
-                                            {isToggling ? '...' : (recipeStatus === 'ACTIVE' ? 'Deactivate' : 'Activate')}
+                                            {isToggling ? '...' : (recipeStatus === 'ACTIVE' ? 'Vô hiệu hóa' : 'Kích hoạt')}
                                         </Button>
                                     </div>
                                 </div>
                             )}
 
-                            <div>
-                                <label className="text-sm font-medium mb-1 block">Yield</label>
-                                <Input
-                                    type="number"
-                                    min="1"
-                                    value={yieldValue}
-                                    onChange={(e) => setYieldValue(Number(e.target.value))}
-                                />
-                                <p className="text-xs text-gray-400 mt-1">Number of units this recipe produces</p>
+                            {/* Product Info */}
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Sản phẩm</span>
+                                    <span className="text-gray-200 font-medium">{product.name}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Đơn vị</span>
+                                    <span className="text-gray-200">{product.unit}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Số nguyên liệu</span>
+                                    <span className="text-gray-200 font-medium">{items.length}</span>
+                                </div>
                             </div>
 
-                            <div className="pt-4 border-t">
+                            {/* Yield */}
+                            <div className="pt-4 border-t border-zinc-800 space-y-2">
+                                <label className="text-sm font-medium text-gray-300 block">Sản lượng (Yield) *</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    value={recipeYield}
+                                    onChange={(e) => setRecipeYield(Number(e.target.value))}
+                                    placeholder="VD: 1"
+                                    className="w-full px-3 py-2 border border-zinc-700 rounded-md text-sm bg-zinc-900/50 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                />
+                                <p className="text-xs text-gray-500">Số lượng sản phẩm tạo ra từ công thức này.</p>
+                            </div>
+
+                            {/* Instructions */}
+                            <div className="pt-4 border-t border-zinc-800 space-y-2">
+                                <label className="text-sm font-medium text-gray-300 block">Hướng dẫn chế biến *</label>
+                                <textarea
+                                    value={instructions}
+                                    onChange={(e) => setInstructions(e.target.value)}
+                                    placeholder="VD: Ướp thịt bò với gia vị 30 phút, sau đó nướng ở 200°C trong 15 phút..."
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-zinc-700 rounded-md text-sm bg-zinc-900/50 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"
+                                />
+                                <p className="text-xs text-gray-500">Mô tả các bước chế biến sản phẩm.</p>
+                            </div>
+
+                            <div className="pt-4 border-t border-zinc-800">
                                 <Button className="w-full" onClick={handleSave} disabled={isSaving}>
                                     <Save size={16} className="mr-2" />
-                                    {isSaving ? 'Saving...' : 'Save Recipe'}
+                                    {isSaving ? 'Đang lưu...' : 'Lưu Công thức'}
                                 </Button>
                             </div>
                         </div>

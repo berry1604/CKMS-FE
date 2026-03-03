@@ -30,7 +30,7 @@ export const WarehouseFulfillment = () => {
             const res = await storeOrderApi.getAllOrders();
             // Only show orders that need fulfillment
             const fulfillmentOrders = (res.content || []).filter(
-                (o) => o.status === 'SUBMITTED' || o.status === 'APPROVED' || o.status === 'SCHEDULED' || o.status === 'PRODUCED'
+                (o) => o.status === 'CONFIRMED' || o.status === 'PREPARING' || o.status === 'READY'
             );
             setOrders(fulfillmentOrders);
             setFilteredOrders(fulfillmentOrders);
@@ -95,13 +95,14 @@ export const WarehouseFulfillment = () => {
                 return;
             }
 
-            // In a real scenario, we might call an explicit deduct API here
-            // Since it's not available, we trigger updateOrderStatus to SHIPPING as the fulfillment action
-            await storeOrderApi.updateOrderStatus(selectedOrder.orderId, 'shipping');
+            if (selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'PREPARING') {
+                toast.error('Đơn hàng chưa sản xuất xong! Vui lòng hoàn thành Lịch Sản Xuất trước.');
+                setIsSubmitting(false);
+                return;
+            }
 
-            toast.success(`Đã xuất kho và giao hàng cho Đơn #${selectedOrder.orderId}`);
+            toast.success('Hàng trong kho đã đủ! Vui lòng sang tab "Vận chuyển" để tạo đơn giao hàng cho tài xế.');
             setSelectedOrder(null);
-            fetchOrders(); // Refresh table
         } catch (error) {
             console.error('Failed to fulfill order:', error);
             toast.error('Có lỗi xảy ra khi xử lý đơn hàng');
@@ -150,9 +151,11 @@ export const WarehouseFulfillment = () => {
             cell: (order) => {
                 const statusMap: Record<string, 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'info' | 'danger'> = {
                     submitted: 'warning',
-                    approved: 'info',
-                    scheduled: 'info',
-                    produced: 'success',
+                    confirmed: 'info',
+                    preparing: 'primary',
+                    ready: 'success',
+                    shipping: 'info',
+                    completed: 'success',
                 };
                 const statusStr = order.status?.toLowerCase() || 'unknown';
                 return (

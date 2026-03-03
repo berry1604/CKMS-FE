@@ -5,6 +5,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Drawer } from '../../components/ui/Drawer';
 import type { StoreOrderResponse } from '../../types/storeOrder';
+import { useAuth } from '../../hooks/useAuth';
 
 interface OrderDetailDrawerProps {
     order: StoreOrderResponse | null;
@@ -15,8 +16,13 @@ interface OrderDetailDrawerProps {
 }
 
 export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCancelOrder }: OrderDetailDrawerProps) => {
+    const { hasAuthority } = useAuth();
     const [isCancelling, setIsCancelling] = useState(false);
+
     if (!order) return null;
+
+    // hasAuthority securely unwraps "ROLE_" prefixes and falls back to JWT if needed.
+    const canApprove = hasAuthority('APPROVE_STORE_ORDER') || hasAuthority('COORDINATOR') || hasAuthority('MANAGER') || hasAuthority('ADMIN');
 
     const getStatusStep = (status: string) => {
         const steps = ['submitted', 'grouped', 'confirmed', 'preparing', 'ready', 'completed'];
@@ -60,7 +66,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                         {isCancelling ? 'Cancelling...' : 'Cancel Order'}
                     </Button>
                 )}
-                {canReject && onStatusUpdate && (
+                {canReject && onStatusUpdate && canApprove && (
                     <Button
                         className="bg-red-600 hover:bg-red-700 text-white"
                         onClick={() => onStatusUpdate(order.orderId, 'REJECTED')}
@@ -68,16 +74,12 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                         Reject
                     </Button>
                 )}
-                {(order.status === 'SUBMITTED' || order.status === 'submitted') && onStatusUpdate && (
-                    <Button onClick={() => onStatusUpdate(order.orderId, 'confirmed')}>
-                        Confirm Order
+                {(order.status === 'SUBMITTED' || order.status === 'submitted') && onStatusUpdate && canApprove && (
+                    <Button onClick={() => onStatusUpdate(order.orderId, 'CONFIRMED')}>
+                        Confirm/Approve
                     </Button>
                 )}
-                {(order.status === 'READY' || order.status === 'ready') && onStatusUpdate && (
-                    <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => onStatusUpdate(order.orderId, 'completed')}>
-                        Finish Order
-                    </Button>
-                )}
+
                 <Button variant="outline" onClick={onClose}>
                     Close
                 </Button>
