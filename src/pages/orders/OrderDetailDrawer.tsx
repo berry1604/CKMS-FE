@@ -92,7 +92,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
             isOpen={isOpen}
             onClose={onClose}
             title={`Order #${order.orderId}`}
-            description={`Store ID: ${order.storeId} • ${new Date(order.orderDate).toLocaleDateString()}`}
+            description={`${order.storeName || `Store ID: ${order.storeId}`} • ${new Date(order.orderDate).toLocaleDateString()}`}
             width="max-w-4xl"
             footer={footer}
         >
@@ -173,30 +173,40 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                         <thead className="bg-zinc-900/50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Product</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Quantity</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Available Stock</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Order Qty</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Total</th>
                             </tr>
                         </thead>
                         <tbody className="bg-zinc-900/50 divide-y divide-zinc-800">
                             {order.orderDetails && order.orderDetails.length > 0 ? (
-                                order.orderDetails.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-zinc-900/80/50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200">{item.productName || `Product #${item.productId}`}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 text-right">{item.quantity} units</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 text-right">${item.unitPrice?.toFixed(2) || '0.00'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-200 text-right">${item.subTotal?.toFixed(2) || (item.quantity * (item.unitPrice || 0)).toFixed(2)}</td>
-                                    </tr>
-                                ))
+                                order.orderDetails.map((item, idx) => {
+                                    const stockQty = item.kitchenStockQuantity || 0;
+                                    const isLowStock = stockQty < item.quantity;
+                                    return (
+                                        <tr key={idx} className="hover:bg-zinc-900/80/50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200">{item.productName || `Product #${item.productId}`}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${isLowStock ? 'bg-red-500/10 text-red-500' : 'text-gray-400'}`}>
+                                                    {stockQty} units
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 text-right">{item.quantity} units</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 text-right">${item.unitPrice?.toFixed(2) || '0.00'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-200 text-right">${item.subTotal?.toFixed(2) || (item.quantity * (item.unitPrice || 0)).toFixed(2)}</td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-400">No items available</td>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-400">No items available</td>
                                 </tr>
                             )}
                         </tbody>
                         <tfoot className="bg-zinc-900/80/50">
                             <tr>
-                                <td colSpan={3} className="px-6 py-4 text-right font-medium text-gray-400">Subtotal</td>
+                                <td colSpan={4} className="px-6 py-4 text-right font-medium text-gray-400">Subtotal</td>
                                 <td className="px-6 py-4 text-right font-bold text-gray-200">${order.totalAmount.toFixed(2)}</td>
                             </tr>
                         </tfoot>
@@ -209,8 +219,8 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                         <h4 className="text-sm font-medium text-gray-200 mb-3">Delivery Information</h4>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-gray-400">Store ID</span>
-                                <span className="font-medium text-gray-200">{order.storeId}</span>
+                                <span className="text-gray-400">Store</span>
+                                <span className="font-medium text-gray-200">{order.storeName || `Store #${order.storeId}`}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Date</span>

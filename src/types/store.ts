@@ -18,6 +18,15 @@ export interface StoreCreateRequest {
     managerId?: number;
 }
 
+export interface StoreUpdateRequest {
+    name: string;
+    address: string;
+    phone?: string;
+    email?: string;
+    managerId?: number;
+    isActive?: boolean;
+}
+
 export interface GetStoresParams {
     page?: number;
     size?: number;

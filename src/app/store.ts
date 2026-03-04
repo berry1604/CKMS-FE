@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthState, User } from '../types/user';
 
 interface AppStore extends AuthState {
@@ -24,6 +24,7 @@ export const useAppStore = create<AppStore>()(
                 isAuthenticated: state.isAuthenticated,
                 token: state.token
             }),
+            storage: createJSONStorage(() => sessionStorage),
         }
     )
 );

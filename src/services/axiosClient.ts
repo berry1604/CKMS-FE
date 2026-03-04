@@ -14,10 +14,10 @@ const axiosClient = axios.create({
 // Request interceptor: attach token
 axiosClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('accessToken');
+        const token = sessionStorage.getItem('accessToken');
 
         // Do not attach token for public endpoints
-        const publicEndpoints = ['/auth/login', '/auth/forgot-password', '/auth/reset-password', '/auth/activate'];
+        const publicEndpoints = ['/auth/login', '/auth/forgot-password', '/auth/reset-password', '/auth/activate', '/auth/refresh'];
         const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
 
         if (token && !isPublicEndpoint) {
@@ -42,8 +42,8 @@ axiosClient.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Token expired or invalid
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
             window.location.href = '/login';
         } else if (error.response?.status === 403) {
             const now = Date.now();
