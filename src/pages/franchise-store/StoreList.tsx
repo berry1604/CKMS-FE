@@ -70,7 +70,8 @@ export const StoreList = () => {
     });
 
     const handleCreate = () => {
-        navigate('/stores/create');
+        setEditingStore(null);
+        setIsModalOpen(true);
     };
 
     const handleEdit = (store: StoreResponse) => {
@@ -87,12 +88,13 @@ export const StoreList = () => {
         if (!deleteStoreId) return;
         setIsDeleting(true);
         try {
-            // Placeholder: Call actual DELETE API here when backend supports it
-            toast.success('Store deleted successfully');
+            await storeApi.deleteStore(deleteStoreId);
+            toast.success('Xóa cửa hàng thành công');
             setIsDeleteModalOpen(false);
             loadStores();
-        } catch (error) {
-            toast.error('Failed to delete store');
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'Failed to delete store';
+            toast.error(msg);
         } finally {
             setIsDeleting(false);
         }
@@ -102,14 +104,13 @@ export const StoreList = () => {
         setIsSaving(true);
         try {
             if (editingStore) {
-                // Backend chưa có API update store
-                // Tạo store mới với thông tin cập nhật
-                toast.error('Backend chưa hỗ trợ cập nhật cửa hàng. Vui lòng tạo cửa hàng mới.');
-                setIsSaving(false);
-                return;
+                // Backend ĐÃ CÓ API update store
+                await storeApi.updateStore(editingStore.id, data);
+                toast.success('Cập nhật cửa hàng thành công!');
+            } else {
+                await storeApi.createStore(data);
+                toast.success('Tạo cửa hàng thành công!');
             }
-            await storeApi.createStore(data);
-            toast.success('Tạo cửa hàng thành công!');
             setIsModalOpen(false);
             setEditingStore(null);
             loadStores();

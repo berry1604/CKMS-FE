@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { StoreResponse, StoreCreateRequest, GetStoresParams } from '../types/store';
+import type { StoreResponse, StoreCreateRequest, StoreUpdateRequest, GetStoresParams } from '../types/store';
 import type { ApiResponse, Page } from '../types/product';
 
 export const storeApi = {
@@ -32,4 +32,14 @@ export const storeApi = {
         const response = await axiosClient.get<ApiResponse<Page<StoreResponse>>>('/stores', { params });
         return response.data;
     },
+
+    updateStore: async (id: number, data: StoreUpdateRequest): Promise<ApiResponse<StoreResponse>> => {
+        const response = await axiosClient.put<ApiResponse<StoreResponse>>(`/stores/${id}`, data);
+        return response.data;
+    },
+
+    deleteStore: async (id: number): Promise<ApiResponse<string>> => {
+        const response = await axiosClient.delete<ApiResponse<string>>(`/stores/${id}`);
+        return response.data;
+    }
 };

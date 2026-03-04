@@ -77,7 +77,8 @@ export const OrderList = () => {
             const lowerQuery = searchQuery.toLowerCase();
             result = result.filter(o =>
                 String(o.orderId).includes(lowerQuery) ||
-                String(o.storeId).includes(lowerQuery)
+                String(o.storeId).includes(lowerQuery) ||
+                (o.storeName && o.storeName.toLowerCase().includes(lowerQuery))
             );
         }
 
@@ -120,9 +121,14 @@ export const OrderList = () => {
             cell: (order) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-400">{order.orderId}</span>
         },
         {
-            header: 'Store ID',
+            header: 'Store',
             accessorKey: 'storeId',
-            cell: (order) => <span className="font-medium text-gray-300">{order.storeId}</span>
+            cell: (order) => (
+                <div>
+                    <span className="font-medium text-gray-200 block">{order.storeName || `Store #${order.storeId}`}</span>
+                    <span className="text-xs text-gray-500">ID: {order.storeId}</span>
+                </div>
+            )
         },
         {
             header: 'Date',

@@ -14,11 +14,13 @@ export interface OrderDetailResponse {
     quantity: number;
     unitPrice: number;
     subTotal: number;
+    kitchenStockQuantity?: number;
 }
 
 export interface StoreOrderResponse {
     orderId: number;
     storeId: number;
+    storeName?: string;
     createdByUserId: number;
     orderDate: string; // ISO 8601 string
     status: string;    // Enum string like SUBMITTED, APPROVED, etc.

@@ -13,10 +13,10 @@ export const authApi = {
         const validAccessToken = accessToken || token;
 
         if (validAccessToken) {
-            localStorage.setItem('accessToken', validAccessToken);
+            sessionStorage.setItem('accessToken', validAccessToken);
         }
         if (refreshToken) {
-            localStorage.setItem('refreshToken', refreshToken);
+            sessionStorage.setItem('refreshToken', refreshToken);
         }
 
         return response.data;
@@ -26,8 +26,8 @@ export const authApi = {
         try {
             await axiosClient.post('/auth/logout', { refreshToken });
         } finally {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
         }
     },
 
@@ -43,10 +43,10 @@ export const authApi = {
         const validAccessToken = accessToken || token;
 
         if (validAccessToken) {
-            localStorage.setItem('accessToken', validAccessToken);
+            sessionStorage.setItem('accessToken', validAccessToken);
         }
         if (newRefreshToken) {
-            localStorage.setItem('refreshToken', newRefreshToken);
+            sessionStorage.setItem('refreshToken', newRefreshToken);
         }
 
         return response.data;
