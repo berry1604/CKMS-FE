@@ -1,0 +1,1 @@
+User wants to add an API to FranchiseStoreController.java.

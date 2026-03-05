@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Shield, Briefcase, Key, CheckCircle2, Store, Warehouse } from 'lucide-react';
+import { User, Mail, Shield, Briefcase, Key, CheckCircle2, Store } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -13,7 +13,6 @@ const userSchema = z.object({
     email: z.string().email('Email không hợp lệ'),
     role: z.enum(['ADMIN', 'MANAGER', 'STAFF', 'COORDINATOR', 'STORE_STAFF'] as const),
     storeId: z.union([z.number(), z.string(), z.null()]).optional(),
-    kitchenId: z.union([z.number(), z.string(), z.null()]).optional(),
 });
 
 type UserForm = z.infer<typeof userSchema>;
@@ -48,7 +47,6 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                 email: user.email,
                 role: user.roleName as 'ADMIN' | 'MANAGER' | 'STAFF' | 'COORDINATOR' | 'STORE_STAFF',
                 storeId: user.storeId || null,
-                kitchenId: user.kitchenId || null,
             });
         } else {
             reset({
@@ -56,7 +54,6 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                 email: '',
                 role: 'STORE_STAFF',
                 storeId: null,
-                kitchenId: null,
             });
         }
     }, [user, isOpen, reset]);
@@ -68,7 +65,6 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
             email: data.email,
             roleName: data.role,
             storeId: data.storeId ? Number(data.storeId) : null,
-            kitchenId: data.kitchenId ? Number(data.kitchenId) : null
         };
         await onSubmit(payload);
         onClose();
@@ -157,18 +153,6 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                                 icon={<Store size={18} className="text-gray-400" />}
                                 error={errors.storeId?.message}
                                 {...register('storeId')}
-                            />
-                        )}
-
-                        {/* Kitchen Assignment */}
-                        {(selectedRole === 'COORDINATOR' || selectedRole === 'ADMIN') && (
-                            <Input
-                                label="Mã Bếp trung tâm (Kitchen ID)"
-                                type="number"
-                                placeholder="Nhập Kitchen ID"
-                                icon={<Warehouse size={18} className="text-gray-400" />}
-                                error={errors.kitchenId?.message}
-                                {...register('kitchenId')}
                             />
                         )}
 

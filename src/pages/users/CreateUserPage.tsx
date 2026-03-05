@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Save, UserPlus, Mail, Shield, Store, ChefHat } from 'lucide-react';
+import { ArrowLeft, Save, UserPlus, Mail, Shield, Store } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/Button';
@@ -31,7 +31,6 @@ export const CreateUserPage = () => {
     const [roles, setRoles] = useState<RoleResponse[]>([]);
     const [stores, setStores] = useState<StoreResponse[]>([]);
     const [selectedStoreId, setSelectedStoreId] = useState<string>('');
-    const [selectedKitchenId, setSelectedKitchenId] = useState<string>('');
 
     useEffect(() => {
         const fetchRoles = async () => {
@@ -73,19 +72,17 @@ export const CreateUserPage = () => {
     const selectedRole = roles.find(r => r.roleId === selectedRoleId);
     const roleName = selectedRole?.roleName?.toUpperCase() || '';
 
-    // Determine if kitchen/store fields should show
-    const needsKitchen = ['COORDINATOR', 'KITCHEN_STAFF', 'SUPPLY_COORDINATOR'].includes(roleName);
+    // Determine if store field should show
     const needsStore = ['STORE_STAFF', 'MANAGER'].includes(roleName);
 
     const onSubmit = async (data: CreateUserRequest) => {
         setBackendError(null);
         setIsSubmitting(true);
 
-        // Add store/kitchen IDs from dropdowns
+        // Add store ID from dropdown
         const payload: CreateUserRequest = {
             ...data,
             storeId: selectedStoreId ? Number(selectedStoreId) : undefined,
-            kitchenId: selectedKitchenId ? Number(selectedKitchenId) : undefined,
         };
 
         try {
@@ -93,7 +90,6 @@ export const CreateUserPage = () => {
             toast.success('Tạo người dùng thành công!');
             reset();
             setSelectedStoreId('');
-            setSelectedKitchenId('');
             navigate('/users');
         } catch (error: any) {
             console.error('Create user error:', error);
@@ -231,27 +227,6 @@ export const CreateUserPage = () => {
                                 </p>
                             </div>
 
-                            {/* Kitchen ID - shows for kitchen-related roles */}
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block flex items-center gap-1.5">
-                                    <ChefHat size={14} className="text-gray-400" />
-                                    Gán vào Bếp trung tâm (Kitchen ID)
-                                    {needsKitchen && <span className="text-amber-500 text-xs">(Bắt buộc)</span>}
-                                </label>
-                                <input
-                                    type="number"
-                                    value={selectedKitchenId}
-                                    onChange={(e) => setSelectedKitchenId(e.target.value)}
-                                    placeholder="VD: 1"
-                                    className="w-full px-3 py-2 border border-zinc-700 rounded-md text-sm bg-zinc-900/50 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                                />
-                                <p className="text-xs text-gray-400 mt-1">
-                                    {needsKitchen
-                                        ? 'Bắt buộc cho Coordinator / Kitchen Staff. User phải thuộc kitchen mới tạo được Production Plan.'
-                                        : 'Tùy chọn. Nhập ID bếp trung tâm để gán user.'
-                                    }
-                                </p>
-                            </div>
                         </div>
                     </div>
 

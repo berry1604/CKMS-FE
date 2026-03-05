@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Store as StoreIcon, MapPin, User, Activity, Phone, Mail } from 'lucide-react';
+import { Store as StoreIcon, MapPin, User, Activity, Phone, Mail, Box } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -16,6 +16,7 @@ const storeSchema = z.object({
     phone: z.string().optional(),
     email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
     managerId: z.number().optional(),
+    warehouseCapacity: z.number().min(0, 'Sức chứa kho phải là số dương hoặc 0'),
     isActive: z.boolean().optional()
 });
 
@@ -43,6 +44,7 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
             phone: '',
             email: '',
             managerId: undefined,
+            warehouseCapacity: 0,
             isActive: true
         }
     });
@@ -69,6 +71,7 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                 address: initialData.address || '',
                 phone: initialData.phone || '',
                 email: initialData.email || '',
+                warehouseCapacity: initialData.warehouseCapacity || 0,
             });
             setIsActive(initialData.isActive);
             setSelectedManagerId('');
@@ -78,6 +81,7 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                 address: '',
                 phone: '',
                 email: '',
+                warehouseCapacity: 0,
             });
             setIsActive(true);
             setSelectedManagerId('');
@@ -90,7 +94,8 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
             address: data.address,
             phone: data.phone || undefined,
             email: data.email || undefined,
-            managerId: selectedManagerId ? Number(selectedManagerId) : undefined
+            managerId: selectedManagerId ? Number(selectedManagerId) : undefined,
+            warehouseCapacity: Number(data.warehouseCapacity)
         };
         console.log('Store payload:', payload);
         onSubmit(payload);
@@ -153,6 +158,16 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                                 {...register('email')}
                             />
                         </div>
+
+                        <Input
+                            label="Sức chứa kho (kg/đv)"
+                            type="number"
+                            min="0"
+                            placeholder="VD: 500"
+                            icon={<Box size={18} className="text-gray-400" />}
+                            error={errors.warehouseCapacity?.message}
+                            {...register('warehouseCapacity', { valueAsNumber: true })}
+                        />
                     </div>
                 </div>
 
