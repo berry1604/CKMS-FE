@@ -7,9 +7,10 @@ import toast from 'react-hot-toast';
 
 type Step = 'set-password' | 'done' | 'error';
 
-export const VerifyEmail = () => {
+export const ResetPassword = () => {
     const navigate = useNavigate();
     const token = new URLSearchParams(window.location.search).get('token') || '';
+
     const [step, setStep] = useState<Step>('set-password');
     const [error, setError] = useState('');
     const [password, setPassword] = useState('');
@@ -23,7 +24,7 @@ export const VerifyEmail = () => {
     useEffect(() => {
         if (!token) {
             setStep('error');
-            setError('Token không hợp lệ. Vui lòng kiểm tra lại link kích hoạt.');
+            setError('Đường dẫn không hợp lệ. Vui lòng kiểm tra lại email của bạn.');
             return;
         }
     }, [token]);
@@ -63,11 +64,11 @@ export const VerifyEmail = () => {
 
         setIsSubmitting(true);
         try {
-            await authApi.activateAccount({ token, password });
-            toast.success('Kích hoạt thiết lập mật khẩu thành công!');
+            await authApi.resetPassword(token, password);
+            toast.success('Đặt lại mật khẩu thành công!');
             setStep('done');
         } catch (err: any) {
-            const msg = err.response?.data?.message || 'Kích hoạt thất bại. Vui lòng thử lại.';
+            const msg = err.response?.data?.message || 'Đặt lại mật khẩu thất bại. Token có thể đã hết hạn.';
             toast.error(msg);
         } finally {
             setIsSubmitting(false);
@@ -78,15 +79,13 @@ export const VerifyEmail = () => {
         <div className="min-h-screen bg-zinc-900/80 flex items-center justify-center p-4">
             <div className="bg-zinc-900/50 p-8 md:p-12 rounded-2xl shadow-xl border border-zinc-800 max-w-md w-full text-center flex flex-col items-center">
 
-
-
                 {/* Step: Error */}
                 {step === 'error' && (
                     <>
                         <div className="h-20 w-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
                             <AlertCircle className="text-red-500 w-12 h-12" />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-200 mb-3">Kích hoạt thất bại</h1>
+                        <h1 className="text-2xl font-bold text-gray-200 mb-3">Lỗi Xác Thực</h1>
                         <p className="text-gray-400 mb-6">{error}</p>
                         <Button
                             className="w-full bg-amber-600 hover:bg-amber-700 text-white rounded-xl h-11"
@@ -100,12 +99,12 @@ export const VerifyEmail = () => {
                 {/* Step: Set Password */}
                 {step === 'set-password' && (
                     <>
-                        <div className="h-20 w-20 bg-green-50 rounded-full flex items-center justify-center mb-6">
-                            <CheckCircle2 className="text-green-500 w-12 h-12" />
+                        <div className="h-20 w-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
+                            <Lock className="text-blue-500 w-10 h-10" />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-200 mb-2">Lời Mời Từ Hệ Thống</h1>
+                        <h1 className="text-2xl font-bold text-gray-200 mb-2">Cài Đặt Lại Mật Khẩu</h1>
                         <p className="text-gray-400 mb-6">
-                            Vui lòng nhập mật khẩu mới để kích hoạt tài khoản của bạn.
+                            Vui lòng nhập mật khẩu mới cho tài khoản của bạn.
                         </p>
 
                         <div className="w-full space-y-4 text-left">
@@ -176,7 +175,7 @@ export const VerifyEmail = () => {
                                 ) : (
                                     <div className="flex items-center gap-2">
                                         <Lock size={16} />
-                                        Đặt mật khẩu & Tiếp tục
+                                        Đổi mật khẩu & Tiếp tục
                                     </div>
                                 )}
                             </Button>
@@ -191,10 +190,10 @@ export const VerifyEmail = () => {
                             <CheckCircle2 className="text-green-500 w-12 h-12" />
                         </div>
                         <h1 className="text-2xl md:text-3xl font-bold text-gray-200 mb-3">
-                            Sẵn sàng đăng nhập!
+                            Mật khẩu đã được đổi!
                         </h1>
                         <p className="text-gray-400 mb-8">
-                            Mật khẩu đã được đặt thành công. Bạn có thể đăng nhập ngay bây giờ.
+                            Tài khoản của bạn đã được cập nhật. Hãy sử dụng mật khẩu mới để đăng nhập.
                         </p>
 
                         <div className="bg-amber-500/10 text-amber-500 w-full py-4 rounded-xl border border-amber-500/20 flex flex-col items-center justify-center gap-1 mb-6">

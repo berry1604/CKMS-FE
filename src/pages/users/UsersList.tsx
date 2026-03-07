@@ -99,7 +99,7 @@ export const UsersList = () => {
     const handleSubmit = async (_data: any) => {
         if (selectedUser) {
             try {
-                await userService.updateUser(selectedUser.id, _data);
+                await userService.updateUser(selectedUser.userId, _data);
                 toast.success('Cập nhật người dùng thành công');
                 loadUsers();
             } catch (error) {
@@ -208,14 +208,14 @@ export const UsersList = () => {
                                     </tr>
                                 ) : (
                                     users.map((user) => (
-                                        <tr key={user.id} className="hover:bg-zinc-800/50 transition-colors group">
+                                        <tr key={user.userId} className="hover:bg-zinc-800/50 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center">
                                                     <div className="relative">
                                                         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-zinc-800 shadow-sm">
                                                             {(user.fullName || user.username || '?').charAt(0).toUpperCase()}
                                                         </div>
-                                                        <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 ${user.isActive ? 'bg-green-500' : 'bg-gray-500'} border-2 border-zinc-800 rounded-full`}></div>
+                                                        <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 ${user.status === 'ACTIVE' ? 'bg-green-500' : user.status === 'PENDING_VERIFICATION' ? 'bg-amber-500' : 'bg-gray-500'} border-2 border-zinc-800 rounded-full`}></div>
                                                     </div>
                                                     <div className="ml-4">
                                                         <div className="font-semibold text-gray-200">{user.fullName || user.username}</div>
@@ -240,10 +240,15 @@ export const UsersList = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                {user.isActive ? (
+                                                {user.status === 'ACTIVE' ? (
                                                     <div className="flex items-center text-sm font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md w-fit">
                                                         <CheckCircle size={12} className="mr-1.5" />
                                                         Đang hoạt động
+                                                    </div>
+                                                ) : user.status === 'PENDING_VERIFICATION' ? (
+                                                    <div className="flex items-center text-sm font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md w-fit">
+                                                        <CheckCircle size={12} className="mr-1.5" />
+                                                        Chờ xác thực
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center text-sm font-medium text-red-400 bg-red-500/10 px-2 py-1 rounded-md w-fit">
@@ -263,7 +268,7 @@ export const UsersList = () => {
                                                     <Button variant="ghost" size="sm" onClick={() => handleEdit(user)} className="text-amber-500 hover:text-amber-400 hover:bg-zinc-800">
                                                         <Edit2 size={16} />
                                                     </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)} className="text-red-500 hover:text-red-400 hover:bg-zinc-800">
+                                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(user.userId)} className="text-red-500 hover:text-red-400 hover:bg-zinc-800">
                                                         <Trash2 size={16} />
                                                     </Button>
                                                 </div>
@@ -314,7 +319,7 @@ export const UsersList = () => {
                     <div className="text-center py-10 text-gray-500">Không tìm thấy thành viên nào.</div>
                 ) : (
                     users.map((user) => (
-                        <Card key={user.id} className="p-4 relative border-zinc-800 bg-zinc-900/50">
+                        <Card key={user.userId} className="p-4 relative border-zinc-800 bg-zinc-900/50">
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center space-x-3">
                                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-base ring-2 ring-zinc-800">
@@ -329,7 +334,7 @@ export const UsersList = () => {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}
+                                    onClick={() => setActiveMenu(activeMenu === user.userId ? null : user.userId)}
                                     className="text-gray-400 p-1"
                                 >
                                     <MoreVertical size={20} />
@@ -340,9 +345,13 @@ export const UsersList = () => {
                                 <Badge variant={getRoleColor(user.roleName)} className="shadow-none">
                                     {user.roleName?.replace(/_/g, ' ') || 'N/A'}
                                 </Badge>
-                                {user.isActive ? (
+                                {user.status === 'ACTIVE' ? (
                                     <div className="flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md">
                                         <CheckCircle size={10} className="mr-1" /> Đang hoạt động
+                                    </div>
+                                ) : user.status === 'PENDING_VERIFICATION' ? (
+                                    <div className="flex items-center text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md">
+                                        <CheckCircle size={10} className="mr-1" /> Chờ xác thực
                                     </div>
                                 ) : (
                                     <div className="flex items-center text-xs font-medium text-red-400 bg-red-500/10 px-2 py-1 rounded-md">
@@ -352,7 +361,7 @@ export const UsersList = () => {
                             </div>
 
                             {/* Mobile Dropdown Menu */}
-                            {activeMenu === user.id && (
+                            {activeMenu === user.userId && (
                                 <div className="absolute right-4 top-12 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-10 py-1 animate-in fade-in zoom-in-95 duration-200">
                                     <button
                                         onClick={() => handleEdit(user)}
@@ -362,7 +371,7 @@ export const UsersList = () => {
                                     </button>
                                     <div className="h-px bg-gray-100 my-1"></div>
                                     <button
-                                        onClick={() => handleDelete(user.id)}
+                                        onClick={() => handleDelete(user.userId)}
                                         className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center"
                                     >
                                         <Trash2 size={16} className="mr-3" /> Xóa quyền truy cập
@@ -370,7 +379,7 @@ export const UsersList = () => {
                                 </div>
                             )}
                             {/* Click outside to close mobile menu */}
-                            {activeMenu === user.id && (
+                            {activeMenu === user.userId && (
                                 <div className="fixed inset-0 z-0 cursor-default" onClick={() => setActiveMenu(null)}></div>
                             )}
                         </Card>

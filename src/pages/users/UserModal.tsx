@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,11 +7,14 @@ import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import type { UserResponse } from '../../types/user';
+import type { RoleResponse } from '../../types/role';
+import { storeApi } from '../../services/store.api';
+import { roleApi } from '../../services/role.api';
 
 const userSchema = z.object({
     name: z.string().min(2, 'Họ tên là bắt buộc'),
     email: z.string().email('Email không hợp lệ'),
-    role: z.enum(['ADMIN', 'MANAGER', 'STAFF', 'COORDINATOR', 'STORE_STAFF'] as const),
+    roleId: z.number().min(1, 'Vai trò là bắt buộc'),
     storeId: z.union([z.number(), z.string(), z.null()]).optional(),
 });
 
@@ -25,6 +28,9 @@ interface UserModalProps {
 }
 
 export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) => {
+    const [roles, setRoles] = useState<RoleResponse[]>([]);
+    const [stores, setStores] = useState<any[]>([]);
+
     const {
         register,
         handleSubmit,
@@ -32,39 +38,59 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
         control,
         formState: { errors, isSubmitting },
     } = useForm<UserForm>({
-        resolver: zodResolver(userSchema),
+        resolver: zodResolver(userSchema) as any,
         defaultValues: {
-            role: 'STORE_STAFF',
+            roleId: 0,
+            storeId: 'null',
         },
     });
 
-    const selectedRole = useWatch({ control, name: 'role' });
+    const selectedRoleId = useWatch({ control, name: 'roleId' });
+    const selectedRoleName = roles.find(r => r.roleId === selectedRoleId)?.roleName;
 
+    // Fetch roles and stores
     useEffect(() => {
-        if (user) {
+        const fetchData = async () => {
+            try {
+                const [rolesList, storesList] = await Promise.all([
+                    roleApi.getAllRoles(),
+                    storeApi.getAllStores({ size: 100 })
+                ]);
+                setRoles(rolesList);
+                setStores(storesList.data.content);
+            } catch (error) {
+                console.error('Error fetching modal data:', error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    // Reset form when user or roles change
+    useEffect(() => {
+        if (user && roles.length > 0) {
+            const userRole = roles.find(r => r.roleName === user.roleName);
             reset({
                 name: user.fullName || user.username,
                 email: user.email,
-                role: user.roleName as 'ADMIN' | 'MANAGER' | 'STAFF' | 'COORDINATOR' | 'STORE_STAFF',
-                storeId: user.storeId || null,
+                roleId: userRole?.roleId || 0,
+                storeId: user.storeId || 'null',
             });
-        } else {
+        } else if (!user) {
             reset({
                 name: '',
                 email: '',
-                role: 'STORE_STAFF',
-                storeId: null,
+                roleId: 0,
+                storeId: 'null',
             });
         }
-    }, [user, isOpen, reset]);
+    }, [user, isOpen, reset, roles]);
 
     const handleFormSubmit = async (data: any) => {
-        // Map fields to match what handleSubmit in UsersList expects or what backend expects
         const payload = {
             fullName: data.name,
             email: data.email,
-            roleName: data.role,
-            storeId: data.storeId ? Number(data.storeId) : null,
+            roleId: Number(data.roleId),
+            storeId: data.storeId && data.storeId !== 'null' ? Number(data.storeId) : null,
         };
         await onSubmit(payload);
         onClose();
@@ -74,15 +100,15 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
         <Drawer
             isOpen={isOpen}
             onClose={onClose}
-            title={user ? 'Chỉnh sửa thành viên' : 'Thêm thành viên mới'}
-            description={user ? 'Cập nhật thông tin và quyền hạn của thành viên.' : 'Tạo tài khoản thành viên mới.'}
+            title={user ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
+            description={user ? 'Cập nhật thông tin và quyền hạn của nhân viên.' : 'Tạo tài khoản nhân viên mới.'}
             footer={
                 <div className="flex justify-end gap-3 w-full">
                     <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
                         Hủy
                     </Button>
                     <Button onClick={handleSubmit(handleFormSubmit)} isLoading={isSubmitting} className="min-w-[120px]">
-                        {user ? 'Lưu thay đổi' : 'Tạo thành viên'}
+                        {user ? 'Lưu thay đổi' : 'Tạo nhân viên'}
                     </Button>
                 </div>
             }
@@ -107,7 +133,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                         <Input
                             label="Địa chỉ Email"
                             type="email"
-                            placeholder="VD: example@franchise.com"
+                            placeholder="VD: person@example.com"
                             icon={<Mail size={18} className="text-gray-400" />}
                             error={errors.email?.message}
                             {...register('email')}
@@ -128,32 +154,43 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                             <div className="relative">
                                 <select
                                     className="flex h-11 w-full rounded-md border border-zinc-700 bg-zinc-900/50 pl-3 pr-10 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 appearance-none transition-shadow"
-                                    {...register('role')}
+                                    {...register('roleId', { valueAsNumber: true })}
                                 >
-                                    <option value="ADMIN">Admin (Toàn quyền)</option>
-                                    <option value="MANAGER">Manager (Quản lý cửa hàng)</option>
-                                    <option value="STAFF">Staff (Nhân viên tổng hợp)</option>
-                                    <option value="COORDINATOR">Coordinator (Điều phối sản xuất)</option>
-                                    <option value="STORE_STAFF">Store Staff (Nhập đơn hàng)</option>
+                                    <option value={0} disabled>Chọn vai trò...</option>
+                                    {roles.map(role => (
+                                        <option key={role.roleId} value={role.roleId}>
+                                            {role.roleName?.replace(/_/g, ' ') || `Role ${role.roleId}`}
+                                        </option>
+                                    ))}
                                 </select>
                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <Shield size={16} className="text-gray-500" />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Store Assignment */}
-                        {(selectedRole === 'STORE_STAFF' || selectedRole === 'MANAGER') && (
-                            <Input
-                                label="Mã Cửa hàng (Store ID)"
-                                type="number"
-                                placeholder="Nhập Store ID"
-                                icon={<Store size={18} className="text-gray-400" />}
-                                error={errors.storeId?.message}
-                                {...register('storeId')}
-                            />
+                        {/* Store Assignment - Conditional based on Role Name */}
+                        {(selectedRoleName === 'STORE_STAFF' || selectedRoleName === 'MANAGER' || selectedRoleName === 'STAFF') && (
+                            <div className="relative">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Cửa hàng chi nhánh</label>
+                                <div className="relative">
+                                    <select
+                                        className="flex h-11 w-full rounded-md border border-zinc-700 bg-zinc-900/50 pl-3 pr-10 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 appearance-none transition-shadow"
+                                        {...register('storeId')}
+                                    >
+                                        <option value="null">Chưa gán cửa hàng</option>
+                                        {stores.map(store => (
+                                            <option key={store.storeId} value={store.storeId}>
+                                                {store.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <Store size={18} className="text-gray-400" />
+                                    </div>
+                                </div>
+                                {errors.storeId && <p className="text-sm text-red-500 mt-1">{errors.storeId.message}</p>}
+                            </div>
                         )}
 
                         <div className="flex gap-2 p-3 bg-amber-500/10 rounded text-xs text-amber-500">
@@ -161,17 +198,16 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                             <p>Việc gán vai trò sẽ tự động cấp các quyền tương ứng cho người dùng này.</p>
                         </div>
                     </div>
-                    {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
+                    {errors.roleId && <p className="text-sm text-red-500">{errors.roleId.message}</p>}
                 </div>
 
-                {/* Additional Info Box */}
                 {!user && (
                     <div className="bg-green-500/10 rounded-lg p-4 flex items-start gap-3 border border-green-500/20">
                         <CheckCircle2 size={18} className="text-green-500 mt-0.5" />
                         <div>
                             <h4 className="text-sm font-semibold text-green-400">Kích hoạt tài khoản</h4>
                             <p className="text-xs text-green-500/80 mt-1 leading-relaxed">
-                                Một email mời sẽ được gửi đến email đã cung cấp với hướng dẫn thiết lập mật khẩu và kích hoạt tài khoản.
+                                Một email mời sẽ được gửi đến email này để thiết lập mật khẩu.
                             </p>
                         </div>
                     </div>

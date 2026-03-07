@@ -58,5 +58,22 @@ export const kitchenInventoryApi = {
             console.error(`Error importing products for warehouse ${warehouseId}:`, error);
             throw error;
         }
+    },
+
+    /**
+     * Get all warehouses belonging to a specific kitchen.
+     * Used by coordinators to know which warehouseId to query for stock.
+     */
+    getWarehousesByKitchenId: async (kitchenId: number): Promise<{ warehouseId: number; name: string }[]> => {
+        try {
+            const response = await axiosClient.get<{ warehouseId: number; name: string }[]>(
+                `/kitchen-warehouses`,
+                { params: { kitchenId } }
+            );
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching warehouses for kitchen ${kitchenId}:`, error);
+            return [];
+        }
     }
 };

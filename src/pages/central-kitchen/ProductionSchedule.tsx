@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Calendar as CalendarIcon, CheckCircle, Clock, PlayCircle, List, ChevronLeft, ChevronRight, Plus, Search, Filter, Ban, CheckSquare } from 'lucide-react';
+import { Calendar as CalendarIcon, CheckCircle, Clock, PlayCircle, List, ChevronLeft, ChevronRight, Plus, Search, Filter, Ban, CheckSquare, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -9,11 +9,13 @@ import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Drawer } from '../../components/ui/Drawer';
 import { productionPlanApi } from '../../services/productionPlan.api';
+import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import type { ProductionPlanSummaryResponse, ProductionPlanDetailResponse } from '../../types/productionPlan';
+import type { KitchenStockItemResponse } from '../../types/kitchenInventory';
 import toast from 'react-hot-toast';
 
 export const ProductionSchedule = () => {
-    const { user, hasAuthority } = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [plans, setPlans] = useState<ProductionPlanSummaryResponse[]>([]);
     const [filteredPlans, setFilteredPlans] = useState<ProductionPlanSummaryResponse[]>([]);
@@ -23,6 +25,9 @@ export const ProductionSchedule = () => {
     const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
     const [selectedPlanDetail, setSelectedPlanDetail] = useState<ProductionPlanDetailResponse | null>(null);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+    // Kitchen stock map: materialName (lowercase) → available quantity
+    const [materialStockMap, setMaterialStockMap] = useState<Map<string, number>>(new Map());
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +48,39 @@ export const ProductionSchedule = () => {
             setSelectedPlanDetail(null);
         }
     }, [selectedPlanId]);
+
+    // Fetch kitchen stock whenever detail panel opens
+    useEffect(() => {
+        if (!selectedPlanId) {
+            setMaterialStockMap(new Map());
+            return;
+        }
+        const fetchStock = async () => {
+            // Use kitchenId from the plan detail once loaded, or from user session
+            const kitchenId = selectedPlanDetail?.kitchenId || user?.kitchenId;
+            if (!kitchenId) return;
+            try {
+                const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(kitchenId);
+                if (warehouses.length === 0) return;
+                // Aggregate stock across all warehouses
+                const nameMap = new Map<string, number>();
+                for (const w of warehouses) {
+                    const res = await kitchenInventoryApi.getWarehouseStock(w.warehouseId);
+                    const items: KitchenStockItemResponse[] = res.data || [];
+                    for (const item of items) {
+                        const key = item.itemName?.toLowerCase().trim();
+                        if (key) {
+                            nameMap.set(key, (nameMap.get(key) || 0) + item.quantity);
+                        }
+                    }
+                }
+                setMaterialStockMap(nameMap);
+            } catch (e) {
+                console.error('Failed to load kitchen stock for plan detail', e);
+            }
+        };
+        fetchStock();
+    }, [selectedPlanId, selectedPlanDetail?.kitchenId, user?.kitchenId]);
 
     useEffect(() => {
         let result = plans;
@@ -557,24 +595,59 @@ export const ProductionSchedule = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <h4 className="font-semibold text-gray-200">Yêu Cầu Nguyên Liệu</h4>
+                            <div className="flex items-center justify-between">
+                                <h4 className="font-semibold text-gray-200">Yêu Cầu Nguyên Liệu</h4>
+                                {materialStockMap.size > 0 && (
+                                    <span className="text-xs text-gray-500">Đối chiếu với tồn kho bếp</span>
+                                )}
+                            </div>
                             {selectedPlanDetail.materials && selectedPlanDetail.materials.length > 0 ? (
                                 <table className="min-w-full divide-y divide-zinc-800 bg-zinc-900/50 rounded-lg overflow-hidden border border-zinc-800">
                                     <thead className="bg-zinc-800/50">
                                         <tr>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Nguyên Liệu</th>
-                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Số Lượng Yêu Cầu</th>
+                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Yêu Cầu</th>
+                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Tồn kho</th>
+                                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase">Trạng thái</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-zinc-800">
-                                        {selectedPlanDetail.materials.map((mat, idx) => (
-                                            <tr key={idx} className="hover:bg-zinc-800/30">
-                                                <td className="px-4 py-3 text-sm text-gray-300">{mat.materialName}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-300 text-right font-medium">
-                                                    {mat.requiredQuantity} <span className="text-gray-500 text-xs ml-1">{mat.unit}</span>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {selectedPlanDetail.materials.map((mat, idx) => {
+                                            const key = mat.materialName?.toLowerCase().trim();
+                                            const available = key ? materialStockMap.get(key) : undefined;
+                                            const stockKnown = available !== undefined;
+                                            const sufficient = !stockKnown || available! >= mat.requiredQuantity;
+                                            return (
+                                                <tr key={idx} className={`hover:bg-zinc-800/30 ${!sufficient ? 'bg-red-500/5' : ''}`}>
+                                                    <td className="px-4 py-3 text-sm text-gray-300">{mat.materialName}</td>
+                                                    <td className="px-4 py-3 text-sm text-gray-300 text-right font-medium">
+                                                        {mat.requiredQuantity} <span className="text-gray-500 text-xs ml-1">{mat.unit}</span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-right">
+                                                        {stockKnown ? (
+                                                            <span className={`font-semibold ${available! < mat.requiredQuantity ? 'text-red-400' : 'text-green-400'}`}>
+                                                                {available} <span className="text-gray-500 text-xs ml-0.5">{mat.unit}</span>
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-500 text-xs italic">Chưa rõ</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        {!stockKnown ? (
+                                                            <span className="text-xs text-gray-500">—</span>
+                                                        ) : sufficient ? (
+                                                            <span className="inline-flex items-center gap-1 text-xs text-green-400 font-medium">
+                                                                <CheckCircle2 size={12} /> Đủ
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 text-xs text-red-400 font-semibold">
+                                                                <AlertTriangle size={12} /> Thiếu {mat.requiredQuantity - available!} {mat.unit}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             ) : (

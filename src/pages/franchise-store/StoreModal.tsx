@@ -1,26 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Store as StoreIcon, MapPin, User, Activity, Phone, Mail, Box } from 'lucide-react';
+import { Store as StoreIcon, MapPin, Activity, Phone, Mail, Box } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import type { StoreResponse, StoreCreateRequest } from '../../types/store';
-import type { UserResponse } from '../../types/user';
-import { userService } from '../../services/user.service';
 
 const storeSchema = z.object({
     name: z.string().min(1, 'Tên cửa hàng là bắt buộc'),
     address: z.string().min(1, 'Địa chỉ là bắt buộc'),
     phone: z.string().optional(),
     email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
-    managerId: z.number().optional(),
     warehouseCapacity: z.number().min(0, 'Sức chứa kho phải là số dương hoặc 0'),
     isActive: z.boolean().optional()
 });
 
-type StoreFormData = z.infer<typeof storeSchema>;
+interface StoreFormData {
+    name: string;
+    address: string;
+    phone?: string;
+    email?: string;
+    warehouseCapacity: number;
+    isActive?: boolean;
+}
 
 interface StoreModalProps {
     isOpen: boolean;
@@ -31,38 +35,19 @@ interface StoreModalProps {
 }
 
 export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }: StoreModalProps) => {
-    const [users, setUsers] = useState<UserResponse[]>([]);
-    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-    const [selectedManagerId, setSelectedManagerId] = useState<string>('');
-    const [isActive, setIsActive] = useState(true);
-
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<StoreFormData>({
+    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<StoreFormData>({
         resolver: zodResolver(storeSchema),
         defaultValues: {
             name: '',
             address: '',
             phone: '',
             email: '',
-            managerId: undefined,
             warehouseCapacity: 0,
             isActive: true
         }
     });
 
-    // Load users for dropdown
-    useEffect(() => {
-        if (isOpen) {
-            setIsLoadingUsers(true);
-            userService.getUsers({ size: 100 }).then(res => {
-                const userList = res.data?.content || [];
-                setUsers(userList);
-            }).catch(err => {
-                console.error('Failed to load users:', err);
-            }).finally(() => {
-                setIsLoadingUsers(false);
-            });
-        }
-    }, [isOpen]);
+    const isActive = watch('isActive');
 
     useEffect(() => {
         if (initialData) {
@@ -72,9 +57,8 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                 phone: initialData.phone || '',
                 email: initialData.email || '',
                 warehouseCapacity: initialData.warehouseCapacity || 0,
+                isActive: initialData.isActive ?? true,
             });
-            setIsActive(initialData.isActive);
-            setSelectedManagerId('');
         } else {
             reset({
                 name: '',
@@ -82,9 +66,8 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                 phone: '',
                 email: '',
                 warehouseCapacity: 0,
+                isActive: true,
             });
-            setIsActive(true);
-            setSelectedManagerId('');
         }
     }, [initialData, reset, isOpen]);
 
@@ -94,11 +77,13 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
             address: data.address,
             phone: data.phone || undefined,
             email: data.email || undefined,
-            managerId: selectedManagerId ? Number(selectedManagerId) : undefined,
             warehouseCapacity: Number(data.warehouseCapacity)
         };
-        console.log('Store payload:', payload);
         onSubmit(payload);
+    };
+
+    const onError = (errors: any) => {
+        console.error('Validation errors:', errors);
     };
 
     return (
@@ -112,13 +97,13 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                     <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
                         Hủy
                     </Button>
-                    <Button type="submit" onClick={handleSubmit(onSubmitForm)} disabled={isLoading} className="min-w-[120px]">
+                    <Button type="submit" form="store-form" disabled={isLoading} className="min-w-[120px]">
                         {isLoading ? 'Đang lưu...' : (initialData ? 'Cập nhật' : 'Đăng ký')}
                     </Button>
                 </div>
             }
         >
-            <form className="space-y-8">
+            <form id="store-form" onSubmit={handleSubmit(onSubmitForm, onError)} className="space-y-8">
                 {/* Section 1: Basic Info */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
@@ -171,45 +156,7 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                     </div>
                 </div>
 
-                {/* Section 2: Manager Assignment */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
-                        <User size={18} className="text-amber-600" />
-                        <h3>Gán Quản lý</h3>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-300">
-                            Chọn người quản lý cửa hàng
-                        </label>
-                        <select
-                            value={selectedManagerId}
-                            onChange={(e) => setSelectedManagerId(e.target.value)}
-                            className="w-full h-10 px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                        >
-                            <option value="">-- Chọn quản lý (tùy chọn) --</option>
-                            {isLoadingUsers ? (
-                                <option disabled>Đang tải...</option>
-                            ) : (
-                                users.map(user => (
-                                    <option key={user.id} value={String(user.id)}>
-                                        {user.fullName || user.username} — {user.roleName} {user.email ? `(${user.email})` : ''}
-                                    </option>
-                                ))
-                            )}
-                        </select>
-                        <p className="text-xs text-gray-500">
-                            Người được chọn sẽ có quyền quản lý cửa hàng này và tạo đơn hàng.
-                        </p>
-                        {initialData?.managerName && (
-                            <p className="text-xs text-amber-500 mt-1">
-                                Quản lý hiện tại: <strong>{initialData.managerName}</strong>
-                            </p>
-                        )}
-                    </div>
-                </div>
-
-                {/* Section 3: Status */}
+                {/* Section 2: Status */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
                         <Activity size={18} className="text-amber-600" />
@@ -234,7 +181,7 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                                 <input
                                     type="radio"
                                     checked={isActive === opt.value}
-                                    onChange={() => setIsActive(opt.value)}
+                                    onChange={() => setValue('isActive', opt.value)}
                                     className="sr-only"
                                 />
                                 <span className="text-sm font-medium">{opt.label}</span>

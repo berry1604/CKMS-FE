@@ -7,11 +7,15 @@ export const useAuth = () => {
     const handleLogin = async (username: string, pass: string): Promise<string | null> => {
         try {
             const response = await authApi.login(username, pass);
-            console.log('Login API response:', response);
+            console.log('--- AUTH DEBUG: Raw Login Response ---', response);
 
             // Handle both response structures (with or without user object)
             // Type assertion used because authApi might return strict type but we want to be flexible for now
-            const { expiresIn, accessTokenExpiresIn, userId } = response as any;
+            const { expiresIn, accessTokenExpiresIn, userId, storeId, storeName } = response as any;
+            const kitchenId = (response as any).kitchenId;
+            const kitchenName = (response as any).kitchenName;
+
+            console.log('--- AUTH DEBUG: Extracted fields ---', { userId, storeId, storeName, kitchenId, kitchenName });
 
             const expiry = expiresIn || accessTokenExpiresIn;
             if (expiry) {
@@ -28,7 +32,11 @@ export const useAuth = () => {
                 email: response.email || `${username}@example.com`,
                 role: userRole as any,
                 authorities: response.authorities || responseAny.privileges || [],
-                avatarUrl: undefined
+                avatarUrl: undefined,
+                storeId: response.storeId,
+                storeName: response.storeName,
+                kitchenId: kitchenId,
+                kitchenName: kitchenName,
             };
 
             // Update store

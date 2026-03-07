@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Save, UserPlus, Mail, Shield, Store } from 'lucide-react';
@@ -12,84 +12,77 @@ import { Card } from '../../components/ui/Card';
 import { userService } from '../../services/user.service';
 import { roleApi } from '../../services/role.api';
 import { storeApi } from '../../services/store.api';
-import type { CreateUserRequest } from '../../types/user';
 import type { RoleResponse } from '../../types/role';
-import type { StoreResponse } from '../../types/store';
 
 const createUserSchema = z.object({
     email: z.string().email('Email không hợp lệ'),
     fullName: z.string().min(2, 'Họ tên phải có ít nhất 2 ký tự'),
     roleId: z.number().min(1, 'Vui lòng chọn vai trò'),
+    storeId: z.coerce.number().optional().nullable(),
     kitchenId: z.number().optional(),
-    storeId: z.number().optional(),
 });
+
+type CreateUserFormValues = z.infer<typeof createUserSchema>;
 
 export const CreateUserPage = () => {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [backendError, setBackendError] = useState<string | null>(null);
     const [roles, setRoles] = useState<RoleResponse[]>([]);
-    const [stores, setStores] = useState<StoreResponse[]>([]);
-    const [selectedStoreId, setSelectedStoreId] = useState<string>('');
-
-    useEffect(() => {
-        const fetchRoles = async () => {
-            try {
-                const data = await roleApi.getAllRoles();
-                setRoles(data);
-            } catch (error) {
-                console.error('Failed to fetch roles:', error);
-            }
-        };
-        fetchRoles();
-
-        // Load stores for dropdown
-        storeApi.getAllStores({ size: 100 }).then(res => {
-            const storeList = res.data?.content || [];
-            setStores(storeList);
-        }).catch(err => {
-            console.error('Failed to load stores:', err);
-        });
-    }, []);
+    const [stores, setStores] = useState<any[]>([]);
 
     const {
         register,
         handleSubmit,
+        control,
         formState: { errors, isValid },
-        reset,
-        watch
-    } = useForm<CreateUserRequest>({
-        resolver: zodResolver(createUserSchema),
+        reset
+    } = useForm<CreateUserFormValues>({
+        resolver: zodResolver(createUserSchema) as any,
         mode: 'onChange',
         defaultValues: {
             email: '',
             fullName: '',
-            roleId: 0
+            roleId: 0,
+            storeId: null
         }
     });
 
-    const selectedRoleId = watch('roleId');
-    const selectedRole = roles.find(r => r.roleId === selectedRoleId);
-    const roleName = selectedRole?.roleName?.toUpperCase() || '';
+    const roleId = useWatch({ control, name: 'roleId' });
+    const selectedRole = roles.find(r => r.roleId === roleId)?.roleName;
 
-    // Determine if store field should show
-    const needsStore = ['STORE_STAFF', 'MANAGER'].includes(roleName);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [rolesData, storesData] = await Promise.all([
+                    roleApi.getAllRoles(),
+                    storeApi.getAllStores({ size: 100 })
+                ]);
+                setRoles(rolesData);
+                setStores(storesData.data.content);
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+            }
+        };
+        fetchData();
+    }, []);
 
-    const onSubmit = async (data: CreateUserRequest) => {
+    const onSubmit = async (data: any) => {
         setBackendError(null);
         setIsSubmitting(true);
 
-        // Add store ID from dropdown
-        const payload: CreateUserRequest = {
-            ...data,
-            storeId: selectedStoreId ? Number(selectedStoreId) : undefined,
+        const payload: any = {
+            email: data.email,
+            fullName: data.fullName,
+            roleId: data.roleId,
+            storeId: data.storeId && data.storeId !== '' ? Number(data.storeId) : undefined,
+            kitchenId: data.kitchenId
         };
 
         try {
             await userService.createUser(payload);
             toast.success('Tạo người dùng thành công!');
             reset();
-            setSelectedStoreId('');
             navigate('/users');
         } catch (error: any) {
             console.error('Create user error:', error);
@@ -134,7 +127,7 @@ export const CreateUserPage = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-8">
                     {/* Basic Info */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
@@ -200,33 +193,29 @@ export const CreateUserPage = () => {
                                 <p className="text-xs text-gray-400 mt-1">Vai trò quyết định quyền hạn trong hệ thống.</p>
                             </div>
 
-                            {/* Store Dropdown - shows for store-related roles */}
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block flex items-center gap-1.5">
-                                    <Store size={14} className="text-gray-400" />
-                                    Gán vào Cửa hàng
-                                    {needsStore && <span className="text-amber-500 text-xs">(Bắt buộc)</span>}
-                                </label>
-                                <select
-                                    value={selectedStoreId}
-                                    onChange={(e) => setSelectedStoreId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-zinc-700 rounded-md text-sm bg-zinc-900/50 text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                                >
-                                    <option value="">-- Không gán cửa hàng --</option>
-                                    {stores.map(store => (
-                                        <option key={store.id} value={String(store.id)}>
-                                            {store.name} {store.address ? `(${store.address})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-gray-400 mt-1">
-                                    {needsStore
-                                        ? 'Bắt buộc cho Store Staff / Manager. User sẽ thuộc cửa hàng này.'
-                                        : 'Tùy chọn. Gán user vào một cửa hàng cụ thể.'
-                                    }
-                                </p>
-                            </div>
-
+                            {/* Store Dropdown - Conditional */}
+                            {(selectedRole === 'STORE_STAFF' || selectedRole === 'MANAGER' || selectedRole === 'STAFF') && (
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-300 block">Cửa hàng chi nhánh *</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Store size={16} className="text-gray-400" />
+                                        </div>
+                                        <select
+                                            className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm bg-zinc-900/50 text-gray-200 focus:outline-none focus:ring-1 focus:border-transparent transition-all appearance-none ${errors.storeId ? 'border-red-500/50 focus:ring-red-500 ring-1 ring-red-500/20' : 'border-zinc-700 focus:ring-amber-500 focus:border-amber-500'}`}
+                                            {...register('storeId')}
+                                        >
+                                            <option value="">Chưa gán cửa hàng</option>
+                                            {stores.map(store => (
+                                                <option key={store.storeId} value={store.storeId}>
+                                                    {store.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    {errors.storeId && <p className="text-red-500 text-xs mt-1">{errors.storeId.message}</p>}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -265,3 +254,4 @@ export const CreateUserPage = () => {
         </div>
     );
 };
+export default CreateUserPage;

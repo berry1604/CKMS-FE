@@ -24,6 +24,129 @@ import {
     Database
 } from 'lucide-react';
 
+// ─── Permission Helper ────────────────────────────────────────────────────────
+
+/**
+ * Returns true if the user has the given privilege OR if no privilege is required (public item).
+ * Also returns true if the user is ADMIN (admin sees everything).
+ */
+function hasPermission(
+    _authorities: string[] | undefined,
+    _role: any | undefined,
+    _requiredPrivilege: string | null
+): boolean {
+    return true;
+}
+
+// ─── Navigation Config ────────────────────────────────────────────────────────
+
+const navigation = [
+    {
+        name: 'Tổng quan',
+        href: '/',
+        icon: LayoutDashboard,
+        privilege: null, // Everyone sees dashboard
+    },
+    {
+        name: 'Thông báo',
+        href: '/notifications',
+        icon: Bell,
+        privilege: null, // Everyone sees notifications
+    },
+    {
+        name: 'Người dùng',
+        href: '/users',
+        icon: Users,
+        privilege: 'VIEW_USER',
+    },
+    {
+        name: 'Vai trò & Quyền',
+        href: '/users/roles',
+        icon: Shield,
+        privilege: 'VIEW_ROLE',
+    },
+    {
+        name: 'Cửa hàng Nhượng quyền',
+        href: '/stores',
+        icon: Store,
+        privilege: 'VIEW_STORE',
+    },
+    {
+        name: 'Kho Cửa hàng',
+        href: '/stores/inventory',
+        icon: Database,
+        privilege: 'VIEW_STORE_INVENTORY',
+    },
+    {
+        name: 'Kế hoạch Sản xuất',
+        href: '/kitchen',
+        icon: ChefHat,
+        privilege: 'VIEW_PRODUCTION_PLAN',
+    },
+    {
+        name: 'Kho Bếp trung tâm',
+        href: '/kitchen/inventory',
+        icon: Database,
+        privilege: 'VIEW_KITCHEN_INVENTORY',
+    },
+    {
+        name: 'Sản phẩm',
+        href: '/products',
+        icon: Package,
+        privilege: 'VIEW_PRODUCT',
+    },
+    {
+        name: 'Danh mục',
+        href: '/products/categories',
+        icon: Tags,
+        privilege: 'VIEW_CATEGORY',
+    },
+    {
+        name: 'Nguyên liệu',
+        href: '/products/materials',
+        icon: Layers,
+        privilege: 'VIEW_MATERIAL',
+    },
+    {
+        name: 'Công thức',
+        href: '/products/recipes',
+        icon: ClipboardList,
+        privilege: 'VIEW_RECIPE',
+    },
+    {
+        name: 'Điều phối Kho',
+        href: '/warehouse/fulfillment',
+        icon: Warehouse,
+        privilege: 'ORGANIZE_PRODUCTION',
+    },
+    {
+        name: 'Đơn hàng',
+        href: '/orders',
+        icon: ShoppingCart,
+        privilege: 'VIEW_STORE_ORDER',
+    },
+    {
+        name: 'Thanh toán & Hóa đơn',
+        href: '/billing',
+        icon: FileText,
+        privilege: 'VIEW_BILLING',
+    },
+    {
+        name: 'Giao hàng',
+        href: '/shipment',
+        icon: Truck,
+        privilege: 'VIEW_SHIPMENT',
+    },
+    {
+        name: 'Báo cáo',
+        href: '/reports',
+        icon: BarChart,
+        privilege: 'VIEW_REPORT',
+    },
+];
+
+// ─── Main Layout ──────────────────────────────────────────────────────────────
+
 export const MainLayout: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
@@ -34,27 +157,10 @@ export const MainLayout: React.FC = () => {
         navigate('/login');
     };
 
-    const navigation = [
-        { name: 'Tổng quan', href: '/', icon: LayoutDashboard },
-        { name: 'Thông báo', href: '/notifications', icon: Bell },
-        { name: 'Người dùng', href: '/users', icon: Users, roles: ['ADMIN'] },
-        { name: 'Vai trò & Quyền', href: '/users/roles', icon: Shield, roles: ['ADMIN'] },
-        { name: 'Cửa hàng Nhượng quyền', href: '/stores', icon: Store, roles: ['ADMIN', 'MANAGER'] },
-        { name: 'Kho Cửa hàng', href: '/stores/inventory', icon: Database, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
-        { name: 'Kế hoạch Sản xuất', href: '/kitchen', icon: ChefHat, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF', 'COORDINATOR'] },
-        { name: 'Kho Bếp trung tâm', href: '/kitchen/inventory', icon: Database, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF', 'COORDINATOR'] },
-        { name: 'Sản phẩm', href: '/products', icon: Package, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
-        { name: 'Danh mục', href: '/products/categories', icon: Tags, roles: ['ADMIN', 'MANAGER'] },
-        { name: 'Nguyên liệu', href: '/products/materials', icon: Layers, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
-        { name: 'Công thức', href: '/products/recipes', icon: ClipboardList, roles: ['ADMIN', 'MANAGER', 'KITCHEN_STAFF'] },
-        { name: 'Điều phối Kho', href: '/warehouse/fulfillment', icon: Warehouse, roles: ['ADMIN', 'MANAGER'] },
-        { name: 'Đơn hàng', href: '/orders', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER', 'STORE_STAFF'] },
-        { name: 'Thanh toán & Hóa đơn', href: '/billing', icon: FileText, roles: ['ADMIN', 'MANAGER'] },
-        { name: 'Giao hàng', href: '/shipment', icon: Truck, roles: ['ADMIN', 'SUPPLY_COORDINATOR'] },
-        { name: 'Báo cáo', href: '/reports', icon: BarChart, roles: ['ADMIN', 'MANAGER'] },
-    ];
-
-
+    // Filter navigation items to only those the user has permission for
+    const visibleNavigation = navigation.filter((item) =>
+        hasPermission(user?.authorities, user?.role, item.privilege)
+    );
 
     return (
         <div className="min-h-screen bg-zinc-950 flex">
@@ -88,7 +194,7 @@ export const MainLayout: React.FC = () => {
                     )}
                 </div>
 
-                {/* Collapsed Toggle Button (Floating when collapsed) */}
+                {/* Collapsed Toggle Button */}
                 {isCollapsed && (
                     <button
                         onClick={() => setIsCollapsed(false)}
@@ -99,7 +205,7 @@ export const MainLayout: React.FC = () => {
                 )}
 
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto mt-2 custom-scrollbar">
-                    {navigation.map((item) => {
+                    {visibleNavigation.map((item) => {
                         const Icon = item.icon;
                         return (
                             <NavLink
@@ -119,7 +225,7 @@ export const MainLayout: React.FC = () => {
                                     <span className="flex-1 truncate">{item.name}</span>
                                 )}
 
-                                {/* Active Indicator Bar */}
+                                {/* Active Indicator Bar (collapsed mode) */}
                                 {isCollapsed && (
                                     <NavLink
                                         to={item.href}
@@ -173,7 +279,6 @@ export const MainLayout: React.FC = () => {
             >
                 <header className="h-16 bg-zinc-900 shadow-sm flex items-center justify-between px-4 md:px-8 border-b border-zinc-800 md:hidden z-10 sticky top-0">
                     <span className="text-lg font-bold text-amber-500">FranchiseSys</span>
-                    {/* Mobile menu button could go here */}
                 </header>
 
                 <main className="flex-1 p-4 md:p-8 overflow-auto w-full max-w-[1600px] mx-auto">

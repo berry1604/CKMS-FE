@@ -8,42 +8,22 @@ import { Badge } from '../../components/ui/Badge';
 import { productApi } from '../../services/product.api';
 import type { ProductResponse as Product } from '../../types/product';
 import { storeOrderApi } from '../../services/storeOrderApi';
-import { storeApi } from '../../services/store.api';
 import type { OrderItemRequest } from '../../types/storeOrder';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
 
-interface StoreOption {
-    id: number;
-    name: string;
-}
+
 
 export const CreateOrder = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [products, setProducts] = useState<Product[]>([]);
     const [cart, setCart] = useState<(OrderItemRequest & { productName: string, price: number, unit: string })[]>([]);
-    const [storeId, setStoreId] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchProduct, setSearchProduct] = useState('');
-    const [stores, setStores] = useState<StoreOption[]>([]);
-
-    const [storeLoadFailed, setStoreLoadFailed] = useState(false);
 
     useEffect(() => {
         productApi.getProducts().then(res => setProducts(res.data.content || []));
-        storeApi.getAllStores().then(res => {
-            const storeList = res.data?.content || [];
-            const mapped = storeList.map((s: any) => ({
-                id: s.id ?? s.storeId,
-                name: s.name ?? s.storeName ?? `Store #${s.id ?? s.storeId}`
-            }));
-            setStores(mapped);
-            if (mapped.length > 0) {
-                setStoreId(String(mapped[0].id));
-            }
-        }).catch(err => {
-            console.error('Failed to load stores:', err);
-            setStoreLoadFailed(true);
-        });
     }, []);
 
     const handleAddToCart = (productId: number) => {
@@ -90,14 +70,14 @@ export const CreateOrder = () => {
             toast.error('Giỏ hàng trống. Vui lòng thêm sản phẩm.');
             return;
         }
-        if (!storeId) {
-            toast.error('Vui lòng chọn cửa hàng.');
+        if (!user?.storeId) {
+            toast.error('Tài khoản của bạn chưa được gán vào cửa hàng nào.');
             return;
         }
-        const numericStoreId = Number(storeId);
+        const numericStoreId = Number(user.storeId);
 
         if (!numericStoreId || isNaN(numericStoreId)) {
-            toast.error(`Store ID không hợp lệ: "${storeId}"`);
+            toast.error(`Store ID không hợp lệ: "${user?.storeId}"`);
             return;
         }
         if (!confirm('Xác nhận đặt đơn hàng này?')) return;
@@ -225,7 +205,18 @@ export const CreateOrder = () => {
                                                         className="px-2 text-gray-400 hover:bg-zinc-900/80 hover:text-gray-300 h-full"
                                                         onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
                                                     >-</button>
-                                                    <span className="text-xs font-medium w-8 text-center">{item.quantity}</span>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        value={item.quantity}
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value, 10);
+                                                            if (!isNaN(val) && val >= 1) {
+                                                                handleQuantityChange(item.productId, val);
+                                                            }
+                                                        }}
+                                                        className="text-xs font-medium w-10 text-center bg-transparent text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500 rounded"
+                                                    />
                                                     <button
                                                         className="px-2 text-gray-400 hover:bg-zinc-900/80 hover:text-gray-300 h-full"
                                                         onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
@@ -265,39 +256,22 @@ export const CreateOrder = () => {
                             <div className="space-y-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Cửa hàng</label>
-                                    {storeLoadFailed || stores.length === 0 ? (
-                                        <>
-                                            <input
-                                                type="number"
-                                                value={storeId}
-                                                onChange={(e) => setStoreId(e.target.value)}
-                                                placeholder="Nhập Store ID (VD: 1)"
-                                                className="w-full bg-zinc-900 border border-zinc-700 text-gray-200 text-sm rounded-md focus:ring-amber-500 focus:border-amber-500 p-2.5"
-                                            />
-                                            <p className="text-xs text-amber-500 mt-1">
-                                                {storeLoadFailed
-                                                    ? 'Không thể tải danh sách cửa hàng (thiếu quyền). Nhập Store ID thủ công.'
-                                                    : 'Chưa có cửa hàng nào. Nhập Store ID thủ công.'
-                                                }
-                                            </p>
-                                        </>
+                                    {user?.storeId ? (
+                                        <div className="w-full bg-zinc-900 border border-zinc-700 text-gray-200 text-sm rounded-md p-2.5 opacity-70">
+                                            {user.storeName || `Cửa hàng của bạn (#${user.storeId})`}
+                                        </div>
                                     ) : (
-                                        <>
-                                            <select
-                                                value={storeId}
-                                                onChange={(e) => setStoreId(e.target.value)}
-                                                className="w-full bg-zinc-900 border border-zinc-700 text-gray-200 text-sm rounded-md focus:ring-amber-500 focus:border-amber-500 p-2.5"
-                                            >
-                                                <option value="" disabled>-- Chọn cửa hàng --</option>
-                                                {stores.map(store => (
-                                                    <option key={store.id} value={store.id}>{store.name}</option>
-                                                ))}
-                                            </select>
-                                            <p className="text-xs text-gray-400 mt-1">Chọn cửa hàng nhận đơn hàng</p>
-                                        </>
+                                        <div className="w-full bg-zinc-900 border border-red-500/50 text-red-400 text-xs rounded-md p-2.5 bg-red-500/5">
+                                            Tài khoản của bạn chưa được gán vào cửa hàng nào. Không thể thực hiện đặt hàng.
+                                        </div>
                                     )}
                                 </div>
-                                <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm mt-2" onClick={handleSubmit} disabled={isSubmitting || cart.length === 0} isLoading={isSubmitting}>
+                                <Button
+                                    className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-sm mt-2"
+                                    onClick={handleSubmit}
+                                    disabled={isSubmitting || cart.length === 0 || !user?.storeId}
+                                    isLoading={isSubmitting}
+                                >
                                     <Save size={16} className="mr-2" /> Đặt hàng
                                 </Button>
                             </div>

@@ -3,12 +3,13 @@ import { MainLayout } from '../layouts/MainLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { Login } from '../pages/auth/Login';
 import { VerifyEmail } from '../pages/auth/VerifyEmail';
+import { ResetPassword } from '../pages/auth/ResetPassword';
 import { Dashboard } from '../pages/dashboard/Dashboard';
 import { UsersList } from '../pages/users/UsersList';
 import { CreateUserPage } from '../pages/users/CreateUserPage';
 import { RolesList } from '../pages/users/RolesList';
 import { StoreList } from '../pages/franchise-store/StoreList';
-import { CreateStorePage } from '../pages/franchise-store/CreateStorePage';
+import CreateStorePage from '../pages/franchise-store/CreateStorePage';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
 import { StoreInventoryPage } from '../pages/franchise-store/StoreInventoryPage';
 import { ProductCatalog } from '../pages/product/ProductCatalog';
@@ -64,6 +65,10 @@ export const router = createBrowserRouter([
     {
         path: '/verify-email',
         element: <VerifyEmail />
+    },
+    {
+        path: '/reset-password',
+        element: <ResetPassword />
     },
     {
         path: '/',

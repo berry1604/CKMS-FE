@@ -12,6 +12,11 @@ export interface User {
     bio?: string;
     joinDate?: string;
     isActive?: boolean;
+    status?: string;
+    storeId?: number;
+    storeName?: string;
+    kitchenId?: number;
+    kitchenName?: string;
 }
 
 export interface CreateUserRequest {
@@ -23,15 +28,15 @@ export interface CreateUserRequest {
 }
 
 export interface CreateUserResponse {
-    id: number;
     username: string;
     email: string;
-    roleName: string;
-    isActive: boolean;
+    fullName: string;
+    token: string;
+    message: string;
 }
 
 export interface UserResponse {
-    id: number;
+    userId: number;
     username: string;
     email: string;
     fullName: string;
@@ -41,6 +46,7 @@ export interface UserResponse {
     kitchenId?: number;
     kitchenName?: string;
     isActive: boolean;
+    status: string;
     createdAt?: string;
 }
 
