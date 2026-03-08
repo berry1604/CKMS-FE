@@ -72,13 +72,16 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
     }, [initialData, reset, isOpen]);
 
     const onSubmitForm = (data: StoreFormData) => {
-        const payload: StoreCreateRequest = {
+        const payload = {
             name: data.name,
             address: data.address,
             phone: data.phone || undefined,
             email: data.email || undefined,
-            warehouseCapacity: Number(data.warehouseCapacity)
-        };
+            warehouseCapacity: Number(data.warehouseCapacity),
+            isActive: data.isActive !== undefined ? data.isActive : true,
+            active: data.isActive !== undefined ? data.isActive : true,
+            status: data.isActive ? 'ACTIVE' : 'INACTIVE'
+        } as StoreCreateRequest;
         onSubmit(payload);
     };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Package, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Search, Package, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, CheckCircle2, XCircle, LibraryBig, Wheat, ChefHat } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -159,9 +159,20 @@ export const ProductCatalog = () => {
                     <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Product Catalog</h1>
                     <p className="text-sm text-gray-400 mt-1">Manage your product inventory and pricing.</p>
                 </div>
-                <Button onClick={handleCreate} className="shrink-0 bg-amber-600 hover:bg-blue-700 text-white shadow-sm">
-                    <Plus size={18} className="mr-2" /> Add Product
-                </Button>
+                <div className="flex flex-wrap items-center gap-3">
+                    <Button variant="outline" onClick={() => navigate('/products/categories')} className="shrink-0 border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white">
+                        <LibraryBig size={16} className="mr-2 text-indigo-400" /> Quản lý Danh mục
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate('/products/materials')} className="shrink-0 border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white">
+                        <Wheat size={16} className="mr-2 text-amber-400" /> Quản lý Nguyên liệu
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate('/products/recipes')} className="shrink-0 border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white">
+                        <ChefHat size={16} className="mr-2 text-emerald-400" /> Quản lý Công thức
+                    </Button>
+                    <Button onClick={handleCreate} className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white shadow-sm font-bold shadow-amber-600/20">
+                        <Plus size={18} className="mr-2" /> Add Product
+                    </Button>
+                </div>
             </div>
 
             {/* Toolbar */}

@@ -1,6 +1,6 @@
 // Types matching backend ShipmentController DTOs — from Swagger
 
-export type ShipmentStatus = 'PENDING' | 'PREPARED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
+export type ShipmentStatus = 'CREATED' | 'PREPARED' | 'IN_TRANSIT' | 'DELIVERED';
 
 export interface CreateShipmentRequest {
     productionPlanId: number;       // required

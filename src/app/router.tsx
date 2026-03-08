@@ -22,17 +22,22 @@ import { CreateCategoryPage } from '../pages/product/CreateCategoryPage';
 import { RecipeManager } from '../pages/product/RecipeManager';
 import { OrderList } from '../pages/orders/OrderList';
 import { CreateOrder } from '../pages/orders/CreateOrder';
+import { OrderApproval } from '../pages/orders/OrderApproval';
 import { ProductListExample } from '../pages/product/ProductListExample';
 import { ProductionSchedule } from '../pages/central-kitchen/ProductionSchedule';
-import { CreateTaskPage } from '../pages/central-kitchen/CreateTaskPage';
+import { CreateProductionPlan } from '../pages/central-kitchen/CreateProductionPlan';
 import { KitchenInventory } from '../pages/central-kitchen/KitchenInventory';
+import { ProductionBoard } from '../pages/central-kitchen/ProductionBoard';
 import { ShipmentList } from '../pages/shipment/ShipmentList';
+import { CreateShipment } from '../pages/shipment/CreateShipment';
 import { BillingList } from '../pages/billing/BillingList';
 import { ReportsDashboard } from '../pages/reports/ReportsDashboard';
 import { UserProfile } from '../pages/profile/UserProfile';
 import { Notifications } from '../pages/common/Notifications';
 import { ComingSoon } from '../components/ComingSoon';
 import { WarehouseFulfillment } from '../pages/warehouse/WarehouseFulfillment';
+import { AllocationMatrix } from '../pages/warehouse/AllocationMatrix';
+import { ReceiveShipment } from '../pages/shipment/ReceiveShipment';
 import { useAuth } from '../hooks/useAuth';
 import type { UserRole } from '../types/user';
 
@@ -105,15 +110,15 @@ export const router = createBrowserRouter([
                         ]
                     },
 
-                    // Central Kitchen Module (Admin, Manager, Kitchen Staff)
+                    // Central Kitchen Module (Admin, Manager, Kitchen Staff, Coordinator)
                     {
                         path: 'kitchen',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'KITCHEN_STAFF']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'KITCHEN_STAFF', 'COORDINATOR']} />,
                         children: [
                             { index: true, element: <ProductionSchedule /> },
-                            { path: 'create-task', element: <CreateTaskPage /> },
+                            { path: 'create-plan', element: <CreateProductionPlan /> },
                             { path: 'inventory', element: <KitchenInventory /> },
-                            { path: 'production', element: <ComingSoon /> }
+                            { path: 'production', element: <ProductionBoard /> }
                         ]
                     },
 
@@ -135,22 +140,24 @@ export const router = createBrowserRouter([
                         ]
                     },
 
-                    // Orders Module (Admin, Manager, Store Staff)
+                    // Orders Module (Admin, Manager, Store Staff, Coordinator)
                     {
                         path: 'orders',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'STORE_STAFF']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'STORE_STAFF', 'COORDINATOR']} />,
                         children: [
                             { index: true, element: <OrderList /> },
-                            { path: 'create', element: <CreateOrder /> }
+                            { path: 'create', element: <CreateOrder /> },
+                            { path: 'approvals', element: <OrderApproval /> }
                         ]
                     },
 
                     // Warehouse Module
                     {
                         path: 'warehouse',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'COORDINATOR']} />,
                         children: [
-                            { path: 'fulfillment', element: <WarehouseFulfillment /> }
+                            { path: 'fulfillment', element: <WarehouseFulfillment /> },
+                            { path: 'allocation', element: <AllocationMatrix /> }
                         ]
                     },
 
@@ -164,12 +171,14 @@ export const router = createBrowserRouter([
                         ]
                     },
 
-                    // Shipment Module (Admin, Supply Coordinator)
+                    // Shipment Module (Admin, Supply Coordinator, Coordinator)
                     {
                         path: 'shipment',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR', 'STORE_STAFF']} />,
                         children: [
-                            { index: true, element: <ShipmentList /> }
+                            { index: true, element: <ShipmentList /> },
+                            { path: 'create', element: <CreateShipment /> },
+                            { path: 'receive', element: <ReceiveShipment /> }
                         ]
                     },
 

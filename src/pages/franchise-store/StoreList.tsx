@@ -63,9 +63,11 @@ export const StoreList = () => {
     }, [searchTerm]);
 
     const filteredStores = stores.filter(store => {
+        const actualIsActive = store.isActive ?? (store as any).active ?? ((store as any).status === 'ACTIVE');
+
         if (statusFilter === 'ALL') return true;
-        if (statusFilter === 'active') return store.isActive;
-        if (statusFilter === 'inactive') return !store.isActive;
+        if (statusFilter === 'active') return actualIsActive;
+        if (statusFilter === 'inactive') return !actualIsActive;
         return true;
     });
 
@@ -105,7 +107,9 @@ export const StoreList = () => {
         try {
             if (editingStore) {
                 // Backend ĐÃ CÓ API update store
-                await storeApi.updateStore(editingStore.id, data);
+                const updateId = editingStore.id || editingStore.storeId;
+                if (!updateId) throw new Error("Store ID is missing");
+                await storeApi.updateStore(updateId, data);
                 toast.success('Cập nhật cửa hàng thành công!');
             } else {
                 await storeApi.createStore(data);
@@ -213,73 +217,77 @@ export const StoreList = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredStores.map((store) => (
-                                        <tr
-                                            key={store.id}
-                                            className="hover:bg-amber-500/5 transition-colors group cursor-pointer"
-                                            onClick={() => navigate(`/stores/${store.id}`)}
-                                        >
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center">
-                                                    <div className="bg-amber-500/10 p-2 rounded-lg mr-3 text-amber-600">
-                                                        <StoreIcon size={20} />
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-medium text-gray-200 group-hover:text-amber-600 transition-colors">{store.name}</div>
-                                                        <div className="text-gray-400 text-xs flex items-center mt-0.5">
-                                                            <MapPin size={10} className="mr-1" />
-                                                            {store.address}
+                                    filteredStores.map((store) => {
+                                        const actualId = store.id || store.storeId;
+                                        const actualIsActive = store.isActive ?? (store as any).active ?? ((store as any).status === 'ACTIVE');
+                                        return (
+                                            <tr
+                                                key={actualId}
+                                                className="hover:bg-amber-500/5 transition-colors group cursor-pointer"
+                                                onClick={() => navigate(`/stores/${actualId}`)}
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center">
+                                                        <div className="bg-amber-500/10 p-2 rounded-lg mr-3 text-amber-600">
+                                                            <StoreIcon size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-medium text-gray-200 group-hover:text-amber-600 transition-colors">{store.name}</div>
+                                                            <div className="text-gray-400 text-xs flex items-center mt-0.5">
+                                                                <MapPin size={10} className="mr-1" />
+                                                                {store.address}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center text-sm text-gray-300">
-                                                    <User size={14} className="mr-2 text-gray-400" />
-                                                    {store.managerName || 'N/A'}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-300">
-                                                    {store.phone && <div>{store.phone}</div>}
-                                                    {store.email && <div className="text-gray-400 text-xs">{store.email}</div>}
-                                                    {!store.phone && !store.email && <span className="text-gray-500">N/A</span>}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <Badge variant={getStatusVariant(store.isActive)} className="shadow-sm">
-                                                    {store.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleEdit(store)}
-                                                        className="h-8 w-8 p-0 text-gray-400 hover:text-amber-600 hover:bg-amber-500/10"
-                                                    >
-                                                        <Edit2 size={16} />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteClick(store.id)}
-                                                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 w-8 p-0 text-gray-400"
-                                                    >
-                                                        <ChevronRight size={16} />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center text-sm text-gray-300">
+                                                        <User size={14} className="mr-2 text-gray-400" />
+                                                        {store.managerName || 'N/A'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-gray-300">
+                                                        {store.phone && <div>{store.phone}</div>}
+                                                        {store.email && <div className="text-gray-400 text-xs">{store.email}</div>}
+                                                        {!store.phone && !store.email && <span className="text-gray-500">N/A</span>}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge variant={getStatusVariant(actualIsActive)} className="shadow-sm">
+                                                        {actualIsActive ? 'ACTIVE' : 'INACTIVE'}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleEdit(store)}
+                                                            className="h-8 w-8 p-0 text-gray-400 hover:text-amber-600 hover:bg-amber-500/10"
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteClick(actualId!)}
+                                                            className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-8 w-8 p-0 text-gray-400"
+                                                        >
+                                                            <ChevronRight size={16} />
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
@@ -323,63 +331,67 @@ export const StoreList = () => {
                 ) : filteredStores.length === 0 ? (
                     <div className="text-center py-10 text-gray-400">No stores found.</div>
                 ) : (
-                    filteredStores.map((store) => (
-                        <Card
-                            key={store.id}
-                            className="p-4 relative active:scale-[0.99] transition-transform"
-                            onClick={() => navigate(`/stores/${store.id}`)}
-                        >
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-amber-500/20 p-2 rounded-lg text-amber-600">
-                                        <StoreIcon size={20} />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-200">{store.name}</h3>
-                                        <div className="text-xs text-gray-400 flex items-center">
-                                            <MapPin size={10} className="mr-1" />
-                                            {store.address}
+                    filteredStores.map((store) => {
+                        const actualId = store.id || store.storeId;
+                        const actualIsActive = store.isActive ?? (store as any).active ?? ((store as any).status === 'ACTIVE');
+                        return (
+                            <Card
+                                key={actualId}
+                                className="p-4 relative active:scale-[0.99] transition-transform"
+                                onClick={() => navigate(`/stores/${actualId}`)}
+                            >
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-amber-500/20 p-2 rounded-lg text-amber-600">
+                                            <StoreIcon size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-gray-200">{store.name}</h3>
+                                            <div className="text-xs text-gray-400 flex items-center">
+                                                <MapPin size={10} className="mr-1" />
+                                                {store.address}
+                                            </div>
                                         </div>
                                     </div>
+                                    <Badge variant={getStatusVariant(actualIsActive)} className="shadow-none">
+                                        {actualIsActive ? 'ACTIVE' : 'INACTIVE'}
+                                    </Badge>
                                 </div>
-                                <Badge variant={getStatusVariant(store.isActive)} className="shadow-none">
-                                    {store.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                </Badge>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
-                                    <div className="text-xs text-gray-400 mb-1 flex items-center">
-                                        <User size={10} className="mr-1" /> Manager
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
+                                        <div className="text-xs text-gray-400 mb-1 flex items-center">
+                                            <User size={10} className="mr-1" /> Manager
+                                        </div>
+                                        <div className="text-sm font-medium text-gray-200 truncate">{store.managerName || 'N/A'}</div>
                                     </div>
-                                    <div className="text-sm font-medium text-gray-200 truncate">{store.managerName || 'N/A'}</div>
-                                </div>
-                                <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
-                                    <div className="text-xs text-gray-400 mb-1 flex items-center">
-                                        <Package size={10} className="mr-1" /> Contact
+                                    <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
+                                        <div className="text-xs text-gray-400 mb-1 flex items-center">
+                                            <Package size={10} className="mr-1" /> Contact
+                                        </div>
+                                        <div className="text-sm font-medium text-gray-200 truncate">{store.phone || store.email || 'N/A'}</div>
                                     </div>
-                                    <div className="text-sm font-medium text-gray-200 truncate">{store.phone || store.email || 'N/A'}</div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center justify-end pt-3 border-t border-zinc-800">
-                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                    <button
-                                        onClick={() => handleEdit(store)}
-                                        className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-500/10 rounded-full"
-                                    >
-                                        <Edit2 size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteClick(store.id)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                <div className="flex items-center justify-end pt-3 border-t border-zinc-800">
+                                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                            onClick={() => handleEdit(store)}
+                                            className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-500/10 rounded-full"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteClick(actualId!)}
+                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </Card>
-                    ))
+                            </Card>
+                        );
+                    })
                 )}
             </div>
 

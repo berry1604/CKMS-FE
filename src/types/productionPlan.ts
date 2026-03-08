@@ -3,12 +3,14 @@ export interface ProductionPlanRequest {
     storeOrderIds: number[];
 }
 
+export type ProductionPlanStatus = 'PLANNED' | 'IN_PRODUCTION' | 'PRODUCED' | 'FINISHED';
+
 export interface ProductionPlanResponse {
     planId: number;
     planName: string;
     batchCode: string;
     kitchenId: number;
-    status: string;
+    status: ProductionPlanStatus;
     createdAt: string;
     coordinatorUserId: number;
     version?: number;

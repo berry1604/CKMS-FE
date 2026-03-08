@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 interface DrawerProps {
     isOpen: boolean;
     onClose: () => void;
-    title?: string;
+    title?: React.ReactNode;
     description?: string;
     children: React.ReactNode;
     footer?: React.ReactNode;
@@ -58,7 +58,7 @@ export const Drawer = ({
                 {/* Header */}
                 <div className="flex items-start justify-between px-6 py-6 border-b border-zinc-800">
                     <div>
-                        {title && <h2 className="text-xl font-semibold text-gray-200">{title}</h2>}
+                        {title && <div className="text-xl font-semibold text-gray-200">{title}</div>}
                         {description && <p className="mt-1 text-sm text-gray-400">{description}</p>}
                     </div>
                     <button

@@ -5,6 +5,8 @@ export interface OrderItemRequest {
 
 export interface StoreOrderRequest {
     storeId: number;
+    deliveryDate: string;
+    note?: string;
     items: OrderItemRequest[];
 }
 
@@ -17,13 +19,15 @@ export interface OrderDetailResponse {
     kitchenStockQuantity?: number;
 }
 
+export type OrderStatus = 'SUBMITTED' | 'APPROVED' | 'ALLOCATED' | 'DELIVERED' | 'REJECTED';
+
 export interface StoreOrderResponse {
     orderId: number;
     storeId: number;
     storeName?: string;
     createdByUserId: number;
     orderDate: string; // ISO 8601 string
-    status: string;    // Enum string like SUBMITTED, APPROVED, etc.
+    status: OrderStatus;
     batchId?: number;
     totalAmount: number;
     orderDetails: OrderDetailResponse[];

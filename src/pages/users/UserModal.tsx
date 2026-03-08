@@ -16,6 +16,7 @@ const userSchema = z.object({
     email: z.string().email('Email không hợp lệ'),
     roleId: z.number().min(1, 'Vai trò là bắt buộc'),
     storeId: z.union([z.number(), z.string(), z.null()]).optional(),
+    kitchenId: z.union([z.number(), z.string(), z.null()]).optional(),
 });
 
 type UserForm = z.infer<typeof userSchema>;
@@ -42,6 +43,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
         defaultValues: {
             roleId: 0,
             storeId: 'null',
+            kitchenId: 'null',
         },
     });
 
@@ -54,7 +56,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
             try {
                 const [rolesList, storesList] = await Promise.all([
                     roleApi.getAllRoles(),
-                    storeApi.getAllStores({ size: 100 })
+                    storeApi.getAllStores({ size: 100 }),
                 ]);
                 setRoles(rolesList);
                 setStores(storesList.data.content);
@@ -74,6 +76,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                 email: user.email,
                 roleId: userRole?.roleId || 0,
                 storeId: user.storeId || 'null',
+                kitchenId: user.kitchenId || 'null',
             });
         } else if (!user) {
             reset({
@@ -81,6 +84,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                 email: '',
                 roleId: 0,
                 storeId: 'null',
+                kitchenId: 'null',
             });
         }
     }, [user, isOpen, reset, roles]);
@@ -91,6 +95,7 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
             email: data.email,
             roleId: Number(data.roleId),
             storeId: data.storeId && data.storeId !== 'null' ? Number(data.storeId) : null,
+            kitchenId: data.kitchenId && data.kitchenId !== 'null' ? Number(data.kitchenId) : null,
         };
         await onSubmit(payload);
         onClose();

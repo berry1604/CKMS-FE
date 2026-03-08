@@ -15,134 +15,182 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Bell,
-    Layers,
-    Tags,
     ClipboardList,
-    Warehouse,
     Shield,
-    Database
+    Database,
+    Network,
+    LibraryBig,
+    Wheat
 } from 'lucide-react';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface NavItem {
+    name: string;
+    href: string;
+    icon: any;
+    privilege: string | string[] | null;
+}
+
+interface NavGroup {
+    category: string;
+    items: NavItem[];
+}
+
+type NavigationItem = NavItem | NavGroup;
 
 // ─── Permission Helper ────────────────────────────────────────────────────────
 
-/**
- * Returns true if the user has the given privilege OR if no privilege is required (public item).
- * Also returns true if the user is ADMIN (admin sees everything).
- */
 function hasPermission(
-    _authorities: string[] | undefined,
-    _role: any | undefined,
-    _requiredPrivilege: string | null
+    authorities: string[] | undefined,
+    role: string | undefined,
+    requiredPrivilege: string | string[] | null
 ): boolean {
+    // REQ: hiển thị full quyền sidebar cho tất cả các role
     return true;
 }
 
 // ─── Navigation Config ────────────────────────────────────────────────────────
 
-const navigation = [
+const navigation: NavigationItem[] = [
     {
         name: 'Tổng quan',
         href: '/',
         icon: LayoutDashboard,
-        privilege: null, // Everyone sees dashboard
+        privilege: null,
     },
+    // SECTION: FRANCHISE STORE
     {
-        name: 'Thông báo',
-        href: '/notifications',
-        icon: Bell,
-        privilege: null, // Everyone sees notifications
+        category: 'Workspace: Cửa hàng',
+        items: [
+            {
+                name: 'Tạo đơn hàng',
+                href: '/orders/create',
+                icon: ShoppingCart,
+                privilege: 'CREATE_STORE_ORDER',
+            },
+            {
+                name: 'Đơn hàng của tôi',
+                href: '/orders',
+                icon: FileText,
+                privilege: 'VIEW_STORE_ORDER',
+            },
+            {
+                name: 'Nhận hàng',
+                href: '/shipment/receive',
+                icon: Package,
+                privilege: 'CONFIRM_SHIPMENT',
+            },
+        ]
     },
+    // SECTION: COORDINATOR
     {
-        name: 'Người dùng',
-        href: '/users',
-        icon: Users,
-        privilege: 'VIEW_USER',
+        category: 'Workspace: Điều phối',
+        items: [
+            {
+                name: 'Duyệt đơn hàng',
+                href: '/orders/approvals',
+                icon: ClipboardList,
+                privilege: 'APPROVE_STORE_ORDER',
+            },
+            {
+                name: 'Lập kế hoạch SX',
+                href: '/kitchen/create-plan',
+                icon: ChefHat,
+                privilege: 'CREATE_PRODUCTION_PLAN',
+            },
+            {
+                name: 'Phân bổ hàng',
+                href: '/warehouse/allocation',
+                icon: Network,
+                privilege: 'ORGANIZE_PRODUCTION',
+            },
+            {
+                name: 'Tạo Shipment',
+                href: '/shipment/create',
+                icon: Truck,
+                privilege: 'CREATE_SHIPMENT',
+            },
+        ]
     },
+    // SECTION: CENTRAL KITCHEN
     {
-        name: 'Vai trò & Quyền',
-        href: '/users/roles',
-        icon: Shield,
-        privilege: 'VIEW_ROLE',
+        category: 'Workspace: Bếp trung tâm',
+        items: [
+            {
+                name: 'Lịch sản xuất',
+                href: '/kitchen',
+                icon: LayoutDashboard,
+                privilege: 'VIEW_PRODUCTION_PLAN',
+            },
+            {
+                name: 'Kho nguyên liệu',
+                href: '/kitchen/inventory',
+                icon: Database,
+                privilege: 'VIEW_KITCHEN_INVENTORY',
+            },
+        ]
     },
+    // SECTION: MANAGER
     {
-        name: 'Cửa hàng Nhượng quyền',
-        href: '/stores',
-        icon: Store,
-        privilege: 'VIEW_STORE',
+        category: 'Workspace: Quản lý',
+        items: [
+            {
+                name: 'Sản phẩm & Menu',
+                href: '/products',
+                icon: Package,
+                privilege: 'VIEW_PRODUCT',
+            },
+            {
+                name: 'Danh mục',
+                href: '/products/categories',
+                icon: LibraryBig,
+                privilege: 'VIEW_PRODUCT',
+            },
+            {
+                name: 'Nguyên liệu',
+                href: '/products/materials',
+                icon: Wheat,
+                privilege: 'VIEW_PRODUCT',
+            },
+            {
+                name: 'Hóa đơn & Billing',
+                href: '/billing',
+                icon: FileText,
+                privilege: 'VIEW_BILLING',
+            },
+            {
+                name: 'Báo cáo doanh thu',
+                href: '/reports',
+                icon: BarChart,
+                privilege: 'VIEW_REPORTS',
+            },
+        ]
     },
+    // SECTION: ADMIN
     {
-        name: 'Kho Cửa hàng',
-        href: '/stores/inventory',
-        icon: Database,
-        privilege: 'VIEW_STORE_INVENTORY',
-    },
-    {
-        name: 'Kế hoạch Sản xuất',
-        href: '/kitchen',
-        icon: ChefHat,
-        privilege: 'VIEW_PRODUCTION_PLAN',
-    },
-    {
-        name: 'Kho Bếp trung tâm',
-        href: '/kitchen/inventory',
-        icon: Database,
-        privilege: 'VIEW_KITCHEN_INVENTORY',
-    },
-    {
-        name: 'Sản phẩm',
-        href: '/products',
-        icon: Package,
-        privilege: 'VIEW_PRODUCT',
-    },
-    {
-        name: 'Danh mục',
-        href: '/products/categories',
-        icon: Tags,
-        privilege: 'VIEW_CATEGORY',
-    },
-    {
-        name: 'Nguyên liệu',
-        href: '/products/materials',
-        icon: Layers,
-        privilege: 'VIEW_MATERIAL',
-    },
-    {
-        name: 'Công thức',
-        href: '/products/recipes',
-        icon: ClipboardList,
-        privilege: 'VIEW_RECIPE',
-    },
-    {
-        name: 'Điều phối Kho',
-        href: '/warehouse/fulfillment',
-        icon: Warehouse,
-        privilege: 'ORGANIZE_PRODUCTION',
-    },
-    {
-        name: 'Đơn hàng',
-        href: '/orders',
-        icon: ShoppingCart,
-        privilege: 'VIEW_STORE_ORDER',
-    },
-    {
-        name: 'Thanh toán & Hóa đơn',
-        href: '/billing',
-        icon: FileText,
-        privilege: 'VIEW_BILLING',
-    },
-    {
-        name: 'Giao hàng',
-        href: '/shipment',
-        icon: Truck,
-        privilege: 'VIEW_SHIPMENT',
-    },
-    {
-        name: 'Báo cáo',
-        href: '/reports',
-        icon: BarChart,
-        privilege: 'VIEW_REPORT',
-    },
+        category: 'Workspace: Hệ thống',
+        items: [
+            {
+                name: 'Người dùng',
+                href: '/users',
+                icon: Users,
+                privilege: 'VIEW_USER',
+            },
+            {
+                name: 'Vai trò & Quyền',
+                href: '/users/roles',
+                icon: Shield,
+                privilege: 'VIEW_ROLE',
+            },
+            {
+                name: 'Cửa hàng',
+                href: '/stores',
+                icon: Store,
+                privilege: 'MANAGE_STORES',
+            },
+        ]
+    }
 ];
 
 // ─── Main Layout ──────────────────────────────────────────────────────────────
@@ -158,21 +206,30 @@ export const MainLayout: React.FC = () => {
     };
 
     // Filter navigation items to only those the user has permission for
-    const visibleNavigation = navigation.filter((item) =>
-        hasPermission(user?.authorities, user?.role, item.privilege)
-    );
+    const filteredNavigation = navigation
+        .map(nav => {
+            if ('category' in nav) {
+                const visibleItems = nav.items.filter(item =>
+                    hasPermission(user?.authorities, user?.role, item.privilege)
+                );
+                return visibleItems.length > 0 ? { ...nav, items: visibleItems } : null;
+            }
+            return hasPermission(user?.authorities, user?.role, nav.privilege) ? nav : null;
+        })
+        .filter((item): item is NavigationItem => item !== null);
 
     return (
         <div className="min-h-screen bg-zinc-950 flex">
             {/* Sidebar */}
             <div
+                id="sidebar"
                 className={cn(
                     "bg-zinc-900 shadow-xl fixed h-full z-20 hidden md:flex flex-col transition-all duration-300 ease-in-out border-r border-zinc-800",
                     isCollapsed ? "w-20" : "w-64"
                 )}
             >
                 {/* Header */}
-                <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800">
+                <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800 focus-within:ring-1 focus-within:ring-amber-500">
                     {!isCollapsed && (
                         <span className="text-xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent truncate">
                             FranchiseSys
@@ -186,6 +243,7 @@ export const MainLayout: React.FC = () => {
 
                     {!isCollapsed && (
                         <button
+                            id="collapse-sidebar-btn"
                             onClick={() => setIsCollapsed(true)}
                             className="p-1.5 rounded-md text-gray-400 hover:bg-zinc-800 hover:text-gray-300 transition-colors"
                         >
@@ -197,6 +255,7 @@ export const MainLayout: React.FC = () => {
                 {/* Collapsed Toggle Button */}
                 {isCollapsed && (
                     <button
+                        id="expand-sidebar-btn"
                         onClick={() => setIsCollapsed(false)}
                         className="absolute -right-3 top-20 bg-zinc-800 border border-zinc-700 shadow-sm p-1 rounded-full text-gray-400 hover:text-amber-500 z-50 transform hover:scale-110 transition-all"
                     >
@@ -204,35 +263,51 @@ export const MainLayout: React.FC = () => {
                     </button>
                 )}
 
-                <nav className="flex-1 p-3 space-y-1 overflow-y-auto mt-2 custom-scrollbar">
-                    {visibleNavigation.map((item) => {
-                        const Icon = item.icon;
+                <nav className="flex-1 p-3 space-y-4 overflow-y-auto mt-2 custom-scrollbar">
+                    {filteredNavigation.map((group) => {
+                        const isGroup = 'category' in group;
+                        const items = isGroup ? group.items : [group];
+
                         return (
-                            <NavLink
-                                key={item.name}
-                                to={item.href}
-                                title={isCollapsed ? item.name : undefined}
-                                className={({ isActive }) =>
-                                    cn(
-                                        'flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative',
-                                        isCollapsed ? 'justify-center' : '',
-                                        isActive ? 'bg-amber-500/10 text-amber-500 shadow-sm' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
-                                    )
-                                }
-                            >
-                                <Icon className={cn("h-5 w-5 transition-transform", "group-hover:scale-110", !isCollapsed && "mr-3")} />
-                                {!isCollapsed && (
-                                    <span className="flex-1 truncate">{item.name}</span>
+                            <div key={isGroup ? group.category : group.name} className="space-y-1">
+                                {isGroup && !isCollapsed && (
+                                    <p className="px-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                                        {group.category}
+                                    </p>
                                 )}
 
-                                {/* Active Indicator Bar (collapsed mode) */}
-                                {isCollapsed && (
-                                    <NavLink
-                                        to={item.href}
-                                        className={({ isActive }) => isActive ? "absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-amber-600 rounded-r-full" : "hidden"}
-                                    />
-                                )}
-                            </NavLink>
+                                {items.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <NavLink
+                                            key={item.href}
+                                            id={`nav-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                                            to={item.href}
+                                            title={isCollapsed ? item.name : undefined}
+                                            className={({ isActive }) =>
+                                                cn(
+                                                    'flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 group relative',
+                                                    isCollapsed ? 'justify-center' : '',
+                                                    isActive ? 'bg-amber-500/10 text-amber-500 shadow-sm' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                                                )
+                                            }
+                                        >
+                                            <Icon className={cn("h-5 w-5 shrink-0 transition-transform", "group-hover:scale-110", !isCollapsed && "mr-3")} />
+                                            {!isCollapsed && (
+                                                <span className="flex-1 truncate">{item.name}</span>
+                                            )}
+
+                                            {/* Active Indicator Bar (collapsed mode) */}
+                                            {isCollapsed && (
+                                                <NavLink
+                                                    to={item.href}
+                                                    className={({ isActive }) => isActive ? "absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-amber-600 rounded-r-full" : "hidden"}
+                                                />
+                                            )}
+                                        </NavLink>
+                                    );
+                                })}
+                            </div>
                         );
                     })}
                 </nav>
@@ -240,6 +315,7 @@ export const MainLayout: React.FC = () => {
                 {/* Footer / User Profile */}
                 <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
                     <div
+                        id="user-profile-trigger"
                         className={cn(
                             "flex items-center cursor-pointer hover:bg-zinc-800 p-2 rounded-xl transition-all border border-transparent hover:border-zinc-700 hover:shadow-sm",
                             isCollapsed ? "justify-center" : "px-3"
@@ -253,12 +329,16 @@ export const MainLayout: React.FC = () => {
                         {!isCollapsed && (
                             <div className="ml-3 overflow-hidden">
                                 <p className="text-sm font-semibold text-gray-200 truncate">{user?.name || 'Người dùng'}</p>
-                                <p className="text-xs text-gray-400 truncate">{user?.role?.replace('ROLE_', '').replace('_', ' ') || ''}</p>
+                                <p className="text-xs text-gray-400 truncate uppercase tracking-tighter">
+                                    {user?.role?.replace('ROLE_', '').replace('_', ' ') || ''}
+                                    {user?.storeName ? ` • ${user.storeName}` : ''}
+                                </p>
                             </div>
                         )}
                     </div>
                     {!isCollapsed && (
                         <button
+                            id="logout-btn"
                             onClick={handleLogout}
                             className="flex items-center w-full px-3 py-2 mt-3 text-sm font-medium text-red-500 rounded-lg hover:bg-red-500/10 transition-colors"
                         >

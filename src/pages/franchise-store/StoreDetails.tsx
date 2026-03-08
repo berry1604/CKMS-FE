@@ -78,7 +78,7 @@ export const StoreDetails = () => {
                     <div className="space-y-4">
                         <div>
                             <p className="text-sm text-gray-400">Store ID</p>
-                            <p className="text-lg font-bold text-gray-200">#{store.id}</p>
+                            <p className="text-lg font-bold text-gray-200">#{store.id || store.storeId}</p>
                         </div>
                         <div>
                             <p className="text-sm text-gray-400">Created At</p>

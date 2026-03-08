@@ -1,5 +1,6 @@
 export interface StoreResponse {
-    id: number;
+    id?: number;
+    storeId?: number;
     name: string;
     address: string;
     phone?: string;

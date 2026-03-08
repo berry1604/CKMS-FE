@@ -12,7 +12,7 @@ interface DataTableProps<T> {
     columns: Column<T>[];
     keyExtractor: (item: T) => string | number;
     isLoading?: boolean;
-    emptyMessage?: string;
+    emptyMessage?: ReactNode;
     onRowClick?: (item: T) => void;
 }
 
