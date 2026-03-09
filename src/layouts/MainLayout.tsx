@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { cn } from '../utils/classNames';
+import { PERMISSIONS, hasPermission, type Permission } from '../config/permissions';
 import {
     LayoutDashboard,
     Users,
@@ -29,7 +30,7 @@ interface NavItem {
     name: string;
     href: string;
     icon: any;
-    privilege: string | string[] | null;
+    permission?: Permission | Permission[];
 }
 
 interface NavGroup {
@@ -39,17 +40,6 @@ interface NavGroup {
 
 type NavigationItem = NavItem | NavGroup;
 
-// ─── Permission Helper ────────────────────────────────────────────────────────
-
-function hasPermission(
-    authorities: string[] | undefined,
-    role: string | undefined,
-    requiredPrivilege: string | string[] | null
-): boolean {
-    // REQ: hiển thị full quyền sidebar cho tất cả các role
-    return true;
-}
-
 // ─── Navigation Config ────────────────────────────────────────────────────────
 
 const navigation: NavigationItem[] = [
@@ -57,7 +47,8 @@ const navigation: NavigationItem[] = [
         name: 'Tổng quan',
         href: '/',
         icon: LayoutDashboard,
-        privilege: null,
+        // Dashboard is available to any authenticated user
+        permission: undefined,
     },
     // SECTION: FRANCHISE STORE
     {
@@ -67,19 +58,19 @@ const navigation: NavigationItem[] = [
                 name: 'Tạo đơn hàng',
                 href: '/orders/create',
                 icon: ShoppingCart,
-                privilege: 'CREATE_STORE_ORDER',
+                permission: PERMISSIONS.CREATE_ORDER,
             },
             {
                 name: 'Đơn hàng của tôi',
                 href: '/orders',
                 icon: FileText,
-                privilege: 'VIEW_STORE_ORDER',
+                permission: PERMISSIONS.VIEW_MY_ORDERS,
             },
             {
                 name: 'Nhận hàng',
                 href: '/shipment/receive',
                 icon: Package,
-                privilege: 'CONFIRM_SHIPMENT',
+                permission: PERMISSIONS.RECEIVE_SHIPMENT,
             },
         ]
     },
@@ -91,25 +82,25 @@ const navigation: NavigationItem[] = [
                 name: 'Duyệt đơn hàng',
                 href: '/orders/approvals',
                 icon: ClipboardList,
-                privilege: 'APPROVE_STORE_ORDER',
+                permission: PERMISSIONS.APPROVE_ORDERS,
             },
             {
                 name: 'Lập kế hoạch SX',
                 href: '/kitchen/create-plan',
                 icon: ChefHat,
-                privilege: 'CREATE_PRODUCTION_PLAN',
+                permission: PERMISSIONS.PRODUCTION_PLANNING,
             },
             {
                 name: 'Phân bổ hàng',
                 href: '/warehouse/allocation',
                 icon: Network,
-                privilege: 'ORGANIZE_PRODUCTION',
+                permission: PERMISSIONS.ALLOCATION_MANAGEMENT,
             },
             {
                 name: 'Tạo Shipment',
                 href: '/shipment/create',
                 icon: Truck,
-                privilege: 'CREATE_SHIPMENT',
+                permission: PERMISSIONS.CREATE_SHIPMENT,
             },
         ]
     },
@@ -121,13 +112,13 @@ const navigation: NavigationItem[] = [
                 name: 'Lịch sản xuất',
                 href: '/kitchen',
                 icon: LayoutDashboard,
-                privilege: 'VIEW_PRODUCTION_PLAN',
+                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
             },
             {
                 name: 'Kho nguyên liệu',
                 href: '/kitchen/inventory',
                 icon: Database,
-                privilege: 'VIEW_KITCHEN_INVENTORY',
+                permission: PERMISSIONS.MATERIAL_INVENTORY,
             },
         ]
     },
@@ -139,31 +130,31 @@ const navigation: NavigationItem[] = [
                 name: 'Sản phẩm & Menu',
                 href: '/products',
                 icon: Package,
-                privilege: 'VIEW_PRODUCT',
+                permission: PERMISSIONS.PRODUCT_MANAGEMENT,
             },
             {
                 name: 'Danh mục',
                 href: '/products/categories',
                 icon: LibraryBig,
-                privilege: 'VIEW_PRODUCT',
+                permission: PERMISSIONS.CATEGORY_MANAGEMENT,
             },
             {
                 name: 'Nguyên liệu',
                 href: '/products/materials',
                 icon: Wheat,
-                privilege: 'VIEW_PRODUCT',
+                permission: PERMISSIONS.INGREDIENT_MANAGEMENT,
             },
             {
                 name: 'Hóa đơn & Billing',
                 href: '/billing',
                 icon: FileText,
-                privilege: 'VIEW_BILLING',
+                permission: PERMISSIONS.BILLING_MANAGEMENT,
             },
             {
                 name: 'Báo cáo doanh thu',
                 href: '/reports',
                 icon: BarChart,
-                privilege: 'VIEW_REPORTS',
+                permission: PERMISSIONS.REVENUE_REPORTS,
             },
         ]
     },
@@ -175,19 +166,19 @@ const navigation: NavigationItem[] = [
                 name: 'Người dùng',
                 href: '/users',
                 icon: Users,
-                privilege: 'VIEW_USER',
+                permission: PERMISSIONS.USER_MANAGEMENT,
             },
             {
                 name: 'Vai trò & Quyền',
                 href: '/users/roles',
                 icon: Shield,
-                privilege: 'VIEW_ROLE',
+                permission: PERMISSIONS.ROLE_PERMISSION_MANAGEMENT,
             },
             {
                 name: 'Cửa hàng',
                 href: '/stores',
                 icon: Store,
-                privilege: 'MANAGE_STORES',
+                permission: PERMISSIONS.STORE_MANAGEMENT,
             },
         ]
     }
@@ -210,11 +201,11 @@ export const MainLayout: React.FC = () => {
         .map(nav => {
             if ('category' in nav) {
                 const visibleItems = nav.items.filter(item =>
-                    hasPermission(user?.authorities, user?.role, item.privilege)
+                    !item.permission || hasPermission(user, item.permission)
                 );
                 return visibleItems.length > 0 ? { ...nav, items: visibleItems } : null;
             }
-            return hasPermission(user?.authorities, user?.role, nav.privilege) ? nav : null;
+            return !nav.permission || hasPermission(user, nav.permission) ? nav : null;
         })
         .filter((item): item is NavigationItem => item !== null);
 
