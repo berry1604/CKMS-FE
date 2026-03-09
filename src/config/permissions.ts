@@ -19,7 +19,8 @@ export type Permission =
     | 'REVENUE_REPORTS'
     | 'USER_MANAGEMENT'
     | 'ROLE_PERMISSION_MANAGEMENT'
-    | 'STORE_MANAGEMENT';
+    | 'STORE_MANAGEMENT'
+    | 'EXECUTE_PRODUCTION';
 
 export const PERMISSIONS: Record<Permission, Permission> = {
     CREATE_ORDER: 'CREATE_ORDER',
@@ -39,6 +40,7 @@ export const PERMISSIONS: Record<Permission, Permission> = {
     USER_MANAGEMENT: 'USER_MANAGEMENT',
     ROLE_PERMISSION_MANAGEMENT: 'ROLE_PERMISSION_MANAGEMENT',
     STORE_MANAGEMENT: 'STORE_MANAGEMENT',
+    EXECUTE_PRODUCTION: 'EXECUTE_PRODUCTION',
 };
 
 // Limit roles here to the ones we actually map permissions for
@@ -66,6 +68,9 @@ export const ROLE_PERMISSIONS: Record<MappedRole, Permission[]> = {
     KITCHEN_STAFF: [
         PERMISSIONS.PRODUCTION_SCHEDULE,
         PERMISSIONS.MATERIAL_INVENTORY,
+        PERMISSIONS.PRODUCT_MANAGEMENT, // Cần để fetch data dropdown (đã ẩn mục này trong sidebar)
+        PERMISSIONS.INGREDIENT_MANAGEMENT, // Cần để fetch data dropdown (đã ẩn mục này trong sidebar)
+        PERMISSIONS.EXECUTE_PRODUCTION, // Quyền thực thi sản xuất (Bắt đầu nấu, Hoàn tất mẻ)
     ],
     MANAGER: [
         PERMISSIONS.PRODUCT_MANAGEMENT,
@@ -73,6 +78,7 @@ export const ROLE_PERMISSIONS: Record<MappedRole, Permission[]> = {
         PERMISSIONS.INGREDIENT_MANAGEMENT,
         PERMISSIONS.BILLING_MANAGEMENT,
         PERMISSIONS.REVENUE_REPORTS,
+        PERMISSIONS.MATERIAL_INVENTORY,
     ],
     ADMIN: [
         PERMISSIONS.USER_MANAGEMENT,

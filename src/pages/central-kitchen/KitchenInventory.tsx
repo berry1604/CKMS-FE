@@ -1,15 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, TrendingUp, Package, Leaf } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Package, Leaf, Edit, Trash2, X, Save } from 'lucide-react';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import type { KitchenStockItemResponse } from '../../types/kitchenInventory';
+import { Modal } from '../../components/ui/Modal';
+import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 
 export const KitchenInventory = () => {
     const navigate = useNavigate();
     const [inventory, setInventory] = useState<KitchenStockItemResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Edit Modal State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<KitchenStockItemResponse | null>(null);
+    const [editQuantity, setEditQuantity] = useState<number>(0);
+    const [editExpiryDate, setEditExpiryDate] = useState<string>('');
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // Delete State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const WAREHOUSE_ID = 1; // Default Kitchen Warehouse ID
 
@@ -29,6 +42,53 @@ export const KitchenInventory = () => {
     useEffect(() => {
         loadInventory();
     }, []);
+
+    const handleEditClick = (item: KitchenStockItemResponse) => {
+        setSelectedItem(item);
+        setEditQuantity(item.quantity);
+        setEditExpiryDate(item.expiryDate ? item.expiryDate.split('T')[0] : '');
+        setIsEditModalOpen(true);
+    };
+
+    const handleUpdate = async () => {
+        if (!selectedItem) return;
+        setIsUpdating(true);
+        try {
+            await kitchenInventoryApi.updateStockItem(WAREHOUSE_ID, selectedItem.id, {
+                quantity: editQuantity,
+                expiryDate: editExpiryDate || undefined
+            });
+            toast.success('Cập nhật tồn kho thành công');
+            setIsEditModalOpen(false);
+            loadInventory();
+        } catch (error) {
+            console.error(error);
+            toast.error('Không thể cập nhật tồn kho. Vui lòng kiểm tra lại quyền hạn hoặc API.');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleDeleteClick = (item: KitchenStockItemResponse) => {
+        setSelectedItem(item);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (!selectedItem) return;
+        setIsDeleting(true);
+        try {
+            await kitchenInventoryApi.deleteStockItem(WAREHOUSE_ID, selectedItem.id);
+            toast.success('Đã xóa vật phẩm khỏi kho');
+            setIsDeleteModalOpen(false);
+            loadInventory();
+        } catch (error) {
+            console.error(error);
+            toast.error('Không thể xóa vật phẩm. Vui lòng kiểm tra lại Backend.');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     const columns: Column<KitchenStockItemResponse>[] = [
         {
@@ -110,6 +170,27 @@ export const KitchenInventory = () => {
                     )}
                 </div>
             )
+        },
+        {
+            header: 'Thao tác',
+            cell: (row) => (
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => handleEditClick(row)}
+                        className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:bg-amber-500/10 hover:text-amber-500 border border-transparent hover:border-amber-500/20 transition-all"
+                        title="Chỉnh sửa"
+                    >
+                        <Edit size={16} />
+                    </button>
+                    <button
+                        onClick={() => handleDeleteClick(row)}
+                        className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:bg-red-500/10 hover:text-red-500 border border-transparent hover:border-red-500/20 transition-all"
+                        title="Xóa"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            )
         }
     ];
 
@@ -145,6 +226,105 @@ export const KitchenInventory = () => {
                     />
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            <Modal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Cập nhật tồn kho"
+            >
+                <div className="space-y-6">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <p className="text-xs text-zinc-500 uppercase font-bold mb-1">Vật phẩm</p>
+                        <p className="text-lg font-black text-white italic">{selectedItem?.itemName}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-amber-500 uppercase tracking-widest ml-1">Số lượng tồn</label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={editQuantity}
+                                onChange={(e) => setEditQuantity(Number(e.target.value))}
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                            />
+                            <span className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-500 font-bold uppercase text-xs">
+                                {selectedItem?.unit}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-amber-500 uppercase tracking-widest ml-1">Ngày hết hạn</label>
+                        <input
+                            type="date"
+                            value={editExpiryDate}
+                            onChange={(e) => setEditExpiryDate(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                            style={{ colorScheme: 'dark' }}
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="flex-1 border-white/10 text-zinc-400 hover:text-white rounded-xl"
+                        >
+                            Hủy bỏ
+                        </Button>
+                        <Button
+                            onClick={handleUpdate}
+                            disabled={isUpdating}
+                            className="flex-1 bg-amber-500 text-black font-black rounded-xl shadow-lg shadow-amber-500/20"
+                        >
+                            {isUpdating ? 'Đang lưu...' : (
+                                <div className="flex items-center gap-2">
+                                    <Save size={18} />
+                                    Lưu thay đổi
+                                </div>
+                            )}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Xác nhận xóa"
+            >
+                <div className="space-y-6">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <div>
+                            <p className="text-zinc-300">Bạn có chắc chắn muốn xóa vật phẩm <span className="text-white font-bold italic">"{selectedItem?.itemName}"</span> khỏi kho không?</p>
+                            <p className="text-xs text-zinc-500 mt-2 uppercase font-bold tracking-tighter">Hành động này không thể hoàn tác.</p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            className="flex-1 border-white/10 text-zinc-400 hover:text-white rounded-xl"
+                        >
+                            Hủy bỏ
+                        </Button>
+                        <Button
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="flex-1 bg-red-500 hover:bg-red-600 text-white font-black rounded-xl shadow-lg shadow-red-500/20"
+                        >
+                            {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };
+

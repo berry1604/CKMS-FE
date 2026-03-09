@@ -61,6 +61,37 @@ export const kitchenInventoryApi = {
     },
 
     /**
+     * Update an existing stock item (quantity or expiry date).
+     */
+    updateStockItem: async (warehouseId: number, stockId: number, data: { quantity: number; expiryDate?: string }): Promise<ApiResponse<KitchenStockItemResponse>> => {
+        try {
+            const response = await axiosClient.patch<ApiResponse<KitchenStockItemResponse>>(
+                `/kitchen-inventory/${warehouseId}/stock/${stockId}`,
+                data
+            );
+            return response.data;
+        } catch (error) {
+            console.error(`Error updating stock item ${stockId}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Delete a stock item from the warehouse.
+     */
+    deleteStockItem: async (warehouseId: number, stockId: number): Promise<ApiResponse<void>> => {
+        try {
+            const response = await axiosClient.delete<ApiResponse<void>>(
+                `/kitchen-inventory/${warehouseId}/stock/${stockId}`
+            );
+            return response.data;
+        } catch (error) {
+            console.error(`Error deleting stock item ${stockId}:`, error);
+            throw error;
+        }
+    },
+
+    /**
      * Get all warehouses belonging to a specific kitchen.
      * Used by coordinators to know which warehouseId to query for stock.
      */
