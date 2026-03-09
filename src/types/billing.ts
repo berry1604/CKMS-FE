@@ -4,6 +4,9 @@ export interface BatchBillingStatementRequest {
   cycleName: string;
 }
 
+export type BillingStatementStatus = 'DRAFT' | 'ISSUED' | 'OVERDUE' | 'PAID' | 'CANCELLED';
+export type InvoiceStatus = 'PENDING' | 'FULFILLED' | 'IN_STATEMENT' | 'PAID' | 'CANCELLED';
+
 export interface BillingStatementResponse {
   statementId: number;
   storeId: number;
@@ -12,7 +15,7 @@ export interface BillingStatementResponse {
   periodStart: string;
   periodEnd: string;
   totalAmount: number;
-  status: string;
+  status: BillingStatementStatus;
   invoiceCount: number;
   issuedAt?: string;
 }
@@ -31,7 +34,7 @@ export interface BillingStatementSummaryResponse {
   storeId?: number;
   cycleName: string;
   totalAmount: number;
-  status: string;
+  status: BillingStatementStatus;
   issuedAt: string;
   periodStart?: string;
   periodEnd?: string;
@@ -47,7 +50,7 @@ export interface InvoiceDetailResponse {
   orderId?: number;
   orderDate?: string;
   amount: number;
-  status?: string;
+  status?: InvoiceStatus;
   note?: string;
 }
 
@@ -60,7 +63,7 @@ export interface BillingStatementDetailResponse {
   orderTotal?: number;
   shippingTotal?: number;
   totalAmount: number;
-  status: string;
+  status: BillingStatementStatus;
   issuedAt?: string;
   paidAt: string | null;
   paymentMethodId?: number;

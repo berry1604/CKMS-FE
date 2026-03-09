@@ -3,7 +3,7 @@ export interface ProductionPlanRequest {
     storeOrderIds: number[];
 }
 
-export type ProductionPlanStatus = 'PLANNED' | 'IN_PRODUCTION' | 'PRODUCED' | 'FINISHED';
+export type ProductionPlanStatus = 'PLANNED' | 'READY_TO_PRODUCE' | 'IN_PRODUCTION' | 'PRODUCED' | 'FINISHED' | 'CANCELLED';
 
 export interface ProductionPlanResponse {
     planId: number;

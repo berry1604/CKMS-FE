@@ -19,7 +19,7 @@ export interface OrderDetailResponse {
     kitchenStockQuantity?: number;
 }
 
-export type OrderStatus = 'SUBMITTED' | 'APPROVED' | 'ALLOCATED' | 'DELIVERED' | 'REJECTED';
+export type OrderStatus = 'SUBMITTED' | 'APPROVED' | 'SCHEDULED' | 'LOCKED' | 'ALLOCATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CONFIRMED' | 'REJECTED';
 
 export interface StoreOrderResponse {
     orderId: number;

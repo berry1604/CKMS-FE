@@ -1,5 +1,7 @@
 export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF' | 'COORDINATOR' | 'STORE_STAFF' | 'KITCHEN_STAFF' | 'SUPPLY_COORDINATOR' | string;
 
+export type UserStatus = 'PENDING_VERIFICATION' | 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'DELETED';
+
 export interface User {
     id: string;
     name: string;
@@ -12,7 +14,7 @@ export interface User {
     bio?: string;
     joinDate?: string;
     isActive?: boolean;
-    status?: string;
+    status?: UserStatus;
     storeId?: number;
     storeName?: string;
     kitchenId?: number;

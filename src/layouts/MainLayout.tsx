@@ -26,23 +26,23 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface NavItem {
+export interface NavItem {
     name: string;
     href: string;
     icon: any;
     permission?: Permission | Permission[];
 }
 
-interface NavGroup {
+export interface NavGroup {
     category: string;
     items: NavItem[];
 }
 
-type NavigationItem = NavItem | NavGroup;
+export type NavigationItem = NavItem | NavGroup;
 
 // ─── Navigation Config ────────────────────────────────────────────────────────
 
-const navigation: NavigationItem[] = [
+export const navigation: NavigationItem[] = [
     {
         name: 'Tổng quan',
         href: '/',
