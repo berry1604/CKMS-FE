@@ -11,6 +11,7 @@ import {
 import { Card } from "../../components/ui/Card";
 import { DataTable, type Column } from "../../components/ui/DataTable";
 import { Badge } from "../../components/ui/Badge";
+import { ConfirmationModal } from "../../components/ui/ConfirmationModal";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { BillingDetailDrawer } from "./InvoiceDetailDrawer";
@@ -48,6 +49,10 @@ export const BillingList = () => {
   const [showManualModal, setShowManualModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [statementToDelete, setStatementToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Manual Statement form
   const [manualForm, setManualForm] = useState({
@@ -109,15 +114,19 @@ export const BillingList = () => {
     setPage(0);
   }, [statusFilter, storeIdFilter]);
 
-  const handleDelete = async (id: number) => {
-    if (
-      !window.confirm("Are you sure you want to delete this billing statement?")
-    )
-      return;
+  const handleDelete = (id: number) => {
+    setStatementToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!statementToDelete) return;
+    setIsDeleting(true);
     try {
-      await billingApi.deleteStatement(id);
+      await billingApi.deleteStatement(statementToDelete);
       toast.success("Billing statement deleted successfully");
       fetchStatements();
+      setIsDeleteModalOpen(false);
     } catch (error: unknown) {
       let msg = "Failed to delete billing statement";
       if (error && typeof error === "object" && "response" in error) {
@@ -125,6 +134,8 @@ export const BillingList = () => {
         msg = axiosError.response?.data?.message || msg;
       }
       toast.error(msg);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -370,11 +381,10 @@ export const BillingList = () => {
                 key={opt.value}
                 onClick={() => setStatusFilter(opt.value)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap
-                                    ${
-                                      statusFilter === opt.value
-                                        ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                                        : "bg-zinc-900/50 border-zinc-700 text-gray-400 hover:bg-zinc-900/80"
-                                    }`}
+                                    ${statusFilter === opt.value
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
+                    : "bg-zinc-900/50 border-zinc-700 text-gray-400 hover:bg-zinc-900/80"
+                  }`}
               >
                 {opt.label}
               </button>
@@ -434,6 +444,18 @@ export const BillingList = () => {
         isOpen={!!selectedStatementId}
         onClose={() => setSelectedStatementId(null)}
         onPaid={fetchStatements}
+      />
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Billing Statement"
+        message="Are you sure you want to delete this billing statement? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+        variant="danger"
       />
 
       {/* Manual Statement Modal */}

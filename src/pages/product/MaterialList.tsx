@@ -5,9 +5,8 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Badge } from '../../components/ui/Badge';
-import { MaterialModal } from './MaterialModal';
 import { materialApi } from '../../services/material.api';
-import type { MaterialResponse, MaterialRequest } from '../../types/material';
+import type { MaterialResponse } from '../../types/material';
 import toast from 'react-hot-toast';
 
 export const MaterialList = () => {
@@ -15,11 +14,6 @@ export const MaterialList = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
-
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingMaterial, setEditingMaterial] = useState<MaterialResponse | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -43,33 +37,14 @@ export const MaterialList = () => {
     };
 
     const handleEdit = (material: MaterialResponse) => {
-        setEditingMaterial(material);
-        setIsModalOpen(true);
+        navigate(`/products/materials/${material.id}/edit`, { state: { material } });
     };
 
     const handleDelete = async (_id: number) => {
         toast.error('Delete functionality is not implemented on Backend yet.');
     };
 
-    const handleSubmit = async (data: MaterialRequest) => {
-        setIsSaving(true);
-        try {
-            if (editingMaterial) {
-                await materialApi.update(editingMaterial.id, data);
-                toast.success('Material updated successfully!');
-            } else {
-                await materialApi.create(data);
-                toast.success('Material created successfully!');
-            }
-            setIsModalOpen(false);
-            fetchData();
-        } catch (error: any) {
-            console.error('Failed to save material:', error);
-            toast.error(error.response?.data?.message || 'Failed to save material');
-        } finally {
-            setIsSaving(false);
-        }
-    };
+
 
     const filteredMaterials = materials.filter(m =>
         m.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -146,14 +121,6 @@ export const MaterialList = () => {
                 data={filteredMaterials}
                 isLoading={isLoading}
                 keyExtractor={(item) => item.id.toString()}
-            />
-
-            <MaterialModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handleSubmit}
-                initialData={editingMaterial}
-                isLoading={isSaving}
             />
         </div>
     );

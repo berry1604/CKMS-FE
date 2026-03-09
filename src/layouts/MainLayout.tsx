@@ -97,8 +97,8 @@ export const navigation: NavigationItem[] = [
                 permission: PERMISSIONS.ALLOCATION_MANAGEMENT,
             },
             {
-                name: 'Tạo Shipment',
-                href: '/shipment/create',
+                name: 'Vận chuyển',
+                href: '/shipment',
                 icon: Truck,
                 permission: PERMISSIONS.CREATE_SHIPMENT,
             },

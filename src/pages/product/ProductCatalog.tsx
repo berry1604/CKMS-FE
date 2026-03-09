@@ -6,6 +6,7 @@ import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { DataTable, type Column } from '../../components/ui/DataTable';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { productApi } from '../../services/product.api';
 import type { ProductResponse as Product } from '../../types/product';
 import { ProductModal } from './ProductModal';
@@ -18,6 +19,11 @@ export const ProductCatalog = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [productToDelete, setProductToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Custom Web Hook
     const {
@@ -50,16 +56,25 @@ export const ProductCatalog = () => {
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this product?')) return;
+    const handleDelete = (id: number) => {
+        setProductToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!productToDelete) return;
+        setIsDeleting(true);
         try {
-            await productApi.deleteProduct(id);
+            await productApi.deleteProduct(productToDelete);
             toast.success('Product deleted successfully');
+            setIsDeleteModalOpen(false);
             refetch();
         } catch (error: any) {
             if (error.response?.status !== 401 && error.response?.status !== 403) {
                 toast.error(error.response?.data?.message || 'Failed to delete product');
             }
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -277,6 +292,18 @@ export const ProductCatalog = () => {
                 onSubmit={handleSubmit}
                 initialData={editingProduct}
                 isLoading={isSaving}
+            />
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Product"
+                message="Are you sure you want to delete this product? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={isDeleting}
+                variant="danger"
             />
         </div>
     );

@@ -13,6 +13,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Drawer } from '../../components/ui/Drawer';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { productionPlanApi } from '../../services/productionPlan.api';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import type { ProductionPlanSummaryResponse, ProductionPlanDetailResponse } from '../../types/productionPlan';
@@ -31,6 +32,11 @@ export const ProductionSchedule = () => {
     const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
     const [selectedPlanDetail, setSelectedPlanDetail] = useState<ProductionPlanDetailResponse | null>(null);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+    // Delete/Cancel Modal State
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [planToCancel, setPlanToCancel] = useState<{ id: number, version?: number } | null>(null);
+    const [isCancelling, setIsCancelling] = useState(false);
 
     // Kitchen stock map: materialName (lowercase) → available quantity
     const [materialStockMap, setMaterialStockMap] = useState<Map<string, number>>(new Map());
@@ -147,11 +153,37 @@ export const ProductionSchedule = () => {
         }
     };
 
+    const confirmCancel = async () => {
+        if (!planToCancel) return;
+        setIsCancelling(true);
+        try {
+            await productionPlanApi.cancelProductionPlan(planToCancel.id, planToCancel.version, true);
+            toast.success('Cập nhật trạng thái thành công');
+            setIsCancelModalOpen(false);
+            loadPlans();
+            if (selectedPlanId === planToCancel.id) {
+                loadPlanDetail(planToCancel.id);
+            }
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'Failed to cancel plan';
+            toast.error(msg);
+        } finally {
+            setIsCancelling(false);
+            setPlanToCancel(null);
+        }
+    };
+
     const handleStatusAction = async (action: 'ready' | 'start' | 'finish' | 'cancel', planIdOverride?: number, versionOverride?: number) => {
         const id = planIdOverride || selectedPlanDetail?.planId;
         const version = versionOverride !== undefined ? versionOverride : selectedPlanDetail?.version;
 
         if (!id) return;
+
+        if (action === 'cancel') {
+            setPlanToCancel({ id, version });
+            setIsCancelModalOpen(true);
+            return;
+        }
 
         try {
             switch (action) {
@@ -163,13 +195,6 @@ export const ProductionSchedule = () => {
                     break;
                 case 'finish':
                     await productionPlanApi.finishProductionPlan(id, version);
-                    break;
-                case 'cancel':
-                    if (confirm('Bạn có chắc chắn muốn hủy kế hoạch này không?')) {
-                        await productionPlanApi.cancelProductionPlan(id, version, true);
-                    } else {
-                        return;
-                    }
                     break;
             }
             if (action === 'finish') {
@@ -646,6 +671,18 @@ export const ProductionSchedule = () => {
                 {viewMode === 'calendar' && renderCalendar()}
                 {viewMode === 'completed' && renderCompletedView()}
             </div>
+
+            <ConfirmationModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                onConfirm={confirmCancel}
+                title="Hủy Kế Hoạch"
+                message="Bạn có chắc chắn muốn hủy kế hoạch này không? Hành động này không thể hoàn tác."
+                confirmText="Xác nhận Hủy"
+                cancelText="Quay Lại"
+                isLoading={isCancelling}
+                variant="danger"
+            />
 
             {/* Premium Detail Drawer */}
             <Drawer

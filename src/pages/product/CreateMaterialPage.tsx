@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { materialApi } from '../../services/material.api';
+import type { MaterialResponse } from '../../types/material';
 
 const createMaterialSchema = z.object({
     name: z.string().min(1, 'Material name is required').trim(),
@@ -19,12 +20,17 @@ type CreateMaterialFormData = z.infer<typeof createMaterialSchema>;
 
 export const CreateMaterialPage = () => {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const isEditMode = !!id;
+
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(isEditMode);
     const [backendError, setBackendError] = useState<string | null>(null);
 
     const {
         register,
         handleSubmit,
+        reset,
         formState: { errors, isValid }
     } = useForm<CreateMaterialFormData>({
         resolver: zodResolver(createMaterialSchema),
@@ -35,12 +41,51 @@ export const CreateMaterialPage = () => {
         }
     });
 
+    const location = useLocation();
+    const materialFromState = (location.state as any)?.material as MaterialResponse | undefined;
+
+    useEffect(() => {
+        const fetchMaterial = async () => {
+            if (!isEditMode) return;
+
+            if (materialFromState) {
+                reset({
+                    name: materialFromState.name,
+                    unit: materialFromState.unit as any,
+                });
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                const data = await materialApi.getById(Number(id));
+                reset({
+                    name: data.name,
+                    unit: data.unit as any,
+                });
+            } catch (error) {
+                console.error('Failed to fetch material details:', error);
+                toast.error('Failed to load material data');
+                navigate('/products/materials');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchMaterial();
+    }, [id, isEditMode, reset, navigate, materialFromState]);
+
     const onSubmit = async (data: CreateMaterialFormData) => {
         setBackendError(null);
         setIsSubmitting(true);
         try {
-            await materialApi.create(data);
-            toast.success('Material created successfully!');
+            if (isEditMode) {
+                await materialApi.update(Number(id), data);
+                toast.success('Material updated successfully!');
+            } else {
+                await materialApi.create(data);
+                toast.success('Material created successfully!');
+            }
             navigate('/products/materials');
         } catch (error: any) {
             console.error('Create material error:', error);
@@ -51,6 +96,14 @@ export const CreateMaterialPage = () => {
             setIsSubmitting(false);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-[60vh]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto pb-10">
@@ -66,9 +119,11 @@ export const CreateMaterialPage = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-200 tracking-tight flex items-center gap-2">
                         <Package size={24} className="text-amber-600" />
-                        Add New Material
+                        {isEditMode ? 'Edit Material' : 'Add New Material'}
                     </h1>
-                    <p className="text-sm text-gray-400 mt-1">Register a new raw material for inventory tracking.</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                        {isEditMode ? 'Update the details of the existing material.' : 'Register a new raw material for inventory tracking.'}
+                    </p>
                 </div>
             </div>
 
@@ -152,7 +207,7 @@ export const CreateMaterialPage = () => {
                             ) : (
                                 <div className="flex items-center gap-2">
                                     <Save size={18} />
-                                    Create Material
+                                    {isEditMode ? 'Update Material' : 'Create Material'}
                                 </div>
                             )}
                         </Button>

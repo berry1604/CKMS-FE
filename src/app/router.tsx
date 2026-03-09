@@ -8,6 +8,7 @@ import { Dashboard } from '../pages/dashboard/Dashboard';
 import { UsersList } from '../pages/users/UsersList';
 import { CreateUserPage } from '../pages/users/CreateUserPage';
 import { RolesList } from '../pages/users/RolesList';
+import { CreateRolePage } from '../pages/users/CreateRolePage';
 import { StoreList } from '../pages/franchise-store/StoreList';
 import CreateStorePage from '../pages/franchise-store/CreateStorePage';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
@@ -27,6 +28,7 @@ import { ProductListExample } from '../pages/product/ProductListExample';
 import { ProductionSchedule } from '../pages/central-kitchen/ProductionSchedule';
 import { CreateProductionPlan } from '../pages/central-kitchen/CreateProductionPlan';
 import { KitchenInventory } from '../pages/central-kitchen/KitchenInventory';
+import { KitchenImportPage } from '../pages/central-kitchen/KitchenImportPage';
 import { ProductionBoard } from '../pages/central-kitchen/ProductionBoard';
 import { ShipmentList } from '../pages/shipment/ShipmentList';
 import { CreateShipment } from '../pages/shipment/CreateShipment';
@@ -93,7 +95,10 @@ export const router = createBrowserRouter([
                         children: [
                             { index: true, element: <UsersList /> },
                             { path: 'create', element: <CreateUserPage /> },
-                            { path: 'roles', element: <RolesList /> }
+                            { path: 'roles', element: <RolesList /> },
+                            { path: 'roles/create', element: <CreateRolePage /> },
+                            { path: 'roles/:id/edit', element: <CreateRolePage /> },
+                            { path: 'roles/:id/view', element: <CreateRolePage /> }
                         ]
                     },
 
@@ -118,6 +123,7 @@ export const router = createBrowserRouter([
                             { index: true, element: <ProductionSchedule /> },
                             { path: 'create-plan', element: <CreateProductionPlan /> },
                             { path: 'inventory', element: <KitchenInventory /> },
+                            { path: 'inventory/import', element: <KitchenImportPage /> },
                             { path: 'production', element: <ProductionBoard /> }
                         ]
                     },
@@ -131,6 +137,7 @@ export const router = createBrowserRouter([
                             { path: 'create', element: <CreateProductPage /> },
                             { path: 'materials', element: <MaterialList /> },
                             { path: 'materials/create', element: <CreateMaterialPage /> },
+                            { path: 'materials/:id/edit', element: <CreateMaterialPage /> },
                             { path: 'beefsteak-materials', element: <BeefsteakMaterialsPage /> },
                             { path: 'categories', element: <CategoryList /> },
                             { path: 'categories/create', element: <CreateCategoryPage /> },

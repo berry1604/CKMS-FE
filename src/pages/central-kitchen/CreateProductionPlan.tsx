@@ -16,7 +16,7 @@ import { cn } from '../../utils/classNames';
 
 export const CreateProductionPlan = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { } = useAuth();
 
     // Wizard State
     const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -29,7 +29,7 @@ export const CreateProductionPlan = () => {
         d.setDate(d.getDate() + 1); // Default to tomorrow
         return d.toISOString().split('T')[0];
     });
-    const [selectedKitchenId, setSelectedKitchenId] = useState<number | ''>(user?.kitchenId || 1);
+    const [selectedKitchenId] = useState<number>(1);
     const [orders, setOrders] = useState<StoreOrderResponse[]>([]);
     const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
 
@@ -196,38 +196,26 @@ export const CreateProductionPlan = () => {
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Bếp Trung Tâm</label>
                                     <div className="grid grid-cols-1 gap-3">
-                                        {[
-                                            { id: 1, name: 'Bếp Gò Vấp', desc: 'Trung tâm khu vực Bắc' },
-                                            { id: 2, name: 'Bếp Quận 1', desc: 'Khu vực trung tâm' },
-                                            { id: 3, name: 'Bếp Thủ Đức', desc: 'Trung tâm khu vực Đông' },
-                                        ].map(kitchen => (
-                                            <button
-                                                key={kitchen.id}
-                                                onClick={() => setSelectedKitchenId(kitchen.id)}
-                                                className={cn(
-                                                    "text-left p-4 rounded-2xl border transition-all group overflow-hidden relative",
-                                                    selectedKitchenId === kitchen.id
-                                                        ? "bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/40"
-                                                        : "bg-zinc-950/40 border-zinc-800 hover:border-zinc-700"
-                                                )}
-                                            >
-                                                {selectedKitchenId === kitchen.id && (
-                                                    <div className="absolute top-0 right-0 w-12 h-12 bg-amber-500/10 blur-xl"></div>
-                                                )}
-                                                <div className="flex items-center justify-between relative z-10">
-                                                    <div>
-                                                        <span className={cn(
-                                                            "block text-sm font-black uppercase tracking-tighter",
-                                                            selectedKitchenId === kitchen.id ? "text-amber-500" : "text-zinc-300"
-                                                        )}>
-                                                            {kitchen.name}
-                                                        </span>
-                                                        <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tight mt-0.5">{kitchen.desc}</span>
+                                        <div className="text-left p-6 rounded-2xl border bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/40 overflow-hidden relative group">
+                                            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl -mr-12 -mt-12 group-hover:bg-amber-500/10 transition-colors"></div>
+                                            <div className="flex items-center justify-between relative z-10">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-black shadow-lg shadow-amber-500/20">
+                                                        <ChefHat size={24} />
                                                     </div>
-                                                    {selectedKitchenId === kitchen.id && <CheckCircle2 size={16} className="text-amber-500" />}
+                                                    <div>
+                                                        <span className="block text-base font-black uppercase tracking-tighter text-amber-500">
+                                                            Bếp Trung Tâm
+                                                        </span>
+                                                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight mt-0.5">Hệ thống sản xuất chính</span>
+                                                    </div>
                                                 </div>
-                                            </button>
-                                        ))}
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/20 rounded-full border border-amber-500/30">
+                                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest">ĐANG HOẠT ĐỘNG</span>
+                                                    <CheckCircle2 size={12} className="text-amber-500" />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -447,7 +435,7 @@ export const CreateProductionPlan = () => {
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter">Bếp sản xuất</p>
                                         <p className="text-sm font-black text-zinc-200">
-                                            {selectedKitchenId === 1 ? 'Bếp Gò Vấp' : selectedKitchenId === 2 ? 'Bếp Quận 1' : 'Bếp Thủ Đức'}
+                                            Bếp Trung Tâm
                                         </p>
                                     </div>
                                     <div className="space-y-1">

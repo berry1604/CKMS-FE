@@ -3,6 +3,7 @@ import { Plus, Edit2, Trash2, Search, Filter, MoreVertical, Mail, Calendar, Chec
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { UserModal } from './UserModal';
 import type { UserResponse } from '../../types/user';
 import { userService } from '../../services/user.service';
@@ -22,6 +23,10 @@ export const UsersList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('ALL');
     const [activeMenu, setActiveMenu] = useState<number | null>(null);
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(0);
@@ -82,18 +87,26 @@ export const UsersList = () => {
         setActiveMenu(null);
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-            try {
-                await userService.deleteUser(id);
-                toast.success('Đã xóa người dùng thành công');
-                loadUsers();
-            } catch (error) {
-                console.error(error);
-                toast.error('Xóa người dùng thất bại');
-            }
-        }
+    const handleDelete = (id: number) => {
+        setUserToDelete(id);
+        setIsDeleteModalOpen(true);
         setActiveMenu(null);
+    };
+
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
+        setIsDeleting(true);
+        try {
+            await userService.deleteUser(userToDelete);
+            toast.success('Đã xóa người dùng thành công');
+            loadUsers();
+            setIsDeleteModalOpen(false);
+        } catch (error) {
+            console.error(error);
+            toast.error('Xóa người dùng thất bại');
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     const handleSubmit = async (_data: any) => {
@@ -392,6 +405,18 @@ export const UsersList = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleSubmit}
                 user={selectedUser}
+            />
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Xóa Người Dùng"
+                message="Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác."
+                confirmText="Xác nhận Xóa"
+                cancelText="Hủy"
+                isLoading={isDeleting}
+                variant="danger"
             />
         </div>
     );
