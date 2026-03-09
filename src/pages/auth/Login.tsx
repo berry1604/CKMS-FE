@@ -32,8 +32,8 @@ export const Login: React.FC = () => {
     } = useForm<LoginForm>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
-            username: 'admin',
-            password: 'admin',
+            username: '',
+            password: '',
         },
     });
 
@@ -106,65 +106,62 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="text-center">
-                <h1 className="text-2xl font-serif font-bold text-white">Welcome Back</h1>
-                <p className="mt-2 text-sm text-gray-300">
-                    Sign in to manage your restaurant
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <div className="text-center space-y-2">
+                <h1 className="text-3xl font-black text-white uppercase tracking-tight">Chào mừng trở lại</h1>
+                <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
+                    Đăng nhập để quản lý hệ thống của bạn
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="space-y-4">
-                    <div className="relative">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                <div className="space-y-5">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Tên đăng nhập</label>
                         <Input
-                            label="Username"
                             type="text"
-                            placeholder="admin"
+                            placeholder="Nhập username"
                             error={errors.username?.message}
                             {...register('username')}
-                            className="bg-white/5 border-white/10 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-white placeholder-gray-500 transition-all duration-200"
-                            labelClassName="text-gray-300 uppercase text-xs tracking-wider"
+                            className="h-14 bg-black/40 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300 placeholder:text-zinc-700"
                         />
                     </div>
 
-                    <div className="relative">
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center ml-1">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Mật khẩu</label>
+                            <button
+                                type="button"
+                                onClick={() => setShowForgot(!showForgot)}
+                                className="text-[10px] font-black text-amber-500/80 hover:text-amber-500 uppercase tracking-widest transition-colors"
+                            >
+                                Quên mật khẩu?
+                            </button>
+                        </div>
                         <Input
-                            label="Password"
                             type="password"
                             placeholder="••••••••"
                             error={errors.password?.message}
                             {...register('password')}
-                            className="bg-white/5 border-white/10 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-white placeholder-gray-500 transition-all duration-200"
-                            labelClassName="text-gray-300 uppercase text-xs tracking-wider"
+                            className="h-14 bg-black/40 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300 placeholder:text-zinc-700"
                         />
                     </div>
                 </div>
 
                 {error && (
-                    <div className="text-sm text-red-400 bg-red-900/20 border border-red-900/50 p-3 rounded-md">
+                    <div className="text-[11px] font-bold text-red-500 bg-red-500/5 border border-red-500/10 p-4 rounded-xl animate-shake">
                         {error}
                     </div>
                 )}
 
                 <Button
                     type="submit"
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white border-none shadow-lg hover:shadow-amber-900/20 transition-all py-2.5"
+                    className="w-full h-14 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl border-0 shadow-2xl shadow-amber-900/40 transition-all duration-500 hover:scale-[1.02] active:scale-95"
                     isLoading={isSubmitting}
                 >
-                    Sign in
+                    Đăng nhập ngay
                 </Button>
             </form>
-
-            <div className="text-right">
-                <button
-                    type="button"
-                    onClick={() => setShowForgot(!showForgot)}
-                    className="text-sm text-amber-400 hover:underline"
-                >
-                    Forgot Password?
-                </button>
-            </div>
 
             {showForgot && (
                 <form onSubmit={handleResetPassword} className="space-y-4 mt-4">
@@ -195,11 +192,6 @@ export const Login: React.FC = () => {
                 </form>
             )}
 
-            <div className="mt-4 text-center text-xs text-gray-400">
-                <p>Demo Credentials:</p>
-                <p>Username: admin / manager / staff</p>
-                <p>Password: admin / manager / staff</p>
-            </div>
         </div>
     );
 };

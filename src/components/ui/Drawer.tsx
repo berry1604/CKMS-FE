@@ -53,30 +53,30 @@ export const Drawer = ({
             {/* Drawer Panel */}
             <div
                 ref={drawerRef}
-                className={`relative w-full ${width} h-full bg-zinc-900 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out animate-in slide-in-from-right duration-300`}
+                className={`relative w-full ${width} h-full bg-zinc-950/80 backdrop-blur-2xl shadow-[-32px_0_64px_-16px_rgba(0,0,0,0.6)] border-l border-white/5 flex flex-col transform transition-transform duration-500 ease-out animate-in slide-in-from-right duration-500`}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between px-6 py-6 border-b border-zinc-800">
-                    <div>
-                        {title && <div className="text-xl font-semibold text-gray-200">{title}</div>}
-                        {description && <p className="mt-1 text-sm text-gray-400">{description}</p>}
+                <div className="flex items-start justify-between px-8 py-8 border-b border-white/5">
+                    <div className="space-y-1">
+                        {title && <div className="text-2xl font-black text-white uppercase tracking-tighter">{title}</div>}
+                        {description && <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{description}</p>}
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 -mr-2 text-gray-400 hover:text-gray-300 hover:bg-zinc-800 rounded-full transition-colors"
+                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                     {children}
                 </div>
 
                 {/* Footer */}
                 {footer && (
-                    <div className="px-6 py-4 border-t border-zinc-800 bg-zinc-900/50">
+                    <div className="px-8 py-6 border-t border-white/5 bg-black/40 backdrop-blur-md">
                         {footer}
                     </div>
                 )}

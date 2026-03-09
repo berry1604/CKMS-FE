@@ -2,19 +2,18 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Lock, Save, Shield, Phone, MapPin, Calendar, FileText } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, Save, Phone, MapPin, Calendar, FileText, Camera, BadgeCheck, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../hooks/useAuth';
 
 const profileSchema = z.object({
-    name: z.string().min(2, 'Name is required'),
-    email: z.string().email('Invalid email'),
+    name: z.string().min(2, 'Tên là bắt buộc'),
+    email: z.string().email('Email không hợp lệ'),
     phone: z.string().optional(),
     address: z.string().optional(),
     bio: z.string().optional(),
-    password: z.string().min(6, 'Password must be at least 6 characters').optional().or(z.literal('')),
+    password: z.string().min(6, 'Mật khẩu phải ít nhất 6 ký tự').optional().or(z.literal('')),
     confirmPassword: z.string().optional().or(z.literal(''))
 }).refine((data) => {
     if (data.password && data.password !== data.confirmPassword) {
@@ -22,14 +21,14 @@ const profileSchema = z.object({
     }
     return true;
 }, {
-    message: "Passwords don't match",
+    message: "Mật khẩu xác nhận không khớp",
     path: ["confirmPassword"],
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export const UserProfile = () => {
-    const { user } = useAuth(); // We might need a way to refresh user data in context
+    const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -62,223 +61,282 @@ export const UserProfile = () => {
         setSuccessMessage('');
 
         try {
-            // In a real app, password would be handled separately or require current password
-
-            // await updateUser(user.id, {
-            //     name: data.name,
-            //     email: data.email,
-            //     phone: data.phone,
-            //     address: data.address,
-            // });
-
-            // Optimistically update local showing (in real app, assume context updates or we re-fetch)
-            // For now, let's just show success
-            setSuccessMessage('Profile updated successfully!');
-
-            // Clear password fields
+            // Simulated API Call
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            setSuccessMessage('Hồ sơ đã được cập nhật thành công!');
             setValue('password', '');
             setValue('confirmPassword', '');
-
         } catch (error) {
             console.error('Failed to update profile', error);
-            alert('Failed to update profile');
         } finally {
             setIsLoading(false);
         }
     };
 
-    if (!user) return <div>Loading...</div>;
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+        </div>
+    );
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6">
-            <h1 className="text-2xl font-bold text-gray-200">My Profile</h1>
+        <div className="max-w-[1400px] mx-auto pb-20 px-4 pt-4 animate-in fade-in duration-700">
+            {/* Cinematic Header Container */}
+            <div className="relative h-[350px] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] mb-[-100px] z-0">
+                <img
+                    src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop"
+                    alt="Cover"
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent"></div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Profile Card */}
-                <div className="md:col-span-1 space-y-6">
-                    <Card className="text-center p-6">
-                        <div className="flex flex-col items-center">
-                            <img
-                                src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}`}
-                                alt={user.name}
-                                className="w-32 h-32 rounded-full mb-4 ring-4 ring-gray-50 object-cover"
-                            />
-                            <h2 className="text-2xl font-bold text-gray-200">{user.name}</h2>
-                            <p className="text-gray-400">{user.email}</p>
+                {/* Header Content */}
+                <div className="absolute bottom-32 left-10 md:left-16 flex flex-col md:flex-row items-end gap-6">
+                    <div className="relative group">
+                        <div className="absolute inset-0 bg-amber-500 rounded-[2rem] blur-2xl group-hover:blur-3xl transition-all opacity-20 group-hover:opacity-40"></div>
+                        <img
+                            src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}&background=f59e0b&color=fff&bold=true`}
+                            alt={user.name}
+                            className="w-32 h-32 md:w-44 md:h-44 rounded-[2rem] border-[6px] border-zinc-950 object-cover shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <button className="absolute bottom-2 right-2 bg-amber-500 text-black p-2.5 rounded-2xl z-20 shadow-xl hover:scale-110 active:scale-95 transition-all border-4 border-zinc-950">
+                            <Camera size={18} strokeWidth={3} />
+                        </button>
+                    </div>
 
-                            <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-sm font-medium">
-                                    <Shield size={14} className="mr-1.5" />
-                                    {user.role}
+                    <div className="mb-4">
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic drop-shadow-lg">
+                                {user.name}
+                            </h1>
+                            <BadgeCheck className="text-amber-500 drop-shadow-glow" size={28} fill="rgba(245,158,11,0.1)" />
+                        </div>
+                        <p className="text-zinc-400 font-bold tracking-widest uppercase italic mt-1 flex items-center gap-2">
+                            <Sparkles size={14} className="text-amber-500/50" />
+                            {user.role?.replace('ROLE_', '').replace('_', ' ')}
+                            {user.storeName ? ` • ${user.storeName}` : ''}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 px-2">
+                {/* Left Sidebar Info */}
+                <div className="lg:col-span-4 space-y-8">
+                    <div className="bg-zinc-900/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/5 p-8 shadow-2xl">
+                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-8 flex items-center gap-2 italic">
+                            <span className="w-2 h-2 rounded-full bg-amber-500/50"></span>
+                            Thông tin liên hệ
+                        </h3>
+
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-5 group p-2 -m-2 rounded-2xl hover:bg-white/5 transition-colors cursor-default">
+                                <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors shadow-inner">
+                                    <Mail size={20} />
                                 </div>
-                                {user.joinDate && (
-                                    <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-400 text-sm">
-                                        <Calendar size={14} className="mr-1.5" />
-                                        Joined {user.joinDate}
-                                    </div>
-                                )}
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-black">Email</span>
+                                    <span className="text-zinc-200 font-bold">{user.email}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-5 group p-2 -m-2 rounded-2xl hover:bg-white/5 transition-colors cursor-default">
+                                <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors shadow-inner">
+                                    <Phone size={20} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-black">Số điện thoại</span>
+                                    <span className="text-zinc-200 font-bold">{user.phone || 'Chưa cập nhật'}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-5 group p-2 -m-2 rounded-2xl hover:bg-white/5 transition-colors cursor-default">
+                                <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors shadow-inner">
+                                    <MapPin size={20} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-black">Địa chỉ</span>
+                                    <span className="text-zinc-200 font-bold leading-tight">{user.address || 'Chưa cập nhật'}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-5 group p-2 -m-2 rounded-2xl hover:bg-white/5 transition-colors cursor-default">
+                                <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors shadow-inner">
+                                    <Calendar size={20} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-black">Ngày tham gia</span>
+                                    <span className="text-zinc-200 font-bold leading-tight italic">
+                                        {user.joinDate ? new Date(user.joinDate).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Chưa có thông tin'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mt-8 text-left space-y-4 pt-6 border-t border-zinc-800">
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase font-semibold">Contact Info</p>
-                                <div className="mt-2 space-y-3">
-                                    <div className="flex items-start text-sm text-gray-400">
-                                        <Phone size={16} className="mr-2 mt-0.5 text-gray-400" />
-                                        <span>{user.phone || 'No phone added'}</span>
-                                    </div>
-                                    <div className="flex items-start text-sm text-gray-400">
-                                        <MapPin size={16} className="mr-2 mt-0.5 text-gray-400" />
-                                        <span>{user.address || 'No address added'}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase font-semibold">Bio</p>
-                                <p className="mt-2 text-sm text-gray-400 leading-relaxed">
-                                    {user.bio || 'No bio provided.'}
-                                </p>
-                            </div>
+                        <div className="mt-10 pt-10 border-t border-white/5">
+                            <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4 italic">Tiểu sử</h3>
+                            <p className="text-zinc-400 text-sm italic font-medium leading-relaxed">
+                                {user.bio || '"Người này chưa viết tiểu sử riêng. Một khởi đầu mới đầy hứa hẹn tại hệ thống FranchiseSys."'}
+                            </p>
                         </div>
-                    </Card>
+                    </div>
                 </div>
 
-                {/* Edit Form */}
-                <div className="md:col-span-2">
-                    <Card title="Edit Personal Information" className="p-6">
+                {/* Right Content Form */}
+                <div className="lg:col-span-8 space-y-8">
+                    <div className="bg-[#080808]/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/5 p-8 md:p-10 shadow-2xl relative overflow-hidden">
+                        {/* Decorative background element */}
+                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full"></div>
+
+                        <div className="flex items-center justify-between mb-10 relative z-10">
+                            <div>
+                                <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Cập nhật hồ sơ</h2>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Quản lý định danh và thông tin cá nhân</p>
+                            </div>
+                            <Button variant="ghost" className="rounded-2xl border border-white/5 hover:border-amber-500/30 text-zinc-400 hover:text-amber-500 text-[10px] font-black tracking-widest uppercase italic px-6 py-3 h-auto">Xem log hđ</Button>
+                        </div>
+
                         {successMessage && (
-                            <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm border border-green-100">
+                            <div className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-xs font-black uppercase tracking-widest animate-in slide-in-from-top duration-500">
                                 {successMessage}
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                                        Full Name
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <User size={18} className="text-gray-400" />
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-10 relative z-10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Họ và tên</label>
+                                    <div className="group relative transition-all duration-300">
+                                        <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                                            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <UserIcon size={18} />
+                                            </div>
                                         </div>
                                         <Input
                                             {...register('name')}
-                                            className="pl-10"
+                                            className="pl-14 h-14 bg-zinc-950/50 border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700 transition-all duration-300"
+                                            placeholder="Nhập tên của bạn"
                                             error={errors.name?.message}
                                         />
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                                        Email Address
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Mail size={18} className="text-gray-400" />
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Địa chỉ Email</label>
+                                    <div className="group relative transition-all duration-300">
+                                        <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                                            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <Mail size={18} />
+                                            </div>
                                         </div>
                                         <Input
                                             {...register('email')}
-                                            className="pl-10"
+                                            className="pl-14 h-14 bg-zinc-950/50 border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700 transition-all duration-300"
                                             type="email"
+                                            placeholder="example@mail.com"
                                             error={errors.email?.message}
                                         />
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                                        Phone Number
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Phone size={18} className="text-gray-400" />
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Số điện thoại</label>
+                                    <div className="group relative transition-all duration-300">
+                                        <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                                            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <Phone size={18} />
+                                            </div>
                                         </div>
                                         <Input
                                             {...register('phone')}
-                                            className="pl-10"
-                                            placeholder="+1 (555) 000-0000"
+                                            className="pl-14 h-14 bg-zinc-950/50 border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700 transition-all duration-300"
+                                            placeholder="09xx xxx xxx"
                                             error={errors.phone?.message}
                                         />
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                                        Address
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <MapPin size={18} className="text-gray-400" />
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Địa chỉ thường trú</label>
+                                    <div className="group relative transition-all duration-300">
+                                        <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                                            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <MapPin size={18} />
+                                            </div>
                                         </div>
                                         <Input
                                             {...register('address')}
-                                            className="pl-10"
-                                            placeholder="123 Main St, City, Country"
+                                            className="pl-14 h-14 bg-zinc-950/50 border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700 transition-all duration-300"
+                                            placeholder="Thành phố, Quận/Huyện,..."
                                             error={errors.address?.message}
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">
-                                    Bio
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute top-3 left-3 pointer-events-none">
-                                        <FileText size={18} className="text-gray-400" />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Tiểu sử cá nhân</label>
+                                <div className="group relative transition-all duration-300">
+                                    <div className="absolute top-2 left-1 pointer-events-none transition-transform duration-500 group-focus-within:translate-y-1">
+                                        <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                            <FileText size={18} />
+                                        </div>
                                     </div>
                                     <textarea
                                         {...register('bio')}
-                                        className="w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500 min-h-[100px]"
-                                        placeholder="Tell us a little about yourself..."
+                                        className="w-full pl-14 pr-4 py-4 bg-zinc-950/50 border border-white/5 focus:border-amber-500/50 rounded-3xl text-zinc-100 font-bold placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-amber-500/30 min-h-[140px] transition-all duration-300"
+                                        placeholder="Một vài dòng giới thiệu về bản thân..."
                                     />
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t border-zinc-800">
-                                <h3 className="text-sm font-medium text-gray-200 mb-4 flex items-center">
-                                    <Lock size={16} className="mr-2 text-amber-600" />
-                                    Security Settings
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">
-                                            New Password
-                                        </label>
+                            {/* Security Section with High-End aesthetic */}
+                            <div className="pt-10 border-t border-white/5 space-y-8">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-lg shadow-amber-500/5 scale-110">
+                                        <Lock size={18} />
+                                    </div>
+                                    <h3 className="text-lg font-black text-white italic uppercase tracking-tighter">Bảo mật hệ thống</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Mật khẩu mới</label>
                                         <Input
                                             {...register('password')}
                                             type="password"
-                                            placeholder="Leave blank to keep current"
+                                            className="h-14 bg-zinc-950/50 border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700"
+                                            placeholder="Để trống nếu không đổi"
                                             error={errors.password?.message}
                                         />
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">
-                                            Confirm New Password
-                                        </label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Xác nhận mật khẩu</label>
                                         <Input
                                             {...register('confirmPassword')}
                                             type="password"
-                                            placeholder="Confirm new password"
+                                            className="h-14 bg-zinc-950/50 border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700"
+                                            placeholder="Nhập lại mật khẩu mới"
                                             error={errors.confirmPassword?.message}
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex justify-end pt-4">
-                                <Button type="submit" isLoading={isLoading} size="lg">
-                                    <Save size={18} className="mr-2" /> Save Profile
+                            <div className="flex justify-end pt-6">
+                                <Button
+                                    type="submit"
+                                    isLoading={isLoading}
+                                    className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase tracking-widest px-10 py-6 h-auto rounded-[1.5rem] shadow-[0_10px_25px_rgba(245,158,11,0.3)] hover:shadow-[0_15px_35px_rgba(245,158,11,0.4)] transition-all duration-300 hover:scale-[1.02] active:scale-95 italic"
+                                >
+                                    <Save size={20} className="mr-3" strokeWidth={3} />
+                                    Lưu thay đổi
                                 </Button>
                             </div>
                         </form>
-                    </Card>
+                    </div>
                 </div>
             </div>
         </div>

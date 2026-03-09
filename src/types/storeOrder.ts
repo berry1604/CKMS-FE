@@ -80,4 +80,5 @@ export interface OrderQueryParams {
     size?: number;     // default=10
     sortBy?: string;   // default=orderId or orderDate
     sortDir?: string;  // default=desc
+    storeId?: number;
 }

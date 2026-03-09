@@ -8,8 +8,10 @@ export const storeInventoryApi = {
         return response.data;
     },
 
-    getProductBatches: async (productId: number): Promise<ApiResponse<StoreStockBatchResponse[]>> => {
-        const response = await axiosClient.get<ApiResponse<StoreStockBatchResponse[]>>(`/store-inventory/${productId}/batches`);
+    getProductBatches: async (productId: number, storeId?: number): Promise<ApiResponse<StoreStockBatchResponse[]>> => {
+        const response = await axiosClient.get<ApiResponse<StoreStockBatchResponse[]>>(`/store-inventory/${productId}/batches`, {
+            params: { storeId }
+        });
         return response.data;
     },
 };

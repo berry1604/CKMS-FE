@@ -58,6 +58,7 @@ export interface GetUsersParams {
     role?: string;
     status?: string;
     search?: string;
+    storeId?: number;
 }
 
 export interface AuthState {

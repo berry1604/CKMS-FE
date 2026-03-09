@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Package, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, CheckCircle2, XCircle, LibraryBig, Wheat, ChefHat } from 'lucide-react';
+import { Plus, Search, Package, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, LibraryBig, Wheat, ChefHat, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
-import { DataTable, type Column } from '../../components/ui/DataTable';
-import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { productApi } from '../../services/product.api';
 import type { ProductResponse as Product } from '../../types/product';
 import { ProductModal } from './ProductModal';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { useProducts } from '../../hooks/useProducts';
 import toast from 'react-hot-toast';
+import { cn } from '../../utils/classNames';
+import productHeaderBg from '../../assets/product_catalog_bg.png';
 
 export const ProductCatalog = () => {
     const navigate = useNavigate();
@@ -99,189 +97,216 @@ export const ProductCatalog = () => {
     };
 
 
-    // Desktop Columns
-    const columns: Column<Product>[] = [
-        {
-            header: 'Product',
-            cell: (row) => (
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-zinc-700">
-                        {row.imageUrl ? (
-                            <img src={row.imageUrl} alt={row.name} className="h-full w-full object-cover" />
-                        ) : (
-                            <div className="h-full w-full flex items-center justify-center text-gray-400">
-                                <Package size={16} />
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <div className="font-medium text-gray-200">{row.name}</div>
-                        <div className="text-xs text-gray-400 font-mono">ID: {row.id}</div>
-                    </div>
-                </div>
-            )
-        },
-        {
-            header: 'Category',
-            accessorKey: 'category',
-            cell: (row) => (
-                <div className="flex items-center gap-1.5 text-gray-400">
-                    <Tag size={14} />
-                    <span>{row.category?.name || 'Uncategorized'}</span>
-                </div>
-            )
-        },
-        {
-            header: 'Price / Unit',
-            cell: (row) => (
-                <div>
-                    <span className="font-medium text-gray-200">${row.price.toLocaleString()}</span>
-                    <span className="text-gray-400 text-sm ml-1">/ {row.unit}</span>
-                </div>
-            )
-        },
-        {
-            header: 'Status',
-            accessorKey: 'isActive',
-            cell: (row) => (
-                <Badge variant={row.isActive ? 'success' : 'secondary'} className="flex items-center w-max gap-1">
-                    {row.isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                    {row.isActive ? 'Active' : 'Inactive'}
-                </Badge>
-            )
-        },
-        {
-            header: 'Actions',
-            cell: (row) => (
-                <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(row)} className="text-amber-600 hover:text-amber-500">
-                        <Edit2 size={16} />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(row.id)} className="text-red-600 hover:text-red-700">
-                        <Trash2 size={16} />
-                    </Button>
-                </div>
-            )
-        }
-    ];
-
-
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Product Catalog</h1>
-                    <p className="text-sm text-gray-400 mt-1">Manage your product inventory and pricing.</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                    <Button variant="outline" onClick={() => navigate('/products/categories')} className="shrink-0 border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white">
-                        <LibraryBig size={16} className="mr-2 text-indigo-400" /> Quản lý Danh mục
-                    </Button>
-                    <Button variant="outline" onClick={() => navigate('/products/materials')} className="shrink-0 border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white">
-                        <Wheat size={16} className="mr-2 text-amber-400" /> Quản lý Nguyên liệu
-                    </Button>
-                    <Button variant="outline" onClick={() => navigate('/products/recipes')} className="shrink-0 border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white">
-                        <ChefHat size={16} className="mr-2 text-emerald-400" /> Quản lý Công thức
-                    </Button>
-                    <Button onClick={handleCreate} className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white shadow-sm font-bold shadow-amber-600/20">
-                        <Plus size={18} className="mr-2" /> Add Product
-                    </Button>
+        <div className="max-w-[1600px] mx-auto pb-20 animate-in fade-in duration-700">
+            {/* Cinematic Header */}
+            <div className="relative h-[350px] rounded-[3rem] overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.4)] mb-8 group border border-white/5">
+                <img
+                    src={productHeaderBg}
+                    alt="Product Catalog Cover"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent"></div>
+
+                <div className="absolute bottom-12 left-12 right-12 flex flex-col md:flex-row justify-between items-end gap-8">
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-[0_0_30px_rgba(16,185,129,0.4)] border border-white/20">
+                                <Package size={28} strokeWidth={2.5} />
+                            </div>
+                            <div className="flex flex-col">
+                                <h1 className="text-5xl font-black text-white italic uppercase tracking-tighter drop-shadow-2xl">
+                                    Thực đơn <span className="text-emerald-400">&</span> Catalog
+                                </h1>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Sparkles size={14} className="text-emerald-400 animate-pulse" />
+                                    <p className="text-zinc-400 font-black uppercase tracking-[.25em] text-[10px] italic">
+                                        Chuẩn hóa thực đơn ELITE Culinary
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 relative z-10">
+                        <Button
+                            variant="outline"
+                            onClick={() => navigate('/products/categories')}
+                            className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] px-6 py-6 h-auto rounded-2xl transition-all hover:scale-105 active:scale-95 italic"
+                        >
+                            <LibraryBig size={18} className="mr-2 text-indigo-400" /> Danh mục
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => navigate('/products/materials')}
+                            className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] px-6 py-6 h-auto rounded-2xl transition-all hover:scale-105 active:scale-95 italic"
+                        >
+                            <Wheat size={18} className="mr-2 text-amber-400" /> Nguyên liệu
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => navigate('/products/recipes')}
+                            className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] px-6 py-6 h-auto rounded-2xl transition-all hover:scale-105 active:scale-95 italic"
+                        >
+                            <ChefHat size={18} className="mr-2 text-emerald-400" /> Công thức
+                        </Button>
+                        <Button
+                            onClick={handleCreate}
+                            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black uppercase tracking-widest px-10 py-6 h-auto rounded-[1.75rem] shadow-[0_15px_30px_rgba(16,185,129,0.3)] hover:scale-[1.05] active:scale-95 transition-all italic border-0 ml-4 h-full"
+                        >
+                            <Plus className="mr-3 h-6 w-6" strokeWidth={3} /> Thêm Sản phẩm
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            {/* Toolbar */}
-            <Card className="border-0 shadow-sm ring-1 ring-zinc-700 overflow-hidden">
-                <div className="p-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-zinc-800 bg-zinc-900/50">
-                    <div className="relative w-full md:w-96">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <Input
-                            placeholder="Search products by name..."
-                            className="pl-10 w-full"
+            {/* Glass Toolbar */}
+            <div className="bg-[#080808]/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/5 p-6 mb-10 shadow-2xl relative overflow-hidden">
+                <div className="absolute -top-32 -left-32 w-80 h-80 bg-emerald-500/5 blur-[120px] rounded-full"></div>
+
+                <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
+                    <div className="relative w-full md:w-[600px] group">
+                        <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                            <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-600 group-focus-within:text-emerald-400 group-focus-within:shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                                <Search size={22} />
+                            </div>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm sản phẩm theo tên..."
+                            className="w-full h-14 pl-16 pr-6 bg-zinc-950/50 border border-white/5 focus:border-emerald-500/50 rounded-[1.25rem] text-zinc-100 font-bold placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-all duration-300"
                             value={localSearch}
                             onChange={(e) => setLocalSearch(e.target.value)}
                         />
                     </div>
-                </div>
 
-                {/* Desktop View */}
-                <div className="hidden md:block">
-                    <DataTable
-                        data={products}
-                        columns={columns}
-                        isLoading={isLoading}
-                        keyExtractor={item => item.id}
-                    />
+                    <div className="flex items-center gap-4 bg-zinc-950/80 px-6 py-3 rounded-2xl border border-white/5">
+                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">Phân loại</span>
+                        <div className="w-px h-4 bg-zinc-800"></div>
+                        <span className="text-zinc-200 font-bold text-sm tracking-tighter">
+                            Tất cả sản phẩm
+                        </span>
+                    </div>
                 </div>
+            </div>
 
-                {/* Pagination Controls */}
-                {pageableInfo && pageableInfo.totalPages > 1 && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-zinc-900/80 border-t border-zinc-800">
-                        <div className="text-sm text-gray-400 mb-4 sm:mb-0">
-                            Showing page <span className="font-medium">{page + 1}</span> of <span className="font-medium">{pageableInfo.totalPages}</span> ({pageableInfo.totalElements} items)
+            {/* Catalog Grid */}
+            <div className="space-y-6">
+                {isLoading ? (
+                    <div className="bg-zinc-900/40 backdrop-blur-xl rounded-[3rem] border border-white/5 p-32 text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto"></div>
+                        <p className="mt-6 text-zinc-500 font-black uppercase tracking-[0.3em] text-xs italic">Đang tải dữ liệu thực đơn...</p>
+                    </div>
+                ) : products.length === 0 ? (
+                    <div className="bg-zinc-900/40 backdrop-blur-xl rounded-[3rem] border border-white/5 p-32 text-center">
+                        <div className="w-20 h-20 rounded-3xl bg-zinc-950 flex items-center justify-center text-zinc-800 mx-auto mb-6 shadow-inner">
+                            <Package size={40} />
                         </div>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(p => Math.max(0, p - 1))}
-                                disabled={pageableInfo.first || isLoading}
+                        <p className="text-zinc-400 font-black uppercase tracking-[0.3em] text-xs italic">Không tìm thấy sản phẩm nào</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {products.map((product) => (
+                            <div
+                                key={product.id}
+                                className="group relative bg-[#0d0d0d]/80 backdrop-blur-3xl rounded-[2.5rem] border border-white/5 p-8 transition-all duration-500 hover:border-emerald-500/30 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden border-b-4 border-b-transparent hover:border-b-emerald-500/50"
+                                onClick={() => handleEdit(product)}
                             >
-                                <ChevronLeft size={16} /> Previous
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(p => p + 1)}
-                                disabled={pageableInfo.last || isLoading}
-                            >
-                                Next <ChevronRight size={16} />
-                            </Button>
-                        </div>
+                                <div className="absolute -right-20 -top-20 w-48 h-48 bg-emerald-500/5 blur-[70px] rounded-full group-hover:bg-emerald-500/10 transition-colors duration-700"></div>
+
+                                <div className="flex flex-col gap-6 relative z-10">
+                                    <div className="flex justify-between items-start">
+                                        <div className="w-24 h-24 rounded-[2rem] bg-zinc-950 overflow-hidden border border-white/5 shadow-inner group-hover:scale-105 transition-transform duration-500">
+                                            {product.imageUrl ? (
+                                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-zinc-800 group-hover:text-emerald-500 transition-colors">
+                                                    <Package size={32} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={cn(
+                                            "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] italic border transition-all duration-500",
+                                            product.isActive
+                                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+                                                : "bg-zinc-950 text-zinc-600 border-white/5"
+                                        )}>
+                                            {product.isActive ? 'Công khai' : 'Nháp'}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Tag size={12} className="text-zinc-600" />
+                                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">{product.category?.name || 'Chưa phân loại'}</span>
+                                        </div>
+                                        <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter group-hover:text-emerald-400 transition-colors leading-[0.9]">
+                                            {product.name}
+                                        </h3>
+                                        <span className="text-[10px] font-mono text-zinc-600 block pt-1 opacity-50">SKU: PD-{String(product.id).padStart(5, '0')}</span>
+                                    </div>
+
+                                    <div className="flex items-end justify-between pt-4 border-t border-white/5 mt-2">
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1 italic">Đơn giá niêm yết</span>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-zinc-200 text-3xl font-black italic tracking-tighter">{product.price.toLocaleString('vi-VN')}</span>
+                                                <span className="text-zinc-500 text-[10px] font-black uppercase italic tracking-widest">VND / {product.unit}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                onClick={() => handleEdit(product)}
+                                                className="w-12 h-12 rounded-2xl bg-zinc-950 text-zinc-600 hover:text-emerald-400 hover:border-emerald-500/30 border border-white/5 transition-all flex items-center justify-center p-0 shadow-inner"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(product.id)}
+                                                className="w-12 h-12 rounded-2xl bg-zinc-950 text-zinc-600 hover:text-rose-500 hover:border-rose-500/30 border border-white/5 transition-all flex items-center justify-center p-0 shadow-inner ml-1"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
-            </Card>
 
-            {/* Mobile View (Grid of Cards) */}
-            <div className="grid grid-cols-1 gap-4 md:hidden">
-                {products.map((product) => (
-                    <Card key={product.id} className="overflow-hidden flex flex-col shadow-sm border-zinc-700">
-                        <div className="p-4 flex gap-4">
-                            <div className="h-20 w-20 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-zinc-700">
-                                {product.imageUrl ? (
-                                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-                                ) : (
-                                    <div className="h-full w-full flex items-center justify-center text-gray-400">
-                                        <Package size={20} />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-semibold text-gray-200 truncate pr-2">{product.name}</h3>
-                                    <Badge variant={product.isActive ? 'success' : 'secondary'} className="text-[10px] px-1.5 py-0.5">
-                                        {product.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                    </Badge>
-                                </div>
-                                <p className="text-xs text-gray-400 font-mono mt-0.5">Cat: {product.category?.name || 'Uncategorized'}</p>
-                                <div className="mt-2 flex items-center justify-between">
-                                    <span className="font-bold text-gray-200 text-lg">${product.price.toLocaleString()} <span className="text-xs text-gray-400 font-normal">/ {product.unit}</span></span>
-                                </div>
+                {/* Pagination Elite */}
+                {pageableInfo && pageableInfo.totalPages > 1 && (
+                    <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-10 px-12 py-8 bg-[#080808]/60 backdrop-blur-2xl rounded-[3rem] border border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] italic mb-1">Phân trang dữ liệu</span>
+                            <div className="text-xs font-black text-zinc-400 uppercase tracking-widest italic">
+                                Trang <span className="text-emerald-400">{page + 1}</span> / <span className="text-zinc-200">{pageableInfo?.totalPages || 0}</span>
+                                <span className="mx-3 opacity-20">|</span>
+                                <span className="text-zinc-500">{pageableInfo?.totalElements || 0} sản phẩm thực đơn</span>
                             </div>
                         </div>
-                        <div className="bg-zinc-900/80 px-4 py-3 border-t border-zinc-800 flex justify-end gap-3">
-                            <Button variant="outline" size="sm" onClick={() => handleEdit(product)} className="flex-1">
-                                Edit
+
+                        <div className="flex gap-4">
+                            <Button
+                                variant="ghost"
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={pageableInfo?.first || isLoading}
+                                className="bg-zinc-950 hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-400 border border-white/5 hover:border-emerald-400/30 rounded-2xl px-12 h-14 font-black uppercase tracking-[0.2em] italic transition-all disabled:opacity-10"
+                            >
+                                <ChevronLeft size={20} className="mr-3" /> Trước
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => handleDelete(product.id)} className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
-                                Delete
+                            <Button
+                                variant="ghost"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={pageableInfo?.last || isLoading}
+                                className="bg-zinc-950 hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-400 border border-white/5 hover:border-emerald-400/30 rounded-2xl px-12 h-14 font-black uppercase tracking-[0.2em] italic transition-all disabled:opacity-10"
+                            >
+                                Sau <ChevronRight size={20} className="ml-3" />
                             </Button>
                         </div>
-                    </Card>
-                ))}
-                {!isLoading && products.length === 0 && (
-                    <div className="text-center py-12 text-gray-400 bg-zinc-900/50 rounded-lg border border-dashed border-gray-300">
-                        No products found.
                     </div>
                 )}
             </div>

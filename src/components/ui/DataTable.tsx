@@ -14,6 +14,7 @@ interface DataTableProps<T> {
     isLoading?: boolean;
     emptyMessage?: ReactNode;
     onRowClick?: (item: T) => void;
+    className?: string;
 }
 
 export function DataTable<T>({
@@ -23,10 +24,11 @@ export function DataTable<T>({
     isLoading = false,
     emptyMessage = 'No data available',
     onRowClick,
+    className,
 }: DataTableProps<T>) {
     if (isLoading) {
         return (
-            <div className="w-full h-48 flex items-center justify-center text-gray-400">
+            <div className={`w-full h-48 flex items-center justify-center text-gray-400 ${className}`}>
                 Loading...
             </div>
         );
@@ -34,14 +36,14 @@ export function DataTable<T>({
 
     if (data.length === 0) {
         return (
-            <div className="w-full h-48 flex items-center justify-center text-gray-400 border border-zinc-800 rounded-lg bg-zinc-900/50">
+            <div className={`w-full h-48 flex items-center justify-center text-gray-400 border border-zinc-800 rounded-lg bg-zinc-900/50 ${className}`}>
                 {emptyMessage}
             </div>
         );
     }
 
     return (
-        <div className="relative overflow-x-auto shadow-sm rounded-lg border border-zinc-800">
+        <div className={`relative overflow-x-auto shadow-sm rounded-lg border border-zinc-800 ${className}`}>
             <table className="w-full text-sm text-left text-gray-400">
                 <thead className="text-xs text-gray-300 uppercase bg-zinc-900/50 border-b border-zinc-800">
                     <tr>
