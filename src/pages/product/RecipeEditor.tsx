@@ -62,8 +62,10 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                 const res = await recipeApi.getActiveRecipe(product.id);
                 if (res.data) {
                     const recipe = res.data;
-                    setRecipeId(recipe.id);
-                    setRecipeStatus(recipe.status || '');
+                    setRecipeId(recipe.recipeId);
+                    setRecipeStatus(recipe.isActive ? 'ACTIVE' : 'INACTIVE');
+                    setInstructions(recipe.instructions || '');
+                    setRecipeYield(recipe.yield || 1);
                     setItems(recipe.recipeDetails.map(detail => ({
                         materialId: detail.materialId,
                         materialName: detail.materialName,
@@ -257,7 +259,7 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                                 try {
                                                     const newActive = recipeStatus !== 'ACTIVE';
                                                     const res = await recipeApi.toggleRecipeStatus(recipeId, newActive);
-                                                    setRecipeStatus(res.data.status);
+                                                    setRecipeStatus(res.data.isActive ? 'ACTIVE' : 'INACTIVE');
                                                     toast.success(`Công thức đã được ${newActive ? 'kích hoạt' : 'vô hiệu hóa'} thành công`);
                                                 } catch (error: any) {
                                                     const msg = error.response?.data?.message || 'Không thể thay đổi trạng thái';
