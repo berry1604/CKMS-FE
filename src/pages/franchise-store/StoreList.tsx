@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, Store as StoreIcon, Edit2, Trash2, ChevronRight, User, MapPin, Package } from 'lucide-react';
+import { Plus, Search, Store as StoreIcon, Edit2, Trash2, ChevronRight, User, MapPin } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
 import type { StoreResponse } from '../../types/store';
 import { storeApi } from '../../services/store.api';
 import { StoreModal } from './StoreModal';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
+import { cn } from '../../utils/classNames';
+import storeHeaderBg from '../../assets/store_list_header_bg.png';
 
 export const StoreList = () => {
     const navigate = useNavigate();
@@ -63,9 +63,11 @@ export const StoreList = () => {
     }, [searchTerm]);
 
     const filteredStores = stores.filter(store => {
+        const actualIsActive = store.isActive ?? (store as any).active ?? ((store as any).status === 'ACTIVE');
+
         if (statusFilter === 'ALL') return true;
-        if (statusFilter === 'active') return store.isActive;
-        if (statusFilter === 'inactive') return !store.isActive;
+        if (statusFilter === 'active') return actualIsActive;
+        if (statusFilter === 'inactive') return !actualIsActive;
         return true;
     });
 
@@ -105,7 +107,9 @@ export const StoreList = () => {
         try {
             if (editingStore) {
                 // Backend ĐÃ CÓ API update store
-                await storeApi.updateStore(editingStore.id, data);
+                const updateId = editingStore.id || editingStore.storeId;
+                if (!updateId) throw new Error("Store ID is missing");
+                await storeApi.updateStore(updateId, data);
                 toast.success('Cập nhật cửa hàng thành công!');
             } else {
                 await storeApi.createStore(data);
@@ -122,266 +126,219 @@ export const StoreList = () => {
         }
     };
 
-    const getStatusVariant = (isActive: boolean) => {
-        return isActive ? 'success' : 'secondary';
-    };
-
     const startItem = currentPage * pageSize + 1;
     const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Franchise Stores</h1>
-                    <p className="text-sm text-gray-400 mt-1">Manage store locations and performance.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="bg-zinc-900/50 px-3 py-1.5 rounded-md border border-zinc-700 text-sm font-medium text-gray-400 shadow-sm">
-                        <span className="text-gray-200 font-bold">{totalElements}</span> Total Stores
+        <div className="max-w-[1600px] mx-auto pb-20 animate-in fade-in duration-700">
+            {/* Cinematic Header */}
+            <div className="relative h-[300px] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] mb-8 group">
+                <img
+                    src={storeHeaderBg}
+                    alt="Store Cover"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent"></div>
+
+                <div className="absolute bottom-10 left-10 right-10 flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]">
+                                <StoreIcon size={24} strokeWidth={2.5} />
+                            </div>
+                            <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter drop-shadow-lg">
+                                Hệ thống <span className="text-amber-500">Cửa hàng</span>
+                            </h1>
+                        </div>
+                        <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs italic ml-1">
+                            Quản lý mạng lưới và hiệu suất vận hành franchise
+                        </p>
                     </div>
-                    <Button onClick={handleCreate} className="shadow-sm">
-                        <Plus className="mr-2 h-4 w-4" /> Register New Store
-                    </Button>
+
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="bg-white/5 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 flex flex-col items-center min-w-[120px]">
+                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Tổng cộng</span>
+                            <span className="text-2xl font-black text-white italic tracking-tighter">{totalElements}</span>
+                        </div>
+                        <Button
+                            onClick={handleCreate}
+                            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase tracking-widest px-8 py-6 h-auto rounded-[1.5rem] shadow-[0_10px_25px_rgba(245,158,11,0.3)] hover:scale-[1.05] active:scale-95 transition-all italic border-0"
+                        >
+                            <Plus className="mr-3 h-5 w-5" strokeWidth={3} /> Đăng ký Cửa hàng mới
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            {/* Toolbar */}
-            <Card className="p-4">
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="relative w-full md:w-96">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search size={18} className="text-gray-400" />
+            {/* Toolbar - Glassmorphism */}
+            <div className="relative z-10 bg-[#080808]/60 backdrop-blur-3xl rounded-[2rem] border border-white/5 p-5 mb-8 shadow-2xl overflow-hidden">
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full"></div>
+
+                <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
+                    <div className="relative w-full md:w-[450px] group">
+                        <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                            <div className="w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                <Search size={18} />
+                            </div>
                         </div>
                         <input
                             type="text"
-                            placeholder="Search store, location, or manager..."
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                            placeholder="Tìm kiếm cửa hàng, vị trí, hoặc quản lý..."
+                            className="w-full pl-14 pr-4 h-12 bg-zinc-950/50 border border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all duration-300"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                        <Filter size={16} className="text-gray-400 hidden md:block" />
-                        <span className="text-sm text-gray-400 whitespace-nowrap hidden md:block">Filter by Status:</span>
-                        {(['ALL', 'active', 'inactive'] as const).map((status) => (
-                            <button
-                                key={status}
-                                onClick={() => setStatusFilter(status)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize whitespace-nowrap ${statusFilter === status
-                                    ? 'bg-amber-500/20 text-amber-500'
-                                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                                    }`}
-                            >
-                                {status === 'ALL' ? 'All Stores' : status}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </Card>
-
-            {/* Desktop Table View */}
-            <div className="hidden md:block">
-                <Card className="overflow-hidden shadow-sm border-zinc-700 p-0">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-zinc-900/80 border-b border-zinc-800 text-xs uppercase text-gray-400 font-semibold tracking-wider">
-                                    <th className="px-6 py-4">Store Name</th>
-                                    <th className="px-6 py-4">Manager</th>
-                                    <th className="px-6 py-4">Contact</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-800">
-                                {isLoading ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
-                                            <div className="flex flex-col items-center justify-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mb-2"></div>
-                                                Loading stores...
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : filteredStores.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
-                                            No stores found matching your criteria.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredStores.map((store) => (
-                                        <tr
-                                            key={store.id}
-                                            className="hover:bg-amber-500/5 transition-colors group cursor-pointer"
-                                            onClick={() => navigate(`/stores/${store.id}`)}
-                                        >
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center">
-                                                    <div className="bg-amber-500/10 p-2 rounded-lg mr-3 text-amber-600">
-                                                        <StoreIcon size={20} />
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-medium text-gray-200 group-hover:text-amber-600 transition-colors">{store.name}</div>
-                                                        <div className="text-gray-400 text-xs flex items-center mt-0.5">
-                                                            <MapPin size={10} className="mr-1" />
-                                                            {store.address}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center text-sm text-gray-300">
-                                                    <User size={14} className="mr-2 text-gray-400" />
-                                                    {store.managerName || 'N/A'}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-300">
-                                                    {store.phone && <div>{store.phone}</div>}
-                                                    {store.email && <div className="text-gray-400 text-xs">{store.email}</div>}
-                                                    {!store.phone && !store.email && <span className="text-gray-500">N/A</span>}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <Badge variant={getStatusVariant(store.isActive)} className="shadow-sm">
-                                                    {store.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleEdit(store)}
-                                                        className="h-8 w-8 p-0 text-gray-400 hover:text-amber-600 hover:bg-amber-500/10"
-                                                    >
-                                                        <Edit2 size={16} />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteClick(store.id)}
-                                                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 w-8 p-0 text-gray-400"
-                                                    >
-                                                        <ChevronRight size={16} />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="bg-zinc-900/80 px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
-                        <span className="text-sm text-gray-400">
-                            {totalElements > 0 ? (
-                                <>Showing <span className="font-medium text-gray-200">{startItem}</span> to <span className="font-medium text-gray-200">{endItem}</span> of <span className="font-medium text-gray-200">{totalElements}</span> stores</>
-                            ) : (
-                                'No stores found'
-                            )}
-                        </span>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={currentPage === 0}
-                                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                            >
-                                Previous
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={currentPage >= totalPages - 1}
-                                onClick={() => setCurrentPage((p) => p + 1)}
-                            >
-                                Next
-                            </Button>
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        <div className="flex bg-zinc-950 p-1.5 rounded-2xl border border-white/5 shadow-inner">
+                            {(['ALL', 'active', 'inactive'] as const).map((status) => (
+                                <button
+                                    key={status}
+                                    onClick={() => setStatusFilter(status)}
+                                    className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic ${statusFilter === status
+                                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                                        : 'text-zinc-500 hover:text-zinc-300'
+                                        }`}
+                                >
+                                    {status === 'ALL' ? 'Tất cả' : status === 'active' ? 'Hoạt động' : 'Tạm dừng'}
+                                </button>
+                            ))}
                         </div>
                     </div>
-                </Card>
+                </div>
             </div>
 
-            {/* Mobile Grid View */}
-            <div className="md:hidden grid grid-cols-1 gap-4">
+            {/* Main List - High-End Cards */}
+            <div className="space-y-4">
                 {isLoading ? (
-                    <div className="text-center py-10 text-gray-400">Loading...</div>
+                    <div className="bg-zinc-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-20 text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500 mx-auto"></div>
+                        <p className="mt-4 text-zinc-500 font-bold uppercase tracking-widest text-[10px] italic">Đang tải danh sách...</p>
+                    </div>
                 ) : filteredStores.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400">No stores found.</div>
+                    <div className="bg-zinc-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-20 text-center">
+                        <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] italic">Không tìm thấy cửa hàng nào phù hợp</p>
+                    </div>
                 ) : (
-                    filteredStores.map((store) => (
-                        <Card
-                            key={store.id}
-                            className="p-4 relative active:scale-[0.99] transition-transform"
-                            onClick={() => navigate(`/stores/${store.id}`)}
-                        >
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-amber-500/20 p-2 rounded-lg text-amber-600">
-                                        <StoreIcon size={20} />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-200">{store.name}</h3>
-                                        <div className="text-xs text-gray-400 flex items-center">
-                                            <MapPin size={10} className="mr-1" />
-                                            {store.address}
+                    <div className="grid grid-cols-1 gap-4">
+                        {filteredStores.map((store) => {
+                            const actualId = store.id || store.storeId;
+                            const actualIsActive = store.isActive ?? (store as any).active ?? ((store as any).status === 'ACTIVE');
+                            return (
+                                <div
+                                    key={actualId}
+                                    className="group relative bg-[#0d0d0d]/80 backdrop-blur-3xl rounded-[2rem] border border-white/5 p-6 hover:border-amber-500/30 transition-all duration-500 hover:shadow-[0_15px_40px_rgba(0,0,0,0.4)] cursor-pointer overflow-hidden"
+                                    onClick={() => navigate(`/stores/${actualId}`)}
+                                >
+                                    {/* Active background effect */}
+                                    <div className="absolute inset-y-0 left-0 w-1 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 shadow-[0_0_15px_rgba(245,158,11,0.8)]"></div>
+                                    <div className="absolute -right-20 -top-20 w-40 h-40 bg-amber-500/5 blur-[60px] rounded-full group-hover:bg-amber-500/10 transition-colors duration-700"></div>
+
+                                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+                                        <div className="flex items-center gap-5 flex-1">
+                                            <div className="w-16 h-16 rounded-[1.25rem] bg-zinc-950 flex items-center justify-center text-zinc-600 group-hover:text-amber-500 transition-all duration-500 shadow-inner group-hover:scale-105">
+                                                <StoreIcon size={28} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter group-hover:text-amber-500 transition-colors">
+                                                    {store.name}
+                                                </h3>
+                                                <div className="flex items-center gap-4 mt-1.5">
+                                                    <div className="flex items-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                                                        <MapPin size={12} className="mr-1.5 text-amber-500 opacity-50" />
+                                                        {store.address}
+                                                    </div>
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-800"></div>
+                                                    <div className="flex items-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                                                        <User size={12} className="mr-1.5 text-amber-500 opacity-50" />
+                                                        {store.managerName || 'N/A'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-8 w-full lg:w-auto">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1 italic">Liên hệ</span>
+                                                <span className="text-zinc-300 text-sm font-bold tracking-tight">
+                                                    {store.phone || <span className="opacity-30 italic">No phone</span>}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1 italic">Trạng thái</span>
+                                                <div className={cn(
+                                                    "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] italic border transition-all duration-500",
+                                                    actualIsActive
+                                                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
+                                                        : "bg-zinc-950 text-zinc-600 border-white/5"
+                                                )}>
+                                                    {actualIsActive ? 'Hoạt động' : 'Tạm dừng'}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 ml-auto lg:ml-0" onClick={(e) => e.stopPropagation()}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleEdit(store)}
+                                                    className="w-12 h-12 rounded-2xl bg-zinc-950 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 border border-white/5 transition-all p-0 shadow-inner group-hover:border-amber-500/20"
+                                                >
+                                                    <Edit2 size={18} />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDeleteClick(actualId!)}
+                                                    className="w-12 h-12 rounded-2xl bg-zinc-950 text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10 border border-white/5 transition-all p-0 shadow-inner group-hover:border-rose-500/20 ml-2"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </Button>
+                                                <div className="w-10 h-10 flex items-center justify-center text-zinc-700 group-hover:text-amber-500 transition-all duration-700 group-hover:translate-x-1">
+                                                    <ChevronRight size={24} strokeWidth={3} />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <Badge variant={getStatusVariant(store.isActive)} className="shadow-none">
-                                    {store.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                </Badge>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
-                                    <div className="text-xs text-gray-400 mb-1 flex items-center">
-                                        <User size={10} className="mr-1" /> Manager
-                                    </div>
-                                    <div className="text-sm font-medium text-gray-200 truncate">{store.managerName || 'N/A'}</div>
-                                </div>
-                                <div className="bg-zinc-900/80 p-2 rounded border border-zinc-800">
-                                    <div className="text-xs text-gray-400 mb-1 flex items-center">
-                                        <Package size={10} className="mr-1" /> Contact
-                                    </div>
-                                    <div className="text-sm font-medium text-gray-200 truncate">{store.phone || store.email || 'N/A'}</div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-end pt-3 border-t border-zinc-800">
-                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                    <button
-                                        onClick={() => handleEdit(store)}
-                                        className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-500/10 rounded-full"
-                                    >
-                                        <Edit2 size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteClick(store.id)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            </div>
-                        </Card>
-                    ))
+                            );
+                        })}
+                    </div>
                 )}
+
+                {/* Pagination ELITE */}
+                <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-6 px-10 py-6 bg-zinc-900/20 backdrop-blur-md rounded-[2.5rem] border border-white/5">
+                    <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] italic">
+                        {totalElements > 0 ? (
+                            <>Hiển thị <span className="text-zinc-200">{startItem}</span> - <span className="text-zinc-200">{endItem}</span> của <span className="text-amber-500">{totalElements}</span> cửa hàng</>
+                        ) : (
+                            'Không có dữ liệu'
+                        )}
+                    </div>
+                    <div className="flex gap-4">
+                        <Button
+                            variant="ghost"
+                            disabled={currentPage === 0}
+                            onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                            className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:bg-amber-500/10 rounded-2xl px-8 h-12 transition-all italic disabled:opacity-20"
+                        >
+                            Trước
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            disabled={currentPage >= totalPages - 1}
+                            onClick={() => setCurrentPage((p) => p + 1)}
+                            className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:bg-amber-500/10 rounded-2xl px-8 h-12 transition-all italic disabled:opacity-20"
+                        >
+                            Tiếp theo
+                        </Button>
+                    </div>
+                </div>
             </div>
+
+            <p className="hidden">Responsive grid removed in favor of Unified High-End Card List</p>
 
             <StoreModal
                 isOpen={isModalOpen}

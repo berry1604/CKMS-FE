@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Tag, Layers, ChevronRight, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { categoryApi } from '../../services/category.api';
 import type { CategoryResponse } from '../../types/category';
+import { cn } from '../../utils/classNames';
+import { Button } from '../../components/ui/Button';
+import productHeaderBg from '../../assets/product_catalog_bg.png';
 
 export const CategoryList: React.FC = () => {
     const [categories, setCategories] = useState<CategoryResponse[]>([]);
@@ -67,121 +70,151 @@ export const CategoryList: React.FC = () => {
     );
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold text-gray-200">Categories</h1>
-                <button
-                    onClick={openCreateModal}
-                    className="flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Add Category
-                </button>
-            </div>
+        <div className="max-w-[1400px] mx-auto pb-20 animate-in fade-in duration-700">
+            {/* Cinematic Header (Condensed) */}
+            <div className="relative h-[240px] rounded-[2.5rem] overflow-hidden shadow-2xl mb-8 group border border-white/5">
+                <img
+                    src={productHeaderBg}
+                    alt="Category Cover"
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 brightness-75 transition-transform duration-[2000ms] group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent"></div>
 
-            <div className="bg-zinc-900/50 rounded-xl shadow-sm border border-zinc-800 overflow-hidden">
-                <div className="p-4 border-b border-zinc-800">
-                    <div className="relative w-full max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="Search categories..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                        />
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-zinc-900/80 border-b border-zinc-800 text-sm font-medium text-gray-400 uppercase tracking-wider">
-                                <th className="p-4">ID</th>
-                                <th className="p-4">Name</th>
-                                <th className="p-4">Description</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-800">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={5} className="p-8 text-center text-gray-400">
-                                        Loading categories...
-                                    </td>
-                                </tr>
-                            ) : filteredCategories.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="p-8 text-center text-gray-400">
-                                        No categories found.
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredCategories.map((category) => (
-                                    <tr key={category.id} className="hover:bg-zinc-900/80 transition-colors">
-                                        <td className="p-4 text-sm font-medium text-gray-200">#{category.id}</td>
-                                        <td className="p-4 text-sm font-semibold text-gray-300">{category.name}</td>
-                                        <td className="p-4 text-sm text-gray-400">{category.description || '-'}</td>
-                                        <td className="p-4">
-                                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${category.status === 'ACTIVE'
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {category.status}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEditModal(category)}
-                                                    className="p-1.5 text-amber-600 bg-amber-500/10 rounded-lg hover:bg-amber-500/20 transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <Pencil className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => openDeleteModal(category)}
-                                                    className="p-1.5 text-red-500 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Delete Modal */}
-            {isDeleteModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-zinc-900/50 rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <div className="p-6 text-center">
-                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Trash2 className="w-8 h-8 text-red-600" />
+                <div className="absolute bottom-8 left-10 right-10 flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500 border border-amber-500/30">
+                                <Layers size={20} />
                             </div>
-                            <h2 className="text-xl font-bold text-gray-200 mb-2">Delete Category</h2>
-                            <p className="text-gray-400 mb-6">
-                                Are you sure you want to delete <span className="font-semibold text-gray-300">{selectedCategory?.name}</span>? This action cannot be undone.
+                            <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">
+                                Danh mục <span className="text-amber-400">Sản phẩm</span>
+                            </h1>
+                        </div>
+                        <p className="text-zinc-400 font-black uppercase tracking-[0.2em] text-[9px] italic flex items-center gap-2">
+                            <Sparkles size={10} className="text-amber-400" />
+                            Quản lý phân loại thực đơn ELITE
+                        </p>
+                    </div>
+
+                    <Button
+                        onClick={openCreateModal}
+                        className="bg-amber-600 hover:bg-amber-500 text-black font-black uppercase tracking-widest px-8 py-5 h-auto rounded-2xl shadow-[0_10px_25px_rgba(245,158,11,0.2)] hover:scale-105 active:scale-95 transition-all italic border-0"
+                    >
+                        <Plus size={20} className="mr-2" strokeWidth={3} /> Thêm Danh mục
+                    </Button>
+                </div>
+            </div>
+
+            {/* Glass Toolbar */}
+            <div className="bg-[#080808]/60 backdrop-blur-3xl rounded-[2rem] border border-white/5 p-5 mb-8 shadow-xl">
+                <div className="relative w-full md:w-[450px] group">
+                    <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                        <div className="w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-zinc-600 group-focus-within:text-amber-400">
+                            <Search size={18} />
+                        </div>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm danh mục..."
+                        className="w-full h-12 pl-14 pr-6 bg-zinc-950/50 border border-white/5 focus:border-amber-500/50 rounded-xl text-zinc-100 font-bold placeholder:text-zinc-700 focus:outline-none transition-all duration-300"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+            </div>
+
+            {/* List Components */}
+            <div className="grid grid-cols-1 gap-4">
+                {loading ? (
+                    <div className="p-20 text-center bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5">
+                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500 mx-auto"></div>
+                        <p className="mt-4 text-zinc-500 font-black uppercase tracking-widest text-[10px] italic">Đang tải danh mục...</p>
+                    </div>
+                ) : filteredCategories.length === 0 ? (
+                    <div className="p-20 text-center bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5">
+                        <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px] italic">Không tìm thấy danh mục nào</p>
+                    </div>
+                ) : (
+                    filteredCategories.map((category) => (
+                        <div
+                            key={category.id}
+                            className="group flex flex-col md:flex-row items-center justify-between p-6 bg-[#0d0d0d]/80 backdrop-blur-2xl rounded-[2rem] border border-white/5 transition-all duration-500 hover:border-amber-500/30 hover:shadow-2xl hover:-translate-y-1"
+                        >
+                            <div className="flex items-center gap-6 w-full md:w-auto">
+                                <div className="w-14 h-14 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-700 group-hover:text-amber-500 transition-colors shadow-inner border border-white/5">
+                                    <Tag size={24} />
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter group-hover:text-amber-400 transition-colors">
+                                            {category.name}
+                                        </h3>
+                                        <span className={cn(
+                                            "px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest italic border",
+                                            category.status === 'ACTIVE'
+                                                ? "bg-green-500/10 text-green-500 border-green-500/20"
+                                                : "bg-zinc-950 text-zinc-600 border-white/5"
+                                        )}>
+                                            {category.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm dừng'}
+                                        </span>
+                                    </div>
+                                    <p className="text-zinc-500 text-sm font-medium line-clamp-1 max-w-md italic">
+                                        {category.description || 'Không có mô tả cho danh mục này'}
+                                    </p>
+                                    <div className="flex items-center gap-2 pt-1">
+                                        <span className="text-[10px] font-mono text-zinc-700">ID: #{String(category.id).padStart(3, '0')}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 mt-6 md:mt-0 w-full md:w-auto">
+                                <button
+                                    onClick={() => openEditModal(category)}
+                                    className="flex-1 md:flex-none h-12 px-6 rounded-xl bg-zinc-950 text-zinc-400 hover:text-amber-400 border border-white/5 hover:border-amber-500/30 transition-all font-black uppercase tracking-widest text-[10px] italic flex items-center justify-center gap-2 shadow-inner"
+                                >
+                                    <Pencil size={14} /> Chỉnh sửa
+                                </button>
+                                <button
+                                    onClick={() => openDeleteModal(category)}
+                                    className="w-12 h-12 rounded-xl bg-zinc-950 text-zinc-600 hover:text-rose-500 border border-white/5 hover:border-rose-500/30 transition-all flex items-center justify-center shadow-inner"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                                <div className="ml-2 hidden md:block">
+                                    <ChevronRight size={20} className="text-zinc-800 group-hover:text-amber-500/50 transition-colors" />
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Elite Delete Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-[#0f0f0f] rounded-[2.5rem] border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.8)] w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-10 text-center">
+                            <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-[0_0_30px_rgba(244,63,94,0.1)] text-rose-500">
+                                <Trash2 size={36} strokeWidth={2.5} />
+                            </div>
+                            <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-3">Xác nhận xóa</h2>
+                            <p className="text-zinc-500 font-medium italic mb-10 leading-relaxed">
+                                Bạn có chắc chắn muốn xóa danh mục <span className="text-rose-400 font-black">{selectedCategory?.name}</span>? <br />
+                                <span className="text-[10px] uppercase tracking-widest text-zinc-700">Hành động này không thể hoàn tác</span>
                             </p>
 
-                            <div className="flex justify-center gap-3">
+                            <div className="flex gap-4">
                                 <button
                                     onClick={() => setIsDeleteModalOpen(false)}
-                                    className="px-4 py-2 text-gray-300 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors font-medium w-full"
+                                    className="flex-1 h-16 rounded-[1.25rem] bg-zinc-900 text-zinc-400 hover:text-white border border-white/5 transition-all font-black uppercase tracking-widest text-xs italic"
                                 >
-                                    Cancel
+                                    Hủy bỏ
                                 </button>
                                 <button
                                     onClick={handleDelete}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium w-full shadow-sm"
+                                    className="flex-1 h-16 rounded-[1.25rem] bg-rose-600 text-black hover:bg-rose-500 transition-all font-black uppercase tracking-widest text-xs italic shadow-[0_15px_30px_rgba(225,29,72,0.3)]"
                                 >
-                                    Delete
+                                    Đồng ý xóa
                                 </button>
                             </div>
                         </div>

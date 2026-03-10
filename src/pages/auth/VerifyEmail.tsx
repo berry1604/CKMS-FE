@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, ArrowRight, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { authApi } from '../../services/auth.api';
 import toast from 'react-hot-toast';
 
-type Step = 'activating' | 'set-password' | 'done' | 'error';
+type Step = 'set-password' | 'done' | 'error';
 
 export const VerifyEmail = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const token = searchParams.get('token') || '';
-
-    const [step, setStep] = useState<Step>('activating');
+    const token = new URLSearchParams(window.location.search).get('token') || '';
+    const [step, setStep] = useState<Step>('set-password');
     const [error, setError] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,28 +19,13 @@ export const VerifyEmail = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [countdown, setCountdown] = useState(5);
 
-    // Activate account on mount
+    // Validate token on mount
     useEffect(() => {
         if (!token) {
             setStep('error');
             setError('Token không hợp lệ. Vui lòng kiểm tra lại link kích hoạt.');
             return;
         }
-
-        authApi.activateAccount({ token })
-            .then(() => {
-                setStep('set-password');
-            })
-            .catch((err: any) => {
-                const msg = err.response?.data?.message || err.message || 'Kích hoạt thất bại';
-                // If already activated, still allow setting password
-                if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('đã kích hoạt')) {
-                    setStep('set-password');
-                } else {
-                    setStep('set-password'); // Still show password form in case activation was already done via redirect
-                    console.warn('Activation response:', msg);
-                }
-            });
     }, [token]);
 
     // Countdown for done step
@@ -80,11 +63,11 @@ export const VerifyEmail = () => {
 
         setIsSubmitting(true);
         try {
-            await authApi.resetPassword(token, password);
-            toast.success('Đặt mật khẩu thành công!');
+            await authApi.activateAccount({ token, password });
+            toast.success('Kích hoạt thiết lập mật khẩu thành công!');
             setStep('done');
         } catch (err: any) {
-            const msg = err.response?.data?.message || 'Đặt mật khẩu thất bại. Vui lòng thử lại.';
+            const msg = err.response?.data?.message || 'Kích hoạt thất bại. Vui lòng thử lại.';
             toast.error(msg);
         } finally {
             setIsSubmitting(false);
@@ -95,16 +78,7 @@ export const VerifyEmail = () => {
         <div className="min-h-screen bg-zinc-900/80 flex items-center justify-center p-4">
             <div className="bg-zinc-900/50 p-8 md:p-12 rounded-2xl shadow-xl border border-zinc-800 max-w-md w-full text-center flex flex-col items-center">
 
-                {/* Step: Activating */}
-                {step === 'activating' && (
-                    <>
-                        <div className="h-20 w-20 bg-amber-500/10 rounded-full flex items-center justify-center mb-6">
-                            <Loader2 className="text-amber-500 w-10 h-10 animate-spin" />
-                        </div>
-                        <h1 className="text-2xl font-bold text-gray-200 mb-3">Đang kích hoạt...</h1>
-                        <p className="text-gray-400">Vui lòng chờ trong giây lát.</p>
-                    </>
-                )}
+
 
                 {/* Step: Error */}
                 {step === 'error' && (
@@ -129,9 +103,9 @@ export const VerifyEmail = () => {
                         <div className="h-20 w-20 bg-green-50 rounded-full flex items-center justify-center mb-6">
                             <CheckCircle2 className="text-green-500 w-12 h-12" />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-200 mb-2">Xác thực thành công!</h1>
+                        <h1 className="text-2xl font-bold text-gray-200 mb-2">Lời Mời Từ Hệ Thống</h1>
                         <p className="text-gray-400 mb-6">
-                            Tài khoản đã được kích hoạt. Hãy đặt mật khẩu để đăng nhập.
+                            Vui lòng nhập mật khẩu mới để kích hoạt tài khoản của bạn.
                         </p>
 
                         <div className="w-full space-y-4 text-left">
@@ -172,8 +146,8 @@ export const VerifyEmail = () => {
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="Nhập lại mật khẩu"
                                         className={`w-full pl-10 pr-10 py-2.5 border rounded-lg text-sm bg-zinc-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${confirmPassword && confirmPassword !== password
-                                                ? 'border-red-500 focus:ring-red-500'
-                                                : 'border-zinc-700 focus:ring-amber-500'
+                                            ? 'border-red-500 focus:ring-red-500'
+                                            : 'border-zinc-700 focus:ring-amber-500'
                                             }`}
                                     />
                                     <button

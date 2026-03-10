@@ -11,6 +11,7 @@ import { OrderDetailDrawer } from './OrderDetailDrawer';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-hot-toast';
+import { cn } from '../../utils/classNames';
 
 export const OrderList = () => {
     const navigate = useNavigate();
@@ -115,58 +116,61 @@ export const OrderList = () => {
 
     const columns: Column<StoreOrderResponse>[] = [
         {
-            header: 'Order ID',
+            header: 'Mã đơn',
             accessorKey: 'orderId',
-            className: 'font-medium text-gray-200',
-            cell: (order) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-400">{order.orderId}</span>
+            className: 'font-medium text-zinc-400',
+            cell: (order) => <span className="font-mono text-[10px] bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">#{order.orderId}</span>
         },
         {
-            header: 'Store',
-            accessorKey: 'storeId',
+            header: 'Cửa hàng',
+            accessorKey: 'storeName',
             cell: (order) => (
                 <div>
-                    <span className="font-medium text-gray-200 block">{order.storeName || `Store #${order.storeId}`}</span>
-                    <span className="text-xs text-gray-500">ID: {order.storeId}</span>
+                    <span className="font-bold text-zinc-100 block text-sm">{order.storeName || `Cửa hàng #${order.storeId}`}</span>
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">ID: {order.storeId}</span>
                 </div>
             )
         },
         {
-            header: 'Date',
+            header: 'Ngày đặt',
             accessorKey: 'orderDate',
-            cell: (order) => <span className="text-gray-400 text-sm">{new Date(order.orderDate).toLocaleDateString()}</span>
+            cell: (order) => <span className="text-zinc-400 text-sm">{new Date(order.orderDate).toLocaleDateString('vi-VN')}</span>
         },
         {
-            header: 'Items',
+            header: 'Số món',
             accessorKey: 'orderDetails',
-            cell: (order) => <Badge variant="secondary" className="font-normal">{order.orderDetails?.length || 0} items</Badge>
+            cell: (order) => <span className="text-zinc-500 text-sm font-medium">{order.orderDetails?.length || 0} món</span>
         },
         {
-            header: 'Total',
+            header: 'Tổng tiền',
             accessorKey: 'totalAmount',
-            className: 'font-bold',
-            cell: (order) => <span className="text-gray-200">${order.totalAmount.toFixed(2)}</span>
+            className: 'font-black text-right',
+            cell: (order) => <span className="text-amber-500 font-bold">{(order.totalAmount || 0).toLocaleString()} <span className="text-[10px] opacity-70">VNĐ</span></span>
         },
         {
-            header: 'Status',
+            header: 'Trạng thái',
             cell: (order) => {
-                const statusStr = order.status?.toLowerCase() || 'unknown';
-                const colors: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "info" | "danger"> = {
-                    submitted: 'warning',
-                    rejected: 'danger',
-                    grouped: 'info',
-                    confirmed: 'info',
-                    preparing: 'primary',
-                    ready: 'secondary',
-                    completed: 'success'
+                const status = order.status;
+                const config: Record<string, { label: string, variant: any }> = {
+                    'SUBMITTED': { label: 'CHỜ DUYỆT', variant: 'warning' },
+                    'APPROVED': { label: 'ĐÃ DUYỆT', variant: 'orange' },
+                    'ALLOCATED': { label: 'ĐÃ PHÂN BỔ', variant: 'info' },
+                    'DELIVERED': { label: 'HOÀN THÀNH', variant: 'success' },
+                    'REJECTED': { label: 'TỪ CHỐI', variant: 'danger' }
                 };
-                return <Badge variant={colors[statusStr] || 'default'}>{statusStr.replace('_', ' ').toUpperCase()}</Badge>;
+                const { label, variant } = config[status] || { label: status, variant: 'default' };
+                return (
+                    <Badge variant={variant} className="text-[10px] font-black px-2 py-0.5 border-0 shadow-sm uppercase tracking-tighter">
+                        {label}
+                    </Badge>
+                );
             }
         },
         {
-            header: 'Actions',
+            header: '',
             cell: (order) => (
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)} className="text-amber-600 hover:text-amber-500 hover:bg-amber-500/10">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)} className="text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-full w-8 h-8 p-0">
                         <Eye size={16} />
                     </Button>
                 </div>
@@ -178,72 +182,84 @@ export const OrderList = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Order Management</h1>
-                    <p className="text-sm text-gray-400 mt-1">Track and manage store orders.</p>
+                    <h1 className="text-2xl font-black text-zinc-100 tracking-tight uppercase">Quản lý Đơn hàng</h1>
+                    <p className="text-sm text-zinc-500 mt-1 font-medium italic">Workspace: Franchise Store • Theo dõi và quản lý các đơn hàng của bạn.</p>
                 </div>
-                <Button onClick={() => navigate('/orders/create')} className="shrink-0 bg-amber-600 hover:bg-blue-700 text-white shadow-sm">
-                    <Plus className="mr-2 h-4 w-4" /> Create Order
+                <Button onClick={() => navigate('/orders/create')} className="shrink-0 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase tracking-tighter rounded-xl shadow-lg shadow-amber-500/10 h-11 px-6">
+                    <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Tạo Đơn hàng
                 </Button>
             </div>
 
-            <Card className="border-0 shadow-sm ring-1 ring-zinc-700">
-                <div className="p-4 border-b border-zinc-800 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <Card className="border-zinc-800 bg-zinc-900/40 ring-1 ring-white/5 overflow-hidden">
+                <div className="p-4 border-b border-zinc-800/50 bg-zinc-900/20 flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div className="relative w-full md:w-80">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                         <Input
-                            placeholder="Search orders..."
-                            className="pl-10"
+                            placeholder="Tìm mã đơn, tên cửa hàng..."
+                            className="pl-10 bg-zinc-950/50 border-zinc-800 focus:border-amber-500/50 transition-all font-medium py-2 text-sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                        <Filter size={16} className="text-gray-400 mr-1" />
-                        <span className="text-sm text-gray-400 mr-2">Status:</span>
-                        {['all', 'submitted', 'confirmed', 'preparing', 'ready', 'completed', 'rejected'].map(status => (
+                    <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+                        <div className="flex items-center gap-2 pr-3 border-r border-zinc-800 mr-1 shrink-0">
+                            <Filter size={14} className="text-zinc-500" />
+                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Lọc:</span>
+                        </div>
+                        {['all', 'SUBMITTED', 'APPROVED', 'ALLOCATED', 'DELIVERED', 'REJECTED'].map(status => (
                             <button
                                 key={status}
-                                onClick={() => setStatusFilter(status as any)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap
-                                    ${statusFilter === status
-                                        ? 'bg-amber-500/10 border-blue-200 text-amber-500'
-                                        : 'bg-zinc-900/50 border-zinc-700 text-gray-400 hover:bg-zinc-900/80'}`}
+                                onClick={() => setStatusFilter(status)}
+                                className={cn(
+                                    "px-4 py-1.5 rounded-full text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-tighter border",
+                                    statusFilter === status
+                                        ? "bg-amber-500 border-amber-500 text-black shadow-lg shadow-amber-500/20"
+                                        : "bg-zinc-800/50 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+                                )}
                             >
-                                {status === 'all' ? 'All' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                {status === 'all' ? 'TẤT CẢ' :
+                                    status === 'SUBMITTED' ? 'CHỜ DUYỆT' :
+                                        status === 'APPROVED' ? 'ĐÃ DUYỆT' :
+                                            status === 'ALLOCATED' ? 'ĐÃ PHÂN BỔ' :
+                                                status === 'DELIVERED' ? 'HOÀN THÀNH' : 'TỪ CHỐI'}
                             </button>
                         ))}
                     </div>
                 </div>
-                <DataTable
-                    data={filteredOrders}
-                    columns={columns}
-                    keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
-                    isLoading={isLoading}
-                    onRowClick={(order) => setSelectedOrder(order)}
-                />
+                <div className="overflow-hidden">
+                    <DataTable
+                        data={filteredOrders}
+                        columns={columns}
+                        keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
+                        isLoading={isLoading}
+                        onRowClick={(order) => setSelectedOrder(order)}
+                    />
+                </div>
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                    <div className="p-4 border-t border-zinc-800 flex items-center justify-between">
-                        <span className="text-sm text-gray-400">
-                            Page {page + 1} of {totalPages}
+                    <div className="p-4 border-t border-zinc-800 bg-zinc-950/20 flex items-center justify-between">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                            Trang {page + 1} / {totalPages}
                         </span>
                         <div className="flex gap-2">
                             <Button
-                                variant="outline"
+                                variant="secondary"
                                 size="sm"
                                 disabled={page === 0}
                                 onClick={() => setPage(p => Math.max(0, p - 1))}
+                                className="bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200 h-8 font-bold px-4"
                             >
-                                Previous
+                                Trước
                             </Button>
                             <Button
-                                variant="outline"
+                                variant="secondary"
                                 size="sm"
                                 disabled={page >= totalPages - 1}
                                 onClick={() => setPage(p => p + 1)}
+                                className="bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200 h-8 font-bold px-4"
                             >
-                                Next
+                                Sau
                             </Button>
                         </div>
                     </div>

@@ -7,11 +7,28 @@ export const useAuth = () => {
     const handleLogin = async (username: string, pass: string): Promise<string | null> => {
         try {
             const response = await authApi.login(username, pass);
-            console.log('Login API response:', response);
+            console.log('--- AUTH DEBUG: Raw Login Response ---', response);
 
             // Handle both response structures (with or without user object)
             // Type assertion used because authApi might return strict type but we want to be flexible for now
-            const { expiresIn, accessTokenExpiresIn, userId } = response as any;
+            const { expiresIn, accessTokenExpiresIn, userId, storeId, storeName, kitchenId, kitchenName } = response as any;
+
+            console.log('--- AUTH DEBUG: Extracted fields from response ---', { userId, storeId, storeName, kitchenId, kitchenName, expiresIn, accessTokenExpiresIn });
+
+            let decodedToken: any = {};
+            const tokenToSave = response.accessToken || (response as any).token;
+            if (tokenToSave) {
+                try {
+                    const base64Url = tokenToSave.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    decodedToken = JSON.parse(jsonPayload);
+                } catch (e) {
+                    console.error('Failed to parse JWT token on login');
+                }
+            }
 
             const expiry = expiresIn || accessTokenExpiresIn;
             if (expiry) {
@@ -20,19 +37,27 @@ export const useAuth = () => {
 
             // Synthesize user from LoginResponse: Use roles array from backend
             const responseAny = response as any;
-            let userRole = responseAny.roleName || (response.roles && response.roles.length > 0 ? response.roles[0] : '');
+            let userRole = decodedToken.roles ? decodedToken.roles[0] : (responseAny.roleName || (response.roles && response.roles.length > 0 ? response.roles[0] : ''));
+
+            const finalStoreId = decodedToken.storeId !== undefined && decodedToken.storeId !== null ? decodedToken.storeId : responseAny.storeId;
+            const finalStoreName = responseAny.storeName || (decodedToken.storeId ? `Cửa hàng ${decodedToken.storeId}` : undefined);
 
             let userObj = {
-                id: String(response.id || userId || 'default-user-id'),
+                id: String(response.id || userId || decodedToken.userId || 'default-user-id'),
                 name: responseAny.fullName || response.username || username,
                 email: response.email || `${username}@example.com`,
                 role: userRole as any,
-                authorities: response.authorities || responseAny.privileges || [],
-                avatarUrl: undefined
+                authorities: decodedToken.roles || response.authorities || responseAny.privileges || [],
+                avatarUrl: undefined,
+                storeId: finalStoreId,
+                storeName: finalStoreName,
+                kitchenId: decodedToken.coordinatorId || kitchenId,
+                kitchenName: kitchenName,
             };
 
+            console.log('--- AUTH DEBUG: Final User Object to save ---', userObj);
+
             // Update store
-            const tokenToSave = response.accessToken || (response as any).token;
             login(userObj, tokenToSave);
             return null; // Success, no error
         } catch (error: any) {

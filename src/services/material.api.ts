@@ -12,6 +12,11 @@ export const materialApi = {
         return response.data.data;
     },
 
+    getById: async (id: number): Promise<MaterialResponse> => {
+        const response = await axiosClient.get<ApiResponse<MaterialResponse>>(`/materials/${id}`);
+        return response.data.data;
+    },
+
     update: async (id: number, data: MaterialRequest): Promise<MaterialResponse> => {
         const response = await axiosClient.patch<ApiResponse<MaterialResponse>>(`/materials/${id}`, data);
         return response.data.data;

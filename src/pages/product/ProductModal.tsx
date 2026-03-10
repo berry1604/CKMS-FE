@@ -64,11 +64,22 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
 
     const footer = (
         <div className="flex justify-end gap-3 w-full">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-                Cancel
+            <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                disabled={isLoading}
+                className="h-12 px-8 rounded-2xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 font-black uppercase text-[10px] tracking-widest transition-all"
+            >
+                Hủy
             </Button>
-            <Button type="submit" form="product-form" disabled={isLoading} className="min-w-[120px]">
-                {isLoading ? 'Saving...' : (initialData ? 'Update Product' : 'Create Product')}
+            <Button
+                type="submit"
+                form="product-form"
+                disabled={isLoading}
+                className="h-12 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-black uppercase text-[10px] tracking-widest transition-all duration-300 border-0 shadow-2xl shadow-amber-900/40"
+            >
+                {isLoading ? 'Đang lưu...' : (initialData ? 'Cập nhật' : 'Thêm mới')}
             </Button>
         </div>
     );
@@ -77,55 +88,77 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
         <Drawer
             isOpen={isOpen}
             onClose={onClose}
-            title={initialData ? 'Edit Product' : 'Add New Product'}
-            description={initialData ? 'Update product information and inventory.' : 'Create a new product record.'}
+            title={initialData ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
+            description={initialData ? 'Cập nhật thông tin và danh mục sản phẩm.' : 'Khởi tạo bản ghi sản phẩm mới trong hệ thống.'}
             width="max-w-md"
             footer={footer}
         >
-            <form id="product-form" onSubmit={handleSubmit(onSubmitForm)} className="space-y-8">
+            <form id="product-form" onSubmit={handleSubmit(onSubmitForm)} className="space-y-10 py-2">
 
                 {/* Basic Info */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-300 font-medium pb-2 border-b border-zinc-800">
-                        <Package size={18} className="text-amber-600" />
-                        <h3>Basic Information</h3>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                            <Package size={18} className="text-amber-500" />
+                        </div>
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Thông tin cơ bản</h3>
                     </div>
-                    <div className="space-y-4">
-                        <Input
-                            label="Product Name"
-                            placeholder="e.g. Signature Coffee"
-                            error={errors.name?.message}
-                            {...register('name')}
-                        />
-                        <Input
-                            label="Description"
-                            placeholder="e.g. A rich and smooth coffee blend"
-                            error={errors.description?.message}
-                            {...register('description')}
-                        />
 
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Tên sản phẩm</label>
                             <Input
-                                label="Unit"
-                                placeholder="e.g. KG, PCS"
-                                error={errors.unit?.message}
-                                {...register('unit')}
+                                placeholder="VD: Cà phê Signature"
+                                icon={<Package size={18} className="text-zinc-600" />}
+                                error={errors.name?.message}
+                                {...register('name')}
+                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Mô tả chi tiết</label>
                             <Input
-                                label="Category ID"
-                                type="number"
-                                placeholder="1"
-                                icon={<Tag size={16} className="text-gray-400" />}
-                                error={errors.categoryId?.message}
-                                {...register('categoryId', { valueAsNumber: true })}
+                                placeholder="Mô tả ngắn gọn về sản phẩm..."
+                                error={errors.description?.message}
+                                {...register('description')}
+                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
                             />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Đơn vị tính</label>
+                                <Input
+                                    placeholder="KG, Cái, Chai..."
+                                    error={errors.unit?.message}
+                                    {...register('unit')}
+                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Mã danh mục</label>
+                                <Input
+                                    type="number"
+                                    placeholder="1"
+                                    icon={<Tag size={16} className="text-zinc-600" />}
+                                    error={errors.categoryId?.message}
+                                    {...register('categoryId', { valueAsNumber: true })}
+                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Giá bán niên yết (VNĐ)</label>
                             <Input
-                                label="Selling Price"
                                 type="number"
-                                step="0.01"
-                                icon={<span className="text-gray-400 font-bold">$</span>}
+                                step="1000"
+                                placeholder="0"
+                                icon={<span className="text-zinc-600 font-bold">₫</span>}
                                 error={errors.price?.message}
                                 {...register('price', { valueAsNumber: true })}
+                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300 font-mono"
                             />
                         </div>
                     </div>

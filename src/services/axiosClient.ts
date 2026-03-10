@@ -40,16 +40,22 @@ axiosClient.interceptors.response.use(
         return response;
     },
     (error) => {
+        const config = error.config;
+        const url = config?.url || '';
+
         if (error.response?.status === 401) {
             // Token expired or invalid
             sessionStorage.removeItem('accessToken');
             sessionStorage.removeItem('refreshToken');
             window.location.href = '/login';
         } else if (error.response?.status === 403) {
-            const now = Date.now();
-            if (now - last403Toast > 3000) {
-                last403Toast = now;
-                toast.error('Bạn không có quyền thực hiện thao tác này. Vui lòng liên hệ Admin.');
+            // Skip showing toast if we are trying to fetch products/categories (we handle fallback in the component)
+            if (!url.includes('/products') && !url.includes('/categories')) {
+                const now = Date.now();
+                if (now - last403Toast > 3000) {
+                    last403Toast = now;
+                    toast.error('Bạn không có quyền thực hiện thao tác này. Vui lòng liên hệ Admin.');
+                }
             }
         }
 

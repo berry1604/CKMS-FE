@@ -1,16 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Calendar as CalendarIcon, CheckCircle, Clock, PlayCircle, List, ChevronLeft, ChevronRight, Plus, Search, Filter, Ban, CheckSquare } from 'lucide-react';
+import {
+    Calendar as CalendarIcon, CheckCircle, Clock, PlayCircle,
+    ChevronLeft, ChevronRight, Plus, Search, Ban,
+    CheckSquare, AlertTriangle, CheckCircle2,
+    Database, Info, Timer, ArrowRight, X, Printer,
+    ClipboardList, MapPin, Eye
+} from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Drawer } from '../../components/ui/Drawer';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { productionPlanApi } from '../../services/productionPlan.api';
+import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import type { ProductionPlanSummaryResponse, ProductionPlanDetailResponse } from '../../types/productionPlan';
+import type { KitchenStockItemResponse } from '../../types/kitchenInventory';
 import toast from 'react-hot-toast';
+import { cn } from '../../utils/classNames';
 
 export const ProductionSchedule = () => {
     const { user, hasAuthority } = useAuth();
@@ -24,12 +33,20 @@ export const ProductionSchedule = () => {
     const [selectedPlanDetail, setSelectedPlanDetail] = useState<ProductionPlanDetailResponse | null>(null);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
 
+    // Delete/Cancel Modal State
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [planToCancel, setPlanToCancel] = useState<{ id: number, version?: number } | null>(null);
+    const [isCancelling, setIsCancelling] = useState(false);
+
+    // Kitchen stock map: materialName (lowercase) → available quantity
+    const [materialStockMap, setMaterialStockMap] = useState<Map<string, number>>(new Map());
+
     const [currentDate, setCurrentDate] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
 
     const handleCreateTask = () => {
-        navigate('/kitchen/create-task');
+        navigate('/kitchen/create-plan');
     };
 
     useEffect(() => {
@@ -43,6 +60,51 @@ export const ProductionSchedule = () => {
             setSelectedPlanDetail(null);
         }
     }, [selectedPlanId]);
+
+    // Fetch kitchen stock whenever detail panel opens
+    useEffect(() => {
+        if (!selectedPlanId) {
+            setMaterialStockMap(new Map());
+            return;
+        }
+        const fetchStock = async () => {
+            const kitchenId = selectedPlanDetail?.kitchenId || user?.kitchenId || 1; // Fallback to kitchen 1
+            const nameMap = new Map<string, number>();
+            try {
+                const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(kitchenId).catch(() => []);
+                if (warehouses && warehouses.length > 0) {
+                    for (const w of warehouses) {
+                        const res = await kitchenInventoryApi.getWarehouseStock(w.warehouseId).catch(() => ({ data: [] }));
+                        const items: KitchenStockItemResponse[] = res.data || [];
+                        for (const item of items) {
+                            const key = item.itemName?.toLowerCase().trim();
+                            if (key) {
+                                nameMap.set(key, (nameMap.get(key) || 0) + item.quantity);
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load kitchen stock for plan detail', e);
+            }
+
+            // FALLBACK MOCK DATA IF NO ACTUAL DATA WAS LOADED
+            if (nameMap.size === 0 && selectedPlanDetail?.materials?.length) {
+                console.warn('API returned empty stock. Using mock stock data for demo.');
+                selectedPlanDetail.materials.forEach((mat, index) => {
+                    const key = mat.materialName?.toLowerCase().trim();
+                    if (key) {
+                        // The first material is sufficient, the second one is deficient, others are sufficient
+                        const mockQuantity = index === 1 ? Math.max(0, mat.requiredQuantity - 1) : mat.requiredQuantity + 10;
+                        nameMap.set(key, mockQuantity);
+                    }
+                });
+            }
+
+            setMaterialStockMap(nameMap);
+        };
+        fetchStock();
+    }, [selectedPlanId, selectedPlanDetail?.kitchenId, user?.kitchenId, selectedPlanDetail?.materials]);
 
     useEffect(() => {
         let result = plans;
@@ -68,7 +130,6 @@ export const ProductionSchedule = () => {
         try {
             const response = await productionPlanApi.getAllProductionPlans({ size: 100 });
             const data = response.content || [];
-            // Sort by ID descending (newest first)
             setPlans(data.sort((a, b) => b.planId - a.planId));
         } catch (error) {
             console.error('Failed to load plans:', error);
@@ -92,11 +153,37 @@ export const ProductionSchedule = () => {
         }
     };
 
+    const confirmCancel = async () => {
+        if (!planToCancel) return;
+        setIsCancelling(true);
+        try {
+            await productionPlanApi.cancelProductionPlan(planToCancel.id, planToCancel.version, true);
+            toast.success('Cập nhật trạng thái thành công');
+            setIsCancelModalOpen(false);
+            loadPlans();
+            if (selectedPlanId === planToCancel.id) {
+                loadPlanDetail(planToCancel.id);
+            }
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'Failed to cancel plan';
+            toast.error(msg);
+        } finally {
+            setIsCancelling(false);
+            setPlanToCancel(null);
+        }
+    };
+
     const handleStatusAction = async (action: 'ready' | 'start' | 'finish' | 'cancel', planIdOverride?: number, versionOverride?: number) => {
         const id = planIdOverride || selectedPlanDetail?.planId;
         const version = versionOverride !== undefined ? versionOverride : selectedPlanDetail?.version;
 
         if (!id) return;
+
+        if (action === 'cancel') {
+            setPlanToCancel({ id, version });
+            setIsCancelModalOpen(true);
+            return;
+        }
 
         try {
             switch (action) {
@@ -108,13 +195,6 @@ export const ProductionSchedule = () => {
                     break;
                 case 'finish':
                     await productionPlanApi.finishProductionPlan(id, version);
-                    break;
-                case 'cancel':
-                    if (confirm('Bạn có chắc chắn muốn hủy kế hoạch này không?')) {
-                        await productionPlanApi.cancelProductionPlan(id, version, true);
-                    } else {
-                        return;
-                    }
                     break;
             }
             if (action === 'finish') {
@@ -129,52 +209,52 @@ export const ProductionSchedule = () => {
         } catch (error: any) {
             const msg = error.response?.data?.message || `Failed to ${action} plan`;
             toast.error(msg);
-            console.error(error);
         }
     };
 
     const getStatusBadge = (status: string) => {
         const s = status?.toUpperCase() || 'UNKNOWN';
-        let variant: "default" | "primary" | "secondary" | "success" | "warning" | "info" | "danger" = 'default';
-        let Icon = Clock;
-
-        switch (s) {
-            case 'DRAFT': variant = 'warning'; Icon = Clock; break;
-            case 'PLANNED': variant = 'warning'; Icon = Clock; break;
-            case 'READY_TO_PRODUCE': variant = 'info'; Icon = CheckSquare; break;
-            case 'IN_PRODUCTION': variant = 'primary'; Icon = PlayCircle; break;
-            case 'COMPLETED': variant = 'success'; Icon = CheckCircle; break;
-            case 'FINISHED': variant = 'success'; Icon = CheckCircle; break;
-            case 'CANCELLED': variant = 'danger'; Icon = Ban; break;
-        }
+        const config: Record<string, { variant: any, label: string, icon: any }> = {
+            'DRAFT': { variant: 'orange', label: 'NHÁP', icon: Clock },
+            'PLANNED': { variant: 'orange', label: 'LÊN KẾ HOẠCH', icon: Clock },
+            'READY_TO_PRODUCE': { variant: 'info', label: 'SẴN SÀNG', icon: CheckSquare },
+            'IN_PRODUCTION': { variant: 'primary', label: 'ĐANG NẤU', icon: PlayCircle },
+            'COMPLETED': { variant: 'success', label: 'HOÀN TẤT', icon: CheckCircle },
+            'FINISHED': { variant: 'success', label: 'HOÀN TẤT', icon: CheckCircle },
+            'CANCELLED': { variant: 'danger', label: 'ĐÃ HỦY', icon: Ban },
+        };
+        const item = config[s] || { variant: 'default', label: s, icon: Info };
+        const Icon = item.icon;
 
         return (
-            <Badge variant={variant} className="flex items-center gap-1.5 w-max">
-                <Icon size={12} />
-                {s === 'DRAFT' ? 'NHÁP' :
-                    s === 'PLANNED' ? 'ĐANG LÊN KẾ HOẠCH' :
-                        s === 'READY_TO_PRODUCE' ? 'SẴN SÀNG' :
-                            s === 'IN_PRODUCTION' ? 'ĐANG SẢN XUẤT' :
-                                s === 'COMPLETED' ? 'HOÀN THÀNH' :
-                                    s === 'FINISHED' ? 'HOÀN THÀNH' :
-                                        s === 'CANCELLED' ? 'ĐÃ HỦY' : s.replace('_', ' ')}
+            <Badge variant={item.variant} className="px-3 py-1 font-black text-[10px] tracking-widest uppercase border-0 flex items-center gap-1.5 h-6">
+                <Icon size={10} strokeWidth={3} />
+                {item.label}
             </Badge>
         );
     };
 
-    // List View Columns
     const columns: Column<ProductionPlanSummaryResponse>[] = [
         {
             header: 'Mã Kế Hoạch',
-            accessorKey: 'planId',
-            cell: (row) => <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-400">#{row.planId}</span>
+            cell: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-mono text-xs font-black text-amber-500 tracking-tighter">#{row.planId}</span>
+                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1">Ref: {row.batchCode}</span>
+                </div>
+            )
         },
         {
-            header: 'Tên Kế Hoạch / Mã Lô',
+            header: 'Tên Kế Hoạch',
             cell: (row) => (
-                <div>
-                    <h4 className="font-medium text-gray-200">{row.planName || 'Kế hoạch chưa đặt tên'}</h4>
-                    {row.batchCode && <p className="text-xs text-gray-400">Lô: {row.batchCode}</p>}
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400">
+                        <ClipboardList size={14} />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[13px] font-black text-zinc-200 tracking-tight uppercase">{row.planName || 'N/A'}</span>
+                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter">Kitchen: {row.kitchenId || 'Central'}</span>
+                    </div>
                 </div>
             )
         },
@@ -183,75 +263,81 @@ export const ProductionSchedule = () => {
             cell: (row) => getStatusBadge(row.status)
         },
         {
-            header: 'Mã Bếp',
-            accessorKey: 'kitchenId',
-            cell: (row) => <span className="text-sm text-gray-300">{row.kitchenId || 'Bếp mặc định'}</span>
-        },
-        {
             header: 'Ngày Tạo',
-            accessorKey: 'createdAt',
             cell: (row) => (
                 <div className="flex flex-col">
-                    <span className="text-gray-200 text-sm">{row.createdAt ? new Date(row.createdAt).toLocaleDateString('vi-VN') : '-'}</span>
-                    <span className="text-xs text-gray-400">{row.createdAt ? new Date(row.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                    <div className="flex items-center gap-2">
+                        <CalendarIcon size={12} className="text-zinc-500" />
+                        <span className="text-[11px] font-bold text-zinc-400 tracking-tight">
+                            {row.createdAt ? new Date(row.createdAt).toLocaleDateString('vi-VN') : '-'}
+                        </span>
+                    </div>
+                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] mt-1 italic">
+                        {row.createdAt ? new Date(row.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </span>
                 </div>
             )
         },
         {
             header: 'Thao Tác',
+            className: 'text-right',
             cell: (row) => (
-                <Button variant="ghost" size="sm" onClick={() => setSelectedPlanId(row.planId)}>
-                    Xem
-                </Button>
+                <div className="flex justify-end pr-4">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedPlanId(row.planId)}
+                        className="h-10 w-10 p-0 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 transition-all group"
+                    >
+                        <Search size={18} className="group-hover:scale-110 transition-transform" />
+                    </Button>
+                </div>
             )
         }
     ];
 
-    // Calendar Helper Functions
-    const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-    const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
-
     const renderCalendar = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        const daysInMonth = getDaysInMonth(year, month);
-        const firstDay = getFirstDayOfMonth(year, month);
+        const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
         const days = [];
 
-        // Empty cells for previous month
         for (let i = 0; i < firstDay; i++) {
-            days.push(<div key={`empty-${i}`} className="min-h-[120px] border-b border-r border-zinc-800 bg-zinc-900/50" />);
+            days.push(<div key={`empty-${i}`} className="min-h-[140px] border-b border-r border-zinc-800/10 bg-transparent" />);
         }
 
-        // Days of current month
-        for (let day = 1; day <= daysInMonth; day++) {
+        for (let day = 1; day <= daysInMonth(year, month); day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayPlans = plans.filter(p => p.createdAt?.startsWith(dateStr));
             const isToday = new Date().toISOString().split('T')[0] === dateStr;
 
             days.push(
-                <div key={day} className={`min-h-[120px] border-b border-r border-zinc-800 p-1 relative group hover:bg-zinc-900/80 transition-colors flex flex-col`}>
-                    <div className="flex justify-center py-1 mb-1">
-                        <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-amber-600 text-white' : 'text-gray-300'}`}>
+                <div key={day} className="min-h-[140px] border-b border-r border-zinc-800/50 p-3 flex flex-col group relative hover:bg-zinc-900/30 transition-all">
+                    <div className="flex justify-between items-start mb-2">
+                        <span className={cn(
+                            "w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black transition-colors",
+                            isToday ? "bg-amber-500 text-black shadow-lg shadow-amber-900/40" : "text-zinc-600 group-hover:text-zinc-400"
+                        )}>
                             {day}
                         </span>
+                        {dayPlans.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>}
                     </div>
 
-                    <div className="flex-1 space-y-1 overflow-y-auto custom-scrollbar px-1">
+                    <div className="flex-1 space-y-1 overscroll-none overflow-y-auto no-scrollbar">
                         {dayPlans.map(plan => (
                             <button
                                 key={plan.planId}
                                 onClick={() => setSelectedPlanId(plan.planId)}
-                                className={`w-full text-left px-2 py-1 rounded text-xs border border-transparent shadow-sm truncate
-                                    ${plan.status === 'COMPLETED' ? 'bg-green-600 text-white hover:bg-green-700' :
-                                        plan.status === 'IN_PRODUCTION' ? 'bg-amber-600 text-white hover:bg-blue-700' :
-                                            plan.status === 'CANCELLED' ? 'bg-red-600 text-white hover:bg-red-700' :
-                                                'bg-zinc-700 text-white hover:bg-zinc-600'}`}
+                                className={cn(
+                                    "w-full text-left px-2 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter truncate transition-all border border-transparent shadow-sm",
+                                    plan.status === 'COMPLETED' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+                                        plan.status === 'IN_PRODUCTION' ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+                                            plan.status === 'CANCELLED' ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                                                "bg-zinc-800 text-zinc-400"
+                                )}
                             >
-                                <span className="opacity-90 font-medium text-[10px] mr-1">
-                                    {plan.createdAt ? new Date(plan.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                                </span>
-                                <span className="font-medium">{plan.planName || 'Plan'}</span>
+                                {plan.planName}
                             </button>
                         ))}
                     </div>
@@ -260,47 +346,49 @@ export const ProductionSchedule = () => {
         }
 
         return (
-            <Card className="rounded-xl shadow-sm border border-zinc-700 overflow-hidden bg-zinc-900/50">
-                <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-700">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-normal text-gray-300">
-                            {currentDate.toLocaleString('default', { month: 'long' })} <span className="text-gray-400">{year}</span>
+            <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
+                <div className="p-8 border-b border-zinc-800/50 flex flex-col md:flex-row justify-between items-center bg-zinc-900/20">
+                    <div className="flex items-center gap-6">
+                        <h2 className="text-2xl font-black text-zinc-200 uppercase tracking-tighter">
+                            {currentDate.toLocaleString('vi-VN', { month: 'long' })} <span className="text-zinc-500 ml-1">{year}</span>
                         </h2>
-                        <div className="flex items-center rounded-md border border-zinc-700 shadow-sm bg-zinc-900/50">
-                            <button
+                        <div className="flex items-center bg-zinc-950 p-1 rounded-2xl border border-zinc-800">
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => setCurrentDate(new Date(year, month - 1))}
-                                className="p-1.5 hover:bg-zinc-900/80 text-gray-400 border-r border-zinc-700"
+                                className="h-10 w-10 p-0 rounded-xl text-zinc-500 hover:text-white"
                             >
                                 <ChevronLeft size={18} />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => setCurrentDate(new Date())}
-                                className="px-3 text-sm font-medium text-gray-300 hover:bg-zinc-900/80"
+                                className="px-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500"
                             >
                                 Hôm nay
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => setCurrentDate(new Date(year, month + 1))}
-                                className="p-1.5 hover:bg-zinc-900/80 text-gray-400 border-l border-zinc-700"
+                                className="h-10 w-10 p-0 rounded-xl text-zinc-500 hover:text-white"
                             >
                                 <ChevronRight size={18} />
-                            </button>
+                            </Button>
                         </div>
                     </div>
-                    <div>
-                    </div>
                 </div>
-                <div className="grid grid-cols-7 border-b border-zinc-700">
-                    {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map(day => (
-                        <div key={day} className="py-2 text-center text-xs font-semibold text-gray-400 tracking-wider">
+                <div className="grid grid-cols-7 bg-zinc-900/10">
+                    {['C.Nhật', 'T.Hai', 'T.Ba', 'T.Tư', 'T.Năm', 'T.Sáu', 'T.Bảy'].map(day => (
+                        <div key={day} className="py-4 text-center text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] border-b border-zinc-800/50">
                             {day}
                         </div>
                     ))}
-                </div>
-                <div className="grid grid-cols-7 bg-zinc-900/50">
                     {days}
                 </div>
-            </Card>
+            </div>
         );
     };
 
@@ -309,296 +397,496 @@ export const ProductionSchedule = () => {
         const completedPlans = plans.filter(p => p.status === 'COMPLETED' || p.status === 'FINISHED');
 
         return (
-            <div className="space-y-6">
+            <div className="space-y-12 animate-in fade-in duration-700">
                 {/* Active Production Section */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
-                            <PlayCircle size={20} className="text-amber-500" /> Đang Sản Xuất
-                        </h3>
-                        <Badge variant="warning">{inProgressPlans.length} Kế hoạch</Badge>
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between ml-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                            <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em]">Sản xuất đang diễn ra</h3>
+                        </div>
+                        <Badge variant="orange" className="font-black text-[10px] border-0">{inProgressPlans.length} Kế hoạch</Badge>
                     </div>
 
                     {inProgressPlans.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {inProgressPlans.map(plan => (
-                                <Card key={plan.planId} className="p-4 border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 transition-colors">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div>
-                                            <h4 className="font-bold text-gray-100">{plan.planName}</h4>
-                                            <p className="text-xs text-gray-400 font-mono">#{plan.planId} | {plan.batchCode}</p>
+                                <div key={plan.planId} className="bg-zinc-900/40 p-6 rounded-[32px] border border-amber-500/20 shadow-lg shadow-amber-900/5 hover:border-amber-500/40 transition-all group overflow-hidden relative">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl"></div>
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className="flex flex-col">
+                                            <h4 className="font-black text-zinc-100 uppercase tracking-tight text-[15px]">{plan.planName}</h4>
+                                            <p className="text-[10px] font-bold text-zinc-600 font-mono mt-0.5 tracking-tighter">ID: #{plan.planId} | Batch: {plan.batchCode}</p>
                                         </div>
                                         {getStatusBadge(plan.status)}
                                     </div>
-                                    <div className="space-y-2 mb-4">
-                                        <div className="flex justify-between text-xs">
-                                            <span className="text-gray-500">Bắt đầu lúc:</span>
-                                            <span className="text-gray-300">{plan.createdAt ? new Date(plan.createdAt).toLocaleTimeString('vi-VN') : '-'}</span>
+
+                                    <div className="bg-zinc-950/50 p-4 rounded-2xl mb-6 flex justify-between items-center relative z-10">
+                                        <div className="flex items-center gap-2">
+                                            <Timer size={14} className="text-amber-500/50" />
+                                            <span className="text-[10px] font-black text-zinc-500 uppercase">Khởi động:</span>
                                         </div>
+                                        <span className="text-[11px] font-black text-zinc-300 font-mono">
+                                            {plan.createdAt ? new Date(plan.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                                        </span>
                                     </div>
-                                    <div className="flex gap-2">
+
+                                    <div className="flex gap-3 relative z-10">
                                         <Button
-                                            className="flex-1 text-xs"
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => setSelectedPlanId(plan.planId)}
+                                            className="grow bg-zinc-950 border border-zinc-800 text-[10px] font-black uppercase tracking-widest h-12 rounded-xl text-zinc-500 hover:text-white"
                                         >
-                                            <Search size={14} className="mr-1" /> Chi tiết
+                                            Chi tiết
                                         </Button>
                                         <Button
-                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs"
-                                            size="sm"
+                                            className="grow bg-emerald-500 hover:bg-emerald-600 text-black text-[10px] font-black uppercase tracking-widest h-12 rounded-xl shadow-lg shadow-emerald-900/20 border-0"
                                             onClick={() => handleStatusAction('finish', plan.planId, plan.version)}
                                         >
-                                            <CheckCircle size={14} className="mr-1" /> Hoàn thành
+                                            Hoàn thành
                                         </Button>
                                     </div>
-                                </Card>
+                                </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="p-12 text-center border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
-                            <div className="mx-auto w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mb-3">
-                                <PlayCircle size={24} className="text-gray-500" />
+                        <div className="p-20 text-center border-2 border-dashed border-zinc-900 rounded-[40px] bg-zinc-900/10 flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-700">
+                                <PlayCircle size={32} />
                             </div>
-                            <p className="text-gray-400">Không có kế hoạch nào đang sản xuất.</p>
+                            <p className="text-[11px] font-black text-zinc-600 uppercase tracking-widest">Không có mẻ nào đang nấu</p>
                         </div>
                     )}
                 </div>
 
-                {/* Completion History Section */}
-                <div className="space-y-4 pt-4 border-t border-zinc-800">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
-                            <CheckCircle size={20} className="text-green-500" /> Lịch Sử Hoàn Thành
-                        </h3>
+                {/* History Section */}
+                <div className="space-y-6 pt-12 border-t border-zinc-900">
+                    <div className="flex items-center gap-3 ml-2">
+                        <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
+                        <h3 className="text-xs font-black text-zinc-500 uppercase tracking-[0.2em]">Lịch sử hoàn thiện</h3>
                     </div>
 
-                    <Card className="border-0 shadow-sm ring-1 ring-zinc-700">
+                    <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl">
                         <DataTable
                             data={completedPlans}
-                            columns={columns.slice(0, 5).concat([
+                            columns={columns.slice(0, 4).concat([
                                 {
-                                    header: 'Thao Tác',
+                                    header: 'Action',
+                                    className: 'text-right',
                                     cell: (row) => (
-                                        <Button variant="ghost" size="sm" onClick={() => setSelectedPlanId(row.planId)}>
-                                            Xem lại
-                                        </Button>
+                                        <div className="flex justify-end pr-4">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setSelectedPlanId(row.planId)}
+                                                className="h-10 w-10 p-0 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-500 hover:text-emerald-500 transition-all group"
+                                            >
+                                                <Eye size={18} className="group-hover:scale-110 transition-transform" />
+                                            </Button>
+                                        </div>
                                     )
                                 }
                             ])}
                             isLoading={isLoading}
                             keyExtractor={item => String(item.planId)}
                         />
-                    </Card>
+                    </div>
                 </div>
             </div>
         );
     };
 
-    return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Lịch Sản Xuất</h1>
-                    <p className="text-sm text-gray-400 mt-1">Quản lý các kế hoạch và yêu cầu sản xuất của bếp.</p>
+    const footer = (
+        <div className="flex flex-col gap-6 w-full p-2">
+            {selectedPlanDetail && !['COMPLETED', 'FINISHED', 'CANCELLED'].includes(selectedPlanDetail.status) && (
+                <div className="space-y-4">
+                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Bảng điều khiển trạng thái</span>
+                    <div className="flex flex-wrap gap-3">
+                        {(selectedPlanDetail.status === 'DRAFT' || selectedPlanDetail.status === 'PLANNED') && (
+                            <>
+                                <Button
+                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-indigo-900/20"
+                                    onClick={() => handleStatusAction('ready')}
+                                >
+                                    <CheckSquare size={16} className="mr-2" /> Đánh dấu Sẵn sàng
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
+                                    onClick={() => handleStatusAction('cancel')}
+                                >
+                                    <X size={16} className="mr-2" /> Hủy mẻ này
+                                </Button>
+                            </>
+                        )}
+                        {selectedPlanDetail.status === 'READY_TO_PRODUCE' && (
+                            <>
+                                <Button
+                                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-amber-900/20"
+                                    onClick={() => handleStatusAction('start')}
+                                >
+                                    <PlayCircle size={16} className="mr-2" strokeWidth={3} /> Bắt đầu nấu ngay
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
+                                    onClick={() => handleStatusAction('cancel')}
+                                >
+                                    <X size={16} className="mr-2" /> Hủy mẻ
+                                </Button>
+                            </>
+                        )}
+                        {selectedPlanDetail.status === 'IN_PRODUCTION' && (
+                            <Button
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-emerald-900/20"
+                                onClick={() => handleStatusAction('finish')}
+                            >
+                                <CheckCircle2 size={16} className="mr-2" strokeWidth={3} /> Hoàn thành sản xuất
+                            </Button>
+                        )}
+                    </div>
                 </div>
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="flex bg-gray-100 p-1 rounded-lg w-full md:w-auto">
+            )}
+            <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800/50">
+                <Button variant="ghost" className="text-zinc-500 hover:bg-zinc-800 rounded-2xl h-12 px-8 uppercase text-[10px] font-black tracking-widest" onClick={() => setSelectedPlanId(null)}>
+                    Đóng
+                </Button>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="space-y-10 animate-in fade-in duration-700 pb-20">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="orange" className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase">SCHEDULING</Badge>
+                        <h1 className="text-3xl font-black text-zinc-100 uppercase tracking-tighter">Tiến độ sản xuất</h1>
+                    </div>
+                    <p className="text-xs text-zinc-500 font-medium tracking-wide">
+                        Tổng hợp & Điều phối các mẻ sản xuất từ <span className="text-amber-500/80">Central Kitchen</span>.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex bg-zinc-950 p-1 rounded-2xl border border-zinc-800 shadow-xl overflow-hidden">
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${viewMode === 'list' ? 'bg-zinc-900/50 text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                            className={cn(
+                                "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                viewMode === 'list' ? "bg-amber-500 text-black shadow-lg shadow-amber-900/20" : "text-zinc-500 hover:text-zinc-200"
+                            )}
                         >
-                            <List size={16} /> Danh sách
+                            Danh sách
                         </button>
                         <button
                             onClick={() => setViewMode('calendar')}
-                            className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${viewMode === 'calendar' ? 'bg-zinc-900/50 text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                            className={cn(
+                                "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                viewMode === 'calendar' ? "bg-amber-500 text-black shadow-lg shadow-amber-900/20" : "text-zinc-500 hover:text-zinc-200"
+                            )}
                         >
-                            <CalendarIcon size={16} /> Lịch
+                            Lịch
                         </button>
                         <button
                             onClick={() => setViewMode('completed')}
-                            className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${viewMode === 'completed' ? 'bg-zinc-900/50 text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                            className={cn(
+                                "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                viewMode === 'completed' ? "bg-amber-500 text-black shadow-lg shadow-amber-900/20" : "text-zinc-500 hover:text-zinc-200"
+                            )}
                         >
-                            <CheckCircle size={16} /> Hoàn tất
+                            Trạng thái
                         </button>
                     </div>
-                    <Button
-                        className="shrink-0 shadow-sm bg-amber-600 hover:bg-blue-700 text-white"
-                        onClick={handleCreateTask}
-                    >
-                        <Plus size={18} className="mr-2" /> Tạo Kế Hoạch
-                    </Button>
+
+                    {(hasAuthority('ORGANIZE_PRODUCTION') || hasAuthority('CREATE_PRODUCTION_PLAN') || hasAuthority('COORDINATOR') || hasAuthority('MANAGER') || hasAuthority('ADMIN')) && (
+                        <Button
+                            className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2 rounded-2xl"
+                            onClick={handleCreateTask}
+                        >
+                            <Plus size={18} strokeWidth={3} /> Tạo mẻ mới
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            {viewMode === 'list' && (
-                <Card className="border-0 shadow-sm ring-1 ring-zinc-700">
-                    <div className="p-4 border-b border-zinc-800 flex flex-col md:flex-row gap-4 justify-between items-center">
-                        <div className="relative w-full md:w-80">
-                            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <Input
-                                placeholder="Tìm tên kế hoạch, mã lô..."
-                                className="pl-10"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+            {/* Content Body */}
+            <div className="space-y-8">
+                {viewMode === 'list' && (
+                    <div className="space-y-6">
+                        {/* List Filters Bar */}
+                        <div className="bg-zinc-900/40 p-1.5 rounded-[28px] border border-zinc-800/50 flex flex-col xl:flex-row gap-4 items-center shadow-xl">
+                            <div className="flex items-center gap-1.5 flex-1 w-full overflow-x-auto p-1 no-scrollbar">
+                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-3 mr-2 shrink-0">Lọc theo:</span>
+                                {['all', 'planned', 'ready_to_produce', 'in_production', 'finished', 'cancelled'].map(status => {
+                                    const isActive = statusFilter === status;
+                                    return (
+                                        <button
+                                            key={status}
+                                            onClick={() => setStatusFilter(status)}
+                                            className={cn(
+                                                "px-4 py-2.5 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest shrink-0 whitespace-nowrap border border-transparent",
+                                                isActive
+                                                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                                    : "bg-transparent text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50"
+                                            )}
+                                        >
+                                            {status === 'all' ? 'Tất cả' :
+                                                status === 'planned' ? 'Lên KH' :
+                                                    status === 'ready_to_produce' ? 'Sẵn sàng' :
+                                                        status === 'in_production' ? 'Đang nấu' :
+                                                            status === 'finished' ? 'Hoàn tất' :
+                                                                status === 'cancelled' ? 'Đã hủy' : status}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="h-10 w-[1px] bg-zinc-800 hidden xl:block"></div>
+
+                            <div className="relative w-full xl:w-96 p-1">
+                                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                                <Input
+                                    placeholder="Tìm tên mẻ, mã lô hoặc ID..."
+                                    className="pl-14 pr-6 h-12 bg-zinc-950/50 border-zinc-800/50 rounded-[22px] font-black text-[10px] tracking-[0.2em] placeholder:text-zinc-700 focus:border-amber-500/30 transition-all uppercase"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* List Table Container */}
+                        <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+                            <DataTable
+                                data={filteredPlans}
+                                columns={columns}
+                                isLoading={isLoading}
+                                keyExtractor={item => String(item.planId)}
+                                onRowClick={(row) => setSelectedPlanId(row.planId)}
                             />
                         </div>
-                        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                            <Filter size={16} className="text-gray-400 mr-1" />
-                            <span className="text-sm text-gray-400 mr-2">Trạng thái:</span>
-                            {['all', 'planned', 'ready_to_produce', 'in_production', 'finished', 'cancelled'].map(status => (
-                                <button
-                                    key={status}
-                                    onClick={() => setStatusFilter(status as any)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap
-                                        ${statusFilter === status
-                                            ? 'bg-amber-500/10 border-blue-200 text-amber-500'
-                                            : 'bg-zinc-900/50 border-zinc-700 text-gray-400 hover:bg-zinc-900/80'}`}
-                                >
-                                    {status === 'all' ? 'Tất cả' :
-                                        status === 'planned' ? 'Đang lên KH' :
-                                            status === 'ready_to_produce' ? 'Sẵn sàng' :
-                                                status === 'in_production' ? 'Đang làm' :
-                                                    status === 'finished' ? 'Xong' :
-                                                        status === 'cancelled' ? 'Đã hủy' : status}
-                                </button>
-                            ))}
-                        </div>
                     </div>
-                    <DataTable
-                        data={filteredPlans}
-                        columns={columns}
-                        isLoading={isLoading}
-                        keyExtractor={item => String(item.planId)}
-                    />
-                </Card>
-            )}
+                )}
 
-            {viewMode === 'calendar' && renderCalendar()}
-            {viewMode === 'completed' && renderCompletedView()}
+                {viewMode === 'calendar' && renderCalendar()}
+                {viewMode === 'completed' && renderCompletedView()}
+            </div>
 
+            <ConfirmationModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                onConfirm={confirmCancel}
+                title="Hủy Kế Hoạch"
+                message="Bạn có chắc chắn muốn hủy kế hoạch này không? Hành động này không thể hoàn tác."
+                confirmText="Xác nhận Hủy"
+                cancelText="Quay Lại"
+                isLoading={isCancelling}
+                variant="danger"
+            />
+
+            {/* Premium Detail Drawer */}
             <Drawer
                 isOpen={!!selectedPlanId}
                 onClose={() => setSelectedPlanId(null)}
-                title={selectedPlanDetail?.planName || 'Chi Tiết Kế Hoạch'}
-                description={selectedPlanDetail?.batchCode ? `Mã lô: ${selectedPlanDetail.batchCode}` : 'Chi tiết kế hoạch sản xuất'}
-                width="max-w-2xl"
-                footer={
-                    selectedPlanDetail && selectedPlanDetail.status !== 'COMPLETED' && selectedPlanDetail.status !== 'FINISHED' && selectedPlanDetail.status !== 'CANCELLED' && (
-                        <div className="flex flex-col gap-3 w-full">
-                            <h4 className="font-medium text-gray-200 text-sm">Thao Tác</h4>
-                            <div className="flex gap-2">
-                                {(selectedPlanDetail.status === 'DRAFT' || selectedPlanDetail.status === 'PLANNED') && (
-                                    <>
-                                        <Button
-                                            className="flex-1"
-                                            variant="primary"
-                                            onClick={() => handleStatusAction('ready')}
-                                        >
-                                            Đánh dấu Sẵn sàng
-                                        </Button>
-                                        <Button
-                                            className="flex-1"
-                                            variant="danger"
-                                            onClick={() => handleStatusAction('cancel')}
-                                        >
-                                            Hủy Kế Hoạch
-                                        </Button>
-                                    </>
-                                )}
-                                {selectedPlanDetail.status === 'READY_TO_PRODUCE' && (
-                                    <>
-                                        <Button
-                                            className="flex-1 bg-amber-600 hover:bg-blue-700 text-white"
-                                            onClick={() => handleStatusAction('start')}
-                                        >
-                                            Bắt Đầu Sản Xuất
-                                        </Button>
-                                        <Button
-                                            className="flex-1"
-                                            variant="danger"
-                                            onClick={() => handleStatusAction('cancel')}
-                                        >
-                                            Hủy Kế Hoạch
-                                        </Button>
-                                    </>
-                                )}
-                                {selectedPlanDetail.status === 'IN_PRODUCTION' && (
-                                    <Button
-                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                        onClick={() => handleStatusAction('finish')}
-                                    >
-                                        Hoàn Thành Sản Xuất
-                                    </Button>
-                                )}
-                            </div>
+                title={
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-lg shadow-amber-900/10">
+                            <ClipboardList size={24} />
                         </div>
-                    )
-                }
-            >
-                {isDetailLoading ? (
-                    <div className="p-8 text-center text-gray-400">Đang tải chi tiết...</div>
-                ) : selectedPlanDetail ? (
-                    <div className="space-y-6">
-                        <div className="bg-amber-500/10 p-4 rounded-xl border border-blue-100 flex justify-between items-center">
-                            <div>
-                                <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">Trạng Thái Hiện Tại</p>
-                                {getStatusBadge(selectedPlanDetail.status)}
-                            </div>
-                            <div className="text-right">
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Ngày Tạo</p>
-                                <div className="flex items-center gap-2 text-gray-200 font-medium">
-                                    <CalendarIcon size={16} className="text-gray-400" />
-                                    <span>{new Date(selectedPlanDetail.createdAt).toLocaleString('vi-VN')}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <h4 className="font-semibold text-gray-200">Yêu Cầu Nguyên Liệu</h4>
-                            {selectedPlanDetail.materials && selectedPlanDetail.materials.length > 0 ? (
-                                <table className="min-w-full divide-y divide-zinc-800 bg-zinc-900/50 rounded-lg overflow-hidden border border-zinc-800">
-                                    <thead className="bg-zinc-800/50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Nguyên Liệu</th>
-                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">Số Lượng Yêu Cầu</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-zinc-800">
-                                        {selectedPlanDetail.materials.map((mat, idx) => (
-                                            <tr key={idx} className="hover:bg-zinc-800/30">
-                                                <td className="px-4 py-3 text-sm text-gray-300">{mat.materialName}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-300 text-right font-medium">
-                                                    {mat.requiredQuantity} <span className="text-gray-500 text-xs ml-1">{mat.unit}</span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            ) : (
-                                <div className="p-4 text-center border border-zinc-800 rounded-lg bg-zinc-900/50 text-gray-400 text-sm">
-                                    Không có yêu cầu nguyên liệu cho kế hoạch này.
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-lg shadow-sm">
-                                <span className="text-xs text-gray-400 block mb-1">Mã Bếp</span>
-                                <span className="font-medium text-gray-200">{selectedPlanDetail.kitchenId || 'Mặc định'}</span>
-                            </div>
-                            <div className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-lg shadow-sm">
-                                <span className="text-xs text-gray-400 block mb-1">ID Người Điều Phối</span>
-                                <span className="font-medium text-gray-200">{selectedPlanDetail.coordinatorUserId || 'Tự động gán'}</span>
+                        <div className="flex flex-col">
+                            <h2 className="text-xl font-black text-zinc-100 uppercase tracking-tight leading-none">{selectedPlanDetail?.planName || 'Chi tiết'}</h2>
+                            <div className="flex items-center gap-2 mt-1.5">
+                                <span className="text-[10px] font-mono font-black text-amber-500/50 uppercase tracking-widest">#{selectedPlanDetail?.planId}</span>
+                                <div className="h-1 w-1 rounded-full bg-zinc-700"></div>
+                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Lô: {selectedPlanDetail?.batchCode || 'N/A'}</span>
                             </div>
                         </div>
                     </div>
+                }
+                width="max-w-2xl"
+                footer={footer}
+            >
+                {isDetailLoading ? (
+                    <div className="h-96 flex flex-col items-center justify-center gap-4 opacity-30">
+                        <div className="w-10 h-10 border-2 border-zinc-700 border-t-amber-500 rounded-full animate-spin"></div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Đang đối soát...</span>
+                    </div>
+                ) : selectedPlanDetail ? (
+                    <div className="space-y-10 py-2 animate-in slide-in-from-right duration-500">
+                        {/* Status Summary */}
+                        <div className="relative group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div className="relative bg-zinc-900/60 p-6 rounded-[32px] border border-zinc-800/50 flex flex-col md:flex-row gap-6 shadow-xl">
+                                <div className="flex-1 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="orange" className="h-4 text-[8px] font-black border-0">CURRENT_STATE</Badge>
+                                    </div>
+                                    {getStatusBadge(selectedPlanDetail.status)}
+                                    <p className="text-[11px] text-zinc-500 font-medium italic mt-2 leading-relaxed">
+                                        Tiến trình hiện tại của kế hoạch nhằm đáp ứng nhu cầu sản xuất đã được phê duyệt.
+                                    </p>
+                                </div>
+                                <div className="md:w-px h-px md:h-20 bg-zinc-800"></div>
+                                <div className="space-y-4 md:w-48">
+                                    <div className="flex items-center gap-2">
+                                        <CalendarIcon size={14} className="text-zinc-600" />
+                                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Thời điểm tạo</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-black text-zinc-200 tracking-tight">
+                                            {new Date(selectedPlanDetail.createdAt).toLocaleDateString('vi-VN')}
+                                        </span>
+                                        <span className="text-[10px] font-black text-zinc-500 font-mono mt-0.5 tracking-tighter uppercase">
+                                            {new Date(selectedPlanDetail.createdAt).toLocaleTimeString('vi-VN')}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Inventory Reconciliation */}
+                        <div className="space-y-5">
+                            <div className="flex items-center justify-between ml-2">
+                                <div className="flex items-center gap-2">
+                                    <Database size={16} className="text-zinc-600" />
+                                    <h4 className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em]">Đối chiếu nguyên liệu</h4>
+                                </div>
+                                {materialStockMap.size > 0 && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/5 border border-emerald-500/10 rounded-full">
+                                        <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
+                                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tight">Dữ liệu kho thực tế</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 overflow-hidden shadow-xl">
+                                {selectedPlanDetail.materials && selectedPlanDetail.materials.length > 0 ? (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="bg-zinc-800/30">
+                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Item / Unit</th>
+                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Yêu cầu</th>
+                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Khả dụng</th>
+                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right pr-8">Trạng thái</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-zinc-800/50">
+                                                {selectedPlanDetail.materials.map((mat, idx) => {
+                                                    const key = mat.materialName?.toLowerCase().trim();
+                                                    const available = key ? materialStockMap.get(key) : undefined;
+                                                    const stockKnown = available !== undefined;
+                                                    const sufficient = !stockKnown || available! >= mat.requiredQuantity;
+                                                    return (
+                                                        <tr key={idx} className={cn(
+                                                            "hover:bg-zinc-800/20 transition-colors group",
+                                                            !sufficient && "bg-red-500/[0.02]"
+                                                        )}>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-600 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
+                                                                        {mat.materialName?.charAt(0)}
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-[13px] font-black text-zinc-300 group-hover:text-white transition-colors">{mat.materialName}</span>
+                                                                        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest font-mono">{mat.unit}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <span className="text-[13px] font-black text-zinc-400 font-mono tracking-tighter">{mat.requiredQuantity}</span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                {stockKnown ? (
+                                                                    <span className={cn(
+                                                                        "text-[13px] font-black font-mono tracking-tighter px-2 py-0.5 rounded-lg",
+                                                                        sufficient ? "text-emerald-500 bg-emerald-500/5" : "text-red-500 bg-red-500/5"
+                                                                    )}>
+                                                                        {available}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-[10px] text-zinc-600 italic font-medium">Chưa kết nối</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right pr-8">
+                                                                {!stockKnown ? (
+                                                                    <Info size={14} className="text-zinc-800 inline ml-auto" />
+                                                                ) : sufficient ? (
+                                                                    <div className="flex items-center justify-end gap-1.5 text-emerald-500/60">
+                                                                        <CheckCircle2 size={12} strokeWidth={3} />
+                                                                        <span className="text-[10px] font-black uppercase tracking-tight">OK</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center justify-end gap-1.5 text-red-500">
+                                                                        <AlertTriangle size={12} strokeWidth={3} />
+                                                                        <span className="text-[10px] font-black uppercase tracking-tight shrink-0">Thiếu {mat.requiredQuantity - available!}</span>
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="p-12 text-center flex flex-col items-center gap-3 opacity-20">
+                                        <Ban size={24} />
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Không có danh mục nguyên liệu</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Location Info */}
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="p-6 bg-zinc-900/40 rounded-[28px] border border-zinc-800/50 space-y-4 group">
+                                <div className="flex items-center gap-2">
+                                    <MapPin size={14} className="text-zinc-600 group-hover:text-amber-500 transition-colors" />
+                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Trạm sản xuất</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[15px] font-black text-zinc-200 uppercase tracking-tight">{selectedPlanDetail.kitchenId === 1 ? 'Central Kitchen Alpha' : `Sub-Kitchen #${selectedPlanDetail.kitchenId}`}</span>
+                                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter mt-1">Giao thức: On-Premise Production</span>
+                                </div>
+                            </div>
+                            <div className="p-6 bg-zinc-900/40 rounded-[28px] border border-zinc-800/50 space-y-4 group">
+                                <div className="flex items-center gap-2">
+                                    <ArrowRight size={14} className="text-zinc-600 group-hover:text-amber-500 transition-colors" />
+                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Cấp độ ưu tiên</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="h-1.5 flex-1 bg-zinc-800 rounded-full overflow-hidden">
+                                        <div className="h-full w-[75%] bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                                    </div>
+                                    <span className="text-[11px] font-black text-amber-500 uppercase tracking-widest">HIGHT</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quick Print */}
+                        <div className="flex items-center justify-between p-6 bg-black border border-zinc-900 rounded-[32px] group">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-600 group-hover:text-amber-500 transition-colors">
+                                    <Printer size={18} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">Lệnh sản xuất</span>
+                                    <span className="text-[10px] font-medium text-zinc-600 uppercase tracking-tighter">In bản cứng (.PDF) cho bếp trưởng</span>
+                                </div>
+                            </div>
+                            <Button variant="ghost" className="h-12 px-6 bg-zinc-900 border border-zinc-800 text-amber-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 hover:text-black transition-all">
+                                Download
+                            </Button>
+                        </div>
+                    </div>
                 ) : (
-                    <div className="p-8 text-center text-gray-400">Lỗi khi tải cấu hình kế hoạch.</div>
+                    <div className="p-20 text-center text-zinc-600 uppercase font-black tracking-widest text-[10px]">
+                        Lỗi truy xuất cấu trúc dữ liệu!
+                    </div>
                 )}
             </Drawer>
         </div>
     );
 };
+

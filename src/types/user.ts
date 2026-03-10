@@ -1,5 +1,7 @@
 export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF' | 'COORDINATOR' | 'STORE_STAFF' | 'KITCHEN_STAFF' | 'SUPPLY_COORDINATOR' | string;
 
+export type UserStatus = 'PENDING_VERIFICATION' | 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'DELETED';
+
 export interface User {
     id: string;
     name: string;
@@ -12,6 +14,11 @@ export interface User {
     bio?: string;
     joinDate?: string;
     isActive?: boolean;
+    status?: UserStatus;
+    storeId?: number;
+    storeName?: string;
+    kitchenId?: number;
+    kitchenName?: string;
 }
 
 export interface CreateUserRequest {
@@ -23,15 +30,15 @@ export interface CreateUserRequest {
 }
 
 export interface CreateUserResponse {
-    id: number;
     username: string;
     email: string;
-    roleName: string;
-    isActive: boolean;
+    fullName: string;
+    token: string;
+    message: string;
 }
 
 export interface UserResponse {
-    id: number;
+    userId: number;
     username: string;
     email: string;
     fullName: string;
@@ -41,6 +48,7 @@ export interface UserResponse {
     kitchenId?: number;
     kitchenName?: string;
     isActive: boolean;
+    status: string;
     createdAt?: string;
 }
 
@@ -50,6 +58,7 @@ export interface GetUsersParams {
     role?: string;
     status?: string;
     search?: string;
+    storeId?: number;
 }
 
 export interface AuthState {

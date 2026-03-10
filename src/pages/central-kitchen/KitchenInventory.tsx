@@ -1,32 +1,28 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, TrendingUp, Filter, Package, Leaf } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
+import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, TrendingUp, Package, Leaf, Edit, Trash2, X, Save } from 'lucide-react';
 import { DataTable, type Column } from '../../components/ui/DataTable';
-import { Modal } from '../../components/ui/Modal';
-import { Input } from '../../components/ui/Input';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
-import { materialApi } from '../../services/material.api';
-import { productApi } from '../../services/product.api';
 import type { KitchenStockItemResponse } from '../../types/kitchenInventory';
-import type { MaterialResponse } from '../../types/material';
-import type { ProductResponse } from '../../types/product';
+import { Modal } from '../../components/ui/Modal';
+import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 
 export const KitchenInventory = () => {
+    const navigate = useNavigate();
     const [inventory, setInventory] = useState<KitchenStockItemResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Import Modal State
-    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-    const [importType, setImportType] = useState<'MATERIAL' | 'PRODUCT'>('MATERIAL');
-    const [selectedItemId, setSelectedItemId] = useState<number>(0);
-    const [importQuantity, setImportQuantity] = useState<number>(0);
-    const [expiryDate, setExpiryDate] = useState<string>('');
-    const [isImporting, setIsImporting] = useState(false);
+    // Edit Modal State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<KitchenStockItemResponse | null>(null);
+    const [editQuantity, setEditQuantity] = useState<number>(0);
+    const [editExpiryDate, setEditExpiryDate] = useState<string>('');
+    const [isUpdating, setIsUpdating] = useState(false);
 
-    // Lookups
-    const [materials, setMaterials] = useState<MaterialResponse[]>([]);
-    const [products, setProducts] = useState<ProductResponse[]>([]);
+    // Delete State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const WAREHOUSE_ID = 1; // Default Kitchen Warehouse ID
 
@@ -43,105 +39,114 @@ export const KitchenInventory = () => {
         }
     };
 
-    const loadLookups = async () => {
+    useEffect(() => {
+        loadInventory();
+    }, []);
+
+    const handleEditClick = (item: KitchenStockItemResponse) => {
+        setSelectedItem(item);
+        setEditQuantity(item.quantity);
+        setEditExpiryDate(item.expiryDate ? item.expiryDate.split('T')[0] : '');
+        setIsEditModalOpen(true);
+    };
+
+    const handleUpdate = async () => {
+        if (!selectedItem) return;
+        setIsUpdating(true);
         try {
-            const [matRes, prodRes] = await Promise.all([
-                materialApi.getAll(),
-                productApi.getProducts({ size: 100 }) // Load a decent batch
-            ]);
-            setMaterials(matRes || []);
-            setProducts(prodRes.data?.content || []);
+            await kitchenInventoryApi.updateStockItem(WAREHOUSE_ID, selectedItem.id, {
+                quantity: editQuantity,
+                expiryDate: editExpiryDate || undefined
+            });
+            toast.success('Cập nhật tồn kho thành công');
+            setIsEditModalOpen(false);
+            loadInventory();
         } catch (error) {
-            console.error('Failed to load lookups', error);
+            console.error(error);
+            toast.error('Không thể cập nhật tồn kho. Vui lòng kiểm tra lại quyền hạn hoặc API.');
+        } finally {
+            setIsUpdating(false);
         }
     };
 
-    useEffect(() => {
-        loadInventory();
-        loadLookups();
-    }, []);
+    const handleDeleteClick = (item: KitchenStockItemResponse) => {
+        setSelectedItem(item);
+        setIsDeleteModalOpen(true);
+    };
 
-    const handleImport = async () => {
-        if (!selectedItemId || importQuantity <= 0) {
-            toast.error('Vui lòng chọn món và nhập số lượng hợp lệ.');
-            return;
-        }
-
-        setIsImporting(true);
+    const handleDelete = async () => {
+        if (!selectedItem) return;
+        setIsDeleting(true);
         try {
-            const requestPayload = [{
-                itemId: Number(selectedItemId),
-                quantity: Number(importQuantity),
-                ...(expiryDate ? { expiryDate: expiryDate } : {}),
-                ...(importType === 'MATERIAL'
-                    ? { materialId: Number(selectedItemId) }
-                    : { productId: Number(selectedItemId) }
-                )
-            }];
-
-            console.log('Import payload:', JSON.stringify(requestPayload));
-
-            if (importType === 'MATERIAL') {
-                await kitchenInventoryApi.importMaterials(WAREHOUSE_ID, requestPayload);
-                toast.success('Nhập nguyên liệu thành công');
-            } else {
-                await kitchenInventoryApi.importProducts(WAREHOUSE_ID, requestPayload);
-                toast.success('Nhập thành phẩm thành công');
-            }
-
-            setIsImportModalOpen(false);
-            setImportQuantity(0);
-            setExpiryDate('');
-            setSelectedItemId(0);
+            await kitchenInventoryApi.deleteStockItem(WAREHOUSE_ID, selectedItem.id);
+            toast.success('Đã xóa vật phẩm khỏi kho');
+            setIsDeleteModalOpen(false);
             loadInventory();
-        } catch (error: any) {
-            console.error('Import error:', error);
-            const backendMsg = error.response?.data?.message
-                || error.response?.data?.data
-                || error.response?.data?.error
-                || error.message
-                || 'Lỗi không xác định';
-            toast.error(`Nhập kho thất bại: ${typeof backendMsg === 'object' ? JSON.stringify(backendMsg) : backendMsg}`);
+        } catch (error) {
+            console.error(error);
+            toast.error('Không thể xóa vật phẩm. Vui lòng kiểm tra lại Backend.');
         } finally {
-            setIsImporting(false);
+            setIsDeleting(false);
         }
     };
 
     const columns: Column<KitchenStockItemResponse>[] = [
         {
-            header: 'Tên món',
+            header: 'Tên vật phẩm',
             accessorKey: 'itemName',
-            className: 'font-medium',
             cell: (row) => (
-                <div className="flex items-center gap-2">
-                    {row.itemType === 'MATERIAL' ? (
-                        <Leaf size={16} className="text-emerald-500" />
-                    ) : (
-                        <Package size={16} className="text-amber-500" />
-                    )}
-                    <span>{row.itemName}</span>
+                <div className="flex items-center gap-4 group/item transition-all duration-300">
+                    <div className={`p-2 rounded-xl transition-all duration-300 ${row.itemType === 'MATERIAL' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
+                        {row.itemType === 'MATERIAL' ? (
+                            <Leaf size={18} />
+                        ) : (
+                            <Package size={18} />
+                        )}
+                    </div>
+                    <span className="font-bold text-zinc-100 group-hover/item:text-white transition-colors">{row.itemName}</span>
                 </div>
             )
         },
         {
             header: 'Phân loại',
             cell: (row) => (
-                <span className={`px-2 py-1 text-[10px] rounded uppercase font-semibold ${row.itemType === 'MATERIAL' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                    {row.itemType}
-                </span>
+                <div className="flex">
+                    <span className={`
+                        px-3 py-1 text-[9px] rounded-full uppercase font-black tracking-widest border
+                        ${row.itemType === 'MATERIAL'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+                        }
+                    `}>
+                        {row.itemType === 'MATERIAL' ? 'Nguyên liệu' : 'Thành phẩm'}
+                    </span>
+                </div>
             )
         },
         {
             header: 'Số lượng tồn',
             cell: (row) => {
-                const isLowStock = row.quantity <= 5; // Example threshold
+                const isLowStock = row.quantity <= 5;
                 return (
-                    <div className="flex items-center space-x-2">
-                        <span className={`font-medium ${isLowStock ? 'text-red-500 font-bold' : 'text-gray-200'}`}>
-                            {row.quantity} {row.unit}
-                        </span>
+                    <div className="flex items-center gap-3">
+                        <div className={`
+                            flex items-center px-3 py-1.5 rounded-xl border transition-all duration-300
+                            ${isLowStock
+                                ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.1)]'
+                                : 'bg-white/5 border-white/5 text-zinc-100'
+                            }
+                        `}>
+                            <span className="text-sm font-black mono tracking-tighter">
+                                {row.quantity.toLocaleString()}
+                            </span>
+                            <span className="text-[10px] font-bold uppercase ml-1 opacity-50">
+                                {row.unit}
+                            </span>
+                        </div>
                         {isLowStock && (
-                            <AlertTriangle size={14} className="text-red-500" />
+                            <div className="animate-pulse">
+                                <AlertTriangle size={16} className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                            </div>
                         )}
                     </div>
                 );
@@ -149,113 +154,177 @@ export const KitchenInventory = () => {
         },
         {
             header: 'Ngày Hết hạn',
-            cell: (row) => row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : <span className="text-gray-500 text-xs italic">N/A</span>
+            cell: (row) => (
+                <div className="flex flex-col">
+                    {row.expiryDate ? (
+                        <>
+                            <span className="text-xs font-bold text-zinc-300">
+                                {new Date(row.expiryDate).toLocaleDateString('vi-VN')}
+                            </span>
+                            <span className="text-[9px] font-medium text-zinc-500 uppercase tracking-tighter">
+                                {Math.ceil((new Date(row.expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} ngày còn lại
+                            </span>
+                        </>
+                    ) : (
+                        <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Vĩnh viễn</span>
+                    )}
+                </div>
+            )
+        },
+        {
+            header: 'Thao tác',
+            cell: (row) => (
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => handleEditClick(row)}
+                        className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:bg-amber-500/10 hover:text-amber-500 border border-transparent hover:border-amber-500/20 transition-all"
+                        title="Chỉnh sửa"
+                    >
+                        <Edit size={16} />
+                    </button>
+                    <button
+                        onClick={() => handleDeleteClick(row)}
+                        className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:bg-red-500/10 hover:text-red-500 border border-transparent hover:border-red-500/20 transition-all"
+                        title="Xóa"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            )
         }
     ];
 
-    const currentItemsLookup = importType === 'MATERIAL' ? materials : products;
-    const isReadyToImport = selectedItemId > 0 && importQuantity > 0;
-
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Kho Tổng - Bếp Trung Tâm</h1>
-                    <p className="text-sm text-gray-400 mt-1">Quản lý tồn kho nguyên liệu và thành phẩm phân phối của toàn hệ thống.</p>
+        <div className="space-y-10 animate-in fade-in duration-700">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="animate-in slide-in-from-left-4 duration-700">
+                    <h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">
+                        Kho Tổng <span className="text-amber-500">/</span> Bếp Trung Tâm
+                    </h1>
+                    <p className="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-[0.2em]">Quản lý tồn kho nguyên liệu và thành phẩm toàn hệ thống</p>
                 </div>
-                <div className="flex space-x-2">
-                    <Button variant="outline" className="hidden md:flex">
-                        <Filter size={16} className="mr-2" /> Bộ lọc
-                    </Button>
-                    <Button onClick={() => setIsImportModalOpen(true)} className="bg-amber-600 hover:bg-amber-700 text-white">
-                        <TrendingUp size={16} className="mr-2" /> Nhập kho
-                    </Button>
+                <div className="flex items-center gap-3 animate-in slide-in-from-right-4 duration-700">
+                    <button
+                        onClick={() => navigate('/kitchen/inventory/import')}
+                        className="group relative flex items-center h-12 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black uppercase text-[10px] tracking-widest transition-all duration-300 border-0 shadow-2xl shadow-amber-900/40 hover:scale-[1.02] active:scale-95"
+                    >
+                        <TrendingUp size={18} className="mr-2 transition-transform group-hover:translate-y-[-2px]" />
+                        Nhập kho
+                    </button>
                 </div>
             </div>
 
-            <DataTable
-                data={inventory}
-                columns={columns}
-                isLoading={isLoading}
-                keyExtractor={(item) => item.id}
-            />
+            <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative group animate-in zoom-in-95 duration-1000">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+                <div className="p-2">
+                    <DataTable
+                        data={inventory}
+                        columns={columns}
+                        isLoading={isLoading}
+                        keyExtractor={(item) => item.id}
+                        className="border-0"
+                    />
+                </div>
+            </div>
 
-            {/* Import Stock Modal */}
+            {/* Edit Modal */}
             <Modal
-                isOpen={isImportModalOpen}
-                onClose={() => setIsImportModalOpen(false)}
-                title="Nhập Kho Bếp"
-                size="md"
-                footer={
-                    <>
-                        <Button variant="outline" onClick={() => setIsImportModalOpen(false)} disabled={isImporting}>
-                            Hủy
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Cập nhật tồn kho"
+            >
+                <div className="space-y-6">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <p className="text-xs text-zinc-500 uppercase font-bold mb-1">Vật phẩm</p>
+                        <p className="text-lg font-black text-white italic">{selectedItem?.itemName}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-amber-500 uppercase tracking-widest ml-1">Số lượng tồn</label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={editQuantity}
+                                onChange={(e) => setEditQuantity(Number(e.target.value))}
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                            />
+                            <span className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-500 font-bold uppercase text-xs">
+                                {selectedItem?.unit}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-amber-500 uppercase tracking-widest ml-1">Ngày hết hạn</label>
+                        <input
+                            type="date"
+                            value={editExpiryDate}
+                            onChange={(e) => setEditExpiryDate(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                            style={{ colorScheme: 'dark' }}
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="flex-1 border-white/10 text-zinc-400 hover:text-white rounded-xl"
+                        >
+                            Hủy bỏ
                         </Button>
                         <Button
-                            onClick={handleImport}
-                            disabled={!isReadyToImport || isImporting}
-                            className="bg-amber-600 hover:bg-amber-700 text-white"
+                            onClick={handleUpdate}
+                            disabled={isUpdating}
+                            className="flex-1 bg-amber-500 text-black font-black rounded-xl shadow-lg shadow-amber-500/20"
                         >
-                            {isImporting ? 'Đang xử lý...' : 'Xác nhận nhập'}
+                            {isUpdating ? 'Đang lưu...' : (
+                                <div className="flex items-center gap-2">
+                                    <Save size={18} />
+                                    Lưu thay đổi
+                                </div>
+                            )}
                         </Button>
-                    </>
-                }
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Xác nhận xóa"
             >
-                <div className="space-y-4 px-2 py-4">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Loại Nhập</label>
-                        <select
-                            value={importType}
-                            onChange={(e) => {
-                                setImportType(e.target.value as 'MATERIAL' | 'PRODUCT');
-                                setSelectedItemId(0);
-                            }}
-                            className="w-full h-10 px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                <div className="space-y-6">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <div>
+                            <p className="text-zinc-300">Bạn có chắc chắn muốn xóa vật phẩm <span className="text-white font-bold italic">"{selectedItem?.itemName}"</span> khỏi kho không?</p>
+                            <p className="text-xs text-zinc-500 mt-2 uppercase font-bold tracking-tighter">Hành động này không thể hoàn tác.</p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            className="flex-1 border-white/10 text-zinc-400 hover:text-white rounded-xl"
                         >
-                            <option value="MATERIAL">Nguyên liệu (Materials)</option>
-                            <option value="PRODUCT">Thành phẩm (Products)</option>
-                        </select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Chọn {importType === 'MATERIAL' ? 'Nguyên liệu' : 'Thành phẩm'}</label>
-                        <select
-                            value={selectedItemId}
-                            onChange={(e) => setSelectedItemId(Number(e.target.value))}
-                            className="w-full h-10 px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                            Hủy bỏ
+                        </Button>
+                        <Button
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="flex-1 bg-red-500 hover:bg-red-600 text-white font-black rounded-xl shadow-lg shadow-red-500/20"
                         >
-                            <option value={0} disabled>-- Vui lòng chọn --</option>
-                            {currentItemsLookup.map(item => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name} {importType === 'MATERIAL' && `(${(item as MaterialResponse).unit})`}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Số lượng ({importType === 'MATERIAL' ? 'theo Unit' : 'Cái/Phần'})</label>
-                        <Input
-                            type="number"
-                            placeholder="Nhập số lượng..."
-                            className="bg-zinc-900/50 border-zinc-700 focus:border-amber-500"
-                            value={importQuantity || ''}
-                            onChange={(e) => setImportQuantity(Number(e.target.value))}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Ngày hết hạn (Tuỳ chọn)</label>
-                        <Input
-                            type="date"
-                            className="bg-zinc-900/50 border-zinc-700 focus:border-amber-500"
-                            value={expiryDate}
-                            onChange={(e) => setExpiryDate(e.target.value)}
-                            min={new Date().toISOString().split('T')[0]} // Must be in future
-                        />
+                            {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
+                        </Button>
                     </div>
                 </div>
             </Modal>
         </div>
     );
 };
+

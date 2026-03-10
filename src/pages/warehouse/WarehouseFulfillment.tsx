@@ -30,7 +30,7 @@ export const WarehouseFulfillment = () => {
             const res = await storeOrderApi.getAllOrders();
             // Only show orders that need fulfillment
             const fulfillmentOrders = (res.content || []).filter(
-                (o) => o.status === 'CONFIRMED' || o.status === 'PREPARING' || o.status === 'READY'
+                (o) => o.status === 'APPROVED' || o.status === 'PREPARING' || o.status === 'READY'
             );
             setOrders(fulfillmentOrders);
             setFilteredOrders(fulfillmentOrders);
@@ -95,7 +95,7 @@ export const WarehouseFulfillment = () => {
                 return;
             }
 
-            if (selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'PREPARING') {
+            if (selectedOrder.status === 'APPROVED' || selectedOrder.status === 'PREPARING') {
                 toast.error('Đơn hàng chưa sản xuất xong! Vui lòng hoàn thành Lịch Sản Xuất trước.');
                 setIsSubmitting(false);
                 return;

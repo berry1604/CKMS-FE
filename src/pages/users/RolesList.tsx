@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Shield, Settings } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { roleApi } from '../../services/role.api';
 import type { RoleResponse } from '../../types/role';
-import { RoleModal } from './RoleModal';
 import { toast } from 'react-hot-toast';
 
 export const RolesList = () => {
+    const navigate = useNavigate();
     const [roles, setRoles] = useState<RoleResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedRole, setSelectedRole] = useState<RoleResponse | null>(null);
-    const [isViewMode, setIsViewMode] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [roleToDelete, setRoleToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const loadRoles = async () => {
         setIsLoading(true);
@@ -32,39 +34,40 @@ export const RolesList = () => {
     }, []);
 
     const handleCreate = () => {
-        setSelectedRole(null);
-        setIsViewMode(false);
-        setIsModalOpen(true);
+        navigate('/users/roles/create');
     };
 
     const handleEdit = (role: RoleResponse) => {
-        setSelectedRole(role);
-        setIsViewMode(false);
-        setIsModalOpen(true);
+        navigate(`/users/roles/${role.roleId}/edit`, { state: { role, isViewOnly: false } });
     };
 
     const handleView = (role: RoleResponse) => {
-        setSelectedRole(role);
-        setIsViewMode(true);
-        setIsModalOpen(true);
+        navigate(`/users/roles/${role.roleId}/view`, { state: { role, isViewOnly: true } });
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Are you sure you want to delete this role?')) {
+    const handleDelete = (id: number) => {
+        setRoleToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (roleToDelete) {
+            setIsDeleting(true);
             try {
-                await roleApi.deleteRole(id);
+                await roleApi.deleteRole(roleToDelete);
                 toast.success('Role deleted successfully');
                 loadRoles();
+                setIsDeleteModalOpen(false);
             } catch (error) {
                 console.error(error);
                 toast.error('Failed to delete role');
+            } finally {
+                setIsDeleting(false);
             }
         }
     };
 
-    const handleSubmitComplete = () => {
-        loadRoles();
-    };
+
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-10">
@@ -186,13 +189,18 @@ export const RolesList = () => {
                 </div>
             )}
 
-            <RoleModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmitComplete={handleSubmitComplete}
-                role={selectedRole}
-                allRoles={roles}
-                isViewOnly={isViewMode}
+
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Role"
+                message="Are you sure you want to delete this role? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={isDeleting}
+                variant="danger"
             />
         </div>
     );

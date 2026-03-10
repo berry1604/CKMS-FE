@@ -9,7 +9,11 @@ import type { StoreStockItemResponse, StoreStockBatchResponse } from '../../type
 import { storeInventoryApi } from '../../services/storeInventory.api';
 import { toast } from 'react-hot-toast';
 
-export const StoreInventory = () => {
+interface StoreInventoryProps {
+    storeId?: number;
+}
+
+export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
     const [inventory, setInventory] = useState<StoreStockItemResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -32,6 +36,7 @@ export const StoreInventory = () => {
                 name: searchQuery || undefined,
                 page: currentPage,
                 size: pageSize,
+                storeId: storeId
             });
             const pageData = response.data;
             setInventory(pageData.content);
@@ -58,7 +63,7 @@ export const StoreInventory = () => {
         setSelectedProduct(item);
         setIsBatchLoading(true);
         try {
-            const response = await storeInventoryApi.getProductBatches(item.productId);
+            const response = await storeInventoryApi.getProductBatches(item.productId, storeId);
             setBatches(response.data);
         } catch (error) {
             console.error(error);
@@ -284,10 +289,10 @@ export const StoreInventory = () => {
                                             <div
                                                 key={batch.batchId}
                                                 className={`rounded-xl border p-4 transition-colors ${expired
-                                                        ? 'border-red-500/30 bg-red-500/5'
-                                                        : expiringSoon
-                                                            ? 'border-amber-500/30 bg-amber-500/5'
-                                                            : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900'
+                                                    ? 'border-red-500/30 bg-red-500/5'
+                                                    : expiringSoon
+                                                        ? 'border-amber-500/30 bg-amber-500/5'
+                                                        : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900'
                                                     }`}
                                             >
                                                 <div className="flex items-center justify-between mb-3">

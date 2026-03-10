@@ -22,4 +22,5 @@ export interface GetStoreInventoryParams {
     page?: number;
     size?: number;
     sort?: string;
+    storeId?: number;
 }

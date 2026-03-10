@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Edit2, Trash2, Search, Filter, MoreVertical, Mail, Calendar, CheckCircle, XCircle, Store, Warehouse } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter, Mail, Store, Warehouse } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { UserModal } from './UserModal';
 import type { UserResponse } from '../../types/user';
 import { userService } from '../../services/user.service';
@@ -21,7 +20,10 @@ export const UsersList = () => {
     const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('ALL');
-    const [activeMenu, setActiveMenu] = useState<number | null>(null);
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(0);
@@ -79,27 +81,33 @@ export const UsersList = () => {
     const handleEdit = (user: UserResponse) => {
         setSelectedUser(user);
         setIsModalOpen(true);
-        setActiveMenu(null);
     };
 
-    const handleDelete = async (id: number) => {
-        if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-            try {
-                await userService.deleteUser(id);
-                toast.success('Đã xóa người dùng thành công');
-                loadUsers();
-            } catch (error) {
-                console.error(error);
-                toast.error('Xóa người dùng thất bại');
-            }
+    const handleDelete = (id: number) => {
+        setUserToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
+        setIsDeleting(true);
+        try {
+            await userService.deleteUser(userToDelete);
+            toast.success('Đã xóa người dùng thành công');
+            loadUsers();
+            setIsDeleteModalOpen(false);
+        } catch (error) {
+            console.error(error);
+            toast.error('Xóa người dùng thất bại');
+        } finally {
+            setIsDeleting(false);
         }
-        setActiveMenu(null);
     };
 
     const handleSubmit = async (_data: any) => {
         if (selectedUser) {
             try {
-                await userService.updateUser(selectedUser.id, _data);
+                await userService.updateUser(selectedUser.userId, _data);
                 toast.success('Cập nhật người dùng thành công');
                 loadUsers();
             } catch (error) {
@@ -109,162 +117,200 @@ export const UsersList = () => {
         }
     };
 
-    const getRoleColor = (role: string) => {
-        const colors: Record<string, any> = {
-            ADMIN: 'primary',
-            MANAGER: 'info',
-            STAFF: 'danger',
-            COORDINATOR: 'warning',
-            STORE_STAFF: 'success'
-        };
-        return colors[role] || 'secondary';
-    };
 
     const startItem = currentPage * pageSize + 1;
     const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Thành viên Hệ thống</h1>
-                    <p className="text-sm text-gray-400 mt-1">Quản lý nhân sự và quyền truy cập vào hệ thống.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="bg-zinc-900/50 px-3 py-1.5 rounded-md border border-zinc-800 text-sm font-medium text-gray-400 shadow-sm">
-                        Tổng cộng: <span className="font-bold text-gray-200">{totalElements}</span>
+        <div className="min-h-screen bg-[#0a0a0a] pb-20">
+            {/* Cinematic Header */}
+            <div className="relative h-[300px] w-full overflow-hidden">
+                <img
+                    src="/Users/phunghuyphuoc/.gemini/antigravity/brain/5ad3745d-382e-481d-8167-b732c447a69b/systems_management_bg_1773028301109.png"
+                    className="w-full h-full object-cover scale-105"
+                    alt="Systems Management Background"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-[#0a0a0a] backdrop-blur-[2px]" />
+
+                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="h-px w-12 bg-blue-500/50" />
+                        <span className="text-blue-500 font-medium tracking-widest text-xs uppercase">System Administration</span>
                     </div>
-                    <Button onClick={handleCreate} className="shadow-sm">
-                        <Plus className="mr-2 h-4 w-4" /> Thêm thành viên
-                    </Button>
+
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+                        <div>
+                            <h1 className="text-5xl font-bold text-white tracking-tighter mb-2">
+                                THÀNH VIÊN <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600">HỆ THỐNG</span>
+                            </h1>
+                            <p className="text-gray-400 max-w-xl text-lg font-light leading-relaxed">
+                                Quản lý nhân sự, phân quyền và giám sát hoạt động truy cập của toàn bộ đội ngũ vận hành.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="px-6 py-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
+                                <span className="text-gray-500 text-xs uppercase tracking-widest block mb-1">Tổng cộng</span>
+                                <span className="text-2xl font-bold text-white leading-none">{totalElements}</span>
+                            </div>
+                            <Button onClick={handleCreate} className="h-14 px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                <Plus className="mr-2 h-5 w-5" /> Thêm thành viên
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Toolbar */}
-            <Card className="p-4 border-zinc-800 bg-zinc-900/50">
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="relative w-full md:w-96">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search size={18} className="text-gray-400" />
+            <div className="max-w-7xl mx-auto px-8 -mt-8 relative z-10 space-y-6">
+                {/* Toolbar */}
+                <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-3xl p-4 shadow-2xl overflow-hidden relative">
+                    <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
+                        <div className="relative w-full md:w-[450px] group">
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
+                                <Search size={18} className="text-gray-400 group-focus-within:text-blue-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm theo tên hoặc email..."
+                                className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 transition-all placeholder:text-gray-600 hover:bg-white/[0.07]"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm theo tên hoặc email..."
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-zinc-700 bg-zinc-900/50 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
 
-                    <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                        <Filter size={16} className="text-gray-500 hidden md:block" />
-                        <span className="text-sm text-gray-400 whitespace-nowrap hidden md:block">Lọc theo:</span>
-                        {['ALL', ...roles.map(r => r.roleName).filter(Boolean)].map((role) => (
-                            <button
-                                key={role}
-                                onClick={() => setRoleFilter(role)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${roleFilter === role
-                                    ? 'bg-amber-500/10 text-amber-500'
-                                    : 'bg-zinc-800 text-gray-400 hover:bg-zinc-700'
-                                    }`}
-                            >
-                                {role === 'ALL' ? 'Tất cả vai trò' : role?.replace(/_/g, ' ') || 'Chưa xác định'}
-                            </button>
-                        ))}
+                        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar scroll-smooth">
+                            <div className="p-2 bg-white/5 rounded-xl text-gray-400 mr-2">
+                                <Filter size={18} />
+                            </div>
+                            {['ALL', ...roles.map(r => r.roleName).filter(Boolean)].map((role) => (
+                                <button
+                                    key={role}
+                                    onClick={() => setRoleFilter(role)}
+                                    className={`px-6 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all whitespace-nowrap border ${roleFilter === role
+                                        ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]'
+                                        : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:border-white/10'
+                                        }`}
+                                >
+                                    {role === 'ALL' ? 'Tất cả vai trò' : role?.replace(/_/g, ' ') || 'Chưa xác định'}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </Card>
 
-            {/* Enhanced Table (Desktop) */}
-            <div className="hidden md:block">
-                <Card className="overflow-hidden shadow-sm border-zinc-800 bg-zinc-900/50 p-0">
+                {/* Table Section */}
+                <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-zinc-900/80 border-b border-zinc-800 text-xs uppercase text-gray-400 font-semibold tracking-wider">
-                                    <th className="px-6 py-4">Thành viên</th>
-                                    <th className="px-6 py-4">Vai trò & Gán</th>
-                                    <th className="px-6 py-4">Trạng thái</th>
-                                    <th className="px-6 py-4">Ngày tham gia</th>
-                                    <th className="px-6 py-4 text-right">Thao tác</th>
+                                <tr className="bg-white/[0.02] border-b border-white/10 text-[10px] uppercase text-gray-500 font-bold tracking-[0.2em]">
+                                    <th className="px-8 py-6">Thành viên</th>
+                                    <th className="px-8 py-6">Vai trò OS</th>
+                                    <th className="px-8 py-6">Trạng thái</th>
+                                    <th className="px-8 py-6">Ngày tham gia</th>
+                                    <th className="px-8 py-6 text-right">Điều khiển</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-zinc-800">
+                            <tbody className="divide-y divide-white/5">
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={5} className="px-8 py-24 text-center">
                                             <div className="flex flex-col items-center justify-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mb-2"></div>
-                                                Đang tải danh sách...
+                                                <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4" />
+                                                <span className="text-gray-400 text-sm font-light tracking-widest uppercase">Initializing Interface...</span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : users.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
-                                            Không tìm thấy thành viên nào phù hợp.
+                                        <td colSpan={5} className="px-8 py-24 text-center text-gray-500 font-light italic">
+                                            Không tìm thấy thành viên nào phù hợp với yêu cầu.
                                         </td>
                                     </tr>
                                 ) : (
-                                    users.map((user) => (
-                                        <tr key={user.id} className="hover:bg-zinc-800/50 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center">
+                                    users.map((user, idx) => (
+                                        <tr
+                                            key={user.userId}
+                                            className="hover:bg-white/[0.04] transition-all group animate-in fade-in slide-in-from-left-4 duration-500 ease-out"
+                                            style={{ animationDelay: `${idx * 50}ms` }}
+                                        >
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-4">
                                                     <div className="relative">
-                                                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-zinc-800 shadow-sm">
+                                                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(37,99,235,0.2)]">
                                                             {(user.fullName || user.username || '?').charAt(0).toUpperCase()}
                                                         </div>
-                                                        <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 ${user.isActive ? 'bg-green-500' : 'bg-gray-500'} border-2 border-zinc-800 rounded-full`}></div>
+                                                        <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-4 border-[#0a0a0a] ${user.status === 'ACTIVE' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' :
+                                                            user.status === 'PENDING_VERIFICATION' ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' :
+                                                                'bg-gray-600'
+                                                            }`} />
                                                     </div>
-                                                    <div className="ml-4">
-                                                        <div className="font-semibold text-gray-200">{user.fullName || user.username}</div>
-                                                        <div className="text-gray-400 text-xs flex items-center mt-0.5">
-                                                            <Mail size={10} className="mr-1" />
+                                                    <div>
+                                                        <div className="font-bold text-white text-base tracking-tight">{user.fullName || user.username}</div>
+                                                        <div className="text-gray-500 text-xs flex items-center mt-0.5">
+                                                            <Mail size={12} className="mr-1.5 text-blue-500/50" />
                                                             {user.email}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="space-y-1">
-                                                    <Badge variant={getRoleColor(user.roleName)} className="shadow-sm">
-                                                        {user.roleName?.replace(/_/g, ' ') || 'N/A'}
-                                                    </Badge>
+                                            <td className="px-8 py-6">
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${user.roleName === 'ADMIN' ? 'bg-blue-500' :
+                                                            user.roleName === 'MANAGER' ? 'bg-indigo-500' :
+                                                                user.roleName === 'STORE_STAFF' ? 'bg-green-500' :
+                                                                    'bg-amber-500'
+                                                            }`} />
+                                                        <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">
+                                                            {user.roleName?.replace(/_/g, ' ') || 'N/A'}
+                                                        </span>
+                                                    </div>
                                                     {(user.storeName || user.kitchenName) && (
-                                                        <div className="text-[10px] text-gray-400 flex items-center gap-1">
-                                                            {user.storeName ? <Store size={10} /> : <Warehouse size={10} />}
+                                                        <div className="text-[10px] text-gray-500 flex items-center gap-1.5 ml-3">
+                                                            {user.storeName ? <Store size={10} className="text-blue-400" /> : <Warehouse size={10} className="text-indigo-400" />}
                                                             {user.storeName || user.kitchenName}
                                                         </div>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                {user.isActive ? (
-                                                    <div className="flex items-center text-sm font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md w-fit">
-                                                        <CheckCircle size={12} className="mr-1.5" />
-                                                        Đang hoạt động
+                                            <td className="px-8 py-6">
+                                                {user.status === 'ACTIVE' ? (
+                                                    <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-green-400 bg-green-500/5 border border-green-500/20 px-3 py-1.5 rounded-lg w-fit">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 animate-pulse" />
+                                                        Online
+                                                    </div>
+                                                ) : user.status === 'PENDING_VERIFICATION' ? (
+                                                    <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-amber-400 bg-amber-500/5 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />
+                                                        Pending
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center text-sm font-medium text-red-400 bg-red-500/10 px-2 py-1 rounded-md w-fit">
-                                                        <XCircle size={12} className="mr-1.5" />
-                                                        Ngừng hoạt động
+                                                    <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-red-400 bg-red-500/5 border border-red-500/20 px-3 py-1.5 rounded-lg w-fit">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2" />
+                                                        Offline
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center text-sm text-gray-400">
-                                                    <Calendar size={14} className="mr-2 text-gray-500" />
-                                                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                                                </div>
+                                            <td className="px-8 py-6 text-sm text-gray-500 font-light">
+                                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
                                             </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button variant="ghost" size="sm" onClick={() => handleEdit(user)} className="text-amber-500 hover:text-amber-400 hover:bg-zinc-800">
-                                                        <Edit2 size={16} />
+                                            <td className="px-8 py-6 text-right">
+                                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleEdit(user)}
+                                                        className="h-9 w-9 p-0 bg-white/5 border border-white/10 hover:bg-blue-600 hover:border-blue-500 hover:text-white rounded-xl transition-all"
+                                                    >
+                                                        <Edit2 size={14} />
                                                     </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)} className="text-red-500 hover:text-red-400 hover:bg-zinc-800">
-                                                        <Trash2 size={16} />
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleDelete(user.userId)}
+                                                        className="h-9 w-9 p-0 bg-white/5 border border-white/10 hover:bg-red-600 hover:border-red-500 hover:text-white rounded-xl transition-all"
+                                                    >
+                                                        <Trash2 size={14} />
                                                     </Button>
                                                 </div>
                                             </td>
@@ -275,21 +321,24 @@ export const UsersList = () => {
                         </table>
                     </div>
 
-                    {/* Pagination */}
-                    <div className="bg-zinc-900/80 px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
-                        <span className="text-sm text-gray-400">
-                            {totalElements > 0 ? (
-                                <>Hiển thị <span className="font-medium text-gray-200">{startItem}</span> đến <span className="font-medium text-gray-200">{endItem}</span> trong tổng số <span className="font-medium text-gray-200">{totalElements}</span> thành viên</>
-                            ) : (
-                                'Không tìm thấy kết quả'
-                            )}
-                        </span>
-                        <div className="flex gap-2">
+                    {/* Pagination OS */}
+                    <div className="bg-white/[0.02] px-8 py-6 border-t border-white/10 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <span className="text-xs text-gray-500 font-light tracking-wide italic">
+                                {totalElements > 0 ? (
+                                    <>Hiển thị records <span className="text-blue-400 font-bold">{startItem}-{endItem}</span> / <span className="text-white font-bold">{totalElements}</span></>
+                                ) : (
+                                    'Empty Resultset'
+                                )}
+                            </span>
+                        </div>
+                        <div className="flex gap-3">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 disabled={currentPage === 0}
                                 onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                                className="border-white/10 bg-white/5 text-gray-400 hover:text-white rounded-xl px-6 h-10"
                             >
                                 Trước
                             </Button>
@@ -298,84 +347,13 @@ export const UsersList = () => {
                                 size="sm"
                                 disabled={currentPage >= totalPages - 1}
                                 onClick={() => setCurrentPage((p) => p + 1)}
+                                className="border-white/10 bg-white/5 text-gray-400 hover:text-white rounded-xl px-6 h-10"
                             >
-                                Sau
+                                Tiếp
                             </Button>
                         </div>
                     </div>
-                </Card>
-            </div>
-
-            {/* Mobile Grid View */}
-            <div className="md:hidden grid grid-cols-1 gap-4">
-                {isLoading ? (
-                    <div className="text-center py-10 text-gray-500">Đang tải...</div>
-                ) : users.length === 0 ? (
-                    <div className="text-center py-10 text-gray-500">Không tìm thấy thành viên nào.</div>
-                ) : (
-                    users.map((user) => (
-                        <Card key={user.id} className="p-4 relative border-zinc-800 bg-zinc-900/50">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-base ring-2 ring-zinc-800">
-                                        {(user.fullName || user.username || '?').charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-semibold text-gray-200">{user.fullName || user.username}</h3>
-                                        <div className="text-sm text-gray-400 flex items-center">
-                                            <Mail size={12} className="mr-1" />
-                                            {user.email}
-                                        </div>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}
-                                    className="text-gray-400 p-1"
-                                >
-                                    <MoreVertical size={20} />
-                                </button>
-                            </div>
-
-                            <div className="mt-4 flex flex-wrap gap-2 items-center">
-                                <Badge variant={getRoleColor(user.roleName)} className="shadow-none">
-                                    {user.roleName?.replace(/_/g, ' ') || 'N/A'}
-                                </Badge>
-                                {user.isActive ? (
-                                    <div className="flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2 py-1 rounded-md">
-                                        <CheckCircle size={10} className="mr-1" /> Đang hoạt động
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center text-xs font-medium text-red-400 bg-red-500/10 px-2 py-1 rounded-md">
-                                        <XCircle size={10} className="mr-1" /> Ngừng hoạt động
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Mobile Dropdown Menu */}
-                            {activeMenu === user.id && (
-                                <div className="absolute right-4 top-12 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-10 py-1 animate-in fade-in zoom-in-95 duration-200">
-                                    <button
-                                        onClick={() => handleEdit(user)}
-                                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                    >
-                                        <Edit2 size={16} className="mr-3 text-blue-500" /> Chỉnh sửa thông tin
-                                    </button>
-                                    <div className="h-px bg-gray-100 my-1"></div>
-                                    <button
-                                        onClick={() => handleDelete(user.id)}
-                                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center"
-                                    >
-                                        <Trash2 size={16} className="mr-3" /> Xóa quyền truy cập
-                                    </button>
-                                </div>
-                            )}
-                            {/* Click outside to close mobile menu */}
-                            {activeMenu === user.id && (
-                                <div className="fixed inset-0 z-0 cursor-default" onClick={() => setActiveMenu(null)}></div>
-                            )}
-                        </Card>
-                    ))
-                )}
+                </div>
             </div>
 
             <UserModal
@@ -383,6 +361,18 @@ export const UsersList = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleSubmit}
                 user={selectedUser}
+            />
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Xóa Quyền Truy Cập"
+                message="Bạn có chắc chắn muốn thu hồi toàn bộ quyền truy cập của thành viên này? Hành động này không thể hoàn tác."
+                confirmText="Xác nhận Thu hồi"
+                cancelText="Giữ lại"
+                isLoading={isDeleting}
+                variant="danger"
             />
         </div>
     );

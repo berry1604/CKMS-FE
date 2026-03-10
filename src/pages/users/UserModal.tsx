@@ -1,17 +1,20 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Shield, Briefcase, Key, CheckCircle2, Store, Warehouse } from 'lucide-react';
+import { User, Mail, Shield, Briefcase, Key, CheckCircle2, Store } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import type { UserResponse } from '../../types/user';
+import type { RoleResponse } from '../../types/role';
+import { storeApi } from '../../services/store.api';
+import { roleApi } from '../../services/role.api';
 
 const userSchema = z.object({
     name: z.string().min(2, 'Họ tên là bắt buộc'),
     email: z.string().email('Email không hợp lệ'),
-    role: z.enum(['ADMIN', 'MANAGER', 'STAFF', 'COORDINATOR', 'STORE_STAFF'] as const),
+    roleId: z.number().min(1, 'Vai trò là bắt buộc'),
     storeId: z.union([z.number(), z.string(), z.null()]).optional(),
     kitchenId: z.union([z.number(), z.string(), z.null()]).optional(),
 });
@@ -26,6 +29,9 @@ interface UserModalProps {
 }
 
 export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) => {
+    const [roles, setRoles] = useState<RoleResponse[]>([]);
+    const [stores, setStores] = useState<any[]>([]);
+
     const {
         register,
         handleSubmit,
@@ -33,42 +39,63 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
         control,
         formState: { errors, isSubmitting },
     } = useForm<UserForm>({
-        resolver: zodResolver(userSchema),
+        resolver: zodResolver(userSchema) as any,
         defaultValues: {
-            role: 'STORE_STAFF',
+            roleId: 0,
+            storeId: 'null',
+            kitchenId: 'null',
         },
     });
 
-    const selectedRole = useWatch({ control, name: 'role' });
+    const selectedRoleId = useWatch({ control, name: 'roleId' });
+    const selectedRoleName = roles.find(r => r.roleId === selectedRoleId)?.roleName;
 
+    // Fetch roles and stores
     useEffect(() => {
-        if (user) {
+        const fetchData = async () => {
+            try {
+                const [rolesList, storesList] = await Promise.all([
+                    roleApi.getAllRoles(),
+                    storeApi.getAllStores({ size: 100 }),
+                ]);
+                setRoles(rolesList);
+                setStores(storesList.data.content);
+            } catch (error) {
+                console.error('Error fetching modal data:', error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    // Reset form when user or roles change
+    useEffect(() => {
+        if (user && roles.length > 0) {
+            const userRole = roles.find(r => r.roleName === user.roleName);
             reset({
                 name: user.fullName || user.username,
                 email: user.email,
-                role: user.roleName as 'ADMIN' | 'MANAGER' | 'STAFF' | 'COORDINATOR' | 'STORE_STAFF',
-                storeId: user.storeId || null,
-                kitchenId: user.kitchenId || null,
+                roleId: userRole?.roleId || 0,
+                storeId: user.storeId || 'null',
+                kitchenId: user.kitchenId || 'null',
             });
-        } else {
+        } else if (!user) {
             reset({
                 name: '',
                 email: '',
-                role: 'STORE_STAFF',
-                storeId: null,
-                kitchenId: null,
+                roleId: 0,
+                storeId: 'null',
+                kitchenId: 'null',
             });
         }
-    }, [user, isOpen, reset]);
+    }, [user, isOpen, reset, roles]);
 
     const handleFormSubmit = async (data: any) => {
-        // Map fields to match what handleSubmit in UsersList expects or what backend expects
         const payload = {
             fullName: data.name,
             email: data.email,
-            roleName: data.role,
-            storeId: data.storeId ? Number(data.storeId) : null,
-            kitchenId: data.kitchenId ? Number(data.kitchenId) : null
+            roleId: Number(data.roleId),
+            storeId: data.storeId && data.storeId !== 'null' ? Number(data.storeId) : null,
+            kitchenId: data.kitchenId && data.kitchenId !== 'null' ? Number(data.kitchenId) : null,
         };
         await onSubmit(payload);
         onClose();
@@ -78,116 +105,136 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
         <Drawer
             isOpen={isOpen}
             onClose={onClose}
-            title={user ? 'Chỉnh sửa thành viên' : 'Thêm thành viên mới'}
-            description={user ? 'Cập nhật thông tin và quyền hạn của thành viên.' : 'Tạo tài khoản thành viên mới.'}
+            title={user ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
+            description={user ? 'Cập nhật thông tin và quyền hạn của nhân viên.' : 'Tạo tài khoản nhân viên mới.'}
             footer={
                 <div className="flex justify-end gap-3 w-full">
-                    <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+                    <Button
+                        variant="ghost"
+                        onClick={onClose}
+                        disabled={isSubmitting}
+                        className="h-12 px-8 rounded-2xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 font-black uppercase text-[10px] tracking-widest transition-all"
+                    >
                         Hủy
                     </Button>
-                    <Button onClick={handleSubmit(handleFormSubmit)} isLoading={isSubmitting} className="min-w-[120px]">
-                        {user ? 'Lưu thay đổi' : 'Tạo thành viên'}
+                    <Button
+                        onClick={handleSubmit(handleFormSubmit)}
+                        isLoading={isSubmitting}
+                        className="h-12 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-black uppercase text-[10px] tracking-widest transition-all duration-300 border-0 shadow-2xl shadow-amber-900/40"
+                    >
+                        {user ? 'Lưu thay đổi' : 'Tạo nhân viên'}
                     </Button>
                 </div>
             }
         >
-            <form className="space-y-8">
+            <form className="space-y-10 py-2">
                 {/* Section 1: Basic Info */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-200 font-medium pb-2 border-b border-zinc-800">
-                        <Briefcase size={18} className="text-amber-500" />
-                        <h3>Thông tin cơ bản</h3>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                            <Briefcase size={18} className="text-amber-500" />
+                        </div>
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Thông tin cơ bản</h3>
                     </div>
 
-                    <div className="grid gap-5">
-                        <Input
-                            label="Họ và tên"
-                            placeholder="VD: Nguyễn Văn A"
-                            icon={<User size={18} className="text-gray-400" />}
-                            error={errors.name?.message}
-                            {...register('name')}
-                        />
+                    <div className="grid gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Họ và tên</label>
+                            <Input
+                                placeholder="Nhập đầy đủ họ tên"
+                                icon={<User size={18} className="text-zinc-600" />}
+                                error={errors.name?.message}
+                                {...register('name')}
+                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                            />
+                        </div>
 
-                        <Input
-                            label="Địa chỉ Email"
-                            type="email"
-                            placeholder="VD: example@franchise.com"
-                            icon={<Mail size={18} className="text-gray-400" />}
-                            error={errors.email?.message}
-                            {...register('email')}
-                        />
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Địa chỉ Email</label>
+                            <Input
+                                type="email"
+                                placeholder="example@bistack.com"
+                                icon={<Mail size={18} className="text-zinc-600" />}
+                                error={errors.email?.message}
+                                {...register('email')}
+                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                            />
+                        </div>
                     </div>
                 </div>
 
                 {/* Section 2: Roles & Assignments */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-gray-200 font-medium pb-2 border-b border-zinc-800">
-                        <Shield size={18} className="text-amber-500" />
-                        <h3>Vai trò & Quyền hạn</h3>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                            <Shield size={18} className="text-amber-500" />
+                        </div>
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Vai trò và Cửa hàng</h3>
                     </div>
 
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 space-y-4">
-                        <div className="relative">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Vai trò được gán</label>
-                            <div className="relative">
+                    <div className="bg-zinc-900/40 border border-white/5 rounded-[32px] p-8 space-y-6 relative overflow-hidden group/card shadow-2xl">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Vai trò hệ thống</label>
+                            <div className="relative group/select">
                                 <select
-                                    className="flex h-11 w-full rounded-md border border-zinc-700 bg-zinc-900/50 pl-3 pr-10 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 appearance-none transition-shadow"
-                                    {...register('role')}
+                                    className="flex h-14 w-full rounded-2xl border border-white/5 bg-black/40 pl-4 pr-12 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500/50 appearance-none transition-all duration-300"
+                                    {...register('roleId', { valueAsNumber: true })}
                                 >
-                                    <option value="ADMIN">Admin (Toàn quyền)</option>
-                                    <option value="MANAGER">Manager (Quản lý cửa hàng)</option>
-                                    <option value="STAFF">Staff (Nhân viên tổng hợp)</option>
-                                    <option value="COORDINATOR">Coordinator (Điều phối sản xuất)</option>
-                                    <option value="STORE_STAFF">Store Staff (Nhập đơn hàng)</option>
+                                    <option value={0} disabled className="bg-zinc-900">Chọn vai trò...</option>
+                                    {roles.map(role => (
+                                        <option key={role.roleId} value={role.roleId} className="bg-zinc-900">
+                                            {role.roleName?.replace(/_/g, ' ') || `Role ${role.roleId}`}
+                                        </option>
+                                    ))}
                                 </select>
-                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-zinc-600 group-focus-within/select:text-amber-500 transition-colors">
+                                    <Shield size={20} />
                                 </div>
                             </div>
                         </div>
 
                         {/* Store Assignment */}
-                        {(selectedRole === 'STORE_STAFF' || selectedRole === 'MANAGER') && (
-                            <Input
-                                label="Mã Cửa hàng (Store ID)"
-                                type="number"
-                                placeholder="Nhập Store ID"
-                                icon={<Store size={18} className="text-gray-400" />}
-                                error={errors.storeId?.message}
-                                {...register('storeId')}
-                            />
+                        {(selectedRoleName === 'STORE_STAFF' || selectedRoleName === 'MANAGER' || selectedRoleName === 'STAFF') && (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Đơn vị công tác</label>
+                                <div className="relative group/select">
+                                    <select
+                                        className="flex h-14 w-full rounded-2xl border border-white/5 bg-black/40 pl-4 pr-12 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500/50 appearance-none transition-all duration-300"
+                                        {...register('storeId')}
+                                    >
+                                        <option value="null" className="bg-zinc-900">Chưa gán đơn vị</option>
+                                        {stores.map(store => (
+                                            <option key={store.storeId} value={store.storeId} className="bg-zinc-900">
+                                                {store.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-zinc-600 group-focus-within/select:text-amber-500 transition-colors">
+                                        <Store size={20} />
+                                    </div>
+                                </div>
+                            </div>
                         )}
 
-                        {/* Kitchen Assignment */}
-                        {(selectedRole === 'COORDINATOR' || selectedRole === 'ADMIN') && (
-                            <Input
-                                label="Mã Bếp trung tâm (Kitchen ID)"
-                                type="number"
-                                placeholder="Nhập Kitchen ID"
-                                icon={<Warehouse size={18} className="text-gray-400" />}
-                                error={errors.kitchenId?.message}
-                                {...register('kitchenId')}
-                            />
-                        )}
-
-                        <div className="flex gap-2 p-3 bg-amber-500/10 rounded text-xs text-amber-500">
-                            <Key size={14} className="mt-0.5" />
-                            <p>Việc gán vai trò sẽ tự động cấp các quyền tương ứng cho người dùng này.</p>
+                        <div className="flex gap-4 p-5 bg-amber-500/5 border border-amber-500/10 rounded-2xl transition-colors hover:bg-amber-500/10">
+                            <Key size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                            <p className="text-[11px] font-medium text-amber-500/80 leading-relaxed uppercase tracking-wide">
+                                Việc gán vai trò sẽ tự động cấp các đặc quyền tương ứng cho người dùng này trong hệ thống.
+                            </p>
                         </div>
                     </div>
-                    {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
+                    {errors.roleId && <p className="text-[10px] font-bold text-red-500 ml-1 tracking-wider uppercase bg-red-500/10 p-2 rounded-lg inline-block">{errors.roleId.message}</p>}
                 </div>
 
-                {/* Additional Info Box */}
                 {!user && (
-                    <div className="bg-green-500/10 rounded-lg p-4 flex items-start gap-3 border border-green-500/20">
-                        <CheckCircle2 size={18} className="text-green-500 mt-0.5" />
-                        <div>
-                            <h4 className="text-sm font-semibold text-green-400">Kích hoạt tài khoản</h4>
-                            <p className="text-xs text-green-500/80 mt-1 leading-relaxed">
-                                Một email mời sẽ được gửi đến email đã cung cấp với hướng dẫn thiết lập mật khẩu và kích hoạt tài khoản.
+                    <div className="bg-emerald-500/5 rounded-3xl p-6 flex items-start gap-4 border border-emerald-500/10 animate-in fade-in zoom-in-95 duration-700">
+                        <CheckCircle2 size={24} className="text-emerald-500 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                            <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest">Kích hoạt tức thì</h4>
+                            <p className="text-[10px] text-zinc-500 font-medium leading-relaxed uppercase tracking-wide">
+                                Hệ thống tự động gửi email mời thiết lập mật khẩu đến nhân viên ngay sau khi khởi tạo.
                             </p>
                         </div>
                     </div>

@@ -16,13 +16,15 @@ export interface LoginResponse {
     expiresIn?: number;
     accessTokenExpiresIn?: number;
     userId?: number;
+    storeId?: number;
+    storeName?: string;
+    kitchenId?: number;
+    kitchenName?: string;
 }
 
 export interface ActivateAccountRequest {
-    // fields based on backend
     token: string;
-    // other fields if necessary
-    [key: string]: any;
+    password?: string;
 }
 
 export interface ForgotPasswordRequest {

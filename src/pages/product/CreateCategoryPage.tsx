@@ -3,17 +3,16 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Save, Tag, AlertCircle, Activity, FileText } from 'lucide-react';
+import { ArrowLeft, Save, Tag, AlertCircle, Activity, FileText, Sparkles, ChevronRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { categoryApi } from '../../services/category.api';
 import type { CategoryResponse } from '../../types/category';
 
 const createCategorySchema = z.object({
-    categoryId: z.string().min(1, 'Category ID is required').trim(),
-    name: z.string().min(1, 'Category name is required').trim(),
+    categoryId: z.string().min(1, 'Mã danh mục là bắt buộc').trim(),
+    name: z.string().min(1, 'Tên danh mục là bắt buộc').trim(),
     description: z.string().optional(),
     status: z.enum(['ACTIVE', 'INACTIVE'])
 });
@@ -52,7 +51,6 @@ export const CreateCategoryPage = () => {
         const fetchCategory = async () => {
             if (!isEditMode) return;
 
-            // If we got category data from route state, use it directly
             if (categoryFromState) {
                 reset({
                     categoryId: categoryFromState.categoryId || String(categoryFromState.id),
@@ -64,7 +62,6 @@ export const CreateCategoryPage = () => {
                 return;
             }
 
-            // Fallback: fetch from API
             try {
                 const data = await categoryApi.getById(Number(id));
                 reset({
@@ -75,7 +72,7 @@ export const CreateCategoryPage = () => {
                 });
             } catch (error) {
                 console.error('Failed to fetch category details:', error);
-                toast.error('Failed to load category data');
+                toast.error('Không thể tải dữ liệu danh mục');
                 navigate('/products/categories');
             } finally {
                 setIsLoading(false);
@@ -91,15 +88,15 @@ export const CreateCategoryPage = () => {
         try {
             if (isEditMode) {
                 await categoryApi.update(Number(id), data);
-                toast.success('Category updated successfully');
+                toast.success('Cập nhật danh mục thành công');
             } else {
                 await categoryApi.create(data);
-                toast.success('Category created successfully');
+                toast.success('Tạo danh mục thành công');
             }
             navigate('/products/categories');
         } catch (error: any) {
             console.error('Create category error:', error);
-            const message = error.response?.data?.message || 'Failed to create category. Please try again.';
+            const message = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
             setBackendError(message);
             toast.error(message);
         } finally {
@@ -116,140 +113,217 @@ export const CreateCategoryPage = () => {
     }
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto pb-10">
-            {/* Header */}
-            <div className="flex items-center gap-4">
-                <Button
-                    variant="ghost"
-                    onClick={() => navigate('/products/categories')}
-                    className="hover:bg-zinc-800/80 rounded-full p-2 h-auto"
-                >
-                    <ArrowLeft size={20} className="text-gray-400" />
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight flex items-center gap-2">
-                        <Tag size={24} className="text-amber-600" />
-                        {isEditMode ? 'Edit Category' : 'Create Category'}
-                    </h1>
-                    <p className="text-sm text-gray-400 mt-1">
-                        {isEditMode ? 'Update the details of the existing category.' : 'Add a new category for products or materials.'}
-                    </p>
+        <div className="min-h-screen bg-[#0a0a0a] text-gray-100">
+            {/* Cinematic Header */}
+            <div className="relative h-64 w-full overflow-hidden">
+                <img
+                    src="/Users/phunghuyphuoc/.gemini/antigravity/brain/5ad3745d-382e-481d-8167-b732c447a69b/product_catalog_bg_1773026965335.png"
+                    className="w-full h-full object-cover scale-105 opacity-40 text-transparent"
+                    alt="Background"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0a0a]/60 to-[#0a0a0a]"></div>
+
+                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-5xl mx-auto">
+                    <div className="flex items-center gap-2 text-amber-500/80 mb-4 animate-in fade-in slide-in-from-left duration-700">
+                        <button
+                            onClick={() => navigate('/products/categories')}
+                            className="hover:text-amber-400 transition-colors flex items-center gap-1 text-sm font-medium"
+                        >
+                            <ArrowLeft size={16} />
+                            Quay lại danh sách
+                        </button>
+                        <ChevronRight size={14} className="text-gray-600" />
+                        <span className="text-gray-400 text-sm">Quản lý danh mục</span>
+                    </div>
+
+                    <div className="flex items-end justify-between gap-6">
+                        <div className="animate-in fade-in slide-in-from-bottom duration-700">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-amber-500/20 rounded-lg border border-amber-500/30">
+                                    <Tag className="text-amber-500" size={24} />
+                                </div>
+                                <h1 className="text-4xl font-bold tracking-tight text-white italic">
+                                    {isEditMode ? 'CHỈNH SỬA' : 'THÊM MỚI'} <span className="text-amber-500">DANH MỤC</span>
+                                </h1>
+                            </div>
+                            <p className="text-gray-400 max-w-xl">
+                                {isEditMode
+                                    ? 'Cập nhật thông tin chi tiết cho danh mục sản phẩm hiện có.'
+                                    : 'Bắt đầu tạo một danh mục mới để quản lý phân loại sản phẩm hiệu quả hơn.'}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <Card className="p-6 md:p-8 border-0 shadow-sm ring-1 ring-zinc-700 bg-zinc-900/50">
-                {backendError && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-3">
-                        <div className="mt-0.5">
-                            <AlertCircle size={18} className="text-red-500" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-sm">Action Failed</h3>
-                            <p className="text-sm">{backendError}</p>
-                        </div>
-                    </div>
-                )}
+            {/* Main Form Content */}
+            <div className="max-w-5xl mx-auto px-8 -mt-6 relative z-10 pb-20">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Form */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <Sparkles size={60} className="text-amber-500" />
+                            </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block">Category ID *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Tag size={16} className="text-gray-400" />
+                            {backendError && (
+                                <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-start gap-3 animate-in fade-in scale-in-95">
+                                    <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                                    <div>
+                                        <h3 className="font-bold text-sm">Lỗi hệ thống</h3>
+                                        <p className="text-sm opacity-80">{backendError}</p>
                                     </div>
-                                    <input
-                                        type="text"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.categoryId ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
-                                        placeholder="e.g. CAT-001"
-                                        disabled={isEditMode}
-                                        {...register('categoryId')}
-                                    />
-                                </div>
-                                {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId.message}</p>}
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block">Category Name *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Tag size={16} className="text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.name ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
-                                        placeholder="e.g. Beverages"
-                                        {...register('name')}
-                                    />
-                                </div>
-                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block">Status *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Activity size={16} className="text-gray-400" />
-                                    </div>
-                                    <select
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-900/50 ${errors.status ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
-                                        {...register('status')}
-                                    >
-                                        <option value="ACTIVE">Active</option>
-                                        <option value="INACTIVE">Inactive</option>
-                                    </select>
-                                </div>
-                                {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status.message}</p>}
-                            </div>
-
-                            <div className="space-y-1 md:col-span-2">
-                                <label className="text-sm font-medium text-gray-300 block flex items-center gap-2">
-                                    <FileText size={16} className="text-gray-400" />
-                                    Description
-                                </label>
-                                <textarea
-                                    className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent resize-none h-24 mt-1 ${errors.description ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
-                                    placeholder="Enter category description"
-                                    {...register('description')}
-                                />
-                                {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-zinc-800 flex justify-end gap-3">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => navigate('/products/categories')}
-                            disabled={isSubmitting}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            className="bg-amber-600 hover:bg-blue-700 text-white min-w-[140px]"
-                            disabled={isSubmitting || !isValid}
-                        >
-                            {isSubmitting ? (
-                                <div className="flex items-center gap-2">
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Creating...
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <Save size={18} />
-                                    {isEditMode ? 'Update Category' : 'Create Category'}
                                 </div>
                             )}
-                        </Button>
+
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Category ID */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Mã danh mục *</label>
+                                        <div className="relative group/input">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within/input:text-amber-500 transition-colors">
+                                                <Tag size={18} />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                {...register('categoryId')}
+                                                disabled={isEditMode}
+                                                className={`w-full pl-12 pr-4 py-3 bg-black/40 border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${errors.categoryId ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'
+                                                    }`}
+                                                placeholder="VD: CAT-001"
+                                            />
+                                        </div>
+                                        {errors.categoryId && <p className="text-red-400 text-xs mt-1 ml-1">{errors.categoryId.message}</p>}
+                                    </div>
+
+                                    {/* Name */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Tên danh mục *</label>
+                                        <div className="relative group/input">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within/input:text-amber-500 transition-colors">
+                                                <Activity size={18} />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                {...register('name')}
+                                                className={`w-full pl-12 pr-4 py-3 bg-black/40 border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${errors.name ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'
+                                                    }`}
+                                                placeholder="VD: Đồ uống"
+                                            />
+                                        </div>
+                                        {errors.name && <p className="text-red-400 text-xs mt-1 ml-1">{errors.name.message}</p>}
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Trạng thái *</label>
+                                        <div className="relative group/input">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within/input:text-amber-500 transition-colors">
+                                                <Sparkles size={18} />
+                                            </div>
+                                            <select
+                                                {...register('status')}
+                                                className={`w-full pl-12 pr-10 py-3 bg-black/40 border rounded-xl text-sm appearance-none transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${errors.status ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'
+                                                    }`}
+                                            >
+                                                <option value="ACTIVE">Hoạt động</option>
+                                                <option value="INACTIVE">Ngưng hoạt động</option>
+                                            </select>
+                                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500">
+                                                <ChevronRight size={16} className="rotate-90" />
+                                            </div>
+                                        </div>
+                                        {errors.status && <p className="text-red-400 text-xs mt-1 ml-1">{errors.status.message}</p>}
+                                    </div>
+
+                                    {/* Description */}
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Mô tả chi tiết</label>
+                                        <div className="relative group/input">
+                                            <div className="absolute top-4 left-4 flex items-start pointer-events-none text-gray-500 group-focus-within/input:text-amber-500 transition-colors">
+                                                <FileText size={18} />
+                                            </div>
+                                            <textarea
+                                                {...register('description')}
+                                                rows={4}
+                                                className={`w-full pl-12 pr-4 py-3 bg-black/40 border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none ${errors.description ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'
+                                                    }`}
+                                                placeholder="Nhập mô tả chi tiết cho danh mục này..."
+                                            />
+                                        </div>
+                                        {errors.description && <p className="text-red-400 text-xs mt-1 ml-1">{errors.description.message}</p>}
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 flex justify-end gap-4 border-t border-white/5">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={() => navigate('/products/categories')}
+                                        className="text-gray-400 hover:text-white hover:bg-white/5 px-8 rounded-xl h-12"
+                                    >
+                                        Hủy bỏ
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={isSubmitting || !isValid}
+                                        className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-bold px-10 rounded-xl shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed h-12 flex items-center gap-2 group/btn transition-all active:scale-95"
+                                    >
+                                        {isSubmitting ? (
+                                            <RefreshIcon className="animate-spin h-5 w-5" />
+                                        ) : (
+                                            <Save size={20} className="group-hover/btn:scale-110 transition-transform" />
+                                        )}
+                                        {isEditMode ? 'CẬP NHẬT' : 'HOÀN TẤT'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </form>
-            </Card>
+
+                    {/* Right Column: Tips/Preview */}
+                    <div className="space-y-6">
+                        <div className="backdrop-blur-xl bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6">
+                            <h3 className="text-amber-500 font-bold mb-4 flex items-center gap-2">
+                                <Sparkles size={18} />
+                                Ghi chú quan trọng
+                            </h3>
+                            <ul className="space-y-4 text-sm text-gray-400">
+                                <li className="flex gap-3">
+                                    <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5"></div>
+                                    <p><span className="text-gray-200">Mã danh mục</span> là định danh duy nhất và không thể thay đổi sau khi tạo.</p>
+                                </li>
+                                <li className="flex gap-3">
+                                    <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5"></div>
+                                    <p><span className="text-gray-200">Tên danh mục</span> nên ngắn gọn, dễ nhớ để hiển thị tốt trên thực đơn.</p>
+                                </li>
+                                <li className="flex gap-3">
+                                    <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5"></div>
+                                    <p><span className="text-gray-200">Trạng thái</span> Ngưng hoạt động sẽ ẩn các sản phẩm thuộc danh mục này khỏi cửa hàng.</p>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div className="backdrop-blur-xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 text-center">
+                            <div className="w-16 h-16 bg-gradient-to-br from-amber-500/20 to-transparent rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
+                                <Tag className="text-amber-500/60" size={32} />
+                            </div>
+                            <h4 className="text-gray-300 font-semibold mb-1">Mẹo nhỏ</h4>
+                            <p className="text-gray-500 text-xs leading-relaxed">
+                                Sử dụng mô tả chi tiết giúp nhân viên dễ dàng phân loại và tìm kiếm sản phẩm trong hệ thống.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
+
+const RefreshIcon = ({ className }: { className?: string }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+);

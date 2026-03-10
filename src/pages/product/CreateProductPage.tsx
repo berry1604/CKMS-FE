@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Package, Tag, AlertCircle, DollarSign, Box } from 'luc
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { productApi } from '../../services/product.api';
 import { categoryApi } from '../../services/category.api';
@@ -88,156 +89,149 @@ export const CreateProductPage = () => {
     };
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto pb-10">
+        <div className="space-y-10 max-w-4xl mx-auto pb-20 pt-4">
             {/* Header */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6 animate-in fade-in slide-in-from-left-4 duration-700">
                 <Button
                     variant="ghost"
                     onClick={() => navigate('/products')}
-                    className="hover:bg-zinc-800/80 rounded-full p-2 h-auto"
+                    className="h-12 w-12 rounded-2xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-300"
                 >
-                    <ArrowLeft size={20} className="text-gray-400" />
+                    <ArrowLeft size={20} />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight flex items-center gap-2">
-                        <Package size={24} className="text-amber-600" />
-                        Add New Product
+                    <h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                            <Package size={24} className="text-amber-500" />
+                        </div>
+                        Thêm sản phẩm mới
                     </h1>
-                    <p className="text-sm text-gray-400 mt-1">Create a new product record in the catalog.</p>
+                    <p className="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-[0.2em] ml-1">Khởi tạo bản ghi sản phẩm trong hệ thống</p>
                 </div>
             </div>
 
-            <Card className="p-6 md:p-8 border-0 shadow-sm ring-1 ring-zinc-700 bg-zinc-900/50">
+            <Card className="p-10 border-white/5 bg-zinc-900/40 backdrop-blur-xl rounded-[40px] shadow-2xl relative overflow-hidden group animate-in fade-in zoom-in-95 duration-1000">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+
                 {backendError && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-3">
-                        <div className="mt-0.5">
-                            <AlertCircle size={18} className="text-red-500" />
-                        </div>
+                    <div className="mb-10 p-5 bg-red-500/5 border border-red-500/10 text-red-500 rounded-2xl flex items-start gap-4 animate-shake">
+                        <AlertCircle size={20} className="shrink-0 mt-0.5" />
                         <div>
-                            <h3 className="font-semibold text-sm">Action Failed</h3>
-                            <p className="text-sm">{backendError}</p>
+                            <h3 className="font-black text-[10px] uppercase tracking-widest">Thao tác thất bại</h3>
+                            <p className="text-xs mt-1 font-medium">{backendError}</p>
                         </div>
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block">Product Name *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Package size={16} className="text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.name ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
-                                        placeholder="e.g. Signature Coffee"
-                                        {...register('name')}
-                                    />
-                                </div>
-                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+                    <div className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Tên sản phẩm *</label>
+                                <Input
+                                    placeholder="VD: Cà phê Signature"
+                                    icon={<Package size={18} className="text-zinc-600" />}
+                                    error={errors.name?.message}
+                                    {...register('name')}
+                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                />
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block">Category *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Tag size={16} className="text-gray-400" />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Danh mục sản phẩm *</label>
+                                <div className="relative group/field">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Tag size={18} className="text-zinc-600 group-focus-within/field:text-amber-500/50 transition-colors" />
                                     </div>
                                     <select
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-900/50 ${errors.categoryId ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
+                                        className={`w-full pl-12 pr-4 h-14 bg-white/5 border border-white/5 focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 text-zinc-100 rounded-2xl appearance-none transition-all duration-300 text-sm font-medium ${errors.categoryId ? 'border-red-500/50 ring-red-500/10' : ''}`}
                                         {...register('categoryId', { valueAsNumber: true })}
                                     >
-                                        <option value={0} disabled>-- Select Category --</option>
+                                        <option value={0} disabled className="bg-zinc-900">-- Chọn danh mục --</option>
                                         {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>
+                                            <option key={cat.id} value={cat.id} className="bg-zinc-900">
                                                 {cat.categoryId ? `[${cat.categoryId}] ${cat.name}` : cat.name}
                                             </option>
                                         ))}
                                     </select>
-                                </div>
-                                {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId.message}</p>}
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block">Selling Price *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <DollarSign size={16} className="text-gray-400" />
+                                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                        <Box size={14} className="text-zinc-600" />
                                     </div>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.price ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
-                                        placeholder="0.00"
-                                        {...register('price', { valueAsNumber: true })}
-                                    />
                                 </div>
-                                {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
+                                {errors.categoryId && <p className="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase tracking-tight">{errors.categoryId.message}</p>}
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-300 block">Unit *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Box size={16} className="text-gray-400" />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Giá bán niên yết (VNĐ) *</label>
+                                <Input
+                                    type="number"
+                                    step="1000"
+                                    placeholder="0"
+                                    icon={<DollarSign size={18} className="text-zinc-600" />}
+                                    error={errors.price?.message}
+                                    {...register('price', { valueAsNumber: true })}
+                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300 font-mono"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Đơn vị tính *</label>
+                                <div className="relative group/field">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Box size={18} className="text-zinc-600 group-focus-within/field:text-amber-500/50 transition-colors" />
                                     </div>
                                     <select
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.unit ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
+                                        className={`w-full pl-12 pr-4 h-14 bg-white/5 border border-white/5 focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 text-zinc-100 rounded-2xl appearance-none transition-all duration-300 text-sm font-medium ${errors.unit ? 'border-red-500/50 ring-red-500/10' : ''}`}
                                         {...register('unit')}
                                     >
-                                        <option value="KG">KG</option>
-                                        <option value="GRAM">GRAM</option>
-                                        <option value="LITER">LITER</option>
-                                        <option value="ML">ML</option>
-                                        <option value="PIECE">PIECE</option>
-                                        <option value="BOTTLE">BOTTLE</option>
-                                        <option value="BOX">BOX</option>
+                                        <option value="KG" className="bg-zinc-900">KG</option>
+                                        <option value="GRAM" className="bg-zinc-900">GRAM</option>
+                                        <option value="LITER" className="bg-zinc-900">LITER</option>
+                                        <option value="ML" className="bg-zinc-900">ML</option>
+                                        <option value="PIECE" className="bg-zinc-900">PIECE</option>
+                                        <option value="BOTTLE" className="bg-zinc-900">BOTTLE</option>
+                                        <option value="BOX" className="bg-zinc-900">BOX</option>
                                     </select>
                                 </div>
-                                {errors.unit && <p className="text-red-500 text-xs mt-1">{errors.unit.message}</p>}
+                                {errors.unit && <p className="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase tracking-tight">{errors.unit.message}</p>}
                             </div>
 
-                            <div className="space-y-1 md:col-span-2">
-                                <label className="text-sm font-medium text-gray-300 block">Description</label>
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Mô tả sản phẩm</label>
                                 <textarea
-                                    className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${errors.description ? 'border-red-300 focus:ring-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:ring-amber-500'}`}
-                                    placeholder="e.g. A rich and smooth coffee blend"
-                                    rows={3}
+                                    className={`w-full px-5 py-4 bg-white/5 border border-white/5 focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 text-zinc-100 rounded-3xl transition-all duration-300 text-sm placeholder:text-zinc-700 min-h-[120px] resize-none ${errors.description ? 'border-red-500/50 ring-red-500/10' : ''}`}
+                                    placeholder="Nhập mô tả chi tiết về sản phẩm..."
                                     {...register('description')}
                                 />
-                                {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
+                                {errors.description && <p className="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase tracking-tight">{errors.description.message}</p>}
                             </div>
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-zinc-800 flex justify-end gap-3">
+                    <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-end gap-4">
                         <Button
                             type="button"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => navigate('/products')}
                             disabled={isSubmitting}
+                            className="h-14 px-10 rounded-2xl text-zinc-400 hover:text-white font-black uppercase text-[10px] tracking-widest transition-all"
                         >
-                            Cancel
+                            Hủy bỏ
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-amber-600 hover:bg-blue-700 text-white min-w-[140px]"
                             disabled={isSubmitting || !isValid}
+                            className="h-14 px-10 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-black uppercase text-xs tracking-widest transition-all duration-500 border-0 shadow-2xl shadow-amber-900/40 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100"
                         >
                             {isSubmitting ? (
-                                <div className="flex items-center gap-2">
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Saving...
+                                <div className="flex items-center gap-3">
+                                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                    Đang xử lý...
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                     <Save size={18} />
-                                    Add Product
+                                    Tạo sản phẩm
                                 </div>
                             )}
                         </Button>

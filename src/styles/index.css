@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+@keyframes slow-zoom {
+  from { transform: scale(1.0); }
+  to { transform: scale(1.15); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.animate-slow-zoom {
+  animation: slow-zoom 30s infinite alternate ease-in-out;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
 @layer base {
   body {
     @apply antialiased text-gray-200 bg-zinc-950;
