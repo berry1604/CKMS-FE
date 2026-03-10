@@ -74,7 +74,12 @@ export const ProductionBoard = () => {
     const handleConfirmFinish = async () => {
         if (!finishingPlanId) return;
         try {
-            await productionPlanApi.finishProductionPlan(finishingPlanId, finishingPlanVersion);
+            // Send yield report data (currently mocked as 100 per logic in modal)
+            const yieldData = {
+                actualYield: 100, // This matches the default value in the UI
+                notes: 'Production completed successfully'
+            };
+            await productionPlanApi.finishProductionPlan(finishingPlanId, finishingPlanVersion, yieldData);
             toast.success('Sản xuất hoàn tất. Đã báo cáo năng suất thành công!');
             setShowYieldModal(false);
             setFinishingPlanId(null);
