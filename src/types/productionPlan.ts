@@ -31,7 +31,7 @@ export interface MaterialRequirementResponse {
     materialId: number;
     materialName: string;
     requiredQuantity: number;
-    unit: string;
+    unit?: string;
 }
 
 export interface ProductionPlanDetailResponse extends ProductionPlanSummaryResponse {

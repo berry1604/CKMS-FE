@@ -134,14 +134,14 @@ export const UsersList = () => {
 
                 <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="h-px w-12 bg-blue-500/50" />
-                        <span className="text-blue-500 font-medium tracking-widest text-xs uppercase">System Administration</span>
+                        <div className="h-px w-12 bg-amber-500/50" />
+                        <span className="text-amber-500 font-medium tracking-widest text-xs uppercase">System Administration</span>
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-end gap-6">
                         <div>
                             <h1 className="text-5xl font-bold text-white tracking-tighter mb-2">
-                                THÀNH VIÊN <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600">HỆ THỐNG</span>
+                                THÀNH VIÊN <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">HỆ THỐNG</span>
                             </h1>
                             <p className="text-gray-400 max-w-xl text-lg font-light leading-relaxed">
                                 Quản lý nhân sự, phân quyền và giám sát hoạt động truy cập của toàn bộ đội ngũ vận hành.
@@ -152,7 +152,7 @@ export const UsersList = () => {
                                 <span className="text-gray-500 text-xs uppercase tracking-widest block mb-1">Tổng cộng</span>
                                 <span className="text-2xl font-bold text-white leading-none">{totalElements}</span>
                             </div>
-                            <Button onClick={handleCreate} className="h-14 px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <Button onClick={handleCreate} className="h-14 px-8 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-bold rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]">
                                 <Plus className="mr-2 h-5 w-5" /> Thêm thành viên
                             </Button>
                         </div>
@@ -166,12 +166,12 @@ export const UsersList = () => {
                     <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
                         <div className="relative w-full md:w-[450px] group">
                             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                <Search size={18} className="text-gray-400 group-focus-within:text-blue-400" />
+                                <Search size={18} className="text-gray-400 group-focus-within:text-amber-400" />
                             </div>
                             <input
                                 type="text"
                                 placeholder="Tìm kiếm theo tên hoặc email..."
-                                className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 transition-all placeholder:text-gray-600 hover:bg-white/[0.07]"
+                                className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all placeholder:text-gray-600 hover:bg-white/[0.07]"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -186,7 +186,7 @@ export const UsersList = () => {
                                     key={role}
                                     onClick={() => setRoleFilter(role)}
                                     className={`px-6 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all whitespace-nowrap border ${roleFilter === role
-                                        ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]'
+                                        ? 'bg-amber-600 border-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.3)]'
                                         : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:border-white/10'
                                         }`}
                                 >
@@ -215,7 +215,7 @@ export const UsersList = () => {
                                     <tr>
                                         <td colSpan={5} className="px-8 py-24 text-center">
                                             <div className="flex flex-col items-center justify-center">
-                                                <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4" />
+                                                <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
                                                 <span className="text-gray-400 text-sm font-light tracking-widest uppercase">Initializing Interface...</span>
                                             </div>
                                         </td>
@@ -236,7 +236,7 @@ export const UsersList = () => {
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-4">
                                                     <div className="relative">
-                                                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+                                                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(245,158,11,0.2)]">
                                                             {(user.fullName || user.username || '?').charAt(0).toUpperCase()}
                                                         </div>
                                                         <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-4 border-[#0a0a0a] ${user.status === 'ACTIVE' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' :
@@ -247,7 +247,7 @@ export const UsersList = () => {
                                                     <div>
                                                         <div className="font-bold text-white text-base tracking-tight">{user.fullName || user.username}</div>
                                                         <div className="text-gray-500 text-xs flex items-center mt-0.5">
-                                                            <Mail size={12} className="mr-1.5 text-blue-500/50" />
+                                                            <Mail size={12} className="mr-1.5 text-amber-500/50" />
                                                             {user.email}
                                                         </div>
                                                     </div>
@@ -256,8 +256,8 @@ export const UsersList = () => {
                                             <td className="px-8 py-6">
                                                 <div className="space-y-1.5">
                                                     <div className="flex items-center gap-2">
-                                                        <span className={`h-1.5 w-1.5 rounded-full ${user.roleName === 'ADMIN' ? 'bg-blue-500' :
-                                                            user.roleName === 'MANAGER' ? 'bg-indigo-500' :
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${user.roleName === 'ADMIN' ? 'bg-amber-500' :
+                                                            user.roleName === 'MANAGER' ? 'bg-orange-500' :
                                                                 user.roleName === 'STORE_STAFF' ? 'bg-green-500' :
                                                                     'bg-amber-500'
                                                             }`} />
@@ -267,7 +267,7 @@ export const UsersList = () => {
                                                     </div>
                                                     {(user.storeName || user.kitchenName) && (
                                                         <div className="text-[10px] text-gray-500 flex items-center gap-1.5 ml-3">
-                                                            {user.storeName ? <Store size={10} className="text-blue-400" /> : <Warehouse size={10} className="text-indigo-400" />}
+                                                            {user.storeName ? <Store size={10} className="text-amber-400" /> : <Warehouse size={10} className="text-orange-400" />}
                                                             {user.storeName || user.kitchenName}
                                                         </div>
                                                     )}
@@ -300,7 +300,7 @@ export const UsersList = () => {
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleEdit(user)}
-                                                        className="h-9 w-9 p-0 bg-white/5 border border-white/10 hover:bg-blue-600 hover:border-blue-500 hover:text-white rounded-xl transition-all"
+                                                        className="h-9 w-9 p-0 bg-white/5 border border-white/10 hover:bg-amber-600 hover:border-amber-500 hover:text-white rounded-xl transition-all"
                                                     >
                                                         <Edit2 size={14} />
                                                     </Button>
@@ -326,7 +326,7 @@ export const UsersList = () => {
                         <div className="flex items-center gap-4">
                             <span className="text-xs text-gray-500 font-light tracking-wide italic">
                                 {totalElements > 0 ? (
-                                    <>Hiển thị records <span className="text-blue-400 font-bold">{startItem}-{endItem}</span> / <span className="text-white font-bold">{totalElements}</span></>
+                                    <>Hiển thị records <span className="text-amber-400 font-bold">{startItem}-{endItem}</span> / <span className="text-white font-bold">{totalElements}</span></>
                                 ) : (
                                     'Empty Resultset'
                                 )}

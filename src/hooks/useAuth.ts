@@ -1,5 +1,6 @@
 import { useAppStore } from '../app/store';
 import { authApi } from '../services/auth.api';
+import { hasPermission, type Permission } from '../config/permissions';
 
 export const useAuth = () => {
     const { user, isAuthenticated, login, logout } = useAppStore();
@@ -88,6 +89,9 @@ export const useAuth = () => {
     };
 
     const hasAuthority = (authority: string): boolean => {
+        // First try the specialized hasPermission logic (handles role-to-permission mapping)
+        if (hasPermission(user, authority as Permission)) return true;
+
         const normalizedAuthority = authority.toUpperCase();
 
         let userRoleStr = user?.role || '';

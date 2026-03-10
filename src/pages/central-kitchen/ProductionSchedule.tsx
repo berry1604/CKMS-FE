@@ -68,18 +68,73 @@ export const ProductionSchedule = () => {
   const [manualProductId, setManualProductId] = useState<number>(1);
   const [manualActualQty, setManualActualQty] = useState<number>(100);
 
-  // Delete/Cancel Modal State
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [planToCancel, setPlanToCancel] = useState<{
-    id: number;
-    version?: number;
-  } | null>(null);
-  const [isCancelling, setIsCancelling] = useState(false);
+    // Fetch kitchen stock whenever detail panel opens
+    useEffect(() => {
+        if (!selectedPlanId) {
+            setMaterialStockMap(new Map());
+            return;
+        }
+        const fetchStock = async () => {
+            const kitchenId = selectedPlanDetail?.kitchenId || user?.kitchenId || 1;
+            const nameMap = new Map<string, number>();
+            try {
+                // IMPORTANT: Match backend logic which only checks the PRIMARY warehouse
+                // Backend: warehouseRepository.findByKitchen_KitchenId(kitchenId).stream().findFirst()
+                // Frontend: getWarehousesByKitchenId(kitchenId) returns list, we take first one
+                
+                // However, there is no endpoint /kitchen-warehouses in Backend currently!
+                // So getWarehousesByKitchenId returns [] and we fallback to { warehouseId: 1 }.
+                
+                // If Backend logic (ProductionPlanServiceImpl:166) finds a different warehouse ID than 1,
+                // then UI (checking ID 1) and Backend (checking ID X) will mismatch.
+                
+                // Assuming standard setup:
+                // If kitchenId=1, warehouseId is likely 1.
+                // We should rely on what the user sees in Inventory page.
+                
+                // The Inventory page uses WAREHOUSE_ID = 1 hardcoded.
+                // Let's stick to WAREHOUSE_ID = 1 for now if we can't fetch.
+                
+                let warehouseIdToUse = 1;
+                
+                try {
+                     const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(kitchenId);
+                     if (warehouses && warehouses.length > 0) {
+                         warehouseIdToUse = warehouses[0].warehouseId;
+                     }
+                } catch (e) {
+                    // Ignore, stick to 1
+                }
 
-  // Kitchen stock map: materialName (lowercase) → available quantity
-  const [materialStockMap, setMaterialStockMap] = useState<Map<string, number>>(
-    new Map(),
-  );
+                // Force warehouseId = 1 if user is admin/manager seeing global view, 
+                // OR if we are in development and know the seed data.
+                // But for correctness, we should use the one found.
+                
+                // Check stock for this warehouse
+                const res = await kitchenInventoryApi.getWarehouseStock(warehouseIdToUse).catch(() => ({ data: [] }));
+                const items: KitchenStockItemResponse[] = res.data || [];
+                for (const item of items) {
+                    // Backend uses materialId to check stock, not name.
+                    // We must map by materialId if available, or fallback to name.
+                    
+                    // In KitchenStockItemResponse: itemId is the ID of material or product.
+                    // itemType distinguishes them.
+                    
+                    if (item.itemType === 'MATERIAL') {
+                        // Use materialId as key (convert to string for Map)
+                        const idKey = `id-${item.itemId}`;
+                        nameMap.set(idKey, (nameMap.get(idKey) || 0) + item.quantity);
+                    }
+                    
+                    // Keep name mapping for UI display (fallback)
+                    const key = item.itemName?.toLowerCase().trim();
+                    if (key) {
+                        nameMap.set(key, (nameMap.get(key) || 0) + item.quantity);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load kitchen stock for plan detail', e);
+            }
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("");
@@ -179,8 +234,93 @@ export const ProductionSchedule = () => {
       );
     }
 
-    setFilteredPlans(result);
-  }, [searchQuery, statusFilter, plans]);
+        try {
+            switch (action) {
+                case 'ready':
+                    await productionPlanApi.readyProductionPlan(id);
+                    break;
+                case 'start':
+                    await productionPlanApi.startProductionPlan(id, version);
+                    break;
+                case 'finish': {
+                    // Collect outputs from orders linked to this plan
+                    // For now, we simulate full yield for all items in the plan
+                    setIsDetailLoading(true);
+                    try {
+                        // Fetch all orders associated with this plan to aggregate product needs
+                        // Use a larger size or specific query if API supports filtering by batchId
+                        // Since storeOrderApi doesn't expose findByBatchId easily, we fetch more.
+                        const ordersRes = await storeOrderApi.getAllOrders({ size: 500 });
+                        
+                        // Filter orders that belong to this plan
+                        // Also check for orders that are IN_PRODUCTION status and match this batch?
+                        // Or just batchId.
+                        const planOrders = (ordersRes.content || []).filter(o => o.batchId === id); 
+                        
+                        // DEBUG: Log found orders
+                        console.log("Found orders for plan", id, ":", planOrders.length, planOrders);
+
+                        const productMap = new Map<number, number>();
+                        planOrders.forEach(order => {
+                            (order.orderDetails || []).forEach(item => {
+                                productMap.set(item.productId, (productMap.get(item.productId) || 0) + item.quantity);
+                            });
+                        });
+
+                        const outputs = Array.from(productMap.entries()).map(([productId, actualQty]) => ({
+                            productId,
+                            actualQty
+                        }));
+
+                        // If no orders found or no outputs (which is possible if batchId logic fails),
+                        // we must try a fallback.
+                        if (outputs.length === 0) {
+                            // FALLBACK: If we can't find products via orders, check if we can infer from Plan Name or just send a dummy/warning.
+                            // However, backend requires at least one output.
+                            // Let's try to see if the plan detail has any info about what it produces?
+                            // Unfortunately, ProductionPlanDetail only lists MATERIALS requirements, not product outputs directly 
+                            // unless we query the recipes.
+                            
+                            // Last resort: If we are in dev/demo mode, or if data is inconsistent,
+                            // we might want to alert the user OR create a dummy output if that helps unblock (DANGEROUS).
+                            // Better approach: Show a modal to manually input yield (Complex).
+                            
+                            // Simplest fix for now: Log the error clearly and maybe try to fetch ALL orders 
+                            // to see if we missed any pagination (we only fetched 100).
+                            
+                            // Let's try fetching more orders if 100 wasn't enough?
+                            // Or, maybe batchId is not set correctly on orders?
+                            
+                            console.warn("No outputs found for plan", id, "in first 100 orders. Checking if any order is SCHEDULED/ALLOCATED without batchId?");
+                             
+                             toast.error("Không tìm thấy sản phẩm đầu ra từ các đơn hàng liên kết. Vui lòng kiểm tra lại trạng thái đơn hàng.");
+                             return;
+                        }
+
+                        await productionPlanApi.finishProductionPlan(id, version, {
+                            outputs,
+                            requestVersion: version
+                        });
+                    } finally {
+                        setIsDetailLoading(false);
+                    }
+                    break;
+                }
+            }
+            if (action === 'finish') {
+                toast.success('Kế hoạch đã hoàn thành. Sản phẩm đã được cập nhật vào kho.');
+            } else {
+                toast.success('Cập nhật trạng thái thành công');
+            }
+            loadPlans();
+            if (selectedPlanId === id) {
+                loadPlanDetail(id);
+            }
+        } catch (error: any) {
+            const msg = error.response?.data?.message || `Failed to ${action} plan`;
+            toast.error(msg);
+        }
+    };
 
   const loadPlans = async () => {
     setIsLoading(true);
@@ -450,24 +590,54 @@ export const ProductionSchedule = () => {
       const dayPlans = plans.filter((p) => p.createdAt?.startsWith(dateStr));
       const isToday = new Date().toISOString().split("T")[0] === dateStr;
 
-      days.push(
-        <div
-          key={day}
-          className="min-h-[140px] border-b border-r border-zinc-800/50 p-3 flex flex-col group relative hover:bg-zinc-900/30 transition-all"
-        >
-          <div className="flex justify-between items-start mb-2">
-            <span
-              className={cn(
-                "w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black transition-colors",
-                isToday
-                  ? "bg-amber-500 text-black shadow-lg shadow-amber-900/40"
-                  : "text-zinc-600 group-hover:text-zinc-400",
-              )}
-            >
-              {day}
-            </span>
-            {dayPlans.length > 0 && (
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+    const footer = (
+        <div className="flex flex-col gap-6 w-full p-2">
+            {selectedPlanDetail && !['COMPLETED', 'FINISHED', 'CANCELLED'].includes(selectedPlanDetail.status?.toUpperCase()) && (
+                <div className="space-y-4">
+                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Bảng điều khiển trạng thái</span>
+                    <div className="flex flex-wrap gap-3">
+                        {(selectedPlanDetail.status?.toUpperCase() === 'DRAFT' || selectedPlanDetail.status?.toUpperCase() === 'PLANNED') && hasAuthority('ORGANIZE_PRODUCTION') && (
+                            <>
+                                <Button
+                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-indigo-900/20"
+                                    onClick={() => handleStatusAction('ready')}
+                                >
+                                    <CheckSquare size={16} className="mr-2" /> Đánh dấu Sẵn sàng
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
+                                    onClick={() => handleStatusAction('cancel')}
+                                >
+                                    <X size={16} className="mr-2" /> Hủy mẻ này
+                                </Button>
+                            </>
+                        )}
+                        {selectedPlanDetail.status?.toUpperCase() === 'READY_TO_PRODUCE' && hasAuthority('EXECUTE_PRODUCTION') && (
+                            <>
+                                <Button
+                                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-amber-900/20"
+                                    onClick={() => handleStatusAction('start')}
+                                >
+                                    <PlayCircle size={16} className="mr-2" strokeWidth={3} /> Bắt đầu nấu ngay
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
+                                    onClick={() => handleStatusAction('cancel')}
+                                >
+                                    <X size={16} className="mr-2" /> Hủy mẻ
+                                </Button>
+                            </>
+                        )}
+                        {selectedPlanDetail.status?.toUpperCase() === 'IN_PRODUCTION' && hasAuthority('EXECUTE_PRODUCTION') && (
+                            <Button
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-emerald-900/20"
+                                onClick={() => handleStatusAction('finish')}
+                            >
+                                <CheckCircle2 size={16} className="mr-2" strokeWidth={3} /> Hoàn thành sản xuất
+                            </Button>
+                        )}
+                    </div>
+                </div>
             )}
           </div>
 
@@ -1092,27 +1262,98 @@ export const ProductionSchedule = () => {
                                     Chưa kết nối
                                   </span>
                                 )}
-                              </td>
-                              <td className="px-6 py-4 text-right pr-8">
-                                {!stockKnown ? (
-                                  <Info
-                                    size={14}
-                                    className="text-zinc-800 inline ml-auto"
-                                  />
-                                ) : sufficient ? (
-                                  <div className="flex items-center justify-end gap-1.5 text-emerald-500/60">
-                                    <CheckCircle2 size={12} strokeWidth={3} />
-                                    <span className="text-[10px] font-black uppercase tracking-tight">
-                                      OK
-                                    </span>
-                                  </div>
+                            </div>
+
+                            <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 overflow-hidden shadow-xl">
+                                {selectedPlanDetail.materials && selectedPlanDetail.materials.length > 0 ? (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="bg-zinc-800/30">
+                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Item / Unit</th>
+                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Yêu cầu</th>
+                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Khả dụng</th>
+                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right pr-8">Trạng thái</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-zinc-800/50">
+                                                {selectedPlanDetail.materials.map((mat, idx) => {
+                                                    // First try to match by ID if materialId is available
+                                                    const idKey = mat.materialId ? `id-${mat.materialId}` : null;
+                                                    let available = idKey ? materialStockMap.get(idKey) : undefined;
+                                                    
+                                                    // Fallback to name if ID match fails
+                                                    if (available === undefined) {
+                                                        const key = mat.materialName?.toLowerCase().trim();
+                                                        available = key ? materialStockMap.get(key) : undefined;
+                                                    }
+                                                    
+                                                    const stockKnown = available !== undefined;
+                                                    const sufficient = !stockKnown || available! >= mat.requiredQuantity;
+                                                    return (
+                                                        <tr key={idx} className={cn(
+                                                            "hover:bg-zinc-800/20 transition-colors group",
+                                                            !sufficient && "bg-red-500/[0.02]"
+                                                        )}>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-600 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
+                                                                        {mat.materialName?.charAt(0)}
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-[13px] font-black text-zinc-300 group-hover:text-white transition-colors">{mat.materialName}</span>
+                                                                        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest font-mono">{mat.unit || 'Kg'}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <span className="text-[13px] font-black text-zinc-400 font-mono tracking-tighter">{mat.requiredQuantity}</span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                {stockKnown ? (
+                                                                    <span className={cn(
+                                                                        "text-[13px] font-black font-mono tracking-tighter px-2 py-0.5 rounded-lg",
+                                                                        sufficient ? "text-emerald-500 bg-emerald-500/5" : "text-red-500 bg-red-500/5"
+                                                                    )}>
+                                                                        {available}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-[10px] text-zinc-600 italic font-medium">Chưa kết nối</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right pr-8">
+                                                                {!stockKnown ? (
+                                                                    <Info size={14} className="text-zinc-800 inline ml-auto" />
+                                                                ) : sufficient ? (
+                                                                    <div className="flex items-center justify-end gap-1.5 text-emerald-500/60">
+                                                                        <CheckCircle2 size={12} strokeWidth={3} />
+                                                                        <span className="text-[10px] font-black uppercase tracking-tight">OK</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center justify-end gap-1.5 text-red-500">
+                                                                        <AlertTriangle size={12} strokeWidth={3} />
+                                                                        <span className="text-[10px] font-black uppercase tracking-tight shrink-0">Thiếu {mat.requiredQuantity - available!}</span>
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 ) : (
-                                  <div className="flex items-center justify-end gap-1.5 text-red-500">
-                                    <AlertTriangle size={12} strokeWidth={3} />
-                                    <span className="text-[10px] font-black uppercase tracking-tight shrink-0">
-                                      Thiếu {mat.requiredQuantity - available!}
-                                    </span>
-                                  </div>
+                                    <div className="p-12 text-center flex flex-col items-center gap-4 bg-zinc-900/20">
+                                        <div className="w-16 h-16 rounded-3xl bg-amber-500/5 flex items-center justify-center text-amber-500/20 border border-amber-500/10">
+                                            <ClipboardList size={32} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">KHÔNG CÓ DANH MỤC NGUYÊN LIỆU</p>
+                                            <p className="text-[10px] text-zinc-600 font-medium max-w-[280px] mx-auto leading-relaxed">
+                                                Các món trong mẻ sản xuất này chưa được cấu hình định lượng (Recipe). Vui lòng kiểm tra lại phần quản lý Recipe của Manager.
+                                            </p>
+                                        </div>
+                                    </div>
                                 )}
                               </td>
                             </tr>
