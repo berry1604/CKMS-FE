@@ -1,44 +1,67 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Package, Hash, Calendar, Layers, ChevronRight, Zap } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import { materialApi } from '../../services/material.api';
 import { productApi } from '../../services/product.api';
+import { useAuth } from '../../hooks/useAuth';
 import type { MaterialResponse } from '../../types/material';
 import type { ProductResponse } from '../../types/product';
 import toast from 'react-hot-toast';
+import warehouseBg from '../../assets/luxury_steakhouse_bg.png';
 
 export const KitchenImportPage = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [importType, setImportType] = useState<'MATERIAL' | 'PRODUCT'>('MATERIAL');
     const [selectedItemId, setSelectedItemId] = useState<number>(0);
     const [importQuantity, setImportQuantity] = useState<number>(0);
     const [expiryDate, setExpiryDate] = useState<string>('');
     const [isImporting, setIsImporting] = useState(false);
+    const [isLoadingLookups, setIsLoadingLookups] = useState(false);
 
     // Lookups
     const [materials, setMaterials] = useState<MaterialResponse[]>([]);
     const [products, setProducts] = useState<ProductResponse[]>([]);
 
-    const WAREHOUSE_ID = 1; // Default Kitchen Warehouse ID
+    // Use kitchenId from user auth or fallback to 1 (Default Warehouse ID)
+    const WAREHOUSE_ID = user?.kitchenId ? Number(user.kitchenId) : 1;
 
-    const loadLookups = async () => {
+    const loadLookups = useCallback(async () => {
+        setIsLoadingLookups(true);
         try {
-            const [matRes, prodRes] = await Promise.all([
-                materialApi.getAll(),
-                productApi.getProducts({ size: 100 })
-            ]);
-            setMaterials(matRes || []);
-            setProducts(prodRes.data?.content || []);
-        } catch (error) {
-            console.error('Failed to load lookups', error);
+            // Fetch materials and products separately to avoid one failure blocking the other
+            const fetchMaterials = async () => {
+                try {
+                    const matRes = await materialApi.getAll();
+                    setMaterials(matRes || []);
+                } catch (error) {
+                    console.error('Failed to load materials', error);
+                    toast.error('Không thể tải danh sách nguyên liệu. Vui lòng kiểm tra quyền hạn.');
+                }
+            };
+
+            const fetchProducts = async () => {
+                try {
+                    const prodRes = await productApi.getProducts({ size: 100 });
+                    // prodRes is the ApiResponse object, so prodRes.data is the Page object
+                    setProducts(prodRes.data?.content || []);
+                } catch (error) {
+                    console.error('Failed to load products', error);
+                    toast.error('Không thể tải danh sách thành phẩm. Vui lòng kiểm tra quyền hạn.');
+                }
+            };
+
+            await Promise.allSettled([fetchMaterials(), fetchProducts()]);
+        } finally {
+            setIsLoadingLookups(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         loadLookups();
-    }, []);
+    }, [loadLookups]);
 
     const handleImport = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -50,14 +73,11 @@ export const KitchenImportPage = () => {
 
         setIsImporting(true);
         try {
+            // Payload follows KitchenStockImportRequest DTO structure
             const requestPayload = [{
                 itemId: Number(selectedItemId),
                 quantity: Number(importQuantity),
-                ...(expiryDate ? { expiryDate: expiryDate } : {}),
-                ...(importType === 'MATERIAL'
-                    ? { materialId: Number(selectedItemId) }
-                    : { productId: Number(selectedItemId) }
-                )
+                ...(expiryDate ? { expiryDate: expiryDate } : {})
             }];
 
             if (importType === 'MATERIAL') {
@@ -90,7 +110,7 @@ export const KitchenImportPage = () => {
             {/* Cinematic Header */}
             <div className="relative h-[300px] w-full overflow-hidden">
                 <img
-                    src="/Users/phunghuyphuoc/.gemini/antigravity/brain/5ad3745d-382e-481d-8167-b732c447a69b/warehouse_logistics_bg_1773028054234.png"
+                    src={warehouseBg}
                     className="w-full h-full object-cover scale-105"
                     alt="Warehouse Background"
                 />
@@ -163,10 +183,12 @@ export const KitchenImportPage = () => {
                                         onChange={(e) => setSelectedItemId(Number(e.target.value))}
                                         className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all hover:bg-white/[0.07]"
                                     >
-                                        <option value={0} disabled className="bg-[#1a1a1a]">-- Vui lòng chọn --</option>
+                                        <option value={0} disabled className="bg-[#1a1a1a]">
+                                            {isLoadingLookups ? '-- Đang tải dữ liệu... --' : '-- Vui lòng chọn --'}
+                                        </option>
                                         {currentItemsLookup.map(item => (
                                             <option key={item.id} value={item.id} className="bg-[#1a1a1a] text-gray-200">
-                                                {item.name} {importType === 'MATERIAL' && `(${(item as MaterialResponse).unit})`}
+                                                {item.name} {importType === 'MATERIAL' && (item as MaterialResponse).unit && `(${(item as MaterialResponse).unit})`}
                                             </option>
                                         ))}
                                     </select>

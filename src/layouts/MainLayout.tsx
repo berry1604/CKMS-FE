@@ -31,11 +31,13 @@ export interface NavItem {
     href: string;
     icon: any;
     permission?: Permission | Permission[];
+    hidden?: boolean | ((user: User | null) => boolean);
 }
 
 export interface NavGroup {
     category: string;
     items: NavItem[];
+    headerPermission?: Permission | Permission[];
 }
 
 export type NavigationItem = NavItem | NavGroup;
@@ -53,6 +55,7 @@ export const navigation: NavigationItem[] = [
     // SECTION: FRANCHISE STORE
     {
         category: 'Workspace: Cửa hàng',
+        headerPermission: [PERMISSIONS.CREATE_ORDER, PERMISSIONS.VIEW_MY_ORDERS, PERMISSIONS.RECEIVE_SHIPMENT],
         items: [
             {
                 name: 'Tạo đơn hàng',
@@ -77,7 +80,14 @@ export const navigation: NavigationItem[] = [
     // SECTION: COORDINATOR
     {
         category: 'Workspace: Điều phối',
+        headerPermission: [PERMISSIONS.APPROVE_ORDERS, PERMISSIONS.PRODUCTION_PLANNING, PERMISSIONS.ALLOCATION_MANAGEMENT, PERMISSIONS.CREATE_SHIPMENT],
         items: [
+            {
+                name: 'Lịch sản xuất',
+                href: '/kitchen',
+                icon: LayoutDashboard,
+                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
+            },
             {
                 name: 'Duyệt đơn hàng',
                 href: '/orders/approvals',
@@ -104,33 +114,26 @@ export const navigation: NavigationItem[] = [
             },
         ]
     },
-    // SECTION: CENTRAL KITCHEN
+    // SECTION: MANAGER
     {
-        category: 'Workspace: Bếp trung tâm',
+        category: 'Workspace: Quản lý',
+        headerPermission: [PERMISSIONS.CATEGORY_MANAGEMENT, PERMISSIONS.BILLING_MANAGEMENT, PERMISSIONS.REVENUE_REPORTS],
         items: [
-            {
-                name: 'Lịch sản xuất',
-                href: '/kitchen',
-                icon: LayoutDashboard,
-                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
-            },
             {
                 name: 'Kho nguyên liệu',
                 href: '/kitchen/inventory',
                 icon: Database,
                 permission: PERMISSIONS.MATERIAL_INVENTORY,
             },
-        ]
-    },
-    // SECTION: MANAGER
-    {
-        category: 'Workspace: Quản lý',
-        items: [
             {
                 name: 'Sản phẩm & Menu',
                 href: '/products',
                 icon: Package,
                 permission: PERMISSIONS.PRODUCT_MANAGEMENT,
+                hidden: (user) => {
+                    const role = user?.role?.replace('ROLE_', '');
+                    return role === 'KITCHEN_STAFF';
+                },
             },
             {
                 name: 'Danh mục',
@@ -143,6 +146,10 @@ export const navigation: NavigationItem[] = [
                 href: '/products/materials',
                 icon: Wheat,
                 permission: PERMISSIONS.INGREDIENT_MANAGEMENT,
+                hidden: (user) => {
+                    const role = user?.role?.replace('ROLE_', '');
+                    return role === 'KITCHEN_STAFF';
+                },
             },
             {
                 name: 'Hóa đơn & Billing',
@@ -196,16 +203,20 @@ export const MainLayout: React.FC = () => {
         navigate('/login');
     };
 
-    // Filter navigation items to only those the user has permission for
+    // Filter navigation items to only those the user has permission for and not hidden
     const filteredNavigation = navigation
         .map(nav => {
             if ('category' in nav) {
-                const visibleItems = nav.items.filter(item =>
-                    !item.permission || hasPermission(user, item.permission)
-                );
+                const visibleItems = nav.items.filter(item => {
+                    const isPermissionOk = !item.permission || hasPermission(user, item.permission);
+                    const isNotHidden = typeof item.hidden === 'function' ? !item.hidden(user) : !item.hidden;
+                    return isPermissionOk && isNotHidden;
+                });
                 return visibleItems.length > 0 ? { ...nav, items: visibleItems } : null;
             }
-            return !nav.permission || hasPermission(user, nav.permission) ? nav : null;
+            const isPermissionOk = !nav.permission || hasPermission(user, nav.permission);
+            const isNotHidden = typeof nav.hidden === 'function' ? !nav.hidden(user) : !nav.hidden;
+            return isPermissionOk && isNotHidden ? nav : null;
         })
         .filter((item): item is NavigationItem => item !== null);
 
@@ -264,10 +275,13 @@ export const MainLayout: React.FC = () => {
                     {filteredNavigation.map((group) => {
                         const isGroup = 'category' in group;
                         const items = isGroup ? group.items : [group];
+                        const showHeader = isGroup && !isCollapsed && (!group.headerPermission || (Array.isArray(group.headerPermission) 
+                            ? group.headerPermission.some(p => hasPermission(user, p)) 
+                            : hasPermission(user, group.headerPermission)));
 
                         return (
                             <div key={isGroup ? group.category : group.name} className="space-y-2">
-                                {isGroup && !isCollapsed && (
+                                {showHeader && (
                                     <p className="px-4 text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] mb-4 italic opacity-80 flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500/30"></span>
                                         {group.category}
