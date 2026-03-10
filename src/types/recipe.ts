@@ -19,11 +19,14 @@ export interface RecipeDetailResponse {
 }
 
 export interface RecipeResponse {
-    id: number;
+    recipeId: number;
     productId: number;
     productName: string;
-    status: string;
+    createdByUserId: number;
+    createdByUserName: string;
+    version: number;
+    isActive: boolean;
+    yield: number;
+    instructions: string;
     recipeDetails: RecipeDetailResponse[];
-    createdAt: string;
-    updatedAt: string;
 }

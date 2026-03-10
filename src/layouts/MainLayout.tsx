@@ -83,12 +83,6 @@ export const navigation: NavigationItem[] = [
         headerPermission: [PERMISSIONS.APPROVE_ORDERS, PERMISSIONS.PRODUCTION_PLANNING, PERMISSIONS.ALLOCATION_MANAGEMENT, PERMISSIONS.CREATE_SHIPMENT],
         items: [
             {
-                name: 'Lịch sản xuất',
-                href: '/kitchen',
-                icon: LayoutDashboard,
-                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
-            },
-            {
                 name: 'Duyệt đơn hàng',
                 href: '/orders/approvals',
                 icon: ClipboardList,
@@ -99,6 +93,12 @@ export const navigation: NavigationItem[] = [
                 href: '/kitchen/create-plan',
                 icon: ChefHat,
                 permission: PERMISSIONS.PRODUCTION_PLANNING,
+            },
+            {
+                name: 'Lịch sản xuất',
+                href: '/kitchen',
+                icon: LayoutDashboard,
+                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
             },
             {
                 name: 'Phân bổ hàng',
@@ -207,12 +207,20 @@ export const MainLayout: React.FC = () => {
     const filteredNavigation = navigation
         .map(nav => {
             if ('category' in nav) {
+                let categoryName = nav.category;
+
+                // Dynamic category name for Kitchen Staff: "Điều phối" -> "Bếp trung tâm"
+                const userRole = String(user?.role || '').toUpperCase();
+                if (categoryName === 'Workspace: Điều phối' && userRole.includes('KITCHEN_STAFF')) {
+                    categoryName = 'Workspace: Bếp trung tâm';
+                }
+
                 const visibleItems = nav.items.filter(item => {
                     const isPermissionOk = !item.permission || hasPermission(user, item.permission);
                     const isNotHidden = typeof item.hidden === 'function' ? !item.hidden(user) : !item.hidden;
                     return isPermissionOk && isNotHidden;
                 });
-                return visibleItems.length > 0 ? { ...nav, items: visibleItems } : null;
+                return visibleItems.length > 0 ? { ...nav, category: categoryName, items: visibleItems } : null;
             }
             const isPermissionOk = !nav.permission || hasPermission(user, nav.permission);
             const isNotHidden = typeof nav.hidden === 'function' ? !nav.hidden(user) : !nav.hidden;
