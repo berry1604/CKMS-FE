@@ -85,7 +85,7 @@ export const ShipmentList = () => {
 
     const getStatusBadge = (status: string) => {
         const config: Record<string, { variant: any, label: string, icon: any }> = {
-            'CREATED': { variant: 'orange', label: 'Mới tạo', icon: Plus },
+            'PENDING': { variant: 'orange', label: 'Mới tạo', icon: Plus },
             'PREPARED': { variant: 'info', label: 'Đã chuẩn bị', icon: Package },
             'IN_TRANSIT': { variant: 'primary', label: 'Đang giao', icon: Truck },
             'DELIVERED': { variant: 'success', label: 'Đã giao', icon: MapPin },
@@ -183,7 +183,7 @@ export const ShipmentList = () => {
 
     const statusOptions: { value: FilterStatus; label: string; icon: any }[] = [
         { value: 'all', label: 'Tất cả', icon: Package },
-        { value: 'CREATED', label: 'Mới tạo', icon: Plus },
+        { value: 'PENDING', label: 'Mới tạo', icon: Plus },
         { value: 'PREPARED', label: 'Đã chuẩn bị', icon: Package },
         { value: 'IN_TRANSIT', label: 'Đang giao', icon: Truck },
         { value: 'DELIVERED', label: 'Đã giao', icon: MapPin },

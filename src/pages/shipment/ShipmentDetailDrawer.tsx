@@ -25,7 +25,7 @@ export const ShipmentDetailDrawer = ({
     if (!shipment) return null;
 
     const steps = [
-        { id: 'CREATED', label: 'MỚI TẠO', icon: Package, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+        { id: 'PENDING', label: 'MỚI TẠO', icon: Package, color: 'text-orange-500', bg: 'bg-orange-500/10' },
         { id: 'PREPARED', label: 'ĐÃ CHUẨN BỊ', icon: Package, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
         { id: 'IN_TRANSIT', label: 'ĐANG GIAO', icon: Truck, color: 'text-primary-500', bg: 'bg-primary-500/10' },
         { id: 'DELIVERED', label: 'ĐÃ GIAO', icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' }
@@ -38,7 +38,7 @@ export const ShipmentDetailDrawer = ({
         if (isCancelled) return null;
 
         switch (shipment.status) {
-            case 'CREATED':
+            case 'PENDING':
                 return (
                     <Button
                         onClick={() => onStatusAction(shipment.shipmentId, 'prepare')}

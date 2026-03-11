@@ -1,8 +1,8 @@
-import { OrderStatus } from '../types/storeOrder';
-import { ProductionPlanStatus } from '../types/productionPlan';
-import { ShipmentStatus } from '../types/shipment';
-import { BillingStatementStatus, InvoiceStatus } from '../types/billing';
-import { UserStatus } from '../types/user';
+import type { OrderStatus } from '../types/storeOrder';
+import type { ProductionPlanStatus } from '../types/productionPlan';
+import type { ShipmentStatus } from '../types/shipment';
+import type { BillingStatementStatus, InvoiceStatus } from '../types/billing';
+import type { UserStatus } from '../types/user';
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
     SUBMITTED: 'Chờ duyệt',
@@ -12,7 +12,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
     ALLOCATED: 'Đã phân bổ',
     IN_TRANSIT: 'Đang giao hàng',
     DELIVERED: 'Đã giao hàng',
-    CONFIRMED: 'Đã xác nhận',
+    CONFIRMED: 'Hoàn thành',
     REJECTED: 'Từ chối'
 };
 
