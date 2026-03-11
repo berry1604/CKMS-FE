@@ -128,14 +128,14 @@ export const AllocationMatrix = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-900 pb-6">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-6 bg-indigo-500 rounded-full"></div>
+                        <div className="w-2 h-6 bg-amber-500 rounded-full"></div>
                         <Badge variant="orange" className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase">WAREHOUSE MANAGEMENT</Badge>
                     </div>
                     <h1 className="text-4xl font-black text-white uppercase tracking-tighter leading-none mb-2">
                         Ma Trận Điều Phối
                     </h1>
                     <p className="text-sm text-zinc-500 font-medium max-w-xl">
-                        Tối ưu hóa việc phân bổ thành phẩm từ <span className="text-amber-500 font-bold">Bếp Trung Tâm</span> tới các <span className="text-indigo-400 font-bold">Cửa hàng nhượng quyền</span> dựa trên nhu cầu thực tế từ đơn hàng.
+                        Tối ưu hóa việc phân bổ thành phẩm từ <span className="text-amber-500 font-bold">Bếp Trung Tâm</span> tới các <span className="text-amber-400 font-bold">Cửa hàng nhượng quyền</span> dựa trên nhu cầu thực tế từ đơn hàng.
                     </p>
                 </div>
 
@@ -148,7 +148,7 @@ export const AllocationMatrix = () => {
                     <Button
                         onClick={handleSaveAllocation}
                         disabled={matrix.length === 0 || isSaving}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.2)] border-0 flex items-center gap-2 transition-all active:scale-95"
+                        className="bg-amber-600 hover:bg-amber-500 text-black font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] border-0 flex items-center gap-2 transition-all active:scale-95"
                     >
                         {isSaving ? 'Đang lưu...' : <><Save size={18} /> Chốt Phân Bổ</>}
                     </Button>
@@ -160,9 +160,9 @@ export const AllocationMatrix = () => {
                 <div className="lg:col-span-4 bg-zinc-900/60 p-5 rounded-3xl border border-zinc-800/50 flex flex-col justify-center">
                     <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3 ml-1">Chọn Lô Sản Xuất Cần Điều Phối</label>
                     <div className="relative group">
-                        <Database className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                        <Database className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-amber-500 transition-colors" size={18} />
                         <select
-                            className="w-full appearance-none pl-12 pr-10 h-14 bg-zinc-950/80 border border-zinc-800 rounded-2xl text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all cursor-pointer shadow-inner"
+                            className="w-full appearance-none pl-12 pr-10 h-14 bg-zinc-950/80 border border-zinc-800 rounded-2xl text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer shadow-inner"
                             value={selectedPlanId}
                             onChange={(e) => setSelectedPlanId(e.target.value ? Number(e.target.value) : '')}
                             disabled={isLoadingPlans}
@@ -188,7 +188,7 @@ export const AllocationMatrix = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/20">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                             <Truck size={24} />
                         </div>
                         <div>
@@ -209,7 +209,7 @@ export const AllocationMatrix = () => {
                             </div>
                         </div>
                         <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-500/50 w-[65%]"></div>
+                            <div className="h-full bg-amber-500/50 w-[65%]"></div>
                         </div>
                     </div>
                 </div>
@@ -223,7 +223,7 @@ export const AllocationMatrix = () => {
                             <tr className="bg-zinc-900 border-b border-zinc-800">
                                 <th className="px-10 py-10 bg-zinc-900 sticky left-0 z-30 border-r border-zinc-800/50 w-[380px] shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-indigo-500 border border-zinc-800">
+                                        <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-amber-500 border border-zinc-800">
                                             <Package size={24} />
                                         </div>
                                         <div className="flex flex-col">
@@ -251,8 +251,8 @@ export const AllocationMatrix = () => {
                                     <td colSpan={storeColumns.length + 1} className="px-10 py-40 text-center">
                                         <div className="flex flex-col items-center gap-6">
                                             <div className="relative w-16 h-16">
-                                                <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
-                                                <div className="absolute inset-0 border-4 border-t-indigo-500 rounded-full animate-spin"></div>
+                                                <div className="absolute inset-0 border-4 border-amber-500/20 rounded-full"></div>
+                                                <div className="absolute inset-0 border-4 border-t-amber-500 rounded-full animate-spin"></div>
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="text-sm font-black text-zinc-200 uppercase tracking-widest">Building Allocation Matrix</p>
@@ -340,7 +340,7 @@ export const AllocationMatrix = () => {
                                                                             ? "border-red-500/40 text-red-500 focus:ring-red-500/5 focus:border-red-500"
                                                                             : isOptimized
                                                                                 ? "border-emerald-500/40 text-emerald-500 focus:ring-emerald-500/5 focus:border-emerald-500"
-                                                                                : "border-zinc-800 text-zinc-100 focus:ring-indigo-500/5 focus:border-indigo-500"
+                                                                                : "border-zinc-800 text-zinc-100 focus:ring-amber-500/5 focus:border-amber-500"
                                                                     )}
                                                                     value={cell.allocatedQuantity.toString()}
                                                                     onChange={(e) => handleQuantityChange(row.productId, col.storeId, e.target.value)}
@@ -398,8 +398,8 @@ export const AllocationMatrix = () => {
                         </div>
                     </div>
 
-                    <div className="flex-1 max-w-lg bg-indigo-500/5 p-4 rounded-3xl border border-indigo-500/10 flex items-center gap-4 group">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-black transition-all">
+                    <div className="flex-1 max-w-lg bg-amber-500/5 p-4 rounded-3xl border border-amber-500/10 flex items-center gap-4 group">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all">
                             <Info size={18} />
                         </div>
                         <p className="text-[11px] text-zinc-500 font-bold leading-relaxed tracking-tight uppercase">

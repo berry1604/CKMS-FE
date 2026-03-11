@@ -55,10 +55,11 @@ export const productionPlanApi = {
      * Finish production plan
      * Security: hasRole('COORDINATOR') or hasRole('ADMIN')
      */
-    finishProductionPlan: async (id: number, version?: number): Promise<ProductionPlanResponse> => {
+    finishProductionPlan: async (id: number, version?: number, data?: any): Promise<ProductionPlanResponse> => {
         try {
             const config = version ? { headers: { 'If-Match': version } } : {};
-            const response = await axiosClient.post<ProductionPlanResponse>(`/production-plans/${id}/finish`, null, config);
+            // Corrected endpoint from /finish to /yield as per backend controller
+            const response = await axiosClient.post<ProductionPlanResponse>(`/production-plans/${id}/yield`, data || {}, config);
             return response.data;
         } catch (error) {
             console.error(`Error finishing plan ${id}:`, error);
