@@ -164,7 +164,7 @@ export const ShipmentList = () => {
             cell: (s) => getStatusBadge(s.status)
         },
         {
-            header: 'Action',
+            header: 'Hành động',
             className: 'text-right',
             cell: (s) => (
                 <div className="flex justify-end pr-4">
@@ -196,11 +196,11 @@ export const ShipmentList = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="orange" className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase">SHIPPING</Badge>
+                        <Badge variant="orange" className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase">VẬN CHUYỂN</Badge>
                         <h1 className="text-3xl font-black text-zinc-100 uppercase tracking-tighter">Luồng vận chuyển</h1>
                     </div>
                     <p className="text-xs text-zinc-500 font-medium tracking-wide">
-                        Theo dõi thời gian thực quá trình giao hàng từ <span className="text-amber-500/80">Warehouse</span> tới các điểm tiêu thụ.
+                        Theo dõi thời gian thực quá trình giao hàng từ <span className="text-amber-500/80">Kho bếp</span> tới các điểm tiêu thụ.
                     </p>
                 </div>
 

@@ -135,7 +135,7 @@ export const UsersList = () => {
                 <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="h-px w-12 bg-amber-500/50" />
-                        <span className="text-amber-500 font-medium tracking-widest text-xs uppercase">System Administration</span>
+                        <span className="text-amber-500 font-medium tracking-widest text-xs uppercase">Quản trị hệ thống</span>
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-end gap-6">
@@ -216,7 +216,7 @@ export const UsersList = () => {
                                         <td colSpan={5} className="px-8 py-24 text-center">
                                             <div className="flex flex-col items-center justify-center">
                                                 <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
-                                                <span className="text-gray-400 text-sm font-light tracking-widest uppercase">Initializing Interface...</span>
+                                                <span className="text-gray-400 text-sm font-light tracking-widest uppercase">Đang khởi tạo...</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -277,17 +277,17 @@ export const UsersList = () => {
                                                 {user.status === 'ACTIVE' ? (
                                                     <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-green-400 bg-green-500/5 border border-green-500/20 px-3 py-1.5 rounded-lg w-fit">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 animate-pulse" />
-                                                        Online
+                                                        Hoạt động
                                                     </div>
                                                 ) : user.status === 'PENDING_VERIFICATION' ? (
                                                     <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-amber-400 bg-amber-500/5 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />
-                                                        Pending
+                                                        Chờ xác minh
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-red-400 bg-red-500/5 border border-red-500/20 px-3 py-1.5 rounded-lg w-fit">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2" />
-                                                        Offline
+                                                        Không hoạt động
                                                     </div>
                                                 )}
                                             </td>
@@ -326,9 +326,10 @@ export const UsersList = () => {
                         <div className="flex items-center gap-4">
                             <span className="text-xs text-gray-500 font-light tracking-wide italic">
                                 {totalElements > 0 ? (
-                                    <>Hiển thị records <span className="text-amber-400 font-bold">{startItem}-{endItem}</span> / <span className="text-white font-bold">{totalElements}</span></>
+                                    <>Hiển thị <span className="text-amber-400 font-bold">{startItem}-{endItem}</span> / <span className="text-white font-bold">{totalElements}</span> bản ghi</>
+
                                 ) : (
-                                    'Empty Resultset'
+                                    'Không có dữ liệu'
                                 )}
                             </span>
                         </div>

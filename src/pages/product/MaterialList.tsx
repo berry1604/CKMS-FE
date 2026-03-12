@@ -21,7 +21,7 @@ export const MaterialList = () => {
             setMaterials(data);
         } catch (error) {
             console.error('Failed to fetch materials:', error);
-            toast.error('Failed to load materials');
+            toast.error('Không thể tải danh sách nguyên liệu');
         } finally {
             setIsLoading(false);
         }
@@ -40,7 +40,7 @@ export const MaterialList = () => {
     };
 
     const handleDelete = async (_id: number) => {
-        toast.error('Delete functionality is not implemented on Backend yet.');
+        toast.error('Chức năng xóa chưa được hỗ trợ bởi Backend.');
     };
 
 
@@ -55,23 +55,23 @@ export const MaterialList = () => {
             accessorKey: 'id',
         },
         {
-            header: 'Material Name',
+            header: 'Tên nguyên liệu',
             cell: (row) => <div className="font-medium text-gray-200">{row.name}</div>
         },
         {
-            header: 'Unit',
+            header: 'Đơn vị',
             accessorKey: 'unit'
         },
         {
-            header: 'Status',
+            header: 'Trạng thái',
             cell: (row) => (
                 <Badge variant={row.isActive ? 'success' : 'secondary'}>
-                    {row.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    {row.isActive ? 'HOẠT ĐỘNG' : 'KHÔNG HOẠT ĐỘNG'}
                 </Badge>
             )
         },
         {
-            header: 'Actions',
+            header: 'Hành động',
             cell: (row) => (
                 <div className="flex gap-2">
                     <Button

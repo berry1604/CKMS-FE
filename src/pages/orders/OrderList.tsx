@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, Filter, Eye } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Card } from '../../components/ui/Card';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Badge } from '../../components/ui/Badge';
 import { storeOrderApi } from '../../services/storeOrderApi';
@@ -57,7 +55,7 @@ export const OrderList = () => {
             setTotalPages(res.totalPages || 0);
         } catch (error) {
             console.error('Failed to fetch orders:', error);
-            toast.error('Failed to load orders');
+            toast.error('Không thể tải danh sách đơn hàng');
         } finally {
             setIsLoading(false);
         }
@@ -90,14 +88,14 @@ export const OrderList = () => {
         setIsLoading(true);
         try {
             await storeOrderApi.updateOrderStatus(orderId, status);
-            toast.success(`Order #${orderId} status updated to ${status}`);
+            toast.success(`Đã cập nhật trạng thái đơn hàng #${orderId} thành công`);
             fetchData();
             if (selectedOrder && selectedOrder.orderId === orderId) {
                 setSelectedOrder(null);
             }
         } catch (error) {
             console.error('Failed to update status', error);
-            toast.error('Failed to update order status');
+            toast.error('Cập nhật trạng thái thất bại');
             setIsLoading(false);
         }
     };
@@ -105,12 +103,12 @@ export const OrderList = () => {
     const handleCancelOrder = async (orderId: number) => {
         try {
             await storeOrderApi.cancelOrder(orderId);
-            toast.success(`Order #${orderId} has been cancelled`);
+            toast.success(`Đã hủy đơn hàng #${orderId} thành công`);
             setSelectedOrder(null);
             fetchData();
         } catch (error: any) {
             console.error('Failed to cancel order', error);
-            toast.error(error.response?.data?.message || 'Failed to cancel order');
+            toast.error(error.response?.data?.message || 'Hủy đơn hàng thất bại');
         }
     };
 
@@ -206,93 +204,137 @@ export const OrderList = () => {
     ];
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-black text-zinc-100 tracking-tight uppercase">Quản lý Đơn hàng</h1>
-                    <p className="text-sm text-zinc-500 mt-1 font-medium italic">Workspace: Franchise Store • Theo dõi và quản lý các đơn hàng của bạn.</p>
+        <div className="min-h-screen bg-[#0a0a0a] pb-20">
+            {/* Cinematic Header */}
+            <div className="relative h-[320px] w-full overflow-hidden">
+                <img
+                    src="/Users/phunghuyphuoc/.gemini/antigravity/brain/0e7878ef-fd61-49a8-909f-b3ae8c725512/order_management_luxury_1773305899211.png"
+                    className="w-full h-full object-cover scale-110"
+                    alt="Luxury Order Management"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#0a0a0a] backdrop-blur-[1px]" />
+
+                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="h-px w-10 bg-amber-500/50" />
+                        <span className="text-amber-500 font-medium tracking-[0.3em] text-[10px] uppercase">Quản lý chuỗi cung ứng</span>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+                        <div>
+                            <h1 className="text-5xl font-bold text-white tracking-tighter mb-2 italic">
+                                DANH SÁCH <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">ĐƠN HÀNG</span>
+                            </h1>
+                            <p className="text-gray-400 max-w-xl text-lg font-light leading-relaxed">
+                                Giám sát và quản lý các đơn đặt hàng từ hệ thống cửa hàng FranchiseSys.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+                                <span className="text-gray-500 text-[10px] uppercase tracking-[0.2em] block mb-1">Tổng đơn hàng</span>
+                                <span className="text-2xl font-bold text-white leading-none">{orders.length}</span>
+                            </div>
+                            <Button
+                                onClick={() => navigate('/orders/create')}
+                                className="h-14 px-8 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase tracking-widest rounded-2xl shadow-[0_20px_40px_-10px_rgba(245,158,11,0.3)] border-0 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3"
+                            >
+                                <Plus size={20} strokeWidth={3} />
+                                Tạo Đơn Mới
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-                <Button onClick={() => navigate('/orders/create')} className="shrink-0 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase tracking-tighter rounded-xl shadow-lg shadow-amber-500/10 h-11 px-6">
-                    <Plus className="mr-2 h-4 w-4 stroke-[3px]" /> Tạo Đơn hàng
-                </Button>
             </div>
 
-            <Card className="border-zinc-800 bg-zinc-900/40 ring-1 ring-white/5 overflow-hidden">
-                <div className="p-4 border-b border-zinc-800/50 bg-zinc-900/20 flex flex-col md:flex-row gap-4 justify-between items-center">
-                    <div className="relative w-full md:w-80">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        <Input
-                            placeholder="Tìm mã đơn, tên cửa hàng..."
-                            className="pl-10 bg-zinc-950/50 border-zinc-800 focus:border-amber-500/50 transition-all font-medium py-2 text-sm"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                        <div className="flex items-center gap-2 pr-3 border-r border-zinc-800 mr-1 shrink-0">
-                            <Filter size={14} className="text-zinc-500" />
-                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Lọc:</span>
+            <div className="max-w-7xl mx-auto px-8 -mt-10 relative z-10 space-y-8">
+                {/* Search & Filter Bar */}
+                <div className="backdrop-blur-3xl bg-white/[0.03] border border-white/10 rounded-[32px] p-4 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+                    
+                    <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
+                        <div className="relative w-full md:w-[400px] group/search">
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within/search:scale-110">
+                                <Search size={18} className="text-gray-500 group-focus-within/search:text-amber-500 transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Tìm mã đơn, tên cửa hàng..."
+                                className="w-full pl-12 pr-4 py-4 bg-black/40 border border-white/5 rounded-2xl text-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all duration-300 placeholder:text-gray-600 hover:bg-white/[0.05]"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
-                        {['all', 'DRAFT', 'SUBMITTED', 'APPROVED', 'ALLOCATED', 'DELIVERED', 'REJECTED'].map(status => (
-                            <button
-                                key={status}
-                                onClick={() => setStatusFilter(status)}
-                                className={cn(
-                                    "px-4 py-1.5 rounded-full text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-tighter border",
-                                    statusFilter === status
-                                        ? "bg-amber-500 border-amber-500 text-black shadow-lg shadow-amber-500/20"
-                                        : "bg-zinc-800/50 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
-                                )}
-                            >
-                                {status === 'all' ? 'TẤT CẢ' :
-                                    status === 'DRAFT' ? 'BẢN NHÁP' :
+
+                        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-4 md:pb-0 no-scrollbar">
+                            <div className="flex items-center gap-2 pr-4 border-r border-white/5 mr-2">
+                                <Filter size={16} className="text-amber-500" />
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Lọc theo</span>
+                            </div>
+                            {['all', 'DRAFT', 'SUBMITTED', 'APPROVED', 'ALLOCATED', 'DELIVERED', 'REJECTED'].map(status => (
+                                <button
+                                    key={status}
+                                    onClick={() => setStatusFilter(status)}
+                                    className={cn(
+                                        "px-5 py-2.5 rounded-xl text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest border",
+                                        statusFilter === status
+                                            ? "bg-amber-600/90 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                                            : "bg-white/5 border-white/5 text-gray-500 hover:border-white/20 hover:text-gray-300"
+                                    )}
+                                >
+                                    {status === 'all' ? 'TẤT CẢ' : (
+                                        status === 'DRAFT' ? 'NHÁP' :
                                         status === 'SUBMITTED' ? 'CHỜ DUYỆT' :
-                                            status === 'APPROVED' ? 'ĐÃ DUYỆT' :
-                                                status === 'ALLOCATED' ? 'ĐÃ PHÂN BỔ' :
-                                                    status === 'DELIVERED' ? 'HOÀN THÀNH' : 'TỪ CHỐI'}
-                            </button>
-                        ))}
+                                        status === 'APPROVED' ? 'ĐÃ DUYỆT' :
+                                        status === 'ALLOCATED' ? 'PHÂN BỔ' :
+                                        status === 'DELIVERED' ? 'HOÀN THÀNH' : 'TỪ CHỐI'
+                                    )}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
-                <div className="overflow-hidden">
-                    <DataTable
-                        data={filteredOrders}
-                        columns={columns}
-                        keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
-                        isLoading={isLoading}
-                        onRowClick={(order) => setSelectedOrder(order)}
-                    />
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="p-4 border-t border-zinc-800 bg-zinc-950/20 flex items-center justify-between">
-                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                            Trang {page + 1} / {totalPages}
-                        </span>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                disabled={page === 0}
-                                onClick={() => setPage(p => Math.max(0, p - 1))}
-                                className="bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200 h-8 font-bold px-4"
-                            >
-                                Trước
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                disabled={page >= totalPages - 1}
-                                onClick={() => setPage(p => p + 1)}
-                                className="bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200 h-8 font-bold px-4"
-                            >
-                                Sau
-                            </Button>
-                        </div>
+                <div className="backdrop-blur-3xl bg-white/[0.02] border border-white/5 rounded-[40px] overflow-hidden shadow-2xl">
+                    <div className="overflow-x-auto">
+                        <DataTable
+                            data={filteredOrders}
+                            columns={columns}
+                            keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
+                            isLoading={isLoading}
+                            onRowClick={(order) => setSelectedOrder(order)}
+                        />
                     </div>
-                )}
-            </Card>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="p-8 border-t border-white/5 bg-black/40 flex items-center justify-between">
+                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                                Trang <span className="text-white">{page + 1}</span> / {totalPages}
+                            </span>
+                            <div className="flex gap-4">
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled={page === 0}
+                                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                                    className="bg-white/5 border-white/10 text-gray-400 hover:text-white h-10 px-6 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-20"
+                                >
+                                    Trước
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled={page >= totalPages - 1}
+                                    onClick={() => setPage(p => p + 1)}
+                                    className="bg-white/5 border-white/10 text-gray-400 hover:text-white h-10 px-6 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all disabled:opacity-20"
+                                >
+                                    Sau
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             <OrderDetailDrawer
                 order={selectedOrder}

@@ -1000,7 +1000,7 @@ export const ProductionSchedule = () => {
             </div>
           </div>
         }
-        width="max-w-2xl"
+        width="max-w-5xl"
         footer={footer}
       >
         {isDetailLoading ? (
@@ -1011,235 +1011,234 @@ export const ProductionSchedule = () => {
             </span>
           </div>
         ) : selectedPlanDetail ? (
-          <div className="space-y-10 py-2 animate-in slide-in-from-right duration-500">
-            {/* Status Summary */}
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative bg-zinc-900/60 p-6 rounded-[32px] border border-zinc-800/50 flex flex-col md:flex-row gap-6 shadow-xl">
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="orange"
-                      className="h-4 text-[8px] font-black border-0"
-                    >
-                      CURRENT_STATE
-                    </Badge>
-                  </div>
-                  {getStatusBadge(selectedPlanDetail.status)}
-                  <p className="text-[11px] text-zinc-500 font-medium italic mt-2 leading-relaxed">
-                    Tiến trình hiện tại của kế hoạch nhằm đáp ứng nhu cầu sản
-                    xuất đã được phê duyệt.
-                  </p>
-                </div>
-                <div className="md:w-px h-px md:h-20 bg-zinc-800"></div>
-                <div className="space-y-4 md:w-48">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon size={14} className="text-zinc-600" />
-                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                      Thời điểm tạo
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-black text-zinc-200 tracking-tight">
-                      {new Date(
-                        selectedPlanDetail.createdAt,
-                      ).toLocaleDateString("vi-VN")}
-                    </span>
-                    <span className="text-[10px] font-black text-zinc-500 font-mono mt-0.5 tracking-tighter uppercase">
-                      {new Date(
-                        selectedPlanDetail.createdAt,
-                      ).toLocaleTimeString("vi-VN")}
-                    </span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 py-2 animate-in slide-in-from-right duration-500">
+            {/* Left Column: Visual & Status */}
+            <div className="lg:col-span-5 space-y-8">
+              <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar">
+                {/* Luxury Visual Element */}
+                <div className="relative -mx-8 -mt-8 mb-8 group/img h-64 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950/90 z-10"></div>
+                  <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full scale-150 group-hover/img:bg-amber-500/20 transition-all duration-700"></div>
+                  <img 
+                    src="/src/assets/kitchen_production.png" 
+                    alt="Kitchen Production" 
+                    className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 group-hover/img:scale-110 transition-all duration-1000"
+                  />
+                  <div className="absolute bottom-6 left-8 z-20">
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-zinc-950/80 backdrop-blur-md border border-amber-500/30">
+                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                      <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Live Production</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Inventory Reconciliation */}
-            <div className="space-y-5">
-              <div className="flex items-center justify-between ml-2">
-                <div className="flex items-center gap-2">
-                  <Database size={16} className="text-zinc-600" />
-                  <h4 className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em]">
-                    Đối chiếu nguyên liệu
-                  </h4>
-                </div>
-                {materialStockMap.size > 0 && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/5 border border-emerald-500/10 rounded-full">
-                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tight">
-                      Dữ liệu kho thực tế
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 overflow-hidden shadow-xl">
-                {selectedPlanDetail.materials &&
-                  selectedPlanDetail.materials.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-zinc-800/30">
-                          <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                            Item / Unit
-                          </th>
-                          <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">
-                            Yêu cầu
-                          </th>
-                          <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">
-                            Khả dụng
-                          </th>
-                          <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right pr-8">
-                            Trạng thái
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-800/50">
-                        {selectedPlanDetail.materials.map((mat, idx) => {
-                          const idKey = `id-${mat.materialId}`;
-                          const available = materialStockMap.get(idKey) || 0;
-                          const sufficient = available >= mat.requiredQuantity;
-                          return (
-                            <tr
-                              key={idx}
-                              className={cn(
-                                "hover:bg-zinc-800/20 transition-colors group",
-                                !sufficient && "bg-red-500/[0.02]",
-                              )}
-                            >
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-600 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
-                                    {mat.materialName?.charAt(0)}
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-[13px] font-black text-zinc-300 group-hover:text-white transition-colors">
-                                      {mat.materialName}
-                                    </span>
-                                    <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest font-mono">
-                                      {mat.unit || "Kg"}
-                                    </span>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                <span className="text-[13px] font-black text-zinc-400 font-mono tracking-tighter">
-                                  {mat.requiredQuantity}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                <span
-                                  className={cn(
-                                    "text-[13px] font-black font-mono tracking-tighter px-2 py-0.5 rounded-lg",
-                                    sufficient
-                                      ? "text-emerald-500 bg-emerald-500/5"
-                                      : "text-red-500 bg-red-500/5",
-                                  )}
-                                >
-                                  {available}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-right pr-8">
-                                {sufficient ? (
-                                  <div className="flex items-center justify-end gap-1.5 text-emerald-500/60">
-                                    <CheckCircle2 size={12} strokeWidth={3} />
-                                    <span className="text-[10px] font-black uppercase tracking-tight">
-                                      OK
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center justify-end gap-1.5 text-red-500">
-                                    <AlertTriangle size={12} strokeWidth={3} />
-                                    <span className="text-[10px] font-black uppercase tracking-tight shrink-0">
-                                      Thiếu{" "}
-                                      {mat.requiredQuantity - available}
-                                    </span>
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="p-12 text-center flex flex-col items-center gap-3 opacity-20">
-                    <Ban size={24} />
-                    <p className="text-[10px] font-black uppercase tracking-widest">
-                      Không có danh mục nguyên liệu
+                {/* Status Summary */}
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="orange"
+                        className="h-5 text-[9px] font-black border-0 tracking-widest"
+                      >
+                        CURRENT_STATE
+                      </Badge>
+                    </div>
+                    <div>
+                        {getStatusBadge(selectedPlanDetail.status)}
+                    </div>
+                    <p className="text-xs text-zinc-500 font-medium italic leading-relaxed">
+                      Tiến trình hiện tại của kế hoạch nhằm đáp ứng nhu cầu sản
+                      xuất đã được phê duyệt.
                     </p>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Location Info */}
-            <div className="grid grid-cols-2 gap-6">
-              <div className="p-6 bg-zinc-900/40 rounded-[28px] border border-zinc-800/50 space-y-4 group">
-                <div className="flex items-center gap-2">
-                  <MapPin
-                    size={14}
-                    className="text-zinc-600 group-hover:text-amber-500 transition-colors"
-                  />
-                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                    Trạm sản xuất
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[15px] font-black text-zinc-200 uppercase tracking-tight">
-                    {selectedPlanDetail.kitchenId === 1
-                      ? "Central Kitchen Alpha"
-                      : `Sub-Kitchen #${selectedPlanDetail.kitchenId}`}
-                  </span>
-                  <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter mt-1">
-                    Giao thức: On-Premise Production
-                  </span>
-                </div>
-              </div>
-              <div className="p-6 bg-zinc-900/40 rounded-[28px] border border-zinc-800/50 space-y-4 group">
-                <div className="flex items-center gap-2">
-                  <ArrowRight
-                    size={14}
-                    className="text-zinc-600 group-hover:text-amber-500 transition-colors"
-                  />
-                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                    Cấp độ ưu tiên
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 flex-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full w-[75%] bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                  <div className="h-px bg-zinc-800/50"></div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon size={16} className="text-zinc-600" />
+                      <span className="text-[11px] font-black text-zinc-600 uppercase tracking-widest">
+                        Thời điểm tạo
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-black text-zinc-200 tracking-tight">
+                        {new Date(
+                          selectedPlanDetail.createdAt,
+                        ).toLocaleDateString("vi-VN")}
+                      </span>
+                      <span className="text-xs font-black text-zinc-500 font-mono mt-1 tracking-tighter uppercase blur-[0.2px]">
+                        {new Date(
+                          selectedPlanDetail.createdAt,
+                        ).toLocaleTimeString("vi-VN")}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-black text-amber-500 uppercase tracking-widest">
-                    HIGHT
+                </div>
+              </div>
+
+              {/* Quick Specs */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
+                  <div className="flex items-center gap-2">
+                    <MapPin size={14} className="text-zinc-600 group-hover/spec:text-amber-500 transition-colors" />
+                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Trạm</span>
+                  </div>
+                  <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
+                    {selectedPlanDetail.kitchenId === 1 ? "Alpha Kitchen" : `Kitchen #${selectedPlanDetail.kitchenId}`}
                   </span>
+                </div>
+                <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
+                  <div className="flex items-center gap-2">
+                    <ArrowRight size={14} className="text-zinc-600 group-hover/spec:text-amber-500 transition-colors" />
+                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Ưu tiên</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full w-[75%] bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                    </div>
+                    <span className="text-[9px] font-black text-amber-500">HIGH</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Print */}
-            <div className="flex items-center justify-between p-6 bg-black border border-zinc-900 rounded-[32px] group">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-600 group-hover:text-amber-500 transition-colors">
-                  <Printer size={18} />
+            {/* Right Column: Inventory & Details */}
+            <div className="lg:col-span-7 space-y-10">
+              {/* Inventory Reconciliation */}
+              <div className="space-y-5">
+                <div className="flex items-center justify-between ml-2">
+                  <div className="flex items-center gap-2">
+                    <Database size={18} className="text-amber-500/50" />
+                    <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                      Đối chiếu nguyên liệu
+                    </h4>
+                  </div>
+                  {materialStockMap.size > 0 && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-[9px] font-black text-emerald-500 uppercase">Live Inventory</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">
-                    Lệnh sản xuất
-                  </span>
-                  <span className="text-[10px] font-medium text-zinc-600 uppercase tracking-tighter">
-                    In bản cứng (.PDF) cho bếp trưởng
-                  </span>
+
+                <div className="bg-zinc-900/20 backdrop-blur-sm rounded-[36px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+                  {selectedPlanDetail.materials &&
+                    selectedPlanDetail.materials.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="bg-zinc-800/20">
+                            <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Nguyên liệu</th>
+                            <th className="px-4 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Yêu cầu</th>
+                            <th className="px-4 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Khả dụng</th>
+                            <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-800/30">
+                          {selectedPlanDetail.materials.map((mat, idx) => {
+                            const idKey = `id-${mat.materialId}`;
+                            const available = materialStockMap.get(idKey) || 0;
+                            const sufficient = available >= mat.requiredQuantity;
+                            return (
+                              <tr
+                                key={idx}
+                                className={cn(
+                                  "hover:bg-zinc-800/40 transition-all duration-300 group/row",
+                                  !sufficient && "bg-red-500/[0.03]",
+                                )}
+                              >
+                                <td className="px-8 py-4">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[11px] font-black text-zinc-600 group-hover/row:border-amber-500/30 group-hover/row:text-amber-500 transition-all">
+                                      {mat.materialName?.charAt(0)}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-black text-zinc-200 tracking-tight group-hover/row:text-white transition-colors">
+                                        {mat.materialName}
+                                      </span>
+                                      <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                                        {mat.unit || "Kg"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                  <span className="text-sm font-black text-zinc-400 font-mono tracking-tighter italic">
+                                    {mat.requiredQuantity}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                  <span
+                                    className={cn(
+                                      "text-sm font-black font-mono tracking-tighter px-3 py-1 rounded-xl",
+                                      sufficient
+                                        ? "text-emerald-500 bg-emerald-500/5 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]"
+                                        : "text-red-500 bg-red-500/5 shadow-[inset_0_0_10px_rgba(239,68,68,0.05)]",
+                                    )}
+                                  >
+                                    {available}
+                                  </span>
+                                </td>
+                                <td className="px-8 py-4 text-right">
+                                  {sufficient ? (
+                                    <div className="flex items-center justify-end gap-2 text-emerald-500">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                                      <span className="text-[10px] font-black uppercase tracking-widest">Ready</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-end gap-2 text-red-500 animate-pulse">
+                                      <AlertTriangle size={14} strokeWidth={3} />
+                                      <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                                        -{mat.requiredQuantity - available} {mat.unit}
+                                      </span>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-16 text-center flex flex-col items-center gap-4 opacity-20">
+                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
+                        <Ban size={32} />
+                      </div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.3em]">No Bill of Materials</p>
+                    </div>
+                  )}
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                className="h-12 px-6 bg-zinc-900 border border-zinc-800 text-amber-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 hover:text-black transition-all"
-              >
-                Download
-              </Button>
+
+              {/* Quick Print Section */}
+              <div className="relative group/print overflow-hidden p-8 bg-zinc-950 border border-zinc-800 rounded-[36px] transition-all duration-500 hover:border-amber-500/20">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl transform translate-x-10 -translate-y-10 group-hover/print:scale-150 transition-transform duration-1000"></div>
+                
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/print:text-amber-500 group-hover/print:border-amber-500/30 group-hover/print:bg-amber-500/5 transition-all duration-500">
+                      <Printer size={24} />
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-black text-white uppercase tracking-tight">Lệnh sản xuất</span>
+                        <Badge variant="default" className="h-4 text-[7px] bg-zinc-900 border-zinc-800">PDF-v1.0</Badge>
+                      </div>
+                      <span className="text-xs text-zinc-500 font-medium mt-1">
+                        Bản in nội bộ dành riêng cho Bếp trưởng (Hardcopy)
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="h-12 px-10 bg-zinc-900 border border-zinc-800 text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-amber-500 hover:text-black hover:border-transparent transition-all duration-500 shadow-lg hover:shadow-amber-500/20"
+                  >
+                    EXtract
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         ) : (

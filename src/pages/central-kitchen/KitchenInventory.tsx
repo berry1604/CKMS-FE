@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, TrendingUp, Package, Leaf, Edit, Trash2, X, Save } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Package, Leaf, Edit, Trash2, Clock, Save } from 'lucide-react';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import type { KitchenStockItemResponse } from '../../types/kitchenInventory';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
+import { cn } from '../../utils/classNames';
 
 export const KitchenInventory = () => {
     const navigate = useNavigate();
@@ -194,36 +195,136 @@ export const KitchenInventory = () => {
         }
     ];
 
+    // Calculate statistics
+    const totalItems = inventory.length;
+    const lowStockItems = inventory.filter(item => item.quantity <= 5).length;
+    const expiringSoonItems = inventory.filter(item => {
+        if (!item.expiryDate) return false;
+        const daysLeft = Math.ceil((new Date(item.expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+        return daysLeft >= 0 && daysLeft <= 7;
+    }).length;
+
     return (
-        <div className="space-y-10 animate-in fade-in duration-700">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="animate-in slide-in-from-left-4 duration-700">
-                    <h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                        Kho Tổng <span className="text-amber-500">/</span> Bếp Trung Tâm
-                    </h1>
-                    <p className="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-[0.2em]">Quản lý tồn kho nguyên liệu và thành phẩm toàn hệ thống</p>
+        <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+            {/* Cinematic Header Section */}
+            <div className="relative h-[280px] -mx-4 -mt-8 mb-12 overflow-hidden group/header">
+                {/* Background Image with Parallax-like effect */}
+                <div className="absolute inset-0 bg-zinc-950">
+                    <img 
+                        src="/src/assets/kitchen_inventory.png" 
+                        alt="Inventory Hero" 
+                        className="w-full h-full object-cover opacity-40 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-transparent to-zinc-950"></div>
                 </div>
-                <div className="flex items-center gap-3 animate-in slide-in-from-right-4 duration-700">
-                    <button
-                        onClick={() => navigate('/kitchen/inventory/import')}
-                        className="group relative flex items-center h-12 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black uppercase text-[10px] tracking-widest transition-all duration-300 border-0 shadow-2xl shadow-amber-900/40 hover:scale-[1.02] active:scale-95"
-                    >
-                        <TrendingUp size={18} className="mr-2 transition-transform group-hover:translate-y-[-2px]" />
-                        Nhập kho
-                    </button>
+
+                {/* Content Overlay */}
+                <div className="absolute inset-0 flex flex-col justify-end p-10 pb-12 max-w-[1600px] mx-auto w-full">
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-8">
+                        <div className="space-y-4 animate-in slide-in-from-left-8 duration-1000 delay-100">
+                            <div className="flex items-center gap-3">
+                                <div className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 backdrop-blur-md">
+                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Inventory Command Center</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2">
+                                    Kho Bếp <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Trung Tâm</span>
+                                </h1>
+                                <p className="text-zinc-400 text-sm font-medium uppercase tracking-widest max-w-xl leading-relaxed opacity-80">
+                                    Quản lý tồn kho nguyên liệu và thành phẩm toàn hệ thống với độ chính xác thời gian thực.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 animate-in slide-in-from-right-8 duration-1000 delay-200">
+                            <button
+                                onClick={() => navigate('/kitchen/inventory/import')}
+                                className="group relative flex items-center h-14 px-10 rounded-[24px] bg-white text-black font-black uppercase text-[11px] tracking-widest transition-all duration-500 hover:bg-amber-500 hover:scale-[1.05] active:scale-95 shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+                            >
+                                <TrendingUp size={18} className="mr-3 transition-transform group-hover:translate-y-[-2px]" />
+                                Nhập kho hệ thống
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative group animate-in zoom-in-95 duration-1000">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
-                <div className="p-2">
-                    <DataTable
-                        data={inventory}
-                        columns={columns}
-                        isLoading={isLoading}
-                        keyExtractor={(item) => item.id}
-                        className="border-0"
-                    />
+            {/* Stats Overview Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 -mt-20 relative z-20">
+                {[
+                    { label: 'Tổng số vật phẩm', value: totalItems, icon: Package, color: 'blue', desc: 'Các loại vật phẩm hiện có' },
+                    { label: 'Cảnh báo tồn kho', value: lowStockItems, icon: AlertTriangle, color: 'red', desc: 'Mặt hàng dưới mức an toàn', highlight: lowStockItems > 0 },
+                    { label: 'Sắp hết hạn', value: expiringSoonItems, icon: Clock, color: 'amber', desc: 'Vật phẩm hết hạn trong 7 ngày', highlight: expiringSoonItems > 0 }
+                ].map((stat, i) => (
+                    <div 
+                        key={i} 
+                        className={cn(
+                            "p-8 rounded-[32px] border transition-all duration-500 group/card relative overflow-hidden",
+                            "bg-zinc-900/60 backdrop-blur-xl border-zinc-800/50 hover:border-zinc-700/80 shadow-2xl",
+                            stat.highlight && `ring-1 ring-${stat.color}-500/30`
+                        )}
+                    >
+                        <div className={cn(
+                            "absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full opacity-10 group-hover/card:opacity-20 transition-opacity",
+                            `bg-${stat.color}-500`
+                        )}></div>
+                        
+                        <div className="flex items-start justify-between relative z-10">
+                            <div className="space-y-4">
+                                <div className={cn(
+                                    "w-12 h-12 rounded-2xl flex items-center justify-center border transition-transform duration-500 group-hover/card:scale-110",
+                                    stat.color === 'blue' ? "bg-blue-500/10 border-blue-500/20 text-blue-500" :
+                                    stat.color === 'red' ? "bg-red-500/10 border-red-500/20 text-red-500" :
+                                    "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                                )}>
+                                    <stat.icon size={22} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+                                    <h3 className="text-3xl font-black text-white tracking-tighter">
+                                        {isLoading ? '---' : stat.value.toLocaleString()}
+                                    </h3>
+                                </div>
+                                <p className="text-[11px] text-zinc-500 font-medium italic opacity-60">{stat.desc}</p>
+                            </div>
+                            
+                            {stat.highlight && (
+                                <div className={cn(
+                                    "px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest animate-pulse",
+                                    stat.color === 'red' ? "bg-red-500/20 text-red-500" : "bg-amber-500/20 text-amber-500"
+                                )}>
+                                    Action Required
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Inventory List Section */}
+            <div className="space-y-6 pt-4 animate-in fade-in duration-1000 delay-300">
+                <div className="flex items-center justify-between ml-2">
+                    <div className="flex items-center gap-3">
+                        <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
+                        <h4 className="text-[12px] font-black text-zinc-400 uppercase tracking-[0.3em]">
+                            Chi tiết danh mục tồn kho
+                        </h4>
+                    </div>
+                </div>
+
+                <div className="bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/50 rounded-[40px] overflow-hidden shadow-2xl relative group/table">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent opacity-50"></div>
+                    <div className="p-4">
+                        <DataTable
+                            data={inventory}
+                            columns={columns}
+                            isLoading={isLoading}
+                            keyExtractor={(item) => item.id}
+                            className="border-0"
+                        />
+                    </div>
                 </div>
             </div>
 

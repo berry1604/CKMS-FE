@@ -40,6 +40,7 @@ import { ComingSoon } from '../components/ComingSoon';
 import { WarehouseFulfillment } from '../pages/warehouse/WarehouseFulfillment';
 import { AllocationMatrix } from '../pages/warehouse/AllocationMatrix';
 import { ReceiveShipment } from '../pages/shipment/ReceiveShipment';
+import { ReceiveShipmentReportPage } from '../pages/shipment/ReceiveShipmentReportPage';
 import { VNPayReturn } from '../pages/billing/VNPayReturn';
 import { useAuth } from '../hooks/useAuth';
 import type { UserRole } from '../types/user';
@@ -186,7 +187,8 @@ export const router = createBrowserRouter([
                         children: [
                             { index: true, element: <ShipmentList /> },
                             { path: 'create', element: <CreateShipment /> },
-                            { path: 'receive', element: <ReceiveShipment /> }
+                            { path: 'receive', element: <ReceiveShipment /> },
+                            { path: 'receive/:id', element: <ReceiveShipmentReportPage /> }
                         ]
                     },
 

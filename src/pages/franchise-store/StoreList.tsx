@@ -352,10 +352,10 @@ export const StoreList = () => {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                title="Delete Store"
-                message="Are you sure you want to delete this store? This action cannot be undone."
-                confirmText="Delete Store"
-                cancelText="Cancel"
+                title="Xóa cửa hàng"
+                message="Bạn có chắc muốn xóa cửa hàng này? Hành động này không thể hoàn tác."
+                confirmText="Xóa cửa hàng"
+                cancelText="Hủy"
                 isLoading={isDeleting}
                 variant="danger"
             />

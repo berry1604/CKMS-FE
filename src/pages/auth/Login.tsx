@@ -11,8 +11,8 @@ import { CustomToast } from '../../components/ui/CustomToast';
 import { authApi } from '../../services/auth.api';
 
 const loginSchema = z.object({
-    username: z.string().min(1, 'Username is required'),
-    password: z.string().min(1, 'Password is required'),
+    username: z.string().min(1, 'Tên đăng nhập là bắt buộc'),
+    password: z.string().min(1, 'Mật khẩu là bắt buộc'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -40,7 +40,7 @@ export const Login: React.FC = () => {
     const onSubmit = async (data: LoginForm) => {
         setError(null);
         // Loading toast
-        const toastId = toast.loading('Logging in...');
+        const toastId = toast.loading('Đang đăng nhập...');
 
         try {
             const errorMsg = await login(data.username, data.password);
@@ -50,8 +50,8 @@ export const Login: React.FC = () => {
                 toast.custom((t) => (
                     <CustomToast
                         t={t}
-                        title="Login Successful"
-                        message="Redirecting to dashboard..."
+                        title="Đăng nhập thành công"
+                        message="Đang chuyển đến trang chủ..."
                         type="success"
                     />
                 ), { duration: 3000, id: toastId });
@@ -63,7 +63,7 @@ export const Login: React.FC = () => {
                 toast.custom((t) => (
                     <CustomToast
                         t={t}
-                        title="Login Failed"
+                        title="Đăng nhập thất bại"
                         message={errorMsg}
                         type="error"
                     />
@@ -75,8 +75,8 @@ export const Login: React.FC = () => {
             toast.custom((t) => (
                 <CustomToast
                     t={t}
-                    title="Error"
-                    message="An unexpected error occurred"
+                    title="Lỗi"
+                    message="Đã xảy ra lỗi không xác định"
                     type="error"
                 />
             ), { id: toastId });
@@ -88,52 +88,52 @@ export const Login: React.FC = () => {
         setResetMessage(null);
 
         if (!resetEmail) {
-            setResetMessage('Please enter your email');
+            setResetMessage('Vui lòng nhập email của bạn');
             return;
         }
 
-        const toastId = toast.loading('Sending reset link...');
+        const toastId = toast.loading('Đang gửi link đặt lại mật khẩu...');
 
         try {
             await authApi.forgotPassword(resetEmail);
-            toast.success('Reset link sent successfully', { id: toastId });
-            setResetMessage('Password reset link has been sent to your email');
+            toast.success('Đã gửi link đặt lại mật khẩu thành công', { id: toastId });
+            setResetMessage('Link đặt lại mật khẩu đã được gửi đến email của bạn');
             setResetEmail('');
         } catch (error: any) {
-            toast.error(error.message || 'Something went wrong', { id: toastId });
-            setResetMessage(error.message || 'Something went wrong');
+            toast.error(error.message || 'Đã xảy ra lỗi', { id: toastId });
+            setResetMessage(error.message || 'Đã xảy ra lỗi');
         }
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <div className="text-center space-y-2">
-                <h1 className="text-3xl font-black text-white uppercase tracking-tight">Chào mừng trở lại</h1>
-                <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
-                    Đăng nhập để quản lý hệ thống của bạn
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="text-center space-y-3">
+                <h1 className="text-3xl font-black text-white uppercase tracking-tight drop-shadow-md">Xác Định Danh Tính</h1>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.2em]">
+                    Nhập thông tin xác thực để truy cập hệ thống
                 </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                <div className="space-y-5">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Tên đăng nhập</label>
+                <div className="space-y-6">
+                    <div className="space-y-3 group/input">
+                        <label className="text-[10px] font-black text-zinc-500 group-focus-within/input:text-amber-500 uppercase tracking-[0.2em] ml-1 transition-colors">Định danh (Username)</label>
                         <Input
                             type="text"
-                            placeholder="Nhập username"
+                            placeholder="Nhập tên đăng nhập"
                             error={errors.username?.message}
                             {...register('username')}
-                            className="h-14 bg-black/40 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300 placeholder:text-zinc-700"
+                            className="h-14 bg-black/50 border-zinc-800 focus:border-amber-500/50 focus:ring-amber-500/20 text-white rounded-2xl transition-all duration-300 placeholder:text-zinc-700 shadow-inner text-sm font-medium px-5"
                         />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3 group/input">
                         <div className="flex justify-between items-center ml-1">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Mật khẩu</label>
+                            <label className="text-[10px] font-black text-zinc-500 group-focus-within/input:text-amber-500 uppercase tracking-[0.2em] transition-colors">Mã Bảo Mật (Password)</label>
                             <button
                                 type="button"
                                 onClick={() => setShowForgot(!showForgot)}
-                                className="text-[10px] font-black text-amber-500/80 hover:text-amber-500 uppercase tracking-widest transition-colors"
+                                className="text-[10px] font-black text-amber-600 hover:text-amber-400 uppercase tracking-widest transition-colors"
                             >
                                 Quên mật khẩu?
                             </button>
@@ -143,23 +143,24 @@ export const Login: React.FC = () => {
                             placeholder="••••••••"
                             error={errors.password?.message}
                             {...register('password')}
-                            className="h-14 bg-black/40 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300 placeholder:text-zinc-700"
+                            className="h-14 bg-black/50 border-zinc-800 focus:border-amber-500/50 focus:ring-amber-500/20 text-white rounded-2xl transition-all duration-300 placeholder:text-zinc-700 shadow-inner text-sm font-medium px-5 tracking-[0.2em]"
                         />
                     </div>
                 </div>
 
                 {error && (
-                    <div className="text-[11px] font-bold text-red-500 bg-red-500/5 border border-red-500/10 p-4 rounded-xl animate-shake">
+                    <div className="text-[11px] font-bold text-red-400 bg-red-950/40 border border-red-500/20 p-4 rounded-2xl animate-in slide-in-from-top-2 flex items-center justify-center text-center shadow-[0_0_15px_rgba(239,68,68,0.1)]">
                         {error}
                     </div>
                 )}
 
                 <Button
                     type="submit"
-                    className="w-full h-14 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl border-0 shadow-2xl shadow-amber-900/40 transition-all duration-500 hover:scale-[1.02] active:scale-95"
+                    className="group relative w-full h-14 bg-zinc-900 border border-zinc-800 hover:border-amber-500/50 text-white font-black uppercase text-[11px] tracking-[0.2em] rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
                     isLoading={isSubmitting}
                 >
-                    Đăng nhập ngay
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
+                    <span className="relative z-10 group-hover:drop-shadow-md transition-all">Ủy Quyền Truy Cập</span>
                 </Button>
             </form>
 
@@ -169,7 +170,7 @@ export const Login: React.FC = () => {
                         <Input
                             label="Email"
                             type="email"
-                            placeholder="Enter your email"
+                            placeholder="Nhập email của bạn"
                             value={resetEmail}
                             onChange={(e) => setResetEmail(e.target.value)}
                             className="bg-white/5 border-white/10 text-white"
@@ -187,7 +188,7 @@ export const Login: React.FC = () => {
                         type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2"
                     >
-                        Send Reset Link
+                        Gửi link đặt lại mật khẩu
                     </Button>
                 </form>
             )}

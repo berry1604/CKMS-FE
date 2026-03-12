@@ -25,7 +25,7 @@ export const CategoryList: React.FC = () => {
             console.error('Failed to fetch categories:', error);
             // Error toast handled by interceptor for 403, etc.
             if ((error as any).response?.status !== 403 && (error as any).response?.status !== 401) {
-                toast.error('Failed to load categories');
+                toast.error('Không thể tải danh sách danh mục');
             }
         } finally {
             setLoading(false);
@@ -54,13 +54,13 @@ export const CategoryList: React.FC = () => {
 
         try {
             await categoryApi.delete(selectedCategory.id);
-            toast.success('Category deleted successfully');
+            toast.success('Đã xóa danh mục thành công');
             setIsDeleteModalOpen(false);
             fetchCategories();
         } catch (error: any) {
             console.error('Failed to delete category:', error);
             if (error.response?.status !== 403 && error.response?.status !== 401) {
-                toast.error(error.response?.data?.message || 'Failed to delete category');
+                toast.error(error.response?.data?.message || 'Xóa danh mục thất bại');
             }
         }
     };

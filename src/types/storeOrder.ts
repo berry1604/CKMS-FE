@@ -30,6 +30,7 @@ export interface StoreOrderResponse {
     status: OrderStatus;
     batchId?: number;
     totalAmount: number;
+    note?: string;
     orderDetails: OrderDetailResponse[];
 }
 

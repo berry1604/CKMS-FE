@@ -1,23 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Package, Truck, Clock, Search, Filter, AlertCircle, Eye, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Package, Truck, Clock, Search, Filter, Eye, User } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { Input } from '../../components/ui/Input';
-import { Drawer } from '../../components/ui/Drawer';
 import { shipmentApi } from '../../services/shipment.api';
 import type { ShipmentResponse } from '../../types/shipment';
-import { ReceiveShipmentForm } from './ReceiveShipmentForm';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/classNames';
 
 export const ReceiveShipment = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [shipments, setShipments] = useState<ShipmentResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedShipment, setSelectedShipment] = useState<ShipmentResponse | null>(null);
-    const [isConfirming, setIsConfirming] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'IN_TRANSIT' | 'DELIVERED'>('IN_TRANSIT'); // Default to incoming
 
@@ -45,20 +41,6 @@ export const ReceiveShipment = () => {
         fetchShipments();
     }, [fetchShipments]);
 
-    const handleConfirmDelivery = async (data: { note: string, receivedQuantities: Record<number, number> }) => {
-        if (!selectedShipment) return;
-        setIsConfirming(true);
-        try {
-            await shipmentApi.confirmDelivery(selectedShipment.shipmentId, data);
-            toast.success('Đã xác nhận nhận hàng thành công!');
-            setSelectedShipment(null);
-            fetchShipments();
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Lỗi xác nhận giao hàng');
-        } finally {
-            setIsConfirming(false);
-        }
-    };
 
     const filteredShipments = shipments.filter(s => {
         if (statusFilter !== 'all' && s.status !== statusFilter) return false;
@@ -92,167 +74,174 @@ export const ReceiveShipment = () => {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-black text-zinc-100 uppercase tracking-tighter">Nhận Hàng</h1>
-                    <p className="text-sm text-zinc-500 mt-1 font-medium italic">Workspace: Cửa hàng • Kiểm tra và xác nhận các lô hàng đang được giao đến.</p>
+        <div className="min-h-screen bg-[#0a0a0a] pb-20">
+            {/* Cinematic Header */}
+            <div className="relative h-[320px] w-full overflow-hidden">
+                <img
+                    src="/Users/phunghuyphuoc/.gemini/antigravity/brain/0e7878ef-fd61-49a8-909f-b3ae8c725512/logistics_delivery_luxury_1773305129347.png"
+                    className="w-full h-full object-cover scale-110"
+                    alt="Luxury Logistics"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#0a0a0a] backdrop-blur-[1px]" />
+
+                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="h-px w-10 bg-amber-500/50" />
+                        <span className="text-amber-500 font-medium tracking-[0.3em] text-[10px] uppercase">Điều phối nhập kho</span>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+                        <div>
+                            <h1 className="text-5xl font-bold text-white tracking-tighter mb-2">
+                                NHẬN <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">HÀNG</span>
+                            </h1>
+                            <p className="text-gray-400 max-w-xl text-lg font-light leading-relaxed">
+                                Kiểm tra và xác nhận các lô hàng đang được giao đến cửa hàng.
+                            </p>
+                        </div>
+                        <div className="px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+                            <span className="text-gray-500 text-[10px] uppercase tracking-[0.2em] block mb-1">Tổng chuyến hàng</span>
+                            <span className="text-2xl font-bold text-white leading-none">{filteredShipments.length}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <Card className="border-zinc-800 bg-zinc-900/40 ring-1 ring-white/5 overflow-hidden shadow-2xl">
+            <div className="max-w-7xl mx-auto px-8 -mt-10 relative z-10 space-y-8">
                 {/* Search & Filter Bar */}
-                <div className="p-4 border-b border-zinc-800/50 bg-zinc-900/20 flex flex-col md:flex-row gap-4 justify-between items-center">
-                    <div className="relative w-full md:w-80">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                        <Input
-                            placeholder="Tìm mã chuyến, tên tài xế..."
-                            className="pl-10 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500/50 transition-all font-medium py-2 text-sm text-zinc-200"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 no-scrollbar">
-                        <div className="flex items-center gap-2 pr-3 border-r border-zinc-800 mr-1 shrink-0">
-                            <Filter size={14} className="text-zinc-500" />
-                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Hiển thị:</span>
+                <div className="backdrop-blur-3xl bg-white/[0.03] border border-white/10 rounded-[32px] p-4 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+                    
+                    <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
+                        <div className="relative w-full md:w-[400px] group/search">
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within/search:scale-110">
+                                <Search size={18} className="text-gray-500 group-focus-within/search:text-amber-500 transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Tìm mã chuyến, tên tài xế..."
+                                className="w-full pl-12 pr-4 py-4 bg-black/40 border border-white/5 rounded-2xl text-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all duration-300 placeholder:text-gray-600 hover:bg-white/[0.05]"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
-                        {['all', 'IN_TRANSIT', 'DELIVERED'].map(status => (
-                            <button
-                                key={status}
-                                onClick={() => setStatusFilter(status as any)}
-                                className={cn(
-                                    "px-4 py-1.5 rounded-full text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-tighter border",
-                                    statusFilter === status
-                                        ? "bg-indigo-500 border-indigo-500 text-white shadow-lg shadow-indigo-500/20"
-                                        : "bg-zinc-800/50 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
-                                )}
-                            >
-                                {status === 'all' ? 'TẤT CẢ' : (status === 'IN_TRANSIT' ? 'ĐANG GIAO ĐẾN' : 'LỊCH SỬ NHẬN')}
-                            </button>
-                        ))}
+
+                        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+                            <div className="flex items-center gap-2 pr-4 border-r border-white/5 mr-2">
+                                <Filter size={16} className="text-amber-500" />
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">HIỂN THỊ</span>
+                            </div>
+                            {['all', 'IN_TRANSIT', 'DELIVERED'].map(status => (
+                                <button
+                                    key={status}
+                                    onClick={() => setStatusFilter(status as any)}
+                                    className={cn(
+                                        "px-6 py-2.5 rounded-xl text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest border",
+                                        statusFilter === status
+                                            ? "bg-amber-600/90 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                                            : "bg-white/5 border-white/5 text-gray-500 hover:border-white/20 hover:text-gray-300"
+                                    )}
+                                >
+                                    {status === 'all' ? 'TẤT CẢ' : (status === 'IN_TRANSIT' ? 'ĐANG GIAO ĐẾN' : 'LỊCH SỬ NHẬN')}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* List Body */}
-                <div className="p-6">
+                <div>
                     {isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
-                            <span className="text-sm font-black text-zinc-500 uppercase tracking-widest">Đang tải dữ liệu...</span>
+                        <div className="flex flex-col items-center justify-center py-32 gap-6 scale-110">
+                            <div className="relative">
+                                <div className="w-16 h-16 border-4 border-amber-500/10 border-t-amber-500 rounded-full animate-spin"></div>
+                                <div className="absolute inset-0 blur-xl bg-amber-500/20 rounded-full"></div>
+                            </div>
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.4em] animate-pulse">Luân chuyển dữ liệu...</span>
                         </div>
                     ) : filteredShipments.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-center">
-                            <div className="w-20 h-20 rounded-full bg-zinc-800/50 flex items-center justify-center mb-6 border border-zinc-700">
-                                <Package size={32} className="text-zinc-500" />
+                        <div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in-95 duration-500">
+                            <div className="w-24 h-24 rounded-[32px] bg-white/[0.02] border border-white/5 flex items-center justify-center mb-8 shadow-inner shadow-black/50">
+                                <Package size={40} className="text-gray-700" />
                             </div>
-                            <h3 className="text-lg font-black text-zinc-300 uppercase tracking-tighter mb-2">Không có chuyến hàng nào</h3>
-                            <p className="text-sm text-zinc-500 max-w-sm mx-auto font-medium">Bạn hiện không có chuyến hàng nào khớp với điều kiện lọc trên.</p>
+                            <h3 className="text-xl font-bold text-gray-400 uppercase tracking-tighter mb-3">Hệ thống trống</h3>
+                            <p className="text-gray-600 max-w-sm mx-auto font-light italic">Không tìm thấy chuyến hàng nào khớp với điều kiện hiện tại.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredShipments.map(shipment => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredShipments.map((shipment, idx) => (
                                 <div
                                     key={shipment.shipmentId}
-                                    className="group relative bg-zinc-950/40 rounded-[24px] border border-zinc-800/60 overflow-hidden hover:border-indigo-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/5 flex flex-col"
+                                    className="group relative bg-[#111111] border border-white/5 rounded-[40px] p-6 shadow-2xl transition-all duration-500 hover:border-amber-500/40 hover:-translate-y-2 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.1)] animate-in fade-in slide-in-from-bottom-8 flex flex-col"
+                                    style={{ animationDelay: `${idx * 100}ms` }}
                                 >
-                                    <div className="p-5 flex-1 flex flex-col">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/20 shrink-0 group-hover:scale-110 transition-transform">
-                                                    <Truck size={20} strokeWidth={2.5} />
+                                    <div className="relative z-10 flex-1">
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-px">
+                                                    <div className="w-full h-full bg-[#111] rounded-2xl flex items-center justify-center text-amber-500 group-hover:bg-transparent group-hover:text-black transition-all">
+                                                        <Truck size={24} />
+                                                    </div>
                                                 </div>
                                                 <div>
-                                                    <div className="text-lg font-black text-zinc-100 tracking-tighter">#{shipment.shipmentId}</div>
-                                                    <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">{shipment.createdAt ? new Date(shipment.createdAt).toLocaleDateString() : '--'}</div>
+                                                    <h3 className="text-2xl font-black text-white tracking-tighter">#{shipment.shipmentId}</h3>
+                                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-1">
+                                                        {shipment.createdAt ? new Date(shipment.createdAt).toLocaleDateString('vi-VN') : '--'}
+                                                    </p>
                                                 </div>
                                             </div>
                                             {getStatusBadge(shipment.status)}
                                         </div>
 
-                                        <div className="space-y-3 flex-1">
-                                            <div className="flex items-start gap-2 p-3 bg-zinc-900/50 rounded-xl border border-zinc-800/50">
-                                                <User size={14} className="text-zinc-500 mt-1 shrink-0" />
-                                                <div className="min-w-0">
-                                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-0.5">Tài xế</p>
-                                                    <p className="text-sm font-semibold text-zinc-200 truncate">{shipment.driverName || 'Chưa cập nhật'}</p>
-                                                    <p className="text-xs text-indigo-400 font-mono mt-0.5">{shipment.driverPhone || ''}</p>
+                                        <div className="space-y-4 mb-8">
+                                            <div className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 group-hover:border-white/10 transition-colors relative overflow-hidden">
+                                                <div className="absolute top-0 left-0 w-1 h-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-500">
+                                                        <User size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] mb-1">Cơ trưởng chuyến hàng</div>
+                                                        <div className="text-sm font-bold text-white tracking-tight">{shipment.driverName || 'Vô danh'}</div>
+                                                        <div className="text-[10px] text-amber-500/80 font-mono mt-0.5">{shipment.driverPhone || '---'}</div>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div className="flex flex-col gap-1 p-3 bg-zinc-900/30 rounded-xl border border-zinc-800/30 line-clamp-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Clock size={12} className="text-zinc-500" />
-                                                    <span className="text-xs font-medium text-zinc-400">Khởi hành: {shipment.shippedAt ? new Date(shipment.shippedAt).toLocaleString() : 'Chưa rõ'}</span>
-                                                </div>
+                                            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.01] border border-white/5 text-gray-500">
+                                                <Clock size={14} className="text-amber-500/50" />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest truncate">
+                                                    Khởi động: {shipment.shippedAt ? new Date(shipment.shippedAt).toLocaleString('vi-VN') : '---'}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Action Button Area */}
-                                    <div className="p-4 bg-zinc-900/60 border-t border-zinc-800/60 mt-auto">
-                                        <Button
-                                            onClick={() => setSelectedShipment(shipment)}
-                                            className={cn(
-                                                "w-full h-11 rounded-xl font-black uppercase text-[11px] tracking-widest transition-all",
-                                                shipment.status === 'IN_TRANSIT'
-                                                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20"
-                                                    : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                                    <Button
+                                        onClick={() => navigate(`/shipment/receive/${shipment.shipmentId}`)}
+                                        className={cn(
+                                            "relative w-full h-14 rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] overflow-hidden transition-all duration-500 group/btn",
+                                            shipment.status === 'IN_TRANSIT'
+                                                ? "bg-amber-500 text-black hover:shadow-[0_0_30px_rgba(245,158,11,0.4)]"
+                                                : "bg-[#1a1a1a] text-gray-400 border border-white/10 hover:border-white/20 hover:text-white"
+                                        )}
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+                                        <div className="relative z-10 flex items-center justify-center gap-2">
+                                            {shipment.status === 'IN_TRANSIT' ? (
+                                                <>NHẬN VẬN ĐƠN <Eye size={16} /></>
+                                            ) : (
+                                                <>THÔNG TIN CHI TIẾT <Eye size={16} /></>
                                             )}
-                                        >
-                                            <Eye size={16} className="mr-2" />
-                                            {shipment.status === 'IN_TRANSIT' ? 'Tiến hành Nhận Hàng' : 'Xem Chi tiết'}
-                                        </Button>
-                                    </div>
+                                        </div>
+                                    </Button>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
-            </Card>
+            </div>
 
-            <Drawer
-                isOpen={!!selectedShipment}
-                onClose={() => setSelectedShipment(null)}
-                title={
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                            <Package size={20} />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-lg font-black text-indigo-400 uppercase tracking-tighter">Biên bản Nhận Hàng</span>
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-0.5">Chuyến #{selectedShipment?.shipmentId}</span>
-                        </div>
-                    </div>
-                }
-            >
-                {selectedShipment && (
-                    <div className="space-y-6">
-                        {selectedShipment.status !== 'IN_TRANSIT' && (
-                            <div className="flex items-start gap-3 p-4 bg-zinc-800/30 border border-zinc-700/50 rounded-xl">
-                                <AlertCircle size={18} className="text-zinc-400 shrink-0 mt-0.5" />
-                                <div>
-                                    <h4 className="text-sm font-bold text-zinc-200">Trạng thái hiện tại: {selectedShipment.status}</h4>
-                                    <p className="text-xs text-zinc-500 mt-1">Lô hàng này không trong trạng thái đang giao, bạn chỉ có thể xem chi tiết ở chế độ chỉ đọc.</p>
-                                </div>
-                            </div>
-                        )}
-
-                        <ReceiveShipmentForm
-                            shipmentId={selectedShipment.shipmentId}
-                            storeOrderIds={selectedShipment.storeOrderIds || []}
-                            onCancel={() => setSelectedShipment(null)}
-                            onSubmit={handleConfirmDelivery}
-                            isSubmitting={isConfirming}
-                        />
-
-                        {selectedShipment.status !== 'IN_TRANSIT' && (
-                            <div className="absolute inset-0 z-50 bg-zinc-950/5 cursor-not-allowed"></div>
-                        )}
-                    </div>
-                )}
-            </Drawer>
         </div>
     );
 };
