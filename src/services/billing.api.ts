@@ -7,8 +7,15 @@ import type {
   BillingStatementDetailResponse,
   PaymentStatementRequest,
   PaymentStatementResponse,
-  ApiResponse,
 } from "../types/billing";
+
+// Định nghĩa cấu trúc chuẩn của Backend
+interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data: T;
+  timestamp: string;
+}
 
 interface PageResponse<T> {
   content: T[];
@@ -21,11 +28,48 @@ interface PageResponse<T> {
   empty: boolean;
 }
 
-const BASE_URL = "/api/v1/billing-statements";
+const BASE_URL = "/billing-statements";
 
 export const billingApi = {
   /**
-   * Generate manual billing statement for a specific store
+   * GET /api/v1/billing-statements
+   */
+  getStatements: async (params: {
+    storeId?: number;
+    status?: string;
+    page: number;
+    size: number;
+  }): Promise<PageResponse<BillingStatementSummaryResponse>> => {
+    const res = await axiosClient.get<ApiResponse<PageResponse<BillingStatementSummaryResponse>>>(BASE_URL, { params });
+    return res.data.data;
+  },
+
+  /**
+   * GET /api/v1/billing-statements/{id}
+   */
+  getStatementDetail: async (id: number): Promise<BillingStatementDetailResponse> => {
+    const res = await axiosClient.get<ApiResponse<BillingStatementDetailResponse>>(`${BASE_URL}/${id}`);
+    return res.data.data;
+  },
+
+  /**
+   * POST /api/v1/billing-statements/{id}/vnpay
+   */
+  createVnPayUrl: async (id: number): Promise<string> => {
+    const res = await axiosClient.post<ApiResponse<string>>(`${BASE_URL}/${id}/vnpay`);
+    return res.data.data;
+  },
+
+  /**
+   * GET /api/v1/billing-statements/vnpay-return
+   */
+  verifyVnPayReturn: async (params: any): Promise<any> => {
+    const res = await axiosClient.get<ApiResponse<any>>(`${BASE_URL}/vnpay-return`, { params });
+    return res.data.data;
+  },
+
+  /**
+   * POST /api/v1/billing-statements/generate
    */
   generateManualStatement: async (
     storeId: number,
@@ -41,47 +85,20 @@ export const billingApi = {
   },
 
   /**
-   * Generate batch billing statements for all stores
+   * POST /api/v1/billing-statements/generate/batch
    */
   generateBatchStatements: async (
     request: BatchBillingStatementRequest,
   ): Promise<BatchBillingStatementResponse> => {
     const res = await axiosClient.post<ApiResponse<BatchBillingStatementResponse>>(
-      `${BASE_URL}/generate/batch`,
-      request,
+      `${BASE_URL}/generate/batch`, 
+      request
     );
     return res.data.data;
   },
 
   /**
-   * Get all billing statements (paged)
-   */
-  getStatements: async (params?: {
-    storeId?: number;
-    status?: string;
-    page?: number;
-    size?: number;
-  }): Promise<PageResponse<BillingStatementSummaryResponse>> => {
-    const res = await axiosClient.get<
-      ApiResponse<PageResponse<BillingStatementSummaryResponse>>
-    >(BASE_URL, { params });
-    return res.data.data;
-  },
-
-  /**
-   * Get billing statement detail by ID
-   */
-  getStatementDetail: async (
-    id: number,
-  ): Promise<BillingStatementDetailResponse> => {
-    const res = await axiosClient.get<ApiResponse<BillingStatementDetailResponse>>(
-      `${BASE_URL}/${id}`,
-    );
-    return res.data.data;
-  },
-
-  /**
-   * Pay a billing statement
+   * PATCH /api/v1/billing-statements/{id}/pay
    */
   payStatement: async (
     id: number,
@@ -89,28 +106,15 @@ export const billingApi = {
   ): Promise<PaymentStatementResponse> => {
     const res = await axiosClient.patch<ApiResponse<PaymentStatementResponse>>(
       `${BASE_URL}/${id}/pay`,
-      request,
+      request
     );
     return res.data.data;
   },
 
   /**
-   * Delete a billing statement
+   * DELETE /api/v1/billing-statements/{id}
    */
   deleteStatement: async (id: number): Promise<void> => {
     await axiosClient.delete(`${BASE_URL}/${id}`);
-  },
-
-  /**
-   * Create VNPay payment URL for a billing statement
-   * POST /billing-statements/:id/vnpay
-   * Security: hasAuthority('CONFIRM_PAYMENT')
-   * Returns: payment URL string to redirect user to VNPay
-   */
-  createVNPayUrl: async (id: number): Promise<string> => {
-    const response = await axiosClient.post<ApiResponse<string>>(
-      `/billing-statements/${id}/vnpay`
-    );
-    return response.data.data;
   },
 };
