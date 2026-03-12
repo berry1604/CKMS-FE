@@ -54,8 +54,8 @@ export const AllocationMatrix = () => {
     const fetchAllocationMatrix = async (planId: number) => {
         setIsLoadingMatrix(true);
         try {
-            const data = await allocationApi.previewAllocation(planId);
-            setMatrix(data);
+            const { rows } = await allocationApi.previewAllocation(planId);
+            setMatrix(rows);
         } catch (error) {
             toast.error('Không thể phân bổ dữ liệu plan này');
             setMatrix([]);

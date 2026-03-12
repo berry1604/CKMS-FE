@@ -108,4 +108,17 @@ export const billingApi = {
   deleteStatement: async (id: number): Promise<void> => {
     await axiosClient.delete(`/billing-statements/${id}`);
   },
+
+  /**
+   * Create VNPay payment URL for a billing statement
+   * POST /billing-statements/:id/vnpay
+   * Security: hasAuthority('CONFIRM_PAYMENT')
+   * Returns: payment URL string to redirect user to VNPay
+   */
+  createVNPayUrl: async (id: number): Promise<string> => {
+    const response = await axiosClient.post<ApiResponse<string>>(
+      `/billing-statements/${id}/vnpay`
+    );
+    return response.data.data;
+  },
 };

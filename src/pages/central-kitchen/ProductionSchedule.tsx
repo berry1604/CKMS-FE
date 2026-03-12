@@ -34,6 +34,7 @@ import { Drawer } from "../../components/ui/Drawer";
 import { ConfirmationModal } from "../../components/ui/ConfirmationModal";
 import { productionPlanApi } from "../../services/productionPlan.api";
 import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
+import { allocationApi, type AllocationRow } from "../../services/allocationApi";
 import type {
   ProductionPlanSummaryResponse,
   ProductionPlanDetailResponse,
@@ -103,30 +104,35 @@ export const ProductionSchedule = () => {
       return;
     }
     const fetchStock = async () => {
-      const kitchenId = selectedPlanDetail?.kitchenId || user?.kitchenId || 1;
-      const nameMap = new Map<string, number>();
+      // In this system, each CentralKitchen has exactly one KitchenWarehouse,
+      // and they share the same auto-incremented ID (kitchenId=1 → warehouseId=1).
+      // The correct endpoint is: GET /api/v1/kitchen-inventory/{warehouseId}/stock
+      const warehouseId = selectedPlanDetail?.kitchenId || user?.kitchenId || 1;
+      const stockMap = new Map<string, number>();
 
       try {
         const res = await kitchenInventoryApi
-          .getWarehouseStock(kitchenId)
+          .getWarehouseStock(warehouseId)
           .catch(() => ({ data: [] }));
 
         const items = res.data || [];
         for (const item of items) {
-          const key = item.itemName?.toLowerCase().trim();
-          if (key) {
-            nameMap.set(key, (nameMap.get(key) || 0) + item.quantity);
+          // Map by name (lowercase) for fuzzy matching
+          const nameKey = item.itemName?.toLowerCase().trim();
+          if (nameKey) {
+            stockMap.set(nameKey, (stockMap.get(nameKey) || 0) + item.quantity);
           }
+          // Map by material ID for precise matching (used by the table)
           if (item.itemType === "MATERIAL") {
             const idKey = `id-${item.itemId}`;
-            nameMap.set(idKey, (nameMap.get(idKey) || 0) + item.quantity);
+            stockMap.set(idKey, (stockMap.get(idKey) || 0) + item.quantity);
           }
         }
       } catch (e) {
         console.error("Failed to load kitchen stock for plan detail", e);
       }
 
-      setMaterialStockMap(nameMap);
+      setMaterialStockMap(stockMap);
     };
     fetchStock();
   }, [
@@ -178,6 +184,17 @@ export const ProductionSchedule = () => {
     setIsDetailLoading(true);
     try {
       const detail = await productionPlanApi.getProductionPlanDetail(id);
+
+      // ENHANCEMENT: Fetch the "most accurate" materials from allocation preview
+      try {
+        const preview = await allocationApi.previewAllocation(id);
+        if (preview.materials && preview.materials.length > 0) {
+          detail.materials = preview.materials;
+        }
+      } catch (e) {
+        console.warn("Could not fetch accurate materials preview", e);
+      }
+
       setSelectedPlanDetail(detail);
     } catch (error) {
       console.error("Failed to load plan detail:", error);
@@ -240,22 +257,56 @@ export const ProductionSchedule = () => {
           await productionPlanApi.startProductionPlan(id, version);
           break;
         case "finish":
-          setFinishingPlanId(id);
-          setFinishingPlanVersion(version);
+          setIsDetailLoading(true);
+          try {
+            // Step 1: Fetch basic plan details
+            const detail = await productionPlanApi.getProductionPlanDetail(id);
 
-          // Pre-populate actualQuantities with expected defaults if detail matches
-          if (id === selectedPlanDetail?.planId && selectedPlanDetail.expectedProducts) {
+            // Step 2: Fetch allocation preview to get the list of products
+            // This requires 'ORGANIZE_PRODUCTION' privilege which we just granted to KITCHEN_STAFF
+            let displayItems: any[] = [];
+            try {
+              const { rows: allocationRows } = await allocationApi.previewAllocation(id);
+
+              // Map AllocationRow to ProductionPlanDetailItem format
+              displayItems = allocationRows.map((row: AllocationRow) => ({
+                productId: row.productId,
+                productName: row.productName,
+                plannedQuantity: (row.allocations || []).reduce((sum: number, alloc: any) => sum + (alloc.requestedQuantity || 0), 0),
+                unit: "" // Unit might not be in preview, can be added if needed
+              }));
+            } catch (allocError) {
+              console.error("Failed to fetch allocation preview:", allocError);
+              // Fallback to empty list if allocation fails, but the modal will show "No data"
+            }
+
+            // Update local state for modal
+            setSelectedPlanDetail({
+              ...detail,
+              items: displayItems
+            });
+
+            setFinishingPlanId(id);
+            setFinishingPlanVersion(version);
+
+            // Pre-populate actualQuantities logic
             const initQs: Record<number, number> = {};
-            selectedPlanDetail.expectedProducts.forEach(ep => {
-              initQs[ep.productId] = ep.expectedQuantity;
+            displayItems.forEach((item) => {
+              initQs[item.productId] = item.plannedQuantity;
             });
             setActualQuantities(initQs);
-          } else {
-            setActualQuantities({});
-          }
 
-          setShowYieldModal(true);
-          return; // Stop here, wait for modal confirmation
+            setShowYieldModal(true);
+          } catch (err: any) {
+            console.error("Error preparing yield modal:", err);
+            const msg = err.response?.status === 403
+              ? "Bạn không có quyền thực hiện thao tác này."
+              : "Không thể tải thông tin sản phẩm để nghiệm thu";
+            toast.error(msg);
+          } finally {
+            setIsDetailLoading(false);
+          }
+          return;
       }
       toast.success("Cập nhật trạng thái thành công");
       loadPlans();
@@ -698,7 +749,7 @@ export const ProductionSchedule = () => {
             </span>
             <div className="flex flex-wrap gap-3">
               {(selectedPlanDetail.status === "DRAFT" ||
-                selectedPlanDetail.status === "PLANNED") && (
+                selectedPlanDetail.status === "PLANNED") && (hasAuthority("ORGANIZE_PRODUCTION") || hasAuthority("ADMIN")) && (
                   <>
                     <Button
                       className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -716,7 +767,7 @@ export const ProductionSchedule = () => {
                     </Button>
                   </>
                 )}
-              {selectedPlanDetail.status === "READY_TO_PRODUCE" && (
+              {selectedPlanDetail.status === "READY_TO_PRODUCE" && (hasAuthority("EXECUTE_PRODUCTION") || hasAuthority("ADMIN") || hasAuthority("MANAGER")) && (
                 <>
                   <Button
                     className="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-amber-900/20"
@@ -733,7 +784,7 @@ export const ProductionSchedule = () => {
                   </Button>
                 </>
               )}
-              {selectedPlanDetail.status === "IN_PRODUCTION" && (
+              {selectedPlanDetail.status === "IN_PRODUCTION" && (hasAuthority("EXECUTE_PRODUCTION") || hasAuthority("ADMIN") || hasAuthority("MANAGER")) && (
                 <Button
                   className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-emerald-900/20"
                   onClick={() => handleStatusAction("finish")}
@@ -1240,51 +1291,57 @@ export const ProductionSchedule = () => {
                       Thủ công
                     </Badge>
                   </div>
-                  <div className="border border-zinc-800 rounded-[24px] bg-black/40 p-4 divide-y divide-zinc-800/50 max-h-[40vh] overflow-y-auto custom-scrollbar">
-                    {selectedPlanDetail?.expectedProducts && selectedPlanDetail.expectedProducts.length > 0 ? (
-                      selectedPlanDetail.expectedProducts.map((ep) => (
-                        <div key={ep.productId} className="flex flex-col gap-4 py-4 first:pt-0 last:pb-0">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-600">
-                                <Package size={14} />
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {selectedPlanDetail?.items && selectedPlanDetail.items.length > 0 ? (
+                      selectedPlanDetail.items.map((item) => (
+                        <div key={item.productId} className="group p-5 rounded-[24px] bg-zinc-900/50 border border-zinc-800/50 hover:border-amber-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/5">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                                <Package size={22} className="text-amber-500" />
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[13px] font-bold text-zinc-300">
-                                  {ep.productName}
+                                <span className="text-[15px] font-black text-zinc-100 tracking-tight flex items-center gap-2">
+                                  {item.productName}
                                 </span>
-                                <span className="text-[10px] text-zinc-500 font-medium">ID: #{ep.productId} | SL Yêu cầu: {ep.expectedQuantity}</span>
+                                <span className="text-[10px] text-zinc-500 font-medium tracking-wider uppercase">ID: #{item.productId} | SL Yêu cầu: <span className="text-amber-500 font-bold">{item.plannedQuantity}</span></span>
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <span className="text-[13px] font-bold text-zinc-400 pl-11">
-                              Sản lượng
+                          <div className="flex items-center justify-between bg-zinc-950/50 p-4 rounded-2xl border border-zinc-800/30">
+                            <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                              Sản lượng thực tế
                             </span>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
                               <input
                                 type="number"
-                                className="w-24 h-10 bg-zinc-900 border border-zinc-800 rounded-xl text-center text-[15px] font-black text-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all"
-                                value={actualQuantities[ep.productId] ?? ''}
+                                className="w-28 h-12 bg-zinc-900 border border-zinc-800 rounded-xl text-center text-lg font-black text-amber-500 focus:ring-2 focus:ring-amber-500/50 outline-none transition-all duration-300 shadow-inner"
+                                value={actualQuantities[item.productId] ?? ''}
                                 onChange={(e) =>
                                   setActualQuantities(prev => ({
                                     ...prev,
-                                    [ep.productId]: Number(e.target.value)
+                                    [item.productId]: Number(e.target.value)
                                   }))
                                 }
                                 min={0}
+                                placeholder="0"
                               />
-                              <span className="text-[11px] font-black text-zinc-600 uppercase">
-                                {ep.unit || 'Unit'}
+                              <span className="text-[11px] font-black text-zinc-600 uppercase tracking-tighter w-8">
+                                {item.unit || 'Món'}
                               </span>
                             </div>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="py-8 text-center text-[11px] text-zinc-500 font-bold tracking-widest uppercase">
-                        Không có dữ liệu món yêu cầu
+                      <div className="py-12 text-center">
+                        <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
+                          <AlertTriangle size={24} className="text-zinc-700" />
+                        </div>
+                        <div className="text-[11px] text-zinc-500 font-bold tracking-[0.2em] uppercase">
+                          Không có dữ liệu món yêu cầu
+                        </div>
                       </div>
                     )}
                   </div>

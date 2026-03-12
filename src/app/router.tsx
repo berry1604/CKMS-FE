@@ -40,6 +40,7 @@ import { ComingSoon } from '../components/ComingSoon';
 import { WarehouseFulfillment } from '../pages/warehouse/WarehouseFulfillment';
 import { AllocationMatrix } from '../pages/warehouse/AllocationMatrix';
 import { ReceiveShipment } from '../pages/shipment/ReceiveShipment';
+import { VNPayReturn } from '../pages/billing/VNPayReturn';
 import { useAuth } from '../hooks/useAuth';
 import type { UserRole } from '../types/user';
 
@@ -181,7 +182,7 @@ export const router = createBrowserRouter([
                     // Shipment Module (Admin, Supply Coordinator, Coordinator)
                     {
                         path: 'shipment',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR', 'STORE_STAFF']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR', 'KITCHEN_STAFF', 'STORE_STAFF']} />,
                         children: [
                             { index: true, element: <ShipmentList /> },
                             { path: 'create', element: <CreateShipment /> },
@@ -204,5 +205,10 @@ export const router = createBrowserRouter([
     {
         path: '*',
         element: <Navigate to="/" replace />
+    },
+    // VNPay return — accessible without auth (VNPay redirect doesn't carry session cookie)
+    {
+        path: '/billing/vnpay-return',
+        element: <VNPayReturn />
     }
 ]);

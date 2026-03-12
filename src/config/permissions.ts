@@ -75,6 +75,7 @@ export const ROLE_PERMISSIONS: Record<MappedRole, Permission[]> = {
         PERMISSIONS.PRODUCT_MANAGEMENT, // Cần để fetch data dropdown (đã ẩn mục này trong sidebar)
         PERMISSIONS.INGREDIENT_MANAGEMENT, // Cần để fetch data dropdown (đã ẩn mục này trong sidebar)
         PERMISSIONS.EXECUTE_PRODUCTION, // Quyền thực thi sản xuất (Bắt đầu nấu, Hoàn tất mẻ)
+        PERMISSIONS.CREATE_SHIPMENT,   // Quyền tạo và quản lý vận chuyển
     ],
     MANAGER: [
         PERMISSIONS.PRODUCT_MANAGEMENT,
@@ -88,6 +89,7 @@ export const ROLE_PERMISSIONS: Record<MappedRole, Permission[]> = {
         PERMISSIONS.USER_MANAGEMENT,
         PERMISSIONS.ROLE_PERMISSION_MANAGEMENT,
         PERMISSIONS.STORE_MANAGEMENT,
+        PERMISSIONS.BILLING_MANAGEMENT,
     ],
 };
 

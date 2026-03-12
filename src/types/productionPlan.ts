@@ -34,14 +34,14 @@ export interface MaterialRequirementResponse {
     unit?: string;
 }
 
-export interface ExpectedProductResponse {
+export interface ProductionPlanDetailItem {
     productId: number;
     productName: string;
-    expectedQuantity: number;
+    plannedQuantity: number;
     unit?: string;
 }
 
 export interface ProductionPlanDetailResponse extends ProductionPlanSummaryResponse {
     materials: MaterialRequirementResponse[];
-    expectedProducts?: ExpectedProductResponse[];
+    items?: ProductionPlanDetailItem[];
 }

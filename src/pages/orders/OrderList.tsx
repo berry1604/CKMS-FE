@@ -114,6 +114,20 @@ export const OrderList = () => {
         }
     };
 
+    const handleSubmitOrder = async (orderId: number) => {
+        setIsLoading(true);
+        try {
+            await storeOrderApi.submitOrder(orderId);
+            toast.success(`Đã gửi đơn hàng #${orderId} thành công`);
+            setSelectedOrder(null);
+            fetchData();
+        } catch (error: any) {
+            console.error('Failed to submit order', error);
+            toast.error(error.response?.data?.message || 'Gửi đơn hàng thất bại');
+            setIsLoading(false);
+        }
+    };
+
     const columns: Column<StoreOrderResponse>[] = [
         {
             header: 'Mã đơn',
@@ -152,6 +166,7 @@ export const OrderList = () => {
             cell: (order) => {
                 const status = order.status;
                 const config: Record<string, { label: string, variant: any }> = {
+                    'DRAFT': { label: 'BẢN NHÁP', variant: 'default' },
                     'SUBMITTED': { label: 'CHỜ DUYỆT', variant: 'warning' },
                     'APPROVED': { label: 'ĐÃ DUYỆT', variant: 'orange' },
                     'ALLOCATED': { label: 'ĐÃ PHÂN BỔ', variant: 'info' },
@@ -169,7 +184,19 @@ export const OrderList = () => {
         {
             header: '',
             cell: (order) => (
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pr-4">
+                    {order.status === 'DRAFT' && (hasAuthority('STORE_STAFF') || hasAuthority('CREATE_STORE_ORDER') || hasAuthority('MANAGER')) && (
+                        <Button
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleSubmitOrder(order.orderId);
+                            }}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest px-3 h-8 rounded-lg shadow-lg shadow-emerald-900/20 border-0"
+                        >
+                            Gửi Đơn
+                        </Button>
+                    )}
                     <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)} className="text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-full w-8 h-8 p-0">
                         <Eye size={16} />
                     </Button>
@@ -206,7 +233,7 @@ export const OrderList = () => {
                             <Filter size={14} className="text-zinc-500" />
                             <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Lọc:</span>
                         </div>
-                        {['all', 'SUBMITTED', 'APPROVED', 'ALLOCATED', 'DELIVERED', 'REJECTED'].map(status => (
+                        {['all', 'DRAFT', 'SUBMITTED', 'APPROVED', 'ALLOCATED', 'DELIVERED', 'REJECTED'].map(status => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
@@ -218,10 +245,11 @@ export const OrderList = () => {
                                 )}
                             >
                                 {status === 'all' ? 'TẤT CẢ' :
-                                    status === 'SUBMITTED' ? 'CHỜ DUYỆT' :
-                                        status === 'APPROVED' ? 'ĐÃ DUYỆT' :
-                                            status === 'ALLOCATED' ? 'ĐÃ PHÂN BỔ' :
-                                                status === 'DELIVERED' ? 'HOÀN THÀNH' : 'TỪ CHỐI'}
+                                    status === 'DRAFT' ? 'BẢN NHÁP' :
+                                        status === 'SUBMITTED' ? 'CHỜ DUYỆT' :
+                                            status === 'APPROVED' ? 'ĐÃ DUYỆT' :
+                                                status === 'ALLOCATED' ? 'ĐÃ PHÂN BỔ' :
+                                                    status === 'DELIVERED' ? 'HOÀN THÀNH' : 'TỪ CHỐI'}
                             </button>
                         ))}
                     </div>
@@ -272,6 +300,7 @@ export const OrderList = () => {
                 onClose={() => setSelectedOrder(null)}
                 onStatusUpdate={handleStatusUpdate}
                 onCancelOrder={handleCancelOrder}
+                onSubmitOrder={handleSubmitOrder}
             />
         </div>
     );

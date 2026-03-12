@@ -11,7 +11,9 @@ import {
   Wallet,
   ArrowRight,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  CreditCard,
+  Loader2
 } from "lucide-react";
 import { BillingDetailDrawer } from "./InvoiceDetailDrawer";
 import { billingApi } from "../../services/billing.api";
@@ -55,6 +57,9 @@ export const BillingList = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [statementToDelete, setStatementToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // VNPay state
+  const [isPayingVNPay, setIsPayingVNPay] = useState<number | null>(null);
 
   // Manual Statement form
   const [manualForm, setManualForm] = useState({
@@ -138,6 +143,22 @@ export const BillingList = () => {
       toast.error(msg);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleVNPayPayment = async (statementId: number) => {
+    setIsPayingVNPay(statementId);
+    try {
+      const paymentUrl = await billingApi.createVNPayUrl(statementId);
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      } else {
+        toast.error("Không thể tạo link thanh toán VNPay");
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Lỗi khi tạo link thanh toán VNPay";
+      toast.error(msg);
+      setIsPayingVNPay(null);
     }
   };
 
@@ -478,6 +499,21 @@ export const BillingList = () => {
                   >
                     <Eye size={18} className="transition-transform group-hover/btn:scale-110" /> Xem Chi tiết
                   </button>
+
+                  {/* VNPay Payment Button — only show for unpaid/non-cancelled */}
+                  {!['PAID', 'CANCELLED'].includes(s.status?.toUpperCase() || '') && (
+                    <button
+                      onClick={() => handleVNPayPayment(s.statementId)}
+                      disabled={isPayingVNPay === s.statementId}
+                      className="h-14 px-6 rounded-2xl bg-blue-950 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 transition-all font-black uppercase tracking-widest text-xs italic flex items-center justify-center gap-2 shadow-inner disabled:opacity-50"
+                    >
+                      {isPayingVNPay === s.statementId
+                        ? <Loader2 size={16} className="animate-spin" />
+                        : <CreditCard size={16} />}
+                      {isPayingVNPay === s.statementId ? "Đang xử lý..." : "VNPay"}
+                    </button>
+                  )}
+
                   <button
                     onClick={() => handleDelete(s.statementId)}
                     className="w-14 h-14 rounded-2xl bg-zinc-950 text-zinc-800 hover:text-rose-500 border border-white/5 hover:border-rose-500/40 transition-all flex items-center justify-center shadow-inner"

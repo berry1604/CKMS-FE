@@ -80,6 +80,19 @@ export const storeOrderApi = {
     },
 
     /**
+     * Submit a draft order
+     */
+    submitOrder: async (id: number | string): Promise<StoreOrderResponse> => {
+        try {
+            const response = await axiosClient.patch<StoreOrderResponse>(`/orders/${id}/submit`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error submitting order ${id}:`, error);
+            throw error;
+        }
+    },
+
+    /**
      * Get simple stores list for dropdown
      */
     getMyStores: async (): Promise<StoreSimpleResponse[]> => {

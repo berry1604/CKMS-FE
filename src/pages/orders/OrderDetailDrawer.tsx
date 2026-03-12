@@ -14,9 +14,10 @@ interface OrderDetailDrawerProps {
     onClose: () => void;
     onStatusUpdate?: (orderId: number, status: string) => void;
     onCancelOrder?: (orderId: number) => void;
+    onSubmitOrder?: (orderId: number) => void;
 }
 
-export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCancelOrder }: OrderDetailDrawerProps) => {
+export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCancelOrder, onSubmitOrder }: OrderDetailDrawerProps) => {
     const { hasAuthority } = useAuth();
     const [isCancelling, setIsCancelling] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -72,6 +73,14 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                     >
                         <XCircle size={16} className="mr-2" />
                         {isCancelling ? 'Đang hủy...' : 'Hủy đơn'}
+                    </Button>
+                )}
+                {orderStatus === 'DRAFT' && onSubmitOrder && (hasAuthority('STORE_STAFF') || hasAuthority('CREATE_STORE_ORDER') || hasAuthority('MANAGER')) && (
+                    <Button
+                        className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-9 px-6 rounded-lg shadow-lg shadow-emerald-900/20 border-0"
+                        onClick={() => onSubmitOrder(order.orderId)}
+                    >
+                        Gửi Đơn
                     </Button>
                 )}
                 {canReject && onStatusUpdate && canApprove && (

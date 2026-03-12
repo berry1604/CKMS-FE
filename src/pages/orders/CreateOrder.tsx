@@ -125,7 +125,7 @@ export const CreateOrder = () => {
         setIsSubmitting(true);
         try {
             await storeOrderApi.createOrder(payload);
-            toast.success('Đặt đơn hàng thành công! Trạng thái: SUBMITTED');
+            toast.success('Tạo bản nháp thành công! Vui lòng gửi đơn để được duyệt.');
             navigate('/orders');
         } catch (error: any) {
             console.error('Failed to submit order', error);
@@ -157,7 +157,7 @@ export const CreateOrder = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     <Badge variant="secondary" className="px-3 py-1 border-zinc-700 text-zinc-400 bg-transparent ring-1 ring-zinc-700">
-                        Trạng thái mặc định: <span className="text-amber-500 ml-1 font-bold">SUBMITTED</span>
+                        Trạng thái mặc định: <span className="text-amber-500 ml-1 font-bold">BẢN NHÁP</span>
                     </Badge>
                 </div>
             </div>
