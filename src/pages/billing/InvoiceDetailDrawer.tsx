@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Building2, Calendar, X } from "lucide-react";
+import { CreditCard, Building2, Calendar, X, AlertCircle } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { Drawer } from "../../components/ui/Drawer";
 import { billingApi } from "../../services/billing.api";
+import { useAuth } from "../../hooks/useAuth"; // Added useAuth
 import { toast } from "react-hot-toast";
 import type {
   BillingStatementDetailResponse,
@@ -25,6 +26,7 @@ export const BillingDetailDrawer = ({
   onClose,
   onPaid,
 }: BillingDetailDrawerProps) => {
+  const { hasAuthority } = useAuth(); // Use auth hook
   const [detail, setDetail] = useState<BillingStatementDetailResponse | null>(
     null,
   );
@@ -36,6 +38,7 @@ export const BillingDetailDrawer = ({
     transactionReference: "",
     note: "",
   });
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   // Fetch detail when opened
   const fetchDetail = useCallback(async () => {
@@ -56,18 +59,58 @@ export const BillingDetailDrawer = ({
   useEffect(() => {
     if (isOpen && statementId) {
       fetchDetail();
+      // Reset form
+      setPayForm({
+        paymentMethodId: 0,
+        transactionReference: "",
+        note: "",
+      });
+      setFormErrors({});
+      setShowPayForm(false);
     }
   }, [isOpen, statementId, fetchDetail]);
 
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!payForm.paymentMethodId) {
+      errors.paymentMethodId = "Please select a payment method";
+    }
+    if (payForm.paymentMethodId === 2 && !payForm.transactionReference) {
+      // Assuming ID 2 is Bank Transfer
+      errors.transactionReference = "Reference is required for Bank Transfer";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handlePay = async () => {
     if (!statementId) return;
+    if (!validateForm()) return;
+
     setIsPaying(true);
     try {
-      await billingApi.payStatement(statementId, payForm);
+      const response = await billingApi.payStatement(statementId, payForm);
       toast.success("Payment processed successfully!");
+      
+      // Update local state immediately
+      setDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "PAID",
+              paidAt: response.paidAt,
+              transactionReference: response.transactionReference,
+              paymentMethodId: payForm.paymentMethodId, // Optimistic update or derived
+            }
+          : null,
+      );
+
       setShowPayForm(false);
       onPaid?.();
-      onClose();
+      // Don't close immediately, let user see the update? Or close?
+      // User might want to see the status change.
+      // But usually "Mark as Paid" -> Close is fine.
+      // Let's keep it open to show the updated status.
     } catch (error: unknown) {
       let msg = "Payment failed";
       if (error && typeof error === "object" && "response" in error) {

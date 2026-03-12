@@ -21,43 +21,40 @@ interface PageResponse<T> {
   empty: boolean;
 }
 
+const BASE_URL = "/api/v1/billing-statements";
+
 export const billingApi = {
   /**
    * Generate manual billing statement for a specific store
-   * POST /billing-statements/generate?storeId=&periodStart=&periodEnd=
-   * Security: hasAuthority('CONFIRM_PAYMENT')
    */
   generateManualStatement: async (
     storeId: number,
     periodStart: string,
     periodEnd: string,
   ): Promise<BillingStatementResponse> => {
-    const response = await axiosClient.post<
-      ApiResponse<BillingStatementResponse>
-    >("/billing-statements/generate", null, {
-      params: { storeId, periodStart, periodEnd },
-    });
-    return response.data.data;
+    const res = await axiosClient.post<ApiResponse<BillingStatementResponse>>(
+      `${BASE_URL}/generate`,
+      null,
+      { params: { storeId, periodStart, periodEnd } },
+    );
+    return res.data.data;
   },
 
   /**
    * Generate batch billing statements for all stores
-   * POST /billing-statements/generate/batch
-   * Security: hasAuthority('CONFIRM_PAYMENT')
    */
   generateBatchStatements: async (
     request: BatchBillingStatementRequest,
   ): Promise<BatchBillingStatementResponse> => {
-    const response = await axiosClient.post<
-      ApiResponse<BatchBillingStatementResponse>
-    >("/billing-statements/generate/batch", request);
-    return response.data.data;
+    const res = await axiosClient.post<ApiResponse<BatchBillingStatementResponse>>(
+      `${BASE_URL}/generate/batch`,
+      request,
+    );
+    return res.data.data;
   },
 
   /**
    * Get all billing statements (paged)
-   * GET /billing-statements?storeId=&status=&page=&size=&sort=
-   * Security: hasAuthority('VIEW_BILLING')
    */
   getStatements: async (params?: {
     storeId?: number;
@@ -65,48 +62,43 @@ export const billingApi = {
     page?: number;
     size?: number;
   }): Promise<PageResponse<BillingStatementSummaryResponse>> => {
-    const response = await axiosClient.get<
+    const res = await axiosClient.get<
       ApiResponse<PageResponse<BillingStatementSummaryResponse>>
-    >("/billing-statements", { params });
-    return response.data.data;
+    >(BASE_URL, { params });
+    return res.data.data;
   },
 
   /**
    * Get billing statement detail by ID
-   * GET /billing-statements/:id
-   * Security: hasAuthority('VIEW_BILLING')
    */
   getStatementDetail: async (
     id: number,
   ): Promise<BillingStatementDetailResponse> => {
-    const response = await axiosClient.get<
-      ApiResponse<BillingStatementDetailResponse>
-    >(`/billing-statements/${id}`);
-    return response.data.data;
+    const res = await axiosClient.get<ApiResponse<BillingStatementDetailResponse>>(
+      `${BASE_URL}/${id}`,
+    );
+    return res.data.data;
   },
 
   /**
    * Pay a billing statement
-   * PATCH /billing-statements/:id/pay
-   * Security: hasAuthority('CONFIRM_PAYMENT')
    */
   payStatement: async (
     id: number,
     request: PaymentStatementRequest,
   ): Promise<PaymentStatementResponse> => {
-    const response = await axiosClient.patch<
-      ApiResponse<PaymentStatementResponse>
-    >(`/billing-statements/${id}/pay`, request);
-    return response.data.data;
+    const res = await axiosClient.patch<ApiResponse<PaymentStatementResponse>>(
+      `${BASE_URL}/${id}/pay`,
+      request,
+    );
+    return res.data.data;
   },
 
   /**
    * Delete a billing statement
-   * DELETE /billing-statements/:id
-   * Security: hasAuthority('CONFIRM_PAYMENT') or equivalent
    */
   deleteStatement: async (id: number): Promise<void> => {
-    await axiosClient.delete(`/billing-statements/${id}`);
+    await axiosClient.delete(`${BASE_URL}/${id}`);
   },
 
   /**

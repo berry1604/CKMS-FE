@@ -21,11 +21,10 @@ export interface BillingStatementResponse {
 }
 
 export interface BatchBillingStatementResponse {
-  totalStores: number;
-  successCount: number;
-  failureCount: number;
-  statements: BillingStatementResponse[];
-  errors?: string[];
+totalStoresProcessed: number;
+  totalStatementsCreated: number;
+  storesSkippedNoInvoices: number;
+  status: string;
 }
 
 export interface BillingStatementSummaryResponse {
@@ -34,10 +33,8 @@ export interface BillingStatementSummaryResponse {
   storeId?: number;
   cycleName: string;
   totalAmount: number;
-  status: BillingStatementStatus;
+  status: string;
   issuedAt: string;
-  periodStart?: string;
-  periodEnd?: string;
 }
 
 export interface StoreSimpleResponse {
@@ -57,19 +54,13 @@ export interface InvoiceDetailResponse {
 export interface BillingStatementDetailResponse {
   statementId: number;
   store: StoreSimpleResponse;
-  cycleName?: string;
   periodStart: string;
   periodEnd: string;
-  orderTotal?: number;
-  shippingTotal?: number;
+  orderTotal: number;
+  shippingTotal: number;
   totalAmount: number;
-  status: BillingStatementStatus;
-  issuedAt?: string;
+  status: string;
   paidAt: string | null;
-  paymentMethodId?: number;
-  paymentMethodName?: string;
-  transactionReference?: string;
-  note?: string;
   invoices: InvoiceDetailResponse[];
 }
 
@@ -84,11 +75,12 @@ export interface PaymentStatementResponse {
   status: string;
   paidAt: string;
   transactionReference?: string;
+  paymentMethodName?: string;
 }
 
 export interface ApiResponse<T> {
   status: number;
   message: string;
-  data: T;
+  data: T; // BẮT BUỘC phải có dòng này và dùng Generic <T>
   timestamp: string;
 }
