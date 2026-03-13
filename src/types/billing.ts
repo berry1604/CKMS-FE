@@ -54,6 +54,7 @@ export interface InvoiceDetailResponse {
 export interface BillingStatementDetailResponse {
   statementId: number;
   store: StoreSimpleResponse;
+  cycleName?: string;
   periodStart: string;
   periodEnd: string;
   orderTotal: number;
@@ -61,6 +62,9 @@ export interface BillingStatementDetailResponse {
   totalAmount: number;
   status: string;
   paidAt: string | null;
+  paymentMethodName?: string;
+  transactionReference?: string;
+  note?: string;
   invoices: InvoiceDetailResponse[];
 }
 

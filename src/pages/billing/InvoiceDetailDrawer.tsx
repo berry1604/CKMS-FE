@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Building2, Calendar, X, AlertCircle } from "lucide-react";
+import { CreditCard, Building2, Calendar, X } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { Drawer } from "../../components/ui/Drawer";
 import { billingApi } from "../../services/billing.api";
-import { useAuth } from "../../hooks/useAuth"; // Added useAuth
 import { toast } from "react-hot-toast";
 import type {
   BillingStatementDetailResponse,
@@ -26,7 +25,6 @@ export const BillingDetailDrawer = ({
   onClose,
   onPaid,
 }: BillingDetailDrawerProps) => {
-  const { hasAuthority } = useAuth(); // Use auth hook
   const [detail, setDetail] = useState<BillingStatementDetailResponse | null>(
     null,
   );
@@ -381,18 +379,18 @@ export const BillingDetailDrawer = ({
       {showPayForm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <Card className="w-full max-w-md p-6 bg-zinc-900 shadow-xl border border-zinc-700">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-200">
+            <div className="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+              <h2 className="text-xl font-bold text-gray-200">
                 Confirm Payment
               </h2>
               <button
                 onClick={() => setShowPayForm(false)}
-                className="text-gray-400 hover:text-gray-200"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Payment Method
@@ -407,12 +405,15 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 >
-                  <option value="" disabled>
+                  <option value="" disabled className="bg-zinc-900 text-gray-500">
                     Select Method
                   </option>
-                  <option value="1">CASH</option>
-                  <option value="2">BANK_TRANSFER</option>
+                  <option value="1" className="bg-zinc-900">CASH</option>
+                  <option value="2" className="bg-zinc-900">BANK_TRANSFER</option>
                 </select>
+                {formErrors.paymentMethodId && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.paymentMethodId}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -428,6 +429,9 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 />
+                {formErrors.transactionReference && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.transactionReference}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -447,14 +451,15 @@ export const BillingDetailDrawer = ({
                 variant="outline"
                 onClick={() => setShowPayForm(false)}
                 disabled={isPaying}
+                className="bg-zinc-800 border-zinc-700 text-gray-300 hover:text-white hover:bg-zinc-700"
               >
                 Cancel
               </Button>
               <Button
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
                 onClick={handlePay}
                 isLoading={isPaying}
-                disabled={!payForm.paymentMethodId}
+                disabled={!payForm.paymentMethodId || isPaying}
               >
                 <CreditCard size={16} className="mr-2" /> Pay Now
               </Button>
