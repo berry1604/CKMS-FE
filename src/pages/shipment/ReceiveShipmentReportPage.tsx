@@ -124,9 +124,23 @@ export const ReceiveShipmentReportPage = () => {
                                 <AlertCircle size={24} className="text-amber-500 shrink-0 mt-0.5" />
                                 <div>
                                     <h4 className="text-sm font-black text-amber-500 uppercase tracking-widest mb-1">Chế độ Chỉ xem</h4>
-                                    <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider leading-relaxed">
-                                        Lô hàng này không trong trạng thái đang giao, bạn chỉ có thể xem chi tiết ở chế độ chỉ đọc.
+                                    <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider leading-relaxed mb-4">
+                                        Lô hàng này không trong trạng thái đang giao, bạn chưa thể xác nhận nhận hàng.
                                     </p>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${(shipment.status as string) === 'PENDING' ? 'bg-amber-500 text-black' : 'bg-emerald-500/20 text-emerald-500'}`}>1</div>
+                                            <span className={`text-[10px] font-black tracking-widest uppercase ${(shipment.status as string) === 'PENDING' ? 'text-zinc-200' : 'text-zinc-500'}`}>PENDING: XÁC NHẬN CHUẨN BỊ HÀNG</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${(shipment.status as string) === 'PREPARED' ? 'bg-amber-500 text-black' : ((shipment.status as string) === 'IN_TRANSIT' || (shipment.status as string) === 'DELIVERED' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-zinc-800 text-zinc-600')}`}>2</div>
+                                            <span className={`text-[10px] font-black tracking-widest uppercase ${(shipment.status as string) === 'PREPARED' ? 'text-zinc-200' : 'text-zinc-600'}`}>PREPARED: XÁC NHẬN XUẤT KHO & GIAO</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${(shipment.status as string) === 'IN_TRANSIT' ? 'bg-amber-500 text-black' : ((shipment.status as string) === 'DELIVERED' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-zinc-800 text-zinc-600')}`}>3</div>
+                                            <span className={`text-[10px] font-black tracking-widest uppercase ${(shipment.status as string) === 'IN_TRANSIT' ? 'text-zinc-200' : 'text-zinc-600'}`}>IN_TRANSIT: XÁC NHẬN NHẬN HÀNG</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -135,6 +149,7 @@ export const ReceiveShipmentReportPage = () => {
                             <ReceiveShipmentForm
                                 shipmentId={shipment.shipmentId}
                                 storeOrderIds={shipment.storeOrderIds || []}
+                                status={shipment.status}
                                 onCancel={() => navigate('/shipment/receive')}
                                 onSubmit={handleConfirmDelivery}
                                 isSubmitting={isConfirming}

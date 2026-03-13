@@ -9,16 +9,18 @@ import { cn } from '../../utils/classNames';
 interface ComponentProps {
     shipmentId: number;
     storeOrderIds: number[];
+    status: string;
     onCancel: () => void;
     onSubmit: (data: { note: string, receivedQuantities: Record<number, number> }) => void;
     isSubmitting: boolean;
 }
 
-export const ReceiveShipmentForm = ({ shipmentId, storeOrderIds, onCancel, onSubmit, isSubmitting }: ComponentProps) => {
+export const ReceiveShipmentForm = ({ shipmentId, storeOrderIds, status, onCancel, onSubmit, isSubmitting }: ComponentProps) => {
     const [expectedItems, setExpectedItems] = useState<Map<number, OrderDetailResponse>>(new Map());
     const [receivedQuantities, setReceivedQuantities] = useState<Record<number, number>>({});
     const [note, setNote] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const isReadOnly = status !== 'IN_TRANSIT';
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
@@ -161,6 +163,7 @@ export const ReceiveShipmentForm = ({ shipmentId, storeOrderIds, onCancel, onSub
                                                     value={received.toString()}
                                                     onChange={(e) => handleQuantityChange(item.productId, e.target.value)}
                                                     min={0}
+                                                    disabled={isReadOnly}
                                                 />
                                             </div>
                                         </td>
@@ -205,7 +208,8 @@ export const ReceiveShipmentForm = ({ shipmentId, storeOrderIds, onCancel, onSub
                         placeholder="Tình trạng bao bì, nhiệt độ, lý do thiếu hàng..."
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
-                        className="h-14 bg-black/40 border-zinc-800 focus:border-amber-500/50 focus:ring-amber-500/10 text-white rounded-2xl transition-all duration-300 text-sm font-medium px-5"
+                        disabled={isReadOnly}
+                        className="h-14 bg-black/40 border-zinc-800 focus:border-amber-500/50 focus:ring-amber-500/10 text-white rounded-2xl transition-all duration-300 text-sm font-medium px-5 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                 </div>
             </div>
@@ -221,8 +225,8 @@ export const ReceiveShipmentForm = ({ shipmentId, storeOrderIds, onCancel, onSub
                 </Button>
                 <Button
                     onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="group relative h-14 px-10 rounded-2xl bg-zinc-950 border border-zinc-800 text-white font-black uppercase text-[10px] tracking-[0.2em] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:border-emerald-500/50"
+                    disabled={isSubmitting || isReadOnly}
+                    className="group relative h-14 px-10 rounded-2xl bg-zinc-950 border border-zinc-800 text-white font-black uppercase text-[10px] tracking-[0.2em] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:border-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:border-zinc-800"
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
                     <div className="relative z-10 flex items-center justify-center gap-3">
