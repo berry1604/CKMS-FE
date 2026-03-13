@@ -210,9 +210,9 @@ export const KitchenInventory = () => {
             <div className="relative h-[280px] -mx-4 -mt-8 mb-12 overflow-hidden group/header">
                 {/* Background Image with Parallax-like effect */}
                 <div className="absolute inset-0 bg-zinc-950">
-                    <img 
-                        src="/src/assets/kitchen_inventory.png" 
-                        alt="Inventory Hero" 
+                    <img
+                        src="/src/assets/kitchen_inventory.png"
+                        alt="Inventory Hero"
                         className="w-full h-full object-cover opacity-40 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent"></div>
@@ -258,8 +258,8 @@ export const KitchenInventory = () => {
                     { label: 'Cảnh báo tồn kho', value: lowStockItems, icon: AlertTriangle, color: 'red', desc: 'Mặt hàng dưới mức an toàn', highlight: lowStockItems > 0 },
                     { label: 'Sắp hết hạn', value: expiringSoonItems, icon: Clock, color: 'amber', desc: 'Vật phẩm hết hạn trong 7 ngày', highlight: expiringSoonItems > 0 }
                 ].map((stat, i) => (
-                    <div 
-                        key={i} 
+                    <div
+                        key={i}
                         className={cn(
                             "p-8 rounded-[32px] border transition-all duration-500 group/card relative overflow-hidden",
                             "bg-zinc-900/60 backdrop-blur-xl border-zinc-800/50 hover:border-zinc-700/80 shadow-2xl",
@@ -270,14 +270,14 @@ export const KitchenInventory = () => {
                             "absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full opacity-10 group-hover/card:opacity-20 transition-opacity",
                             `bg-${stat.color}-500`
                         )}></div>
-                        
+
                         <div className="flex items-start justify-between relative z-10">
                             <div className="space-y-4">
                                 <div className={cn(
                                     "w-12 h-12 rounded-2xl flex items-center justify-center border transition-transform duration-500 group-hover/card:scale-110",
                                     stat.color === 'blue' ? "bg-blue-500/10 border-blue-500/20 text-blue-500" :
-                                    stat.color === 'red' ? "bg-red-500/10 border-red-500/20 text-red-500" :
-                                    "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                                        stat.color === 'red' ? "bg-red-500/10 border-red-500/20 text-red-500" :
+                                            "bg-amber-500/10 border-amber-500/20 text-amber-500"
                                 )}>
                                     <stat.icon size={22} />
                                 </div>
@@ -289,7 +289,7 @@ export const KitchenInventory = () => {
                                 </div>
                                 <p className="text-[11px] text-zinc-500 font-medium italic opacity-60">{stat.desc}</p>
                             </div>
-                            
+
                             {stat.highlight && (
                                 <div className={cn(
                                     "px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest animate-pulse",
