@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { billingApi } from "../../services/billing.api";
 
 /**
  * VNPayReturn page – handles the browser redirect from VNPay after payment.
@@ -31,6 +32,18 @@ export const VNPayReturn = () => {
 
         // vnp_ResponseCode "00" = success
         setStatus(responseCode === "00" ? "success" : "failed");
+
+        // Gọi backend để lưu thông tin và xác nhận (dù IPN có thể đã chạy hoặc chưa)
+        if (responseCode === "00") {
+            const paramsToVerify: Record<string, string> = {};
+            searchParams.forEach((val, key) => {
+                paramsToVerify[key] = val;
+            });
+
+            billingApi.verifyVnPayReturn(paramsToVerify)
+                .then(() => console.log("Backend verified VNPay return successfully"))
+                .catch((err: any) => console.error("VNPay verfication failed", err));
+        }
     }, [searchParams]);
 
     return (

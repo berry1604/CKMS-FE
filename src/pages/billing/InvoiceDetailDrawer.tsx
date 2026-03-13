@@ -36,6 +36,7 @@ export const BillingDetailDrawer = ({
     transactionReference: "",
     note: "",
   });
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   // Fetch detail when opened
   const fetchDetail = useCallback(async () => {
@@ -56,18 +57,58 @@ export const BillingDetailDrawer = ({
   useEffect(() => {
     if (isOpen && statementId) {
       fetchDetail();
+      // Reset form
+      setPayForm({
+        paymentMethodId: 0,
+        transactionReference: "",
+        note: "",
+      });
+      setFormErrors({});
+      setShowPayForm(false);
     }
   }, [isOpen, statementId, fetchDetail]);
 
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!payForm.paymentMethodId) {
+      errors.paymentMethodId = "Please select a payment method";
+    }
+    if (payForm.paymentMethodId === 2 && !payForm.transactionReference) {
+      // Assuming ID 2 is Bank Transfer
+      errors.transactionReference = "Reference is required for Bank Transfer";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handlePay = async () => {
     if (!statementId) return;
+    if (!validateForm()) return;
+
     setIsPaying(true);
     try {
-      await billingApi.payStatement(statementId, payForm);
+      const response = await billingApi.payStatement(statementId, payForm);
       toast.success("Payment processed successfully!");
+      
+      // Update local state immediately
+      setDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "PAID",
+              paidAt: response.paidAt,
+              transactionReference: response.transactionReference,
+              paymentMethodId: payForm.paymentMethodId, // Optimistic update or derived
+            }
+          : null,
+      );
+
       setShowPayForm(false);
       onPaid?.();
-      onClose();
+      // Don't close immediately, let user see the update? Or close?
+      // User might want to see the status change.
+      // But usually "Mark as Paid" -> Close is fine.
+      // Let's keep it open to show the updated status.
     } catch (error: unknown) {
       let msg = "Payment failed";
       if (error && typeof error === "object" && "response" in error) {
@@ -338,18 +379,18 @@ export const BillingDetailDrawer = ({
       {showPayForm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <Card className="w-full max-w-md p-6 bg-zinc-900 shadow-xl border border-zinc-700">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-200">
+            <div className="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+              <h2 className="text-xl font-bold text-gray-200">
                 Confirm Payment
               </h2>
               <button
                 onClick={() => setShowPayForm(false)}
-                className="text-gray-400 hover:text-gray-200"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Payment Method
@@ -364,12 +405,15 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 >
-                  <option value="" disabled>
+                  <option value="" disabled className="bg-zinc-900 text-gray-500">
                     Select Method
                   </option>
-                  <option value="1">CASH</option>
-                  <option value="2">BANK_TRANSFER</option>
+                  <option value="1" className="bg-zinc-900">CASH</option>
+                  <option value="2" className="bg-zinc-900">BANK_TRANSFER</option>
                 </select>
+                {formErrors.paymentMethodId && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.paymentMethodId}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -385,6 +429,9 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 />
+                {formErrors.transactionReference && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.transactionReference}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -404,14 +451,15 @@ export const BillingDetailDrawer = ({
                 variant="outline"
                 onClick={() => setShowPayForm(false)}
                 disabled={isPaying}
+                className="bg-zinc-800 border-zinc-700 text-gray-300 hover:text-white hover:bg-zinc-700"
               >
                 Cancel
               </Button>
               <Button
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
                 onClick={handlePay}
                 isLoading={isPaying}
-                disabled={!payForm.paymentMethodId}
+                disabled={!payForm.paymentMethodId || isPaying}
               >
                 <CreditCard size={16} className="mr-2" /> Pay Now
               </Button>

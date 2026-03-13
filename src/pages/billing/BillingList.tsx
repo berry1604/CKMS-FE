@@ -56,7 +56,6 @@ export const BillingList = () => {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [statementToDelete, setStatementToDelete] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // VNPay state
   const [isPayingVNPay, setIsPayingVNPay] = useState<number | null>(null);
@@ -88,8 +87,8 @@ export const BillingList = () => {
       const params: {
         storeId?: number;
         status?: string;
-        page?: number;
-        size?: number;
+        page: number;
+        size: number;
       } = {
         page,
         size: 10,
@@ -128,7 +127,6 @@ export const BillingList = () => {
 
   const confirmDelete = async () => {
     if (!statementToDelete) return;
-    setIsDeleting(true);
     try {
       await billingApi.deleteStatement(statementToDelete);
       toast.success("Billing statement deleted successfully");
@@ -142,14 +140,13 @@ export const BillingList = () => {
       }
       toast.error(msg);
     } finally {
-      setIsDeleting(false);
     }
   };
 
   const handleVNPayPayment = async (statementId: number) => {
     setIsPayingVNPay(statementId);
     try {
-      const paymentUrl = await billingApi.createVNPayUrl(statementId);
+      const paymentUrl = await billingApi.createVnPayUrl(statementId);
       if (paymentUrl) {
         window.location.href = paymentUrl;
       } else {
@@ -205,7 +202,7 @@ export const BillingList = () => {
       const result = await billingApi.generateBatchStatements(batchForm);
       setBatchResult(result);
       toast.success(
-        `Batch completed: ${result.successCount} success, ${result.failureCount} failed`,
+        `Batch completed: ${result.totalStatementsCreated} created, ${result.storesSkippedNoInvoices} skipped`,
       );
       setShowBatchModal(false);
       setBatchForm({ cycleName: "", periodStart: "", periodEnd: "" });
@@ -230,42 +227,7 @@ export const BillingList = () => {
     return "default";
   };
 
-  const columns: Column<BillingStatementSummaryResponse>[] = [
-    {
-      header: "ID",
-      accessorKey: "statementId",
-      className: "font-medium",
-      cell: (s) => (
-        <span className="font-mono text-xs text-gray-400 bg-zinc-800 px-2 py-1 rounded border border-zinc-700">
-          #{s.statementId}
-        </span>
-      ),
-    },
-    {
-      header: "Store",
-      cell: (s) => (
-        <span className="text-gray-200">
-          {s.storeName || `Store #${s.storeId || "—"}`}
-        </span>
-      ),
-    },
-    {
-      header: "Cycle Name",
-      accessorKey: "cycleName",
-      className: "font-medium text-gray-200",
-      cell: (s) => <span className="text-gray-200">{s.cycleName || "—"}</span>,
-    },
-    {
-      header: "Total Amount",
-      accessorKey: "totalAmount",
-      className: "font-bold",
-      cell: (s) => (
-        <span className="text-gray-200 font-semibold">
-          {s.totalAmount?.toLocaleString("vi-VN")} VND
-        </span>
-      ),
-    },
-  ];
+
 
   const statusOptions: { value: BillingStatus; label: string }[] = [
     { value: "all", label: "All" },
