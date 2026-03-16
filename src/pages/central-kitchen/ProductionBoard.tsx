@@ -11,6 +11,7 @@ import {
   ChefHat,
   Sparkles,
   RefreshCw,
+  Loader2 as LoaderIcon
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { productionPlanApi } from "../../services/productionPlan.api";
@@ -121,10 +122,10 @@ export const ProductionBoard = () => {
 
   // Filter statuses for the board
   const readyPlans = plans.filter(
-    (p) => p.status === "READY_TO_PRODUCE" || p.status === "APPROVED",
+    (p) => p.status === "READY_TO_PRODUCE" || p.status === "APPROVED" || p.status === "PLANNED",
   );
   const inProdPlans = plans.filter(
-    (p) => p.status === "IN_PRODUCTION" || p.status === "PLANNING",
+    (p) => p.status === "IN_PRODUCTION" || p.status === "PRODUCING",
   );
   const donePlans = plans.filter(
     (p) =>
@@ -422,7 +423,7 @@ export const ProductionBoard = () => {
             <div className="p-8 space-y-6">
               {isDetailLoading ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
-                  <Loader2 className="animate-spin text-amber-500" size={32} />
+                  <LoaderIcon className="animate-spin text-amber-500" size={32} />
                   <span className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">
                     Đang đối soát dữ liệu...
                   </span>
@@ -546,19 +547,3 @@ export const ProductionBoard = () => {
   );
 };
 
-const Loader2 = (props: any) => (
-  <svg
-    {...props}
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-  </svg>
-);

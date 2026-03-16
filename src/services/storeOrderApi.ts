@@ -138,5 +138,28 @@ export const storeOrderApi = {
      */
     cancelOrder: async (id: number | string): Promise<void> => {
         await axiosClient.delete(`/orders/${id}`);
+    },
+
+    /**
+     * Approve an order
+     */
+    approveOrder: async (id: number | string): Promise<StoreOrderResponse> => {
+        return storeOrderApi.updateOrderStatus(id, 'APPROVED');
+    },
+
+    /**
+     * Reject an order with reason
+     * Note: Current backend status endpoint might not support 'reason' yet.
+     */
+    rejectOrder: async (id: number | string, _reason: string): Promise<StoreOrderResponse> => {
+        return storeOrderApi.updateOrderStatus(id, 'REJECTED');
+    },
+
+
+    /**
+     * Send notification email manually
+     */
+    notifyOrder: async (id: number | string): Promise<void> => {
+        await axiosClient.post(`/orders/${id}/notify`);
     }
 };

@@ -60,9 +60,10 @@ export const CreateShipment = () => {
             const validPlans = (planRes.content || []).filter(p =>
                 p.status === 'FINISHED' ||
                 p.status === 'COMPLETED' ||
-                p.status === 'ALLOCATED' ||
-                p.status === 'PRODUCED'
+                p.status === 'PRODUCED' ||
+                p.status === 'READY_TO_PRODUCE'
             );
+
             setAvailablePlans(validPlans);
             setAvailableStores(storeRes.data?.content || []);
         } catch (error) {
