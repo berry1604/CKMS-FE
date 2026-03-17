@@ -24,6 +24,7 @@ import { RecipeManager } from '../pages/product/RecipeManager';
 import { OrderList } from '../pages/orders/OrderList';
 import { CreateOrder } from '../pages/orders/CreateOrder';
 import { OrderApproval } from '../pages/orders/OrderApproval';
+import { SplitOrder } from '../pages/orders/SplitOrder';
 import { ProductListExample } from '../pages/product/ProductListExample';
 import { ProductionSchedule } from '../pages/central-kitchen/ProductionSchedule';
 import { CreateProductionPlan } from '../pages/central-kitchen/CreateProductionPlan';
@@ -164,7 +165,8 @@ export const router = createBrowserRouter([
                         children: [
                             { index: true, element: <OrderList /> },
                             { path: 'create', element: <CreateOrder /> },
-                            { path: 'approvals', element: <OrderApproval /> }
+                            { path: 'approvals', element: <OrderApproval /> },
+                            { path: ':id/split', element: <SplitOrder /> }
                         ]
                     },
 

@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Check, X, Search, Eye, Filter, CheckCircle2, AlertCircle, Mail, Calendar, Package, Leaf } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+    Check, X, Search, Eye, Filter, CheckCircle2, 
+    AlertCircle, Mail, Calendar, Package, Leaf, 
+    Scissors 
+} from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
@@ -10,10 +15,12 @@ import type { StoreOrderResponse } from '../../types/storeOrder';
 import type { KitchenInventorySummaryResponse } from '../../types/kitchenInventory';
 import { toast } from 'react-hot-toast';
 import { OrderDetailDrawer } from './OrderDetailDrawer';
+import { RescheduleModal } from '../../components/orders/RescheduleModal';
 import { cn } from '../../utils/classNames';
 import { useStockAnalysis } from '../../hooks/useStockAnalysis';
 
 export const OrderApproval = () => {
+    const navigate = useNavigate();
     // ... (rest of the component state is already there)
     const [orders, setOrders] = useState<StoreOrderResponse[]>([]);
     const [filteredOrders, setFilteredOrders] = useState<StoreOrderResponse[]>([]);
@@ -30,6 +37,10 @@ export const OrderApproval = () => {
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [rejectingOrderId, setRejectingOrderId] = useState<number | null>(null);
+    
+    // Reschedule state
+    const [rescheduleData, setRescheduleData] = useState<{ id: number, date: string } | null>(null);
+    const [rescheduledId, setRescheduledId] = useState<number | null>(null);
 
     // Stock Analysis hook
     const { analysisResults } = useStockAnalysis(orders, inventory);
@@ -238,7 +249,10 @@ export const OrderApproval = () => {
         {
             header: 'Ngày giao',
             cell: (order) => (
-                <span className="text-zinc-300 font-bold text-[11px] tracking-tight whitespace-nowrap">
+                <span className={cn(
+                    "font-bold text-[11px] tracking-tight whitespace-nowrap px-2 py-1 rounded-lg transition-all",
+                    rescheduledId === order.orderId ? "animate-pulse-once bg-amber-500/20 text-amber-500" : "text-zinc-300"
+                )}>
                     {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString('vi-VN') : 'N/A'}
                 </span>
             )
@@ -313,6 +327,24 @@ export const OrderApproval = () => {
                         title="Gửi Email"
                     >
                         <Mail size={16} />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setRescheduleData({ id: order.orderId, date: order.deliveryDate })}
+                        className="h-8 w-8 p-0 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-lg"
+                        title="Đổi ngày"
+                    >
+                        <Calendar size={16} />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/orders/${order.orderId}/split`)}
+                        className="h-8 w-8 p-0 text-zinc-500 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg"
+                        title="Tách đơn"
+                    >
+                        <Scissors size={16} />
                     </Button>
                     <Button
                         variant="ghost"
@@ -582,6 +614,22 @@ export const OrderApproval = () => {
                     }
                 />
             </div>
+
+            {/* Reschedule Modal */}
+            {rescheduleData && (
+                <RescheduleModal
+                    isOpen={!!rescheduleData}
+                    onClose={() => setRescheduleData(null)}
+                    orderId={rescheduleData.id}
+                    currentDeliveryDate={rescheduleData.date}
+                    onSuccess={(newDate) => {
+                        setOrders(prev => prev.map(o => o.orderId === rescheduleData.id ? { ...o, deliveryDate: newDate } : o));
+                        setRescheduledId(rescheduleData.id);
+                        setTimeout(() => setRescheduledId(null), 3000);
+                        fetchData(); // Refresh to catch any other changes
+                    }}
+                />
+            )}
 
             {/* Order Detail Drawer */}
             <OrderDetailDrawer

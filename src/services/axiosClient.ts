@@ -43,7 +43,11 @@ axiosClient.interceptors.response.use(
         const config = error.config;
         const url = config?.url || '';
 
-        if (error.response?.status === 401) {
+        // Handle 400 Bad Request
+        if (error.response?.status === 400) {
+            const message = error.response.data?.message || 'Yêu cầu không hợp lệ.';
+            toast.error(message);
+        } else if (error.response?.status === 401) {
             // Token expired or invalid
             sessionStorage.removeItem('accessToken');
             sessionStorage.removeItem('refreshToken');

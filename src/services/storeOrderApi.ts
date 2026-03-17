@@ -161,5 +161,33 @@ export const storeOrderApi = {
      */
     notifyOrder: async (id: number | string): Promise<void> => {
         await axiosClient.post(`/orders/${id}/notify`);
+    },
+
+    /**
+     * Reschedule delivery date
+     * PATCH /api/v1/orders/{id}/reschedule
+     */
+    rescheduleOrder: async (id: number | string, deliveryDate: string): Promise<StoreOrderResponse> => {
+        try {
+            const response = await axiosClient.patch<StoreOrderResponse>(`/orders/${id}/reschedule`, { deliveryDate });
+            return response.data;
+        } catch (error) {
+            console.error(`Error rescheduling order ${id}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Split order into two
+     * POST /api/v1/orders/{id}/split
+     */
+    splitOrder: async (id: number | string, items: { productId: number, quantity: number }[]): Promise<StoreOrderResponse[]> => {
+        try {
+            const response = await axiosClient.post<StoreOrderResponse[]>(`/orders/${id}/split`, items);
+            return response.data;
+        } catch (error) {
+            console.error(`Error splitting order ${id}:`, error);
+            throw error;
+        }
     }
 };
