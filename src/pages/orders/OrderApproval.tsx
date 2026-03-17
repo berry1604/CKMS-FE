@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Check, X, Search, Eye, Filter, CheckCircle2, 
-    AlertCircle, Mail, Calendar, Package, Leaf, 
+    AlertCircle, Calendar, Package, Leaf, 
     Scissors 
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -311,22 +311,6 @@ export const OrderApproval = () => {
                         title="Xem chi tiết"
                     >
                         <Eye size={16} />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={async () => {
-                            try {
-                                await storeOrderApi.notifyOrder(order.orderId);
-                                toast.success('Đã gửi email thông báo.');
-                            } catch {
-                                toast.error('Gửi email thất bại.');
-                            }
-                        }}
-                        className="h-8 w-8 p-0 text-zinc-500 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg"
-                        title="Gửi Email"
-                    >
-                        <Mail size={16} />
                     </Button>
                     <Button
                         variant="ghost"
