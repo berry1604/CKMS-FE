@@ -30,6 +30,10 @@ import { CreateProductionPlan } from '../pages/central-kitchen/CreateProductionP
 import { KitchenInventory } from '../pages/central-kitchen/KitchenInventory';
 import { KitchenImportPage } from '../pages/central-kitchen/KitchenImportPage';
 import { ProductionBoard } from '../pages/central-kitchen/ProductionBoard';
+import { DispatchDashboard } from '../pages/central-kitchen/DispatchDashboard';
+import { OrderPool } from '../pages/central-kitchen/OrderPool';
+import { ProductionPlanList } from '../pages/central-kitchen/ProductionPlanList';
+
 import { ShipmentList } from '../pages/shipment/ShipmentList';
 import { CreateShipment } from '../pages/shipment/CreateShipment';
 import { BillingList } from '../pages/billing/BillingList';
@@ -123,10 +127,14 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'KITCHEN_STAFF', 'COORDINATOR']} />,
                         children: [
                             { index: true, element: <ProductionSchedule /> },
+                            { path: 'dispatch', element: <DispatchDashboard /> },
+                            { path: 'order-pool', element: <OrderPool /> },
+                            { path: 'production-plans', element: <ProductionPlanList /> },
                             { path: 'create-plan', element: <CreateProductionPlan /> },
                             { path: 'inventory', element: <KitchenInventory /> },
                             { path: 'inventory/import', element: <KitchenImportPage /> },
                             { path: 'production', element: <ProductionBoard /> }
+
                         ]
                     },
 

@@ -29,10 +29,12 @@ export interface StoreOrderResponse {
     orderDate: string; // ISO 8601 string
     status: OrderStatus;
     batchId?: number;
+    planId?: number;
     totalAmount: number;
     note?: string;
     orderDetails: OrderDetailResponse[];
 }
+
 
 export interface PageResponse<T> {
     content: T[];

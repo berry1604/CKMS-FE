@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { productionPlanApi } from '../../services/productionPlan.api';
 import { allocationApi, type AllocationRow } from '../../services/allocationApi';
+import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import type { ProductionPlanSummaryResponse } from '../../types/productionPlan';
 import { cn } from '../../utils/classNames';
 
@@ -54,9 +55,41 @@ export const AllocationMatrix = () => {
     const fetchAllocationMatrix = async (planId: number) => {
         setIsLoadingMatrix(true);
         try {
-            const { rows } = await allocationApi.previewAllocation(planId);
-            setMatrix(rows);
+            const selectedPlan = plans.find(p => p.planId === planId);
+            const kitchenId = selectedPlan?.kitchenId || 1;
+
+            // Step 1: Fetch warehouses for this kitchen to get the stock source
+            const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(kitchenId);
+            const warehouseId = warehouses.length > 0 ? warehouses[0].warehouseId : 1;
+
+            // Step 2: Fetch allocation matrix and current inventory in parallel
+            const [{ rows }, stockRes] = await Promise.all([
+                allocationApi.previewAllocation(planId),
+                kitchenInventoryApi.getWarehouseStock(warehouseId)
+            ]);
+
+            const currentStock = stockRes.data || [];
+
+            // Step 3: Merge existing inventory stock into the matrix availability
+            const mergedRows = rows.map(row => {
+                // Find matching product in stock by name or ID
+                const stockItem = currentStock.find(s => 
+                    (s.itemId && s.itemId === row.productId) || 
+                    (s.itemName && s.itemName.toLowerCase() === row.productName.toLowerCase())
+                );
+                
+                const inventoryQty = stockItem ? stockItem.quantity : 0;
+                
+                return {
+                    ...row,
+                    // available = backend production yield + current inventory stock
+                    totalAvailable: (row.totalAvailable || 0) + inventoryQty
+                };
+            });
+
+            setMatrix(mergedRows);
         } catch (error) {
+            console.error("Allocation preview error:", error);
             toast.error('Không thể phân bổ dữ liệu plan này');
             setMatrix([]);
         } finally {

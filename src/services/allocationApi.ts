@@ -121,7 +121,7 @@ export const allocationApi = {
                         });
 
                         // Use real stock from backend (actualProducedQty), NOT sum of proposedQty
-                        const realStock = item.stockQuantity ?? item.totalAvailable ?? 0;
+                        const realStock = item.stockQuantity ?? item.totalAvailable ?? item.actualProducedQty ?? 0;
                         if (prod.totalAvailable === 0 || realStock > prod.totalAvailable) {
                             prod.totalAvailable = Number(realStock);
                         }
