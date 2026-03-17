@@ -183,40 +183,6 @@ export const StoreDetails = () => {
                     </div>
                 </div >
 
-                {/* Logistics & Capacity Card */}
-                < div className="group relative bg-[#0a0a0a] border border-white/[0.03] rounded-[2.5rem] p-10 hover:border-amber-500/20 transition-all duration-700 overflow-hidden shadow-2xl" >
-                    <div className="relative space-y-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:rotate-6 transition-transform">
-                                <Box size={24} />
-                            </div>
-                            <div>
-                                <h3 className="text-xs font-black tracking-[0.2em] uppercase text-stone-500 group-hover:text-stone-300 transition-colors">Logistics nội bộ</h3>
-                                <p className="text-sm font-medium text-stone-600 italic">Theo dõi tài nguyên</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6 pt-4 border-t border-white/5">
-                            <div>
-                                <p className="text-[10px] uppercase font-black tracking-widest text-amber-500/60 mb-2">Sức chứa tối đa (Định mức)</p>
-                                <div className="flex items-baseline gap-3">
-                                    <p className="text-5xl font-black text-white tracking-tighter italic">{(store.warehouseCapacity || 1000).toLocaleString('vi-VN')}</p>
-                                    <span className="text-stone-600 font-bold tracking-widest text-[10px] uppercase italic">Đơn vị chuẩn</span>
-                                </div>
-                            </div>
-
-                            <div className="pt-2">
-                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                    <div className="h-full w-2/3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 shadow-[0_0_20px_rgba(245,158,11,0.3)]"></div>
-                                </div>
-                                <div className="flex justify-between mt-3">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-stone-600 italic">Vận hành: Ổn định</span>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-amber-500/80">67% Đã sử dụng</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div >
 
                 {/* System Stats / Overview Card */}
                 < div className="group relative bg-[#0a0a0a] border border-white/[0.03] rounded-[2.5rem] p-10 hover:border-amber-500/20 transition-all duration-700 overflow-hidden shadow-2xl" >

@@ -27,6 +27,7 @@ export interface KitchenStockImportRequest {
 }
 
 export interface KitchenInventorySummaryResponse {
+    itemId?: number;
     itemName: string;
     totalQuantity: number;
     unit: string;

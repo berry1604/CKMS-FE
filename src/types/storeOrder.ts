@@ -31,6 +31,7 @@ export interface StoreOrderResponse {
     batchId?: number;
     planId?: number;
     totalAmount: number;
+    deliveryDate: string; // ISO 8601 date string
     note?: string;
     orderDetails: OrderDetailResponse[];
 }

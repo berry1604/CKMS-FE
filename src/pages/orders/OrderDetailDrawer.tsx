@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Package, Clock, CheckCircle, Truck, Printer, Download, XCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Package, Clock, CheckCircle, Truck, Printer, Download, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Drawer } from '../../components/ui/Drawer';
@@ -7,6 +7,8 @@ import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import type { StoreOrderResponse } from '../../types/storeOrder';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/classNames';
+import { storeOrderApi } from '../../services/storeOrderApi';
+import { toast } from 'react-hot-toast';
 
 interface OrderDetailDrawerProps {
     order: StoreOrderResponse | null;
@@ -21,8 +23,33 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
     const { hasAuthority } = useAuth();
     const [isCancelling, setIsCancelling] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [orderDetails, setOrderDetails] = useState<StoreOrderResponse | null>(null);
+    const [isFetching, setIsFetching] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && order?.orderId) {
+            const fetchFullDetails = async () => {
+                setIsFetching(true);
+                try {
+                    const fullOrder = await storeOrderApi.getOrderById(order.orderId);
+                    setOrderDetails(fullOrder);
+                } catch (error) {
+                    console.error('Failed to fetch order details:', error);
+                    toast.error('Không thể tải chi tiết đơn hàng');
+                    setOrderDetails(null);
+                } finally {
+                    setIsFetching(false);
+                }
+            };
+            fetchFullDetails();
+        } else if (!isOpen) {
+            setOrderDetails(null);
+        }
+    }, [isOpen, order?.orderId]);
 
     if (!order) return null;
+
+    const currentOrder = orderDetails || order;
 
     // Permissions check
     const canApprove = hasAuthority('APPROVE_STORE_ORDER') || hasAuthority('COORDINATOR') || hasAuthority('MANAGER') || hasAuthority('ADMIN');
@@ -33,8 +60,8 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
         return index >= 0 ? index + 1 : 0;
     };
 
-    const currentStep = getStatusStep(order.status);
-    const orderStatus = order.status?.toUpperCase();
+    const currentStep = getStatusStep(currentOrder.status);
+    const orderStatus = currentOrder.status?.toUpperCase();
 
     const canCancel = orderStatus === 'SUBMITTED';
     const canReject = orderStatus === 'SUBMITTED';
@@ -46,7 +73,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
     const confirmCancel = async () => {
         setIsCancelling(true);
         try {
-            await onCancelOrder?.(order.orderId);
+            await onCancelOrder?.(currentOrder.orderId);
             setIsCancelModalOpen(false);
         } finally {
             setIsCancelling(false);
@@ -78,7 +105,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                 {orderStatus === 'DRAFT' && onSubmitOrder && (hasAuthority('STORE_STAFF') || hasAuthority('CREATE_STORE_ORDER') || hasAuthority('MANAGER')) && (
                     <Button
                         className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-9 px-6 rounded-lg shadow-lg shadow-emerald-900/20 border-0"
-                        onClick={() => onSubmitOrder(order.orderId)}
+                        onClick={() => onSubmitOrder(currentOrder.orderId)}
                     >
                         Gửi Đơn
                     </Button>
@@ -86,14 +113,14 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                 {canReject && onStatusUpdate && canApprove && (
                     <Button
                         className="bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-[10px] tracking-widest h-9 px-4 rounded-lg shadow-lg shadow-red-900/20 border-0"
-                        onClick={() => onStatusUpdate(order.orderId, 'REJECTED')}
+                        onClick={() => onStatusUpdate(currentOrder.orderId, 'REJECTED')}
                     >
                         Từ chối
                     </Button>
                 )}
                 {orderStatus === 'SUBMITTED' && onStatusUpdate && canApprove && (
                     <Button
-                        onClick={() => onStatusUpdate(order.orderId, 'APPROVED')}
+                        onClick={() => onStatusUpdate(currentOrder.orderId, 'APPROVED')}
                         className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-9 px-6 rounded-lg shadow-lg shadow-amber-900/20 border-0"
                     >
                         Duyệt Đơn
@@ -112,11 +139,16 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
             <Drawer
                 isOpen={isOpen}
                 onClose={onClose}
-                title={`Chi tiết đơn hàng #${order.orderId}`}
-                description={`${order.storeName || `Cửa hàng ID: ${order.storeId}`} • Đặt ngày: ${new Date(order.orderDate).toLocaleDateString('vi-VN')}`}
+                title={`Chi tiết đơn hàng #${currentOrder.orderId}`}
+                description={`${currentOrder.storeName || `Cửa hàng ID: ${currentOrder.storeId}`} • Đặt ngày: ${new Date(currentOrder.orderDate).toLocaleDateString('vi-VN')}`}
                 width="max-w-5xl"
                 footer={footer}
             >
+                {isFetching && (
+                    <div className="absolute inset-x-0 top-0 h-1 z-[60]">
+                        <div className="h-full bg-amber-500 animate-[loading_2s_ease-in-out_infinite] w-1/3"></div>
+                    </div>
+                )}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 py-2 animate-in slide-in-from-right duration-500">
                     {/* Left Column: Visual & Global Status */}
                     <div className="lg:col-span-5 space-y-8">
@@ -162,7 +194,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Order Identifier</span>
-                                        <span className="text-2xl font-black text-white tracking-tighter">#{order.orderId}</span>
+                                        <span className="text-2xl font-black text-white tracking-tighter">#{currentOrder.orderId}</span>
                                     </div>
                                 </div>
                                 <p className="text-xs text-zinc-500 font-medium italic leading-relaxed">
@@ -176,7 +208,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                 <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Tổng giá trị thanh toán</span>
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-4xl font-black text-amber-500 tracking-tighter">
-                                        {(order.totalAmount || 0).toLocaleString()}
+                                        {(currentOrder.totalAmount || 0).toLocaleString()}
                                     </span>
                                     <span className="text-sm font-black text-amber-500/50 uppercase tracking-widest">VNĐ</span>
                                 </div>
@@ -188,7 +220,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                             <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
                                 <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">Store Source</span>
                                 <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
-                                    {order.storeName || `Shop #${order.storeId}`}
+                                    {currentOrder.storeName || `Shop #${currentOrder.storeId}`}
                                 </span>
                                 <div className="flex items-center gap-1.5 opacity-60">
                                     <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
@@ -199,11 +231,23 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                             <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
                                 <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">Creation Time</span>
                                 <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
-                                    {new Date(order.orderDate).toLocaleDateString('vi-VN')}
+                                    {new Date(currentOrder.orderDate).toLocaleDateString('vi-VN')}
                                 </span>
                                 <div className="flex items-center gap-2">
                                     <span className="text-[9px] font-black text-zinc-600 font-mono uppercase">
-                                        {new Date(order.orderDate).toLocaleTimeString('vi-VN')}
+                                        {new Date(currentOrder.orderDate).toLocaleTimeString('vi-VN')}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec col-span-2">
+                                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">Requested Delivery Date</span>
+                                <span className="text-[15px] font-black text-white uppercase truncate block">
+                                    {currentOrder.deliveryDate ? new Date(currentOrder.deliveryDate).toLocaleDateString('vi-VN') : 'N/A'}
+                                </span>
+                                <div className="flex items-center gap-1.5 opacity-60">
+                                    <Clock size={12} className="text-amber-500" />
+                                    <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
+                                        Specified Arrival
                                     </span>
                                 </div>
                             </div>
@@ -288,7 +332,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                     </h4>
                                 </div>
                                 <div className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full">
-                                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{order.orderDetails?.length || 0} ITEMS</span>
+                                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{currentOrder.orderDetails?.length || 0} ITEMS</span>
                                 </div>
                             </div>
 
@@ -303,7 +347,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-zinc-800/30">
-                                        {order.orderDetails?.map((item, idx) => {
+                                        {currentOrder.orderDetails?.map((item, idx) => {
                                             const stockQty = item.kitchenStockQuantity || 0;
                                             const isLowStock = stockQty < item.quantity;
                                             return (
@@ -349,7 +393,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                     <div className="space-y-2">
                                         <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] block">Coordinator Notes Node</span>
                                         <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">
-                                            {order.note || "Hệ thống chưa ghi nhận ghi chú bổ sung cho đơn hàng này."}
+                                            {currentOrder.note || "Hệ thống chưa ghi nhận ghi chú bổ sung cho đơn hàng này."}
                                         </p>
                                     </div>
                                 </div>

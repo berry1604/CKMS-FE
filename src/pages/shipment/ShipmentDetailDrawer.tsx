@@ -66,7 +66,14 @@ export const ShipmentDetailDrawer = ({
                     </Button>
                 );
             default:
-                return null;
+                return (
+                    <Button
+                        disabled
+                        className="bg-zinc-800 text-zinc-500 font-black uppercase text-[11px] tracking-widest px-8 grow border border-zinc-700"
+                    >
+                        {shipment.status === 'DELIVERED' ? 'Đã hoàn thành' : 'Không có hành động'}
+                    </Button>
+                );
         }
     };
 

@@ -11,6 +11,7 @@ import type { KitchenInventorySummaryResponse } from '../../types/kitchenInvento
 import { toast } from 'react-hot-toast';
 import { OrderDetailDrawer } from './OrderDetailDrawer';
 import { cn } from '../../utils/classNames';
+import { useStockAnalysis } from '../../hooks/useStockAnalysis';
 
 export const OrderApproval = () => {
     // ... (rest of the component state is already there)
@@ -30,13 +31,16 @@ export const OrderApproval = () => {
     const [rejectReason, setRejectReason] = useState('');
     const [rejectingOrderId, setRejectingOrderId] = useState<number | null>(null);
 
+    // Stock Analysis hook
+    const { analysisResults } = useStockAnalysis(orders, inventory);
+
     // Filter states
     const [selectedProduct, setSelectedProduct] = useState<string>('all');
     const [selectedDate, setSelectedDate] = useState<string>('all');
 
     // Derived filter options
     const productOptions = Array.from(new Set(orders.flatMap(o => o.orderDetails.map(d => d.productName)))).sort();
-    const dateOptions = Array.from(new Set(orders.map(o => new Date(o.orderDate).toLocaleDateString('vi-VN')))).sort();
+    const dateOptions = Array.from(new Set(orders.map(o => o.deliveryDate ? new Date(o.deliveryDate).toLocaleDateString('vi-VN') : 'N/A'))).sort();
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -51,6 +55,7 @@ export const OrderApproval = () => {
             
             // Map KitchenStockItemResponse to KitchenInventorySummaryResponse
             const mappedInventory: KitchenInventorySummaryResponse[] = (inventoryRes.data || []).map(item => ({
+                itemId: item.itemId,
                 itemName: item.itemName,
                 itemType: item.itemType as "MATERIAL" | "PRODUCT",
                 totalQuantity: item.quantity,
@@ -93,7 +98,7 @@ export const OrderApproval = () => {
 
         // Date filter
         if (selectedDate !== 'all') {
-            result = result.filter(o => new Date(o.orderDate).toLocaleDateString('vi-VN') === selectedDate);
+            result = result.filter(o => (o.deliveryDate ? new Date(o.deliveryDate).toLocaleDateString('vi-VN') : 'N/A') === selectedDate);
         }
 
         setFilteredOrders(result);
@@ -233,24 +238,49 @@ export const OrderApproval = () => {
         {
             header: 'Ngày giao',
             cell: (order) => (
-                <span className="text-zinc-300 font-bold text-[11px] tracking-tight whitespace-nowrap">{new Date(order.orderDate).toLocaleDateString('vi-VN')}</span>
+                <span className="text-zinc-300 font-bold text-[11px] tracking-tight whitespace-nowrap">
+                    {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString('vi-VN') : 'N/A'}
+                </span>
             )
         },
         {
             header: 'Kho',
             cell: (order) => {
-                const stockOk = order.orderDetails.every(item => {
-                    const inv = inventory.find(i => i.itemName === item.productName);
-                    return inv && inv.totalQuantity >= item.quantity;
-                });
-                return stockOk ? (
-                    <Badge variant="success" className="bg-emerald-500/10 text-emerald-400 border-0 flex items-center gap-1 text-[9px] py-0 px-1.5">
-                        <Check size={10} strokeWidth={3} /> ĐỦ HÀNG
-                    </Badge>
-                ) : (
-                    <Badge variant="danger" className="bg-red-500/10 text-red-400 border-0 flex items-center gap-1 text-[9px] py-0 px-1.5">
-                        <AlertCircle size={10} strokeWidth={3} /> THIẾU
-                    </Badge>
+                const analysis = analysisResults[order.orderId];
+                if (!analysis) return <span className="text-[10px] text-zinc-600 animate-pulse">Đang tính...</span>;
+
+                return (
+                    <div className="relative group/stock">
+                        {analysis.isEnough ? (
+                            <Badge variant="success" className="bg-emerald-500/10 text-emerald-400 border-0 flex items-center gap-1 text-[9px] py-0 px-1.5 cursor-help">
+                                <Check size={10} strokeWidth={3} /> ĐỦ HÀNG
+                            </Badge>
+                        ) : (
+                            <Badge variant="danger" className="bg-red-500/10 text-red-400 border-0 flex items-center gap-1 text-[9px] py-0 px-1.5 cursor-help">
+                                <AlertCircle size={10} strokeWidth={3} /> THIẾU {analysis.shortageMaterials.length} NL
+                            </Badge>
+                        )}
+                        
+                        {/* Tooltip / Popover Detail */}
+                        <div className="absolute left-0 top-full mt-2 w-64 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl opacity-0 invisible group-hover/stock:opacity-100 group-hover/stock:visible transition-all z-50 pointer-events-none">
+                            <h5 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 border-b border-zinc-800 pb-2">Chi tiết nguyên liệu</h5>
+                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                                {analysis.details.map((d, i) => (
+                                    <div key={i} className="flex justify-between items-start text-[10px]">
+                                        <div className="flex flex-col">
+                                            <span className={cn("font-bold", d.isEnough ? "text-zinc-300" : "text-red-400")}>{d.materialName}</span>
+                                            <span className="text-zinc-600">Cần: {d.required}{d.unit}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={cn("font-black", d.isEnough ? "text-emerald-500" : "text-red-500")}>
+                                                Có: {d.available}{d.unit}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 );
             }
         },
@@ -418,7 +448,7 @@ export const OrderApproval = () => {
                                         <div className="bg-zinc-900/40 rounded-2xl p-4 border border-zinc-800/50">
                                             <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block mb-2">Khuyến nghị Duyệt</span>
                                             {filteredOrders
-                                                .filter(o => o.orderDetails.every(item => (inventory.find(i => i.itemName === item.productName)?.totalQuantity || 0) >= item.quantity))
+                                                .filter(o => analysisResults[o.orderId]?.isEnough)
                                                 .sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime())
                                                 .slice(0, 1)
                                                 .map(o => (
@@ -434,7 +464,7 @@ export const OrderApproval = () => {
                                         <div className="bg-zinc-900/40 rounded-2xl p-4 border border-zinc-800/50">
                                             <span className="text-[10px] font-black text-red-500 uppercase tracking-widest block mb-2">Tồn kho không đủ</span>
                                             {filteredOrders
-                                                .filter(o => o.orderDetails.some(item => (inventory.find(i => i.itemName === item.productName)?.totalQuantity || 0) < item.quantity))
+                                                .filter(o => analysisResults[o.orderId] && !analysisResults[o.orderId].isEnough)
                                                 .slice(0, 1)
                                                 .map(o => (
                                                     <div key={o.orderId} className="flex justify-between items-center">

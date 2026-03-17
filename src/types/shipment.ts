@@ -12,7 +12,9 @@ export interface DropPointRequest {
 
 export interface CreateShipmentRequest {
     productionPlanId: number;
-    dropPoints: DropPointRequest[];
+    storeId: number;
+    storeOrderIds: number[];
+    dropPoints?: DropPointRequest[];
     ahamoveServiceId: AhamoveServiceIdType;
     driverName?: string;
     driverPhone?: string;

@@ -2,11 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Truck, Filter, Eye, Plus, Search, Calendar,
-    ArrowRight, MapPin, User, Package, Clock,
-    ChevronLeft, ChevronRight, Loader2
+    MapPin, User, Package, Clock,
+    ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
@@ -56,30 +55,65 @@ export const ShipmentList = () => {
     }, [statusFilter]);
 
     const handleStatusAction = async (id: number, action: 'prepare' | 'transit' | 'confirm' | 'cancel', data?: any) => {
+        // Find current shipment to check status
+        const currentShipment = shipments.find(s => s.shipmentId === id) || selectedShipment;
+        if (!currentShipment) return;
+
+        console.log(`[Shipment Action] Attempting ${action} for Shipment #${id}. Current Status: ${currentShipment.status}`);
+
         try {
             switch (action) {
                 case 'prepare':
+                    if (currentShipment.status !== 'PENDING') {
+                        return toast.error(`Không thể chuẩn bị hàng khi trạng thái là ${currentShipment.status}`);
+                    }
                     await shipmentApi.prepareShipment(id);
                     toast.success('Đã chuẩn bị xong hàng');
                     break;
                 case 'transit':
+                    if (currentShipment.status !== 'PREPARED') {
+                        return toast.error(`Không thể xuất kho khi trạng thái là ${currentShipment.status}`);
+                    }
                     await shipmentApi.startTransit(id);
                     toast.success('Đơn hàng đang được vận chuyển');
                     break;
                 case 'confirm':
+                    if (currentShipment.status !== 'IN_TRANSIT') {
+                        return toast.error(`Không thể xác nhận nhận hàng khi trạng thái là ${currentShipment.status}`);
+                    }
                     await shipmentApi.confirmDelivery(id, data);
                     toast.success('Đã xác nhận giao hàng');
                     break;
                 case 'cancel':
+                    if (['DELIVERED', 'CANCELLED'].includes(currentShipment.status)) {
+                        return toast.error(`Không thể hủy đơn hàng khi trạng thái là ${currentShipment.status}`);
+                    }
                     const reason = prompt('Lý do hủy (tùy chọn):');
                     await shipmentApi.cancelShipment(id, reason || undefined);
                     toast.success('Đã hủy đơn vận chuyển');
                     break;
             }
-            setSelectedShipment(null);
+            
+            // Refetch this specific shipment to update the drawer
+            try {
+                const updatedShipment = await shipmentApi.getShipmentById(id);
+                setSelectedShipment(updatedShipment);
+            } catch (err) {
+                // If single fetch fails, close drawer as fallback
+                if (action === 'cancel') setSelectedShipment(null);
+            }
+            
+            // Refresh the entire list in background
             fetchShipments();
         } catch (error: any) {
-            toast.error(error.response?.data?.message || `Không thể thực hiện thao tác ${action}`);
+            const message = error.response?.data?.message || `Không thể thực hiện thao tác ${action}`;
+            toast.error(message);
+            console.error(`[Shipment Action Error] ${message}`, error);
+            
+            // Still refresh to ensure UI is in sync
+            fetchShipments();
+            // Refetch selection if possible to fix local state
+            shipmentApi.getShipmentById(id).then(setSelectedShipment).catch(() => {});
         }
     };
 

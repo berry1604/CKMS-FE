@@ -12,7 +12,7 @@ import { Badge } from '../../components/ui/Badge';
 import { shipmentApi } from '../../services/shipment.api';
 import { productionPlanApi } from '../../services/productionPlan.api';
 import { storeOrderApi } from '../../services/storeOrderApi';
-import type { CreateShipmentRequest, DropPointRequest, AhamoveServiceIdType } from '../../types/shipment';
+import type { CreateShipmentRequest, AhamoveServiceIdType } from '../../types/shipment';
 import type { StoreResponse } from '../../types/store';
 import type { StoreOrderResponse } from '../../types/storeOrder';
 import type { ProductionPlanSummaryResponse } from '../../types/productionPlan';
@@ -89,8 +89,16 @@ export const CreateShipment = () => {
         if (!productionPlanId) return toast.error('Vui lòng chọn Kế hoạch sản xuất');
         if (!form.ahamoveServiceId) return toast.error('Vui lòng chọn loại xe hỗ trợ.');
         
+        // Lấy drop point đầu tiên hợp lệ để gán storeId và storeOrderIds (Backend hiện tại yêu cầu 1 store)
+        const primaryDropPoint = form.dropPoints.find(dp => dp.storeId && dp.storeOrderIds.length > 0);
+        
+        if (!primaryDropPoint) {
+            if (!form.dropPoints[0].storeId) return toast.error('Vui lòng chọn cửa hàng');
+            if (form.dropPoints[0].storeOrderIds.length === 0) return toast.error('Vui lòng chọn ít nhất 1 đơn hàng');
+            return toast.error('Cần ít nhất 1 điểm giao có gắn đơn hàng.');
+        }
+
         const validDropPoints = form.dropPoints.filter(dp => dp.storeId && dp.storeOrderIds.length > 0);
-        if (validDropPoints.length === 0) return toast.error('Cần ít nhất 1 điểm giao có gắn đơn hàng.');
         
         // Ensure no duplicate stores in drop points
         const storeIds = validDropPoints.map(dp => dp.storeId);
@@ -103,6 +111,8 @@ export const CreateShipment = () => {
             const request: CreateShipmentRequest = {
                 ahamoveServiceId: form.ahamoveServiceId,
                 productionPlanId,
+                storeId: Number(primaryDropPoint.storeId),
+                storeOrderIds: primaryDropPoint.storeOrderIds,
                 remarks: form.remarks || undefined, 
                 dropPoints: validDropPoints.map(dp => ({
                     storeId: Number(dp.storeId),
@@ -111,10 +121,13 @@ export const CreateShipment = () => {
                 }))
             };
 
+            console.log('Shipment Payload:', request);
+
             await shipmentApi.createShipment(request);
             toast.success('Đơn vận chuyển đã được tạo thành công!');
             navigate('/shipment');
         } catch (error: any) {
+            console.error('Shipment error:', error);
             toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo đơn vận chuyển');
         } finally {
             setIsSubmitting(false);
