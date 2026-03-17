@@ -11,7 +11,6 @@ import { categoryApi } from '../../services/category.api';
 import type { CategoryResponse } from '../../types/category';
 
 const createCategorySchema = z.object({
-    categoryId: z.string().min(1, 'Mã danh mục là bắt buộc').trim(),
     name: z.string().min(1, 'Tên danh mục là bắt buộc').trim(),
     description: z.string().optional(),
     status: z.enum(['ACTIVE', 'INACTIVE'])
@@ -37,7 +36,6 @@ export const CreateCategoryPage = () => {
         resolver: zodResolver(createCategorySchema),
         mode: 'onChange',
         defaultValues: {
-            categoryId: '',
             name: '',
             description: '',
             status: 'ACTIVE'
@@ -53,7 +51,6 @@ export const CreateCategoryPage = () => {
 
             if (categoryFromState) {
                 reset({
-                    categoryId: categoryFromState.categoryId || String(categoryFromState.id),
                     name: categoryFromState.name,
                     description: categoryFromState.description || '',
                     status: (categoryFromState.status as 'ACTIVE' | 'INACTIVE') || 'ACTIVE'
@@ -65,7 +62,6 @@ export const CreateCategoryPage = () => {
             try {
                 const data = await categoryApi.getById(Number(id));
                 reset({
-                    categoryId: data.categoryId || String(data.id),
                     name: data.name,
                     description: data.description || '',
                     status: (data.status as 'ACTIVE' | 'INACTIVE') || 'ACTIVE'
@@ -178,25 +174,6 @@ export const CreateCategoryPage = () => {
 
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Category ID */}
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Mã danh mục *</label>
-                                        <div className="relative group/input">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within/input:text-amber-500 transition-colors">
-                                                <Tag size={18} />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                {...register('categoryId')}
-                                                disabled={isEditMode}
-                                                className={`w-full pl-12 pr-4 py-3 bg-black/40 border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${errors.categoryId ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'
-                                                    }`}
-                                                placeholder="VD: CAT-001"
-                                            />
-                                        </div>
-                                        {errors.categoryId && <p className="text-red-400 text-xs mt-1 ml-1">{errors.categoryId.message}</p>}
-                                    </div>
-
                                     {/* Name */}
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Tên danh mục *</label>
@@ -290,10 +267,6 @@ export const CreateCategoryPage = () => {
                                 Ghi chú quan trọng
                             </h3>
                             <ul className="space-y-4 text-sm text-gray-400">
-                                <li className="flex gap-3">
-                                    <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5"></div>
-                                    <p><span className="text-gray-200">Mã danh mục</span> là định danh duy nhất và không thể thay đổi sau khi tạo.</p>
-                                </li>
                                 <li className="flex gap-3">
                                     <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5"></div>
                                     <p><span className="text-gray-200">Tên danh mục</span> nên ngắn gọn, dễ nhớ để hiển thị tốt trên thực đơn.</p>

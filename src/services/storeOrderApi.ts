@@ -169,7 +169,7 @@ export const storeOrderApi = {
      */
     rescheduleOrder: async (id: number | string, deliveryDate: string): Promise<StoreOrderResponse> => {
         try {
-            const response = await axiosClient.patch<StoreOrderResponse>(`/orders/reschedule/${id}`, { deliveryDate });
+            const response = await axiosClient.patch<StoreOrderResponse>(`/orders/${id}/reschedule`, { deliveryDate });
             return response.data;
         } catch (error) {
             console.error(`Error rescheduling order ${id}:`, error);

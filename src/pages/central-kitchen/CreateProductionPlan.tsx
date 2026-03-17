@@ -88,11 +88,19 @@ export const CreateProductionPlan = () => {
         if (selectedOrderIds.size === 0) return;
         setIsSubmitting(true);
         try {
-            await productionPlanApi.createProductionPlan({
+            const plan = await productionPlanApi.createProductionPlan({
                 plannedDate,
                 storeOrderIds: Array.from(selectedOrderIds)
             });
-            toast.success('Kế hoạch sản xuất đã được tạo thành công.');
+            
+            // Automatically mark as READY as per coordinator requirement
+            if (plan && plan.planId) {
+                await productionPlanApi.readyProductionPlan(plan.planId);
+                toast.success('Kế hoạch sản xuất đã được tạo và kích hoạt sẵn sàng.');
+            } else {
+                toast.success('Kế hoạch sản xuất đã được tạo thành công.');
+            }
+            
             navigate('/kitchen');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Tạo kế hoạch thất bại.');
@@ -295,6 +303,7 @@ export const CreateProductionPlan = () => {
                                             <th className="px-4 py-4">Đơn hàng</th>
                                             <th className="px-4 py-4">Chi nhánh</th>
                                             <th className="px-4 py-4">Chi tiết món</th>
+                                            <th className="px-4 py-4 text-center">Số lượng</th>
                                             <th className="px-8 py-4 text-right">Giá trị</th>
                                         </tr>
                                     </thead>
@@ -341,6 +350,11 @@ export const CreateProductionPlan = () => {
                                                                 <span className="text-[9px] px-1.5 py-0.5 text-zinc-600 font-bold">+{order.orderDetails.length - 3} món khác</span>
                                                             )}
                                                         </div>
+                                                    </td>
+                                                    <td className="px-4 py-5 text-center">
+                                                        <span className="text-[13px] font-black text-zinc-300">
+                                                            {order.orderDetails?.reduce((sum, item) => sum + item.quantity, 0)}
+                                                        </span>
                                                     </td>
                                                     <td className="px-8 py-5 text-right">
                                                         <span className="text-[13px] font-black text-zinc-100">{(order.totalAmount || 0).toLocaleString()}</span>

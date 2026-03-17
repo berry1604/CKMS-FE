@@ -90,7 +90,7 @@ export const RescheduleModal = ({
                 <div className="p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-sm font-medium text-zinc-400">Đơn hàng:</span>
-                        <span className="font-black text-zinc-100 uppercase tracking-tighter">ORD-{orderId}</span>
+                        <span className="font-black text-zinc-100 uppercase tracking-tighter">Đơn hàng {orderId}</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-sm font-medium text-zinc-400">Ngày giao hiện tại:</span>

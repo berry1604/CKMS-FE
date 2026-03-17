@@ -206,9 +206,19 @@ export const OrderApproval = () => {
             accessorKey: 'orderId',
             className: 'font-bold text-zinc-100',
             cell: (order) => (
+                <span className="font-black text-[12px] text-zinc-200 tracking-tighter">ORD-{order.orderId}</span>
+            )
+        },
+        {
+            header: 'Ngày đặt hàng',
+            cell: (order) => (
                 <div className="flex flex-col">
-                    <span className="font-black text-[12px] text-zinc-200 tracking-tighter">ORD-{order.orderId}</span>
-                    <span className="text-[10px] text-zinc-500 font-medium">Đặt ngày: {new Date(order.orderDate).toLocaleDateString('vi-VN')}</span>
+                    <span className="text-[11px] text-zinc-300 font-bold tracking-tight">
+                        {new Date(order.orderDate).toLocaleDateString('vi-VN')}
+                    </span>
+                    <span className="text-[9px] text-zinc-500 font-medium">
+                        {new Date(order.orderDate).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                 </div>
             )
         },

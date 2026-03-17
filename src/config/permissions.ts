@@ -66,18 +66,24 @@ export const ROLE_PERMISSIONS: Record<MappedRole, Permission[]> = {
         PERMISSIONS.PRODUCTION_PLANNING,
         PERMISSIONS.ALLOCATION_MANAGEMENT,
         PERMISSIONS.CREATE_SHIPMENT,
+        PERMISSIONS.RECEIVE_SHIPMENT,
         PERMISSIONS.PRODUCTION_SCHEDULE,
         PERMISSIONS.ORGANIZE_PRODUCTION,
         PERMISSIONS.MATERIAL_INVENTORY,
         PERMISSIONS.PRODUCT_MANAGEMENT,
     ],
     KITCHEN_STAFF: [
-        PERMISSIONS.PRODUCTION_SCHEDULE,
-        PERMISSIONS.MATERIAL_INVENTORY,
-        PERMISSIONS.PRODUCT_MANAGEMENT, // Cần để fetch data dropdown (đã ẩn mục này trong sidebar)
-        PERMISSIONS.INGREDIENT_MANAGEMENT, // Cần để fetch data dropdown (đã ẩn mục này trong sidebar)
         PERMISSIONS.EXECUTE_PRODUCTION, // Quyền thực thi sản xuất (Bắt đầu nấu, Hoàn tất mẻ)
         PERMISSIONS.CREATE_SHIPMENT,   // Quyền tạo và quản lý vận chuyển
+        PERMISSIONS.VIEW_MY_ORDERS,    // Quyền xem chi tiết đơn hàng (để aggregated items)
+        PERMISSIONS.APPROVE_ORDERS,    // Coordinator has this
+        PERMISSIONS.PRODUCTION_PLANNING, // Coordinator has this
+        PERMISSIONS.ALLOCATION_MANAGEMENT, // Coordinator has this
+        PERMISSIONS.PRODUCTION_SCHEDULE, // Coordinator has this
+        PERMISSIONS.ORGANIZE_PRODUCTION, // Coordinator has this
+        PERMISSIONS.MATERIAL_INVENTORY, // Coordinator has this
+        PERMISSIONS.PRODUCT_MANAGEMENT, // Coordinator has this
+        PERMISSIONS.RECEIVE_SHIPMENT,   // Allow kitchen staff to confirm delivery if backend permits
     ],
     MANAGER: [
         PERMISSIONS.PRODUCT_MANAGEMENT,

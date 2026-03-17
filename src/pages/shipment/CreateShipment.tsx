@@ -220,10 +220,10 @@ export const CreateShipment = () => {
                     </Button>
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="orange" className="text-[9px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase bg-[#DE802B]/20 text-[#DE802B]">AhaMove Integration</Badge>
+                            <Badge variant="orange" className="text-[9px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase bg-[#DE802B]/20 text-[#DE802B]">Bếp trung tâm</Badge>
                             <h1 className="text-2xl font-black text-zinc-100 uppercase tracking-tight">Tạo đơn vận chuyển</h1>
                         </div>
-                        <p className="text-xs text-zinc-500 font-medium tracking-wide">Tích hợp giao hàng AhaMove qua nhiều điểm thả (Drop points).</p>
+                        <p className="text-xs text-zinc-500 font-medium tracking-wide">Tạo lệnh xuất kho cho bộ phận Bếp chuẩn bị hàng.</p>
                     </div>
                 </div>
 
@@ -240,7 +240,7 @@ export const CreateShipment = () => {
                         disabled={isSubmitting || isLoading}
                         className="bg-[#DE802B] hover:bg-[#c97327] text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-[#DE802B]/20 border-0 flex items-center gap-2"
                     >
-                        {isSubmitting ? 'Đang xuất đơn...' : <><Save size={18} /> Gửi AhaMove</>}
+                        {isSubmitting ? 'Đang gửi...' : <><Save size={18} /> Gửi đến bếp</>}
                     </Button>
                 </div>
             </div>
@@ -276,7 +276,7 @@ export const CreateShipment = () => {
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-[#DE802B] uppercase tracking-widest ml-1">Loại dịch vụ AhaMove</label>
+                                <label className="text-[10px] font-black text-[#DE802B] uppercase tracking-widest ml-1">Loại xe vận chuyển (AhaMove)</label>
                                 <div className="relative">
                                     <select
                                         className="w-full appearance-none pl-12 pr-4 h-14 bg-[#DE802B]/5 border border-[#DE802B]/30 rounded-2xl text-sm font-bold text-[#DE802B] focus:outline-none focus:ring-2 focus:ring-[#DE802B]/50 transition-all cursor-pointer"
@@ -457,7 +457,7 @@ export const CreateShipment = () => {
                             disabled={isSubmitting || isLoading || getTotalOrdersSelected() === 0}
                             className="w-full h-16 bg-[#DE802B] hover:bg-[#c97327] text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-[#DE802B]/20 border-0"
                         >
-                            {isSubmitting ? 'Đang xuất đơn...' : 'Gửi đơn AhaMove'}
+                            {isSubmitting ? 'Đang gửi...' : 'Gửi đến bếp'}
                         </Button>
                     </div>
                 </div>

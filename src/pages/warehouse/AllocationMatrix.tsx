@@ -17,6 +17,7 @@ export const AllocationMatrix = () => {
     const [matrix, setMatrix] = useState<AllocationRow[]>([]);
     const [isLoadingMatrix, setIsLoadingMatrix] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     useEffect(() => {
         fetchPlans();
@@ -25,6 +26,7 @@ export const AllocationMatrix = () => {
     useEffect(() => {
         if (selectedPlanId) {
             fetchAllocationMatrix(Number(selectedPlanId));
+            setIsSuccess(false);
         } else {
             setMatrix([]);
         }
@@ -136,7 +138,15 @@ export const AllocationMatrix = () => {
         try {
             await allocationApi.confirmAllocation(payload);
             toast.success('Xác nhận phân bổ kho thành công!');
-            fetchAllocationMatrix(Number(selectedPlanId));
+            setIsSuccess(true);
+            
+            // Workflow: Hide allocated items by resetting selection after a delay
+            setTimeout(() => {
+                setMatrix([]);
+                setSelectedPlanId('');
+                fetchPlans(); // Refresh plan list to exclude processed ones
+            }, 1500);
+            
         } catch (error: any) {
             if (error.response?.status === 404) {
                 toast.success('Xác nhận phân bổ kho thành công!');
@@ -180,10 +190,15 @@ export const AllocationMatrix = () => {
                     <div className="w-[1px] h-10 bg-zinc-800"></div>
                     <Button
                         onClick={handleSaveAllocation}
-                        disabled={matrix.length === 0 || isSaving}
-                        className="bg-amber-600 hover:bg-amber-500 text-black font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] border-0 flex items-center gap-2 transition-all active:scale-95"
+                        disabled={matrix.length === 0 || isSaving || isSuccess}
+                        className={cn(
+                            "font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-xl border-0 flex items-center gap-2 transition-all active:scale-95",
+                            isSuccess 
+                                ? "bg-emerald-600/20 text-emerald-500 border border-emerald-500/30 cursor-default" 
+                                : "bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/20"
+                        )}
                     >
-                        {isSaving ? 'Đang lưu...' : <><Save size={18} /> Chốt Phân Bổ</>}
+                        {isSaving ? 'Đang lưu...' : isSuccess ? <><CheckCircle size={18} /> Đã phân bổ</> : <><Save size={18} /> Chốt Phân Bổ</>}
                     </Button>
                 </div>
             </div>
@@ -318,9 +333,10 @@ export const AllocationMatrix = () => {
                                         <tr key={row.productId} className="hover:bg-zinc-800/30 group transition-all duration-300">
                                             <td className="px-10 py-8 bg-zinc-900/90 backdrop-blur-md sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
                                                 <div className="flex flex-col">
-                                                    <span className="text-base font-black text-zinc-100 tracking-tight group-hover:text-amber-500 transition-colors uppercase leading-none mb-3">
+                                                    <span className="text-base font-black text-zinc-100 tracking-tight group-hover:text-amber-500 transition-colors uppercase leading-none mb-1">
                                                         {row.productName}
                                                     </span>
+                                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-3">ID: #{row.productId}</span>
                                                     <div className="flex items-center gap-4">
                                                         <div className={cn(
                                                             "px-4 py-2 rounded-xl flex items-center gap-3 border transition-all",

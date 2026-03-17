@@ -131,22 +131,31 @@ export const OrderList = () => {
             header: 'Mã đơn',
             accessorKey: 'orderId',
             className: 'font-medium text-zinc-400',
-            cell: (order) => <span className="font-mono text-[10px] bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">#{order.orderId}</span>
+            cell: (order) => <span className="font-mono text-[10px] bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700 whitespace-nowrap">Đơn hàng {order.orderId}</span>
         },
         {
             header: 'Cửa hàng',
             accessorKey: 'storeName',
             cell: (order) => (
                 <div>
-                    <span className="font-bold text-zinc-100 block text-sm">{order.storeName || `Cửa hàng #${order.storeId}`}</span>
+                    <span className="font-bold text-zinc-100 block text-sm">{order.storeName || `Cửa hàng ${order.storeId}`}</span>
                     <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">ID: {order.storeId}</span>
                 </div>
             )
         },
         {
-            header: 'Ngày đặt',
+            header: 'Ngày đặt hàng',
             accessorKey: 'orderDate',
             cell: (order) => <span className="text-zinc-400 text-sm">{new Date(order.orderDate).toLocaleDateString('vi-VN')}</span>
+        },
+        {
+            header: 'Ngày giao',
+            accessorKey: 'deliveryDate',
+            cell: (order) => (
+                <span className="text-zinc-400 text-sm">
+                    {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString('vi-VN') : 'Chưa có'}
+                </span>
+            )
         },
         {
             header: 'Số món',

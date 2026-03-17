@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     Truck, Filter, Eye, Plus, Search, Calendar,
     MapPin, User, Package, Clock,
-    ChevronLeft, ChevronRight
+    ChevronLeft, ChevronRight, ExternalLink
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -117,9 +117,20 @@ export const ShipmentList = () => {
         }
     };
 
+    const handleRefresh = async (id: number) => {
+        try {
+            const updatedShipment = await shipmentApi.getShipmentById(id);
+            setSelectedShipment(updatedShipment);
+            fetchShipments();
+            toast.success('Đã làm mới dữ liệu');
+        } catch (error) {
+            toast.error('Không thể làm mới dữ liệu');
+        }
+    };
+
     const getStatusBadge = (status: string) => {
         const config: Record<string, { variant: any, label: string, icon: any }> = {
-            'PENDING': { variant: 'orange', label: 'Mới tạo', icon: Plus },
+            'PENDING': { variant: 'orange', label: 'Chờ chuẩn bị', icon: Plus },
             'PREPARED': { variant: 'info', label: 'Đã chuẩn bị', icon: Package },
             'IN_TRANSIT': { variant: 'primary', label: 'Đang giao', icon: Truck },
             'DELIVERED': { variant: 'success', label: 'Đã giao', icon: MapPin },
@@ -194,6 +205,30 @@ export const ShipmentList = () => {
             )
         },
         {
+            header: 'Theo dõi',
+            cell: (s) => (
+                <div className="flex items-center gap-2">
+                    {s.trackingLink ? (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(s.trackingLink, '_blank');
+                            }}
+                            className="h-8 px-3 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black rounded-lg border border-amber-500/20 transition-all flex items-center gap-1.5"
+                            title="Mở link theo dõi AhaMove"
+                        >
+                            <ExternalLink size={12} strokeWidth={3} />
+                            <span className="text-[10px] font-black uppercase tracking-tight">Chi tiết</span>
+                        </Button>
+                    ) : (
+                        <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest italic ml-2">Chưa có link</span>
+                    )}
+                </div>
+            )
+        },
+        {
             header: 'Trạng thái',
             cell: (s) => getStatusBadge(s.status)
         },
@@ -217,7 +252,7 @@ export const ShipmentList = () => {
 
     const statusOptions: { value: FilterStatus; label: string; icon: any }[] = [
         { value: 'all', label: 'Tất cả', icon: Package },
-        { value: 'PENDING', label: 'Mới tạo', icon: Plus },
+        { value: 'PENDING', label: 'Chờ chuẩn bị', icon: Plus },
         { value: 'PREPARED', label: 'Đã chuẩn bị', icon: Package },
         { value: 'IN_TRANSIT', label: 'Đang giao', icon: Truck },
         { value: 'DELIVERED', label: 'Đã giao', icon: MapPin },
@@ -346,6 +381,7 @@ export const ShipmentList = () => {
                 isOpen={!!selectedShipment}
                 onClose={() => setSelectedShipment(null)}
                 onStatusAction={handleStatusAction}
+                onRefresh={handleRefresh}
             />
         </div>
     );

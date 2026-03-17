@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, Truck, Printer, Download, XCircle, Loader2 } from 'lucide-react';
+import { Package, Clock, CheckCircle, Truck, Printer, Download, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Drawer } from '../../components/ui/Drawer';
@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/classNames';
 import { storeOrderApi } from '../../services/storeOrderApi';
 import { toast } from 'react-hot-toast';
+import { RescheduleModal } from '../../components/orders/RescheduleModal';
 
 interface OrderDetailDrawerProps {
     order: StoreOrderResponse | null;
@@ -25,6 +26,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [orderDetails, setOrderDetails] = useState<StoreOrderResponse | null>(null);
     const [isFetching, setIsFetching] = useState(false);
+    const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
 
     useEffect(() => {
         if (isOpen && order?.orderId) {
@@ -44,12 +46,14 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
             fetchFullDetails();
         } else if (!isOpen) {
             setOrderDetails(null);
+            setIsRescheduleModalOpen(false);
         }
     }, [isOpen, order?.orderId]);
 
     if (!order) return null;
 
     const currentOrder = orderDetails || order;
+    const orderStatus = currentOrder.status?.toUpperCase();
 
     // Permissions check
     const canApprove = hasAuthority('APPROVE_STORE_ORDER') || hasAuthority('COORDINATOR') || hasAuthority('MANAGER') || hasAuthority('ADMIN');
@@ -61,7 +65,6 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
     };
 
     const currentStep = getStatusStep(currentOrder.status);
-    const orderStatus = currentOrder.status?.toUpperCase();
 
     const canCancel = orderStatus === 'SUBMITTED';
     const canReject = orderStatus === 'SUBMITTED';
@@ -79,6 +82,18 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
             setIsCancelling(false);
         }
     };
+
+    const handleRescheduleSuccess = (newDate: string) => {
+        if (orderDetails) {
+            setOrderDetails({ ...orderDetails, deliveryDate: newDate });
+        } else if (order) {
+            setOrderDetails({ ...order, deliveryDate: newDate });
+        }
+        if (onStatusUpdate) {
+            // Optional: trigger refresh in parent if needed
+        }
+    };
+
 
     const footer = (
         <div className="flex justify-between w-full items-center">
@@ -140,7 +155,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                 isOpen={isOpen}
                 onClose={onClose}
                 title={`Chi tiết đơn hàng #${currentOrder.orderId}`}
-                description={`${currentOrder.storeName || `Cửa hàng ID: ${currentOrder.storeId}`} • Đặt ngày: ${new Date(currentOrder.orderDate).toLocaleDateString('vi-VN')}`}
+                description={`${currentOrder.storeName || `Cửa hàng ID: ${currentOrder.storeId}`} • Ngày đặt hàng: ${new Date(currentOrder.orderDate).toLocaleDateString('vi-VN')}`}
                 width="max-w-5xl"
                 footer={footer}
             >
@@ -229,7 +244,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                 </div>
                             </div>
                             <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
-                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">Creation Time</span>
+                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">Ngày đặt hàng</span>
                                 <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
                                     {new Date(currentOrder.orderDate).toLocaleDateString('vi-VN')}
                                 </span>
@@ -240,7 +255,18 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                 </div>
                             </div>
                             <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec col-span-2">
-                                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">Requested Delivery Date</span>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">Requested Delivery Date</span>
+                                    {canApprove && (orderStatus === 'SUBMITTED' || orderStatus === 'APPROVED' || orderStatus === 'ALLOCATED') && (
+                                        <button 
+                                            onClick={() => setIsRescheduleModalOpen(true)}
+                                            className="text-[10px] font-black text-zinc-500 hover:text-amber-500 uppercase tracking-widest transition-colors"
+                                        >
+                                            Thay đổi
+                                        </button>
+                                    )}
+                                </div>
+                                
                                 <span className="text-[15px] font-black text-white uppercase truncate block">
                                     {currentOrder.deliveryDate ? new Date(currentOrder.deliveryDate).toLocaleDateString('vi-VN') : 'N/A'}
                                 </span>
@@ -413,6 +439,15 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                 isLoading={isCancelling}
                 variant="danger"
             />
+            {isRescheduleModalOpen && (
+                <RescheduleModal
+                    isOpen={isRescheduleModalOpen}
+                    onClose={() => setIsRescheduleModalOpen(false)}
+                    orderId={currentOrder.orderId}
+                    currentDeliveryDate={currentOrder.deliveryDate}
+                    onSuccess={handleRescheduleSuccess}
+                />
+            )}
         </>
     );
 };

@@ -14,8 +14,12 @@ const StoreOrders: React.FC<StoreOrdersProps> = ({ storeId }) => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                // Using getAllOrders which now supports storeId
-                const response = await storeOrderApi.getAllOrders({ storeId, size: 50, sortBy: 'orderDate', sortDir: 'desc' });
+                const response = await storeOrderApi.getAllOrders({
+                    storeId,
+                    size: 50,
+                    sortBy: 'orderDate',
+                    sortDir: 'desc'
+                });
                 if (response.content) {
                     setOrders(response.content);
                 }
@@ -28,6 +32,24 @@ const StoreOrders: React.FC<StoreOrdersProps> = ({ storeId }) => {
 
         fetchOrders();
     }, [storeId]);
+
+    // ✅ Format ngày
+    const formatDate = (date?: string) => {
+        if (!date) return 'Chưa có';
+        try {
+            return new Date(date).toLocaleDateString('vi-VN');
+        } catch {
+            return 'Không hợp lệ';
+        }
+    };
+
+    // ✅ Check gần ngày giao (highlight)
+    const isNearDelivery = (date?: string) => {
+        if (!date) return false;
+        const d = new Date(date).getTime();
+        const now = new Date().getTime();
+        return d - now < 2 * 24 * 60 * 60 * 1000;
+    };
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -44,7 +66,9 @@ const StoreOrders: React.FC<StoreOrdersProps> = ({ storeId }) => {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-stone-400">
                 <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                <p className="text-sm uppercase tracking-widest font-medium">Đang tải lịch sử đơn hàng...</p>
+                <p className="text-sm uppercase tracking-widest font-medium">
+                    Đang tải lịch sử đơn hàng...
+                </p>
             </div>
         );
     }
@@ -54,7 +78,9 @@ const StoreOrders: React.FC<StoreOrdersProps> = ({ storeId }) => {
             <div className="text-center py-20 bg-black/20 backdrop-blur-md rounded-2xl border border-white/5">
                 <ShoppingBag className="w-12 h-12 text-stone-600 mx-auto mb-4" />
                 <h3 className="text-stone-300 font-medium text-lg">Chưa có đơn hàng nào</h3>
-                <p className="text-stone-500 text-sm mt-1">Lịch sử đặt hàng của cửa hàng sẽ xuất hiện tại đây.</p>
+                <p className="text-stone-500 text-sm mt-1">
+                    Lịch sử đặt hàng của cửa hàng sẽ xuất hiện tại đây.
+                </p>
             </div>
         );
     }
@@ -66,38 +92,63 @@ const StoreOrders: React.FC<StoreOrdersProps> = ({ storeId }) => {
                     key={order.orderId}
                     className="group bg-white/[0.02] backdrop-blur-md border border-white/5 rounded-2xl p-5 hover:bg-white/[0.05] transition-all duration-300 flex flex-wrap md:flex-nowrap items-center gap-6"
                 >
+                    {/* Icon */}
                     <div className="w-14 h-14 rounded-2xl bg-stone-900 border border-white/5 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform duration-300 shadow-xl shadow-black/40">
                         <Package className="w-6 h-6" />
                     </div>
 
+                    {/* Info */}
                     <div className="flex-1 min-w-[200px]">
                         <div className="flex items-center gap-3 mb-1">
                             <h3 className="text-white font-bold tracking-widest uppercase text-sm">
-                                Đơn hàng #{order.orderId}
+                                Đơn hàng {order.orderId}
                             </h3>
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-tighter ${getStatusColor(order.status)}`}>
                                 {order.status}
                             </span>
                         </div>
-                        <div className="flex items-center gap-4 text-stone-500 text-xs">
-                            <div className="flex items-center gap-1.5 font-mono italic">
+
+                        {/* Dates + items */}
+                        <div className="flex items-center gap-6 text-xs flex-wrap">
+
+                            {/* Ngày đặt */}
+                            <div className="flex items-center gap-1.5 font-mono italic text-stone-400">
                                 <Calendar className="w-3.5 h-3.5 opacity-60" />
-                                {new Date(order.orderDate).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                {new Date(order.orderDate).toLocaleString('vi-VN', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}
                             </div>
-                            <div className="flex items-center gap-1.5">
+
+                            {/* ✅ Ngày giao */}
+                            <div className={`flex items-center gap-1.5 font-medium ${isNearDelivery(order.deliveryDate) ? 'text-red-400' : 'text-sky-400'
+                                }`}>
+                                <Calendar className="w-3.5 h-3.5 opacity-70" />
+                                Giao: {formatDate(order.deliveryDate)}
+                            </div>
+
+                            {/* Số sản phẩm */}
+                            <div className="flex items-center gap-1.5 text-stone-500">
                                 <ShoppingBag className="w-3.5 h-3.5 opacity-60" />
                                 {order.orderDetails.length} sản phẩm
                             </div>
                         </div>
                     </div>
 
+                    {/* Price */}
                     <div className="text-right">
-                        <p className="text-[10px] text-stone-500 uppercase font-black tracking-widest mb-0.5 opacity-60">Tổng thanh toán</p>
+                        <p className="text-[10px] text-stone-500 uppercase font-black tracking-widest mb-0.5 opacity-60">
+                            Tổng thanh toán
+                        </p>
                         <p className="text-amber-500 font-black text-lg tracking-tight">
                             {order.totalAmount.toLocaleString('vi-VN')} đ
                         </p>
                     </div>
 
+                    {/* Action */}
                     <div className="pl-4 border-l border-white/5 flex items-center gap-4">
                         <button className="p-3 rounded-xl bg-white/5 hover:bg-amber-500/20 text-stone-400 hover:text-amber-400 transition-all border border-transparent hover:border-amber-500/30">
                             <ChevronRight className="w-5 h-5" />

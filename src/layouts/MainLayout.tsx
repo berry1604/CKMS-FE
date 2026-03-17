@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import type { User } from '../types/user';
 import { useAuth } from '../hooks/useAuth';
 import { cn } from '../utils/classNames';
 import { PERMISSIONS, hasPermission, type Permission } from '../config/permissions';
@@ -68,12 +69,20 @@ export const navigation: NavigationItem[] = [
                 href: '/orders',
                 icon: FileText,
                 permission: PERMISSIONS.VIEW_MY_ORDERS,
+                hidden: (user) => {
+                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
+                    return role === 'KITCHEN_STAFF' || role === 'COORDINATOR';
+                },
             },
             {
                 name: 'Nhận hàng',
                 href: '/shipment/receive',
                 icon: Package,
                 permission: PERMISSIONS.RECEIVE_SHIPMENT,
+                hidden: (user) => {
+                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
+                    return role === 'KITCHEN_STAFF' || role === 'COORDINATOR';
+                },
             },
         ]
     },
@@ -87,12 +96,14 @@ export const navigation: NavigationItem[] = [
                 href: '/orders/approvals',
                 icon: ClipboardList,
                 permission: PERMISSIONS.APPROVE_ORDERS,
+                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') === 'KITCHEN_STAFF',
             },
             {
                 name: 'Lập kế hoạch SX',
                 href: '/kitchen/create-plan',
                 icon: ChefHat,
                 permission: PERMISSIONS.PRODUCTION_PLANNING,
+                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') === 'KITCHEN_STAFF',
             },
             {
                 name: 'Lịch sản xuất',
@@ -105,6 +116,7 @@ export const navigation: NavigationItem[] = [
                 href: '/warehouse/allocation',
                 icon: Network,
                 permission: PERMISSIONS.ALLOCATION_MANAGEMENT,
+                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') === 'KITCHEN_STAFF',
             },
             {
                 name: 'Vận chuyển',
@@ -131,8 +143,8 @@ export const navigation: NavigationItem[] = [
                 icon: Package,
                 permission: PERMISSIONS.PRODUCT_MANAGEMENT,
                 hidden: (user) => {
-                    const role = user?.role?.replace('ROLE_', '');
-                    return role === 'KITCHEN_STAFF';
+                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
+                    return role === 'KITCHEN_STAFF' || role === 'COORDINATOR';
                 },
             },
             {
@@ -147,8 +159,8 @@ export const navigation: NavigationItem[] = [
                 icon: Wheat,
                 permission: PERMISSIONS.INGREDIENT_MANAGEMENT,
                 hidden: (user) => {
-                    const role = user?.role?.replace('ROLE_', '');
-                    return role === 'KITCHEN_STAFF';
+                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
+                    return role === 'KITCHEN_STAFF' || role === 'COORDINATOR';
                 },
             },
             {

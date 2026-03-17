@@ -1,11 +1,16 @@
+import { useState, useEffect } from 'react';
 import {
     Truck, Package, User, Phone,
     Calendar, Clock, CheckCircle2,
-    Printer, Trash2, Info, Plus, ExternalLink
+    Printer, Trash2, Info, Plus, ExternalLink,
+    ClipboardList, ChevronRight, Copy, RefreshCw
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { Badge } from '../../components/ui/Badge';
+import { toast } from 'react-hot-toast';
+import { productionPlanApi } from '../../services/productionPlan.api';
+import { shipmentApi } from '../../services/shipment.api';
 import { cn } from '../../utils/classNames';
 import type { ShipmentResponse } from '../../types/shipment';
 
@@ -14,18 +19,60 @@ interface ShipmentDetailDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     onStatusAction: (id: number, action: 'prepare' | 'transit' | 'confirm' | 'cancel', data?: any) => void;
+    onRefresh?: (id: number) => void;
 }
 
 export const ShipmentDetailDrawer = ({
     shipment,
     isOpen,
     onClose,
-    onStatusAction
+    onStatusAction,
+    onRefresh
 }: ShipmentDetailDrawerProps) => {
+    const [aggregatedItems, setAggregatedItems] = useState<{ productId: number, productName: string, quantity: number }[]>([]);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && shipment?.shipmentId) {
+            const loadData = async () => {
+                setIsLoadingDetails(true);
+                try {
+                    // Always try to get full shipment details first to ensure we have productionPlanId
+                    const fullShipment = await shipmentApi.getShipmentById(shipment.shipmentId);
+                    if (fullShipment.productionPlanId) {
+                        const plan = await productionPlanApi.getProductionPlanDetail(fullShipment.productionPlanId);
+                        if (plan.items) {
+                            setAggregatedItems(plan.items.map(item => ({
+                                productId: item.productId,
+                                productName: item.productName,
+                                quantity: item.plannedQuantity
+                            })));
+                        }
+                    }
+                } catch (error: any) {
+                    console.error("Failed to fetch shipment details/items:", error);
+                    toast.error("Không thể tải chi tiết món hàng");
+                } finally {
+                    setIsLoadingDetails(false);
+                }
+            };
+            loadData();
+        } else {
+            setAggregatedItems([]);
+        }
+    }, [isOpen, shipment?.shipmentId]);
+
+    const handleCopyAhamoveId = () => {
+        if (shipment?.ahamoveOrderId) {
+            navigator.clipboard.writeText(shipment.ahamoveOrderId);
+            toast.success('Đã sao chép mã đơn AhaMove');
+        }
+    };
+
     if (!shipment) return null;
 
     const steps = [
-        { id: 'PENDING', label: 'MỚI TẠO', icon: Package, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+        { id: 'PENDING', label: 'CHỜ CHUẨN BỊ', icon: Package, color: 'text-orange-500', bg: 'bg-orange-500/10' },
         { id: 'PREPARED', label: 'ĐÃ CHUẨN BỊ', icon: Package, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
         { id: 'IN_TRANSIT', label: 'ĐANG GIAO', icon: Truck, color: 'text-[#DE802B]', bg: 'bg-[#DE802B]/10' },
         { id: 'DELIVERED', label: 'ĐÃ GIAO', icon: CheckCircle2, color: 'text-[#5C6F2B]', bg: 'bg-[#5C6F2B]/10' }
@@ -53,7 +100,7 @@ export const ShipmentDetailDrawer = ({
                         onClick={() => onStatusAction(shipment.shipmentId, 'transit')}
                         className="bg-[#DE802B] hover:bg-[#c97327] text-black font-black uppercase text-[11px] tracking-widest px-8 grow shadow-xl shadow-[#DE802B]/20"
                     >
-                        Xác nhận xuất kho & Giao
+                        Xác nhận xuất kho & Giao (AhaMove)
                     </Button>
                 );
             case 'IN_TRANSIT':
@@ -101,24 +148,48 @@ export const ShipmentDetailDrawer = ({
             isOpen={isOpen}
             onClose={onClose}
             title={
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#DE802B]/10 flex items-center justify-center text-[#DE802B]">
-                        <Truck size={20} />
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-xl font-black text-zinc-100 uppercase tracking-tighter">Vận đơn #{shipment.shipmentId}</span>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">AhaMove:</span>
-                            {shipment.ahamoveOrderId ? (
-                                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 border-zinc-700 bg-zinc-800 text-zinc-300 font-mono tracking-tighter">
-                                    {shipment.ahamoveOrderId}
-                                </Badge>
-                            ) : (
-                                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 border-zinc-800 bg-zinc-900 text-zinc-600 font-mono tracking-tighter italic">
-                                    N/A
-                                </Badge>
-                            )}
+                <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#DE802B]/10 flex items-center justify-center text-[#DE802B]">
+                            <Truck size={20} />
                         </div>
+                        <div className="flex flex-col">
+                            <span className="text-xl font-black text-zinc-100 uppercase tracking-tighter">Vận đơn #{shipment.shipmentId}</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">AhaMove:</span>
+                                {shipment.ahamoveOrderId ? (
+                                    <div className="flex items-center gap-2 group/copy">
+                                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 border-zinc-700 bg-zinc-800 text-zinc-300 font-mono tracking-tighter">
+                                            {shipment.ahamoveOrderId}
+                                        </Badge>
+                                        <button 
+                                            onClick={handleCopyAhamoveId}
+                                            className="text-zinc-500 hover:text-amber-500 transition-colors"
+                                            title="Sao chép mã đơn"
+                                        >
+                                            <Copy size={10} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 border-zinc-800 bg-zinc-900 text-zinc-600 font-mono tracking-tighter italic">
+                                        N/A
+                                    </Badge>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 pr-8">
+                        {onRefresh && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onRefresh(shipment.shipmentId)}
+                                className="h-10 w-10 p-0 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 transition-all"
+                                title="Làm mới dữ liệu"
+                            >
+                                <RefreshCw size={18} />
+                            </Button>
+                        )}
                     </div>
                 </div>
             }
@@ -171,7 +242,7 @@ export const ShipmentDetailDrawer = ({
                                     <div className="flex flex-col">
                                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">CKMS Status</span>
                                         <Badge variant={isCancelled ? 'danger' : 'success'} className="text-[11px] px-3 py-0.5 h-6 border-0 font-black uppercase tracking-tight">
-                                            {shipment.status}
+                                            {shipment.status === 'PENDING' ? 'WAIT_FOR_PREP' : shipment.status}
                                         </Badge>
                                     </div>
                                     <div className="w-px h-8 bg-zinc-800 mx-2"></div>
@@ -203,9 +274,10 @@ export const ShipmentDetailDrawer = ({
                                             href={shipment.trackingLink}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="px-4 py-3 bg-[#DE802B] hover:bg-[#c97327] text-black rounded-2xl flex items-center gap-2 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#DE802B]/20 transition-all hover:scale-105 active:scale-95"
+                                            className="px-6 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black rounded-2xl flex items-center gap-2.5 font-black uppercase text-[11px] tracking-widest shadow-xl shadow-amber-500/20 transition-all hover:scale-105 active:scale-95 group/track"
                                         >
-                                            <ExternalLink size={14} /> Tracking Link
+                                            <ExternalLink size={16} strokeWidth={3} className="group-hover/track:rotate-12 transition-transform" /> 
+                                            XEM LINK THEO DÕI
                                         </a>
                                     )}
                                 </div>
@@ -385,6 +457,58 @@ export const ShipmentDetailDrawer = ({
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Item Details Panel */}
+                    <div className="bg-zinc-900/40 backdrop-blur-sm rounded-[40px] border border-zinc-800/50 p-10 space-y-6">
+                        <div className="flex items-center justify-between ml-2">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                    <ClipboardList size={18} />
+                                </div>
+                                <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                                    Danh sách món hàng
+                                </h4>
+                            </div>
+                            <Badge variant="orange" className="text-[10px] font-black tracking-widest px-3 py-1 border-0 uppercase">
+                                {aggregatedItems.length} Món
+                            </Badge>
+                        </div>
+
+                        {isLoadingDetails ? (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                <div className="w-10 h-10 border-2 border-amber-500/10 border-t-amber-500 rounded-full animate-spin"></div>
+                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Đang tải danh sách mặt hàng...</span>
+                            </div>
+                        ) : aggregatedItems.length === 0 ? (
+                            <div className="py-20 text-center border-2 border-dashed border-zinc-800 rounded-[32px]">
+                                <p className="text-[11px] text-zinc-600 font-bold uppercase tracking-widest">Trống danh sách hàng hóa</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {aggregatedItems.map((item) => (
+                                    <div 
+                                        key={item.productId}
+                                        className="group h-16 px-6 bg-zinc-950/40 border border-zinc-800/50 rounded-2xl flex items-center justify-between hover:border-amber-500/30 transition-all duration-300"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-2 h-2 rounded-full bg-amber-500/20 group-hover:bg-amber-500 transition-colors"></div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-black text-zinc-200 tracking-tight">{item.productName}</span>
+                                                <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">ID: #{item.productId}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-sm font-black text-amber-500 font-mono tracking-tighter">{item.quantity}</span>
+                                                <span className="text-[8px] text-zinc-600 font-black uppercase tracking-widest">Số lượng</span>
+                                            </div>
+                                            <ChevronRight size={14} className="text-zinc-800 group-hover:text-amber-500 transition-colors" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Action Panel */}
