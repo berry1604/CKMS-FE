@@ -180,7 +180,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                 <div className="absolute bottom-6 left-8 z-20">
                                     <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-zinc-950/80 backdrop-blur-md border border-amber-500/30 shadow-lg shadow-amber-500/10">
                                         <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Retail Sphere Node</span>
+                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Trung tâm Quản lý Hệ thống</span>
                                     </div>
                                 </div>
                             </div>
@@ -200,15 +200,15 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                                     orderStatus === 'DELIVERED' ? 'HOÀN THÀNH' :
                                                         orderStatus === 'REJECTED' ? 'TỪ CHỐI' : orderStatus}
                                     </Badge>
-                                    <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">Live Status</span>
+                                    <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">Trạng thái Hiện tại</span>
                                 </div>
                                 
-                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-4">
                                     <div className="w-14 h-14 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-amber-500 shadow-inner">
                                         <Package size={28} />
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Order Identifier</span>
+                                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Mã đơn hàng</span>
                                         <span className="text-2xl font-black text-white tracking-tighter">#{currentOrder.orderId}</span>
                                     </div>
                                 </div>
@@ -233,13 +233,13 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                         {/* Meta Specs */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
-                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">Store Source</span>
+                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">Cửa hàng đặt hàng</span>
                                 <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
                                     {currentOrder.storeName || `Shop #${currentOrder.storeId}`}
                                 </span>
                                 <div className="flex items-center gap-1.5 opacity-60">
                                     <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
-                                        Verified Terminal
+                                        Xác thực Terminal
                                     </span>
                                 </div>
                             </div>
@@ -256,7 +256,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                             </div>
                             <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec col-span-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">Requested Delivery Date</span>
+                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">Ngày giao hàng dự kiến</span>
                                     {canApprove && (orderStatus === 'SUBMITTED' || orderStatus === 'APPROVED' || orderStatus === 'ALLOCATED') && (
                                         <button 
                                             onClick={() => setIsRescheduleModalOpen(true)}
@@ -273,7 +273,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                 <div className="flex items-center gap-1.5 opacity-60">
                                     <Clock size={12} className="text-amber-500" />
                                     <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
-                                        Specified Arrival
+                                        Lịch trình vận chuyển dự kiến
                                     </span>
                                 </div>
                             </div>
@@ -359,7 +359,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                 </div>
                                 <div className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full">
                                     <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">
-                                        {currentOrder.orderDetails?.reduce((acc, curr) => acc + curr.quantity, 0) || 0} SẢN PHẨM
+                                        {currentOrder.orderDetails?.reduce((acc, curr) => acc + curr.quantity, 0) || 0} ĐƠN VỊ
                                     </span>
                                 </div>
                             </div>
@@ -369,15 +369,12 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                     <thead className="bg-zinc-950/40 border-b border-zinc-800/50">
                                         <tr>
                                             <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Sản phẩm</th>
-                                            <th className="px-6 py-5 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest whitespace-nowrap">Tồn kho bếp</th>
                                             <th className="px-6 py-5 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest whitespace-nowrap">Số lượng</th>
                                             <th className="px-8 py-5 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Thành tiền</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-zinc-800/30">
                                         {currentOrder.orderDetails?.map((item, idx) => {
-                                            const stockQty = item.kitchenStockQuantity || 0;
-                                            const isLowStock = stockQty < item.quantity;
                                             return (
                                                 <tr key={idx} className="group/row hover:bg-white/[0.02] transition-colors">
                                                     <td className="px-8 py-5">
@@ -389,15 +386,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-5 text-center">
-                                                        <div className={cn(
-                                                            "inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black border uppercase tracking-tighter",
-                                                            isLowStock ? "bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]" : "bg-zinc-800/50 text-zinc-500 border-zinc-700/50"
-                                                        )}>
-                                                            {stockQty}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-5 text-center">
-                                                        <span className="text-[14px] font-black text-zinc-300">{item.quantity}</span>
+                                                        <span className="text-[14px] font-black text-zinc-300">{item.quantity} đơn vị</span>
                                                     </td>
                                                     <td className="px-8 py-5 text-right">
                                                         <div className="flex flex-col items-end">
@@ -419,7 +408,7 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                         <Clock size={18} />
                                     </div>
                                     <div className="space-y-2">
-                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] block">Coordinator Notes Node</span>
+                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] block">Ghi chú điều phối chuyên biệt</span>
                                         <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">
                                             {currentOrder.note || "Hệ thống chưa ghi nhận ghi chú bổ sung cho đơn hàng này."}
                                         </p>

@@ -17,8 +17,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { productionPlanApi } from '../../services/productionPlan.api';
 import { allocationApi, type AllocationRow } from '../../services/allocationApi';
-import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
-import type { ProductionPlanSummaryResponse } from '../../types/productionPlan';
+import type { ProductionPlanSummaryResponse, ProductionPlanDetailResponse } from '../../types/productionPlan';
 import { cn } from '../../utils/classNames';
 
 export const AllocationMatrix = () => {
@@ -82,44 +81,58 @@ export const AllocationMatrix = () => {
             const selectedPlanData = [...unallocatedPlans, ...allocatedPlans].find(p => p.planId === planId);
             const isFinishedPlan = selectedPlanData?.status === 'FINISHED';
 
-            let currentStock: any[] = [];
             let previewRes: { rows: AllocationRow[]; rawOrders: any[] } = { rows: [], rawOrders: [] };
+            let planDetail: ProductionPlanDetailResponse | null = null;
 
             try {
-                // Fetch preview first
-                previewRes = await allocationApi.previewAllocation(planId);
-
-                // Try fetching stock in parallel (best effort)
-                try {
-                    const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(1);
-                    const warehouseId = warehouses.length > 0 ? warehouses[0].warehouseId : 1;
-                    const stockRes = await kitchenInventoryApi.getWarehouseStock(warehouseId);
-                    currentStock = stockRes.data || [];
-                } catch (stockError) {
-                    console.warn("Stock fetch failed (non-critical):", stockError);
-                }
-            } catch (previewError) {
-                console.warn("Preview fetch failed:", previewError);
-                throw previewError;
+                // Fetch preview and plan details in parallel
+                const [pRes, dRes] = await Promise.all([
+                    allocationApi.previewAllocation(planId),
+                    productionPlanApi.getProductionPlanDetail(planId)
+                ]);
+                previewRes = pRes;
+                planDetail = dRes;
+            } catch (apiError) {
+                console.warn("Fetch failed:", apiError);
+                throw apiError;
             }
 
             const { rows, rawOrders } = previewRes;
 
-            // Merge stock quantities into allocation rows
+            // Map production yield from plan detail into allocation rows
             const mergedRows = (rows || []).map(row => {
-                const stockItem = currentStock.find(s =>
-                    (s.itemId && s.itemId === row.productId) ||
-                    (s.itemName && s.itemName.toLowerCase() === row.productName.toLowerCase())
-                );
-                const inventoryQty = stockItem ? stockItem.quantity : 0;
+                const targetId = Number(row.productId);
+                
+                // Deep search for matching items in outputs or items arrays
+                const findInArray = (arr: any[]) => 
+                    arr?.find((x: any) => Number(x.productId || x.id || x.itemId) === targetId);
+
+                const outputItem = findInArray(planDetail?.outputs || []);
+                const detailItem = findInArray(planDetail?.items || []);
+                
+                // Calculate total requested as a baseline fallback
+                const totalRequestedInPlan = (row.allocations || []).reduce((sum, a) => sum + (a.requestedQuantity || 0), 0);
+                
+                // Priority: 
+                // 1. Actual produced yield (outputs)
+                // 2. Reported produced quantity (detailItem)
+                // 3. Planned quantity (detailItem)
+                // 4. Sum of requested quantities in this allocation preview
+                // 5. Preview's totalAvailable (from backend)
+                const planProducedQty = outputItem?.quantity 
+                    ?? detailItem?.producedQuantity 
+                    ?? detailItem?.plannedQuantity 
+                    ?? totalRequestedInPlan 
+                    ?? row.totalAvailable 
+                    ?? 0;
 
                 return {
                     ...row,
-                    totalAvailable: (row.totalAvailable || 0) + inventoryQty
+                    totalAvailable: planProducedQty
                 };
             });
 
-            // Check yield AFTER stock merge; skip check for FINISHED plans (already allocated)
+            // Check yield AFTER mapping
             const hasActualYield = isFinishedPlan || (mergedRows.length > 0 && mergedRows.some(r => r.totalAvailable > 0));
             setHasYield(hasActualYield);
 

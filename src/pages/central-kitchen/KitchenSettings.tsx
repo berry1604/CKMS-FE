@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { 
     Timer, 
@@ -21,7 +21,7 @@ export const KitchenSettings = () => {
     const [newCapacity, setNewCapacity] = useState<number>(0);
     const [initialCapacity, setInitialCapacity] = useState<number>(0);
 
-    const loadKitchenData = async () => {
+    const loadKitchenData = useCallback(async () => {
         setIsLoading(true);
         try {
             let targetKitchenId = user?.kitchenId;
@@ -53,7 +53,7 @@ export const KitchenSettings = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user?.kitchenId]);
 
     const getDiff = () => {
         const diff = newCapacity - initialCapacity;
@@ -68,7 +68,7 @@ export const KitchenSettings = () => {
 
     useEffect(() => {
         loadKitchenData();
-    }, [user?.kitchenId]);
+    }, [loadKitchenData]);
 
     const handleSave = async () => {
         if (!kitchenData) return;
@@ -116,7 +116,7 @@ export const KitchenSettings = () => {
                     </p>
                 </div>
 
-                {hasAuthority("MANAGER") || hasAuthority("ADMIN") ? (
+                {hasAuthority("MANAGER") ? (
                     <Button
                         className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2 rounded-2xl"
                         onClick={handleSave}
@@ -171,7 +171,7 @@ export const KitchenSettings = () => {
                                         type="number"
                                         value={newCapacity}
                                         onChange={(e) => setNewCapacity(Number(e.target.value))}
-                                        disabled={!hasAuthority("MANAGER") && !hasAuthority("ADMIN")}
+                                        disabled={!hasAuthority("MANAGER")}
                                         className="h-16 bg-zinc-950/50 border-white/5 focus:border-emerald-500/50 focus:ring-emerald-500/10 text-zinc-100 rounded-[24px] transition-all duration-300 font-mono text-xl font-bold pl-8 pr-32"
                                     />
                                     <div className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-600 font-black text-[10px] uppercase tracking-widest pointer-events-none">

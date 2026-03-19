@@ -182,6 +182,7 @@ export const navigation: NavigationItem[] = [
                 href: '/kitchen/settings',
                 icon: Settings,
                 permission: PERMISSIONS.PRODUCTION_SCHEDULE,
+                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') !== 'MANAGER',
             },
         ]
     },
