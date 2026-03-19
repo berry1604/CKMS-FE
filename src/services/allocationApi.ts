@@ -10,6 +10,7 @@ export interface AllocationCell {
     requestedQuantity: number;
     allocatedQuantity: number;
     maxAvailable: number; // Based on production output
+    deliveryDate?: string;
 }
 
 export interface AllocationRow {
@@ -42,7 +43,7 @@ export const allocationApi = {
     /**
      * Preview allocation matrix for a specific production plan.
      */
-    previewAllocation: async (productionPlanId: number): Promise<{ rows: AllocationRow[], materials: any[] }> => {
+    previewAllocation: async (productionPlanId: number): Promise<{ rows: AllocationRow[], materials: any[], rawOrders: any[] }> => {
         try {
             const response = await axiosClient.get(`/allocations/preview/${productionPlanId}`);
             const resData = response.data as any;
@@ -82,11 +83,57 @@ export const allocationApi = {
             }
 
             if (!rawArray || !Array.isArray(rawArray)) {
+                // Check if the new structure `{ products: [...] }` is present
+                if (resData?.products && Array.isArray(resData.products)) {
+                    const products = resData.products;
+                    const rows: AllocationRow[] = products.map((p: any) => ({
+                        productId: p.productId,
+                        productName: p.productName || `Product ${p.productId}`,
+                        totalAvailable: p.availableQuantity || 0,
+                        allocations: (p.allocations || []).map((a: any) => ({
+                            storeId: a.storeId,
+                            storeName: a.storeName || `Chi nhánh ${a.storeId}`,
+                            requestedQuantity: a.requested || 0,
+                            allocatedQuantity: a.allocated || 0,
+                            maxAvailable: p.availableQuantity || 0,
+                            deliveryDate: p.deliveryDate || a.deliveryDate
+                        }))
+                    }));
+
+                    // Reconstruct rawOrders for summary table
+                    const orderMap = new Map<number, any>();
+                    products.forEach((p: any) => {
+                        (p.allocations || []).forEach((a: any) => {
+                            if (!orderMap.has(a.storeId)) {
+                                orderMap.set(a.storeId, {
+                                    orderId: a.orderId || a.storeId,
+                                    storeId: a.storeId,
+                                    storeName: a.storeName || `Chi nhánh ${a.storeId}`,
+                                    deliveryDate: a.deliveryDate || p.deliveryDate, 
+                                    items: []
+                                });
+                            }
+                            orderMap.get(a.storeId).items.push({
+                                productId: p.productId,
+                                productName: p.productName,
+                                requestedQuantity: a.requested || 0,
+                                allocatedQuantity: a.allocated || 0
+                            });
+                        });
+                    });
+
+                    return {
+                        rows,
+                        materials,
+                        rawOrders: Array.from(orderMap.values())
+                    };
+                }
+
                 console.error('Unknown allocation structure:', resData);
-                return { rows: [], materials };
+                return { rows: [], materials, rawOrders: [] };
             }
 
-            if (rawArray.length === 0) return { rows: [], materials };
+            if (rawArray.length === 0) return { rows: [], materials, rawOrders: [] };
 
             // DETECT & TRANSFORM: 
             // If the array contains objects like {"orderId":3,"storeName":"CN1","items":[]}
@@ -117,7 +164,8 @@ export const allocationApi = {
                             storeName: order.storeName || `Order #${order.orderId}`,
                             requestedQuantity: requested,
                             allocatedQuantity: allocated,
-                            maxAvailable: 999999
+                            maxAvailable: 999999,
+                            deliveryDate: order.deliveryDate || order.orderDate
                         });
 
                         // Use real stock from backend (actualProducedQty), NOT sum of proposedQty
@@ -128,10 +176,10 @@ export const allocationApi = {
                     });
                 });
 
-                return { rows: Array.from(productMap.values()), materials };
+                return { rows: Array.from(productMap.values()), materials, rawOrders: rawArray };
             }
 
-            return { rows: rawArray as AllocationRow[], materials };
+            return { rows: rawArray as AllocationRow[], materials, rawOrders: rawArray };
         } catch (error: any) {
             console.error('Failed to preview allocation', error);
             throw error;

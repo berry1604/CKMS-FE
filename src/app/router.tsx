@@ -184,7 +184,7 @@ export const router = createBrowserRouter([
                     // Billing Module (Admin, Manager)
                     {
                         path: 'billing',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'STORE_STAFF']} />,
                         children: [
                             { index: true, element: <BillingList /> },
                             { path: 'invoices', element: <ComingSoon /> }

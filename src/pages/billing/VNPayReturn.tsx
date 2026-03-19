@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { billingApi } from "../../services/billing.api";
+import { useAuth } from "../../hooks/useAuth";
 
 /**
  * VNPayReturn page – handles the browser redirect from VNPay after payment.
@@ -17,6 +18,8 @@ export const VNPayReturn = () => {
     const [amount, setAmount] = useState<string>("");
     const [bankCode, setBankCode] = useState<string>("");
     const [transactionNo, setTransactionNo] = useState<string>("");
+    const { user, hasAuthority } = useAuth();
+    const isStaff = hasAuthority("STORE_STAFF");
 
     useEffect(() => {
         const responseCode = searchParams.get("vnp_ResponseCode");
@@ -40,7 +43,7 @@ export const VNPayReturn = () => {
                 paramsToVerify[key] = val;
             });
 
-            billingApi.verifyVnPayReturn(paramsToVerify)
+            billingApi.verifyVnPayReturn(paramsToVerify, isStaff ? user?.storeId : undefined)
                 .then(() => console.log("Backend verified VNPay return successfully"))
                 .catch((err: any) => console.error("VNPay verfication failed", err));
         }

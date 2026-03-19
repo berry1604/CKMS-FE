@@ -324,6 +324,7 @@ export const MainLayout: React.FC = () => {
                                                 key={item.href}
                                                 id={`nav-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                                                 to={item.href}
+                                                end={true}
                                                 title={isCollapsed ? item.name : undefined}
                                                 className={({ isActive }) =>
                                                     cn(
@@ -338,6 +339,7 @@ export const MainLayout: React.FC = () => {
                                                 {/* Active Background Glow */}
                                                 <NavLink
                                                     to={item.href}
+                                                    end={true}
                                                     className={({ isActive }) =>
                                                         isActive
                                                             ? "absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-100 transition-opacity duration-700"
