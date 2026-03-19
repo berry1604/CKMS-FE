@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Truck, Filter, Eye, Plus, Search, Calendar,
     MapPin, User, Package, Clock,
@@ -19,6 +19,7 @@ type FilterStatus = 'all' | ShipmentStatus;
 
 export const ShipmentList = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [shipments, setShipments] = useState<ShipmentResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedShipment, setSelectedShipment] = useState<ShipmentResponse | null>(null);
@@ -49,6 +50,16 @@ export const ShipmentList = () => {
     useEffect(() => {
         fetchShipments();
     }, [fetchShipments]);
+
+    // Handle auto-create from Allocation Matrix
+    useEffect(() => {
+        if (location.state?.autoCreate) {
+            navigate('/shipment/create', { 
+                state: location.state,
+                replace: true // Replace current entry so back button works correctly
+            });
+        }
+    }, [location.state, navigate]);
 
     useEffect(() => {
         setPage(0);

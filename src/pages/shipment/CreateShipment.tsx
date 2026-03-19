@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Truck, ArrowLeft, Save, CheckCircle2,
     Calendar, MapPin, ClipboardList, Info as InfoIcon,
@@ -20,6 +20,7 @@ import { cn } from '../../utils/classNames';
 
 export const CreateShipment = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Data States
     const [availablePlans, setAvailablePlans] = useState<ProductionPlanSummaryResponse[]>([]);
@@ -43,6 +44,30 @@ export const CreateShipment = () => {
     useEffect(() => {
         fetchInitialData();
     }, []);
+
+    // Handle auto-fill from Allocation Matrix
+    useEffect(() => {
+        const state = location.state as any;
+        if (!state?.planId || form.productionPlanId) return;
+
+        const updates: Partial<typeof form> = {
+            productionPlanId: state.planId.toString()
+        };
+
+        // Pre-fill drop points from allocated storeIds
+        if (Array.isArray(state.storeIds) && state.storeIds.length > 0) {
+            updates.dropPoints = state.storeIds.map((storeId: number) => ({
+                id: Date.now() + storeId,
+                storeId: storeId.toString(),
+                storeOrderIds: [],
+                remarks: ''
+            }));
+        }
+
+        setForm(prev => ({ ...prev, ...updates }));
+        toast.success(`Đã tự động chọn Kế hoạch: ${state.planName || state.planId}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.state]);
 
     const fetchInitialData = async () => {
         setIsLoading(true);
