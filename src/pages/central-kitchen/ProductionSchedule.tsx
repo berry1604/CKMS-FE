@@ -22,9 +22,9 @@ import {
   Printer,
   ClipboardList,
   MapPin,
-  Eye,
   Package,
   AlertCircle,
+  Eye,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -872,13 +872,13 @@ export const ProductionSchedule = () => {
             hasAuthority("COORDINATOR") ||
             hasAuthority("MANAGER") ||
             hasAuthority("ADMIN")) && (
-              <Button
-                className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2 rounded-2xl"
-                onClick={handleCreateTask}
-              >
-                <Plus size={18} strokeWidth={3} /> Tạo mẻ mới
-              </Button>
-            )}
+            <Button
+              className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2 rounded-2xl"
+              onClick={handleCreateTask}
+            >
+              <Plus size={18} strokeWidth={3} /> Tạo mẻ mới
+            </Button>
+          )}
         </div>
       </div>
 

@@ -22,7 +22,8 @@ import {
     Database,
     Network,
     LibraryBig,
-    Wheat
+    Wheat,
+    Settings
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -110,6 +111,7 @@ export const navigation: NavigationItem[] = [
                 href: '/kitchen',
                 icon: LayoutDashboard,
                 permission: PERMISSIONS.PRODUCTION_SCHEDULE,
+                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') === 'MANAGER',
             },
             {
                 name: 'Phân bổ hàng',
@@ -129,7 +131,7 @@ export const navigation: NavigationItem[] = [
     // SECTION: MANAGER
     {
         category: 'Workspace: Quản lý',
-        headerPermission: [PERMISSIONS.CATEGORY_MANAGEMENT, PERMISSIONS.BILLING_MANAGEMENT, PERMISSIONS.REVENUE_REPORTS],
+        headerPermission: [PERMISSIONS.CATEGORY_MANAGEMENT, PERMISSIONS.BILLING_MANAGEMENT, PERMISSIONS.REVENUE_REPORTS, PERMISSIONS.PRODUCTION_SCHEDULE],
         items: [
             {
                 name: 'Kho nguyên liệu',
@@ -174,6 +176,12 @@ export const navigation: NavigationItem[] = [
                 href: '/reports',
                 icon: BarChart,
                 permission: PERMISSIONS.REVENUE_REPORTS,
+            },
+            {
+                name: 'Công suất Bếp',
+                href: '/kitchen/settings',
+                icon: Settings,
+                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
             },
         ]
     },

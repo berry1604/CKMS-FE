@@ -1,4 +1,4 @@
-export type ProductionPlanStatus = 'READY_TO_PRODUCE' | 'PRODUCING' | 'COMPLETED' | 'CANCELLED' | 'PLANNED' | 'IN_PRODUCTION' | 'PRODUCED' | 'FINISHED' | 'APPROVED';
+export type ProductionPlanStatus = 'DRAFT' | 'READY_TO_PRODUCE' | 'PRODUCING' | 'COMPLETED' | 'CANCELLED' | 'PLANNED' | 'IN_PRODUCTION' | 'PRODUCED' | 'FINISHED' | 'APPROVED';
 
 export interface DispatchSuggestionItem {
     productName: string;
