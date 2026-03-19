@@ -11,6 +11,7 @@ import type {
   BillingStatementDetailResponse,
   PaymentStatementRequest,
 } from "../../types/billing";
+import { useAuth } from "../../hooks/useAuth";
 
 interface BillingDetailDrawerProps {
   statementId: number | null;
@@ -28,6 +29,8 @@ export const BillingDetailDrawer = ({
   const [detail, setDetail] = useState<BillingStatementDetailResponse | null>(
     null,
   );
+  const { hasAuthority, user } = useAuth();
+  const isStaff = hasAuthority("STORE_STAFF");
   const [isLoading, setIsLoading] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [showPayForm, setShowPayForm] = useState(false);
@@ -43,7 +46,7 @@ export const BillingDetailDrawer = ({
     if (!statementId) return;
     setIsLoading(true);
     try {
-      const data = await billingApi.getStatementDetail(statementId);
+      const data = await billingApi.getStatementDetail(statementId, isStaff ? user?.storeId : undefined);
       setDetail(data);
     } catch (error) {
       console.error("Failed to fetch statement detail:", error);
@@ -87,7 +90,7 @@ export const BillingDetailDrawer = ({
 
     setIsPaying(true);
     try {
-      const response = await billingApi.payStatement(statementId, payForm);
+      const response = await billingApi.payStatement(statementId, payForm, isStaff ? user?.storeId : undefined);
       toast.success("Payment processed successfully!");
       
       // Update local state immediately
@@ -140,7 +143,8 @@ export const BillingDetailDrawer = ({
       <div className="flex gap-2">
         {detail &&
           detail.status?.toUpperCase() !== "PAID" &&
-          detail.status?.toUpperCase() !== "CANCELLED" && (
+          detail.status?.toUpperCase() !== "CANCELLED" &&
+          isStaff && (
             <Button
               onClick={() => setShowPayForm(true)}
               className="bg-green-600 hover:bg-green-700 text-white"
