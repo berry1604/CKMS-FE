@@ -47,24 +47,24 @@ export const billingApi = {
   /**
    * GET /api/v1/billing-statements/{id}
    */
-  getStatementDetail: async (id: number): Promise<BillingStatementDetailResponse> => {
-    const res = await axiosClient.get<ApiResponse<BillingStatementDetailResponse>>(`${BASE_URL}/${id}`);
+  getStatementDetail: async (id: number, storeId?: number): Promise<BillingStatementDetailResponse> => {
+    const res = await axiosClient.get<ApiResponse<BillingStatementDetailResponse>>(`${BASE_URL}/${id}`, { params: { storeId } });
     return res.data.data;
   },
 
   /**
    * POST /api/v1/billing-statements/{id}/vnpay
    */
-  createVnPayUrl: async (id: number): Promise<string> => {
-    const res = await axiosClient.post<ApiResponse<string>>(`${BASE_URL}/${id}/vnpay`);
+  createVnPayUrl: async (id: number, storeId?: number): Promise<string> => {
+    const res = await axiosClient.post<ApiResponse<string>>(`${BASE_URL}/${id}/vnpay`, null, { params: { storeId } });
     return res.data.data;
   },
 
   /**
    * GET /api/v1/billing-statements/vnpay-return
    */
-  verifyVnPayReturn: async (params: any): Promise<any> => {
-    const res = await axiosClient.get<ApiResponse<any>>(`${BASE_URL}/vnpay-return`, { params });
+  verifyVnPayReturn: async (params: any, storeId?: number): Promise<any> => {
+    const res = await axiosClient.get<ApiResponse<any>>(`${BASE_URL}/vnpay-return`, { params: { ...params, storeId } });
     return res.data.data;
   },
 
@@ -103,10 +103,12 @@ export const billingApi = {
   payStatement: async (
     id: number,
     request: PaymentStatementRequest,
+    storeId?: number,
   ): Promise<PaymentStatementResponse> => {
     const res = await axiosClient.patch<ApiResponse<PaymentStatementResponse>>(
       `${BASE_URL}/${id}/pay`,
-      request
+      request,
+      { params: { storeId } }
     );
     return res.data.data;
   },

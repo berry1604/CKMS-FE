@@ -9,7 +9,8 @@ import {
   CheckCircle, 
   Package, 
   Store,
-  Timer
+  Timer,
+  ClipboardList
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
@@ -28,8 +29,11 @@ export const AllocationMatrix = () => {
     const [isLoadingPlans, setIsLoadingPlans] = useState(false);
 
     const [matrix, setMatrix] = useState<AllocationRow[]>([]);
+    const [orders, setOrders] = useState<any[]>([]);
+    const [hasYield, setHasYield] = useState<boolean | null>(null);
     const [isLoadingMatrix, setIsLoadingMatrix] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     useEffect(() => {
         fetchPlans();
@@ -38,15 +42,17 @@ export const AllocationMatrix = () => {
     useEffect(() => {
         if (selectedPlanId) {
             fetchAllocationMatrix(Number(selectedPlanId));
+            setIsSuccess(false);
         } else {
             setMatrix([]);
+            setOrders([]);
+            setHasYield(null);
         }
     }, [selectedPlanId]);
 
     const fetchPlans = async () => {
         setIsLoadingPlans(true);
         try {
-            // Fetch completed or finished plans for allocation
             const res = await productionPlanApi.getAllProductionPlans({ size: 50 });
             const allPlans = res.content || [];
             
@@ -74,29 +80,30 @@ export const AllocationMatrix = () => {
         setIsLoadingMatrix(true);
         try {
             const selectedPlanData = [...unallocatedPlans, ...allocatedPlans].find(p => p.planId === planId);
-            const kitchenId = selectedPlanData?.kitchenId || 1;
+            const isFinishedPlan = selectedPlanData?.status === 'FINISHED';
 
             let currentStock: any[] = [];
-            let previewRes: { rows: AllocationRow[] } = { rows: [] };
+            let previewRes: { rows: AllocationRow[]; rawOrders: any[] } = { rows: [], rawOrders: [] };
 
             try {
-                // Try fetching both stock and preview in parallel
-                const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(kitchenId);
-                const warehouseId = warehouses.length > 0 ? warehouses[0].warehouseId : 1;
-
-                const [preview, stockRes] = await Promise.all([
-                    allocationApi.previewAllocation(planId),
-                    kitchenInventoryApi.getWarehouseStock(warehouseId)
-                ]);
-                previewRes = preview;
-                currentStock = stockRes.data || [];
-            } catch (innerError) {
-                console.warn("Stock/Warehouse fetch failed, falling back to basic preview:", innerError);
-                // Fallback: Just fetch the preview
+                // Fetch preview first
                 previewRes = await allocationApi.previewAllocation(planId);
+
+                // Try fetching stock in parallel (best effort)
+                try {
+                    const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(1);
+                    const warehouseId = warehouses.length > 0 ? warehouses[0].warehouseId : 1;
+                    const stockRes = await kitchenInventoryApi.getWarehouseStock(warehouseId);
+                    currentStock = stockRes.data || [];
+                } catch (stockError) {
+                    console.warn("Stock fetch failed (non-critical):", stockError);
+                }
+            } catch (previewError) {
+                console.warn("Preview fetch failed:", previewError);
+                throw previewError;
             }
 
-            const { rows } = previewRes;
+            const { rows, rawOrders } = previewRes;
 
             // Merge stock quantities into allocation rows
             const mergedRows = (rows || []).map(row => {
@@ -104,7 +111,6 @@ export const AllocationMatrix = () => {
                     (s.itemId && s.itemId === row.productId) ||
                     (s.itemName && s.itemName.toLowerCase() === row.productName.toLowerCase())
                 );
-
                 const inventoryQty = stockItem ? stockItem.quantity : 0;
 
                 return {
@@ -113,11 +119,23 @@ export const AllocationMatrix = () => {
                 };
             });
 
+            // Check yield AFTER stock merge; skip check for FINISHED plans (already allocated)
+            const hasActualYield = isFinishedPlan || (mergedRows.length > 0 && mergedRows.some(r => r.totalAvailable > 0));
+            setHasYield(hasActualYield);
+
+            if (!hasActualYield) {
+                setMatrix([]);
+                setOrders([]);
+                return;
+            }
+
+            setOrders(rawOrders || []);
             setMatrix(mergedRows);
         } catch (error) {
             console.error("Critical Allocation preview error:", error);
             toast.error('Không thể phân bổ dữ liệu plan này');
             setMatrix([]);
+            setOrders([]);
         } finally {
             setIsLoadingMatrix(false);
         }
@@ -129,7 +147,6 @@ export const AllocationMatrix = () => {
 
         setMatrix(prev => prev.map(row => {
             if (row.productId === productId) {
-                // Verify limits
                 const currentSum = (row.allocations || []).reduce((sum, a) => sum + (a.storeId === storeId ? 0 : a.allocatedQuantity), 0);
                 const safeQty = Math.max(0, Math.min(newQty, (row.totalAvailable || 0) - currentSum));
 
@@ -162,8 +179,15 @@ export const AllocationMatrix = () => {
         try {
             await allocationApi.confirmAllocation(payload);
             toast.success('Xác nhận phân bổ kho thành công!');
-            fetchPlans(); // Refresh the list to move plan to "Allocated" section
-            fetchAllocationMatrix(Number(selectedPlanId));
+            setIsSuccess(true);
+
+            setTimeout(() => {
+                setIsSuccess(false);
+                fetchPlans();
+                const nextPlan = [...unallocatedPlans].find(p => p.planId !== selectedPlanId);
+                if (nextPlan) setSelectedPlanId(nextPlan.planId);
+                else setSelectedPlanId('');
+            }, 2000);
         } catch (error: any) {
             if (error.response?.status === 404) {
                 toast.success('Xác nhận phân bổ kho thành công!');
@@ -184,7 +208,11 @@ export const AllocationMatrix = () => {
     const storeColumns = Array.from(new Set((matrix || []).flatMap(r => (r.allocations || []).map(a => a.storeId))))
         .map(id => {
             const a = (matrix || []).flatMap(r => r.allocations || []).find(x => x.storeId === id);
-            return { storeId: id, storeName: a?.storeName || `Cửa hàng ${id}` };
+            return { 
+                storeId: id, 
+                storeName: a?.storeName || `Cửa hàng ${id}`,
+                deliveryDate: a?.deliveryDate
+            };
         });
 
     return (
@@ -213,10 +241,22 @@ export const AllocationMatrix = () => {
                     {selectedPlan?.status === 'PRODUCED' && (
                         <Button
                             onClick={handleSaveAllocation}
-                            disabled={matrix.length === 0 || isSaving}
-                            className="bg-amber-600 hover:bg-amber-500 text-black font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] border-0 flex items-center gap-2 transition-all active:scale-95"
+                            disabled={
+                                matrix.length === 0 || 
+                                isSaving || 
+                                isSuccess || 
+                                hasYield === false ||
+                                matrix.some(row => (row.allocations || []).reduce((s, a) => s + a.allocatedQuantity, 0) > row.totalAvailable)
+                            }
+                            className={cn(
+                                "font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-xl border-0 flex items-center gap-2 transition-all active:scale-95",
+                                isSuccess 
+                                    ? "bg-emerald-600/20 text-emerald-500 border border-emerald-500/30 cursor-default" 
+                                    : "bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/20",
+                                matrix.some(row => (row.allocations || []).reduce((s, a) => s + a.allocatedQuantity, 0) > row.totalAvailable) && "opacity-50 grayscale cursor-not-allowed"
+                            )}
                         >
-                            {isSaving ? 'Đang lưu...' : <><Save size={18} /> Chốt Phân Bổ</>}
+                            {isSaving ? 'Đang lưu...' : isSuccess ? <><CheckCircle size={18} /> Đã phân bổ</> : <><Save size={18} /> Chốt Phân Bổ</>}
                         </Button>
                     )}
                 </div>
@@ -350,6 +390,9 @@ export const AllocationMatrix = () => {
                                                         <Store size={14} />
                                                     </div>
                                                     <span className="text-xs font-black text-white uppercase tracking-tighter text-center">{col.storeName}</span>
+                                                    {col.deliveryDate && (
+                                                        <span className="text-[10px] font-bold text-amber-500 uppercase tracking-tighter mt-1">Ngày nhận: {new Date(col.deliveryDate).toLocaleDateString('vi-VN')}</span>
+                                                    )}
                                                     <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mt-0.5 opacity-60">ID #{col.storeId}</span>
                                                 </div>
                                             </th>
@@ -366,6 +409,23 @@ export const AllocationMatrix = () => {
                                                         <div className="absolute inset-0 border-3 border-t-amber-500 rounded-full animate-spin"></div>
                                                     </div>
                                                     <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Đang tải dữ liệu phân bổ...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : hasYield === false ? (
+                                        <tr>
+                                            <td colSpan={storeColumns.length + 1} className="px-10 py-40 text-center relative overflow-hidden">
+                                                <div className="absolute inset-0 bg-red-500/5 backdrop-blur-3xl"></div>
+                                                <div className="flex flex-col items-center gap-6 max-w-lg mx-auto relative z-10">
+                                                    <div className="w-24 h-24 rounded-[32px] bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 shadow-2xl shadow-red-500/20 animate-pulse">
+                                                        <AlertCircle size={48} />
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <p className="text-2xl font-black text-red-400 uppercase tracking-tighter">Chưa có sản lượng sản xuất</p>
+                                                        <p className="text-sm text-zinc-400 font-bold leading-relaxed px-10">
+                                                            Lô sản xuất này hiện chưa có dữ liệu đầu ra (yield). KHÔNG cho phép phân bổ vật tư khi Bếp Trung Tâm chưa ghi nhận sản lượng hoàn thành.
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
@@ -527,6 +587,85 @@ export const AllocationMatrix = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Allocation Summary Table (Order-based) - from develop */}
+            {matrix.length > 0 && orders.length > 0 && (
+                <div className="bg-zinc-950/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
+                    <div className="p-10 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-amber-500 border border-zinc-800">
+                            <ClipboardList size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-white uppercase tracking-tighter">Chi tiết Đơn hàng & Phân bổ</h2>
+                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-1">Danh sách phân bổ cụ thể theo từng đơn hàng của chi nhánh</p>
+                        </div>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-zinc-900/80 text-[10px] uppercase font-black text-zinc-600 tracking-widest border-b border-zinc-800">
+                                    <th className="px-10 py-5">Cửa hàng & Đơn hàng</th>
+                                    <th className="px-8 py-5">Sản phẩm yêu cầu</th>
+                                    <th className="px-8 py-5 text-center">Tổng SL Phân bổ</th>
+                                    <th className="px-10 py-5 text-right">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-800/30">
+                                {orders.map((order, idx) => {
+                                    const totalAllocated = (order.items || []).reduce((sum: number, item: any) => sum + (item.proposedQty ?? item.allocatedQuantity ?? 0), 0);
+                                    
+                                    return (
+                                        <tr key={order.orderId || idx} className="hover:bg-zinc-800/20 transition-all group">
+                                            <td className="px-10 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-600 group-hover:text-amber-500 transition-colors">
+                                                        <Store size={18} />
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-black text-zinc-100 uppercase tracking-tight">{order.storeName || `Cửa hàng #${order.storeId}`}</span>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-tighter">ID: #{order.orderId}</span>
+                                                            {order.deliveryDate && (
+                                                                <>
+                                                                    <div className="w-[1px] h-2 bg-zinc-800"></div>
+                                                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-tighter">Ngày nhận hàng: {new Date(order.deliveryDate).toLocaleDateString('vi-VN')}</span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="flex flex-wrap gap-2 max-w-md">
+                                                    {(order.items || []).map((item: any, i: number) => {
+                                                        const qty = item.proposedQty ?? item.allocatedQuantity ?? 0;
+                                                        if (qty === 0) return null;
+                                                        return (
+                                                            <div key={i} className="px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-2">
+                                                                <span className="text-[10px] font-bold text-zinc-300">{item.productName}</span>
+                                                                <Badge variant="orange" className="text-[9px] px-1.5 h-4 border-0">
+                                                                    x{qty}/{item.requestedQty ?? item.requestedQuantity ?? 0}
+                                                                </Badge>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6 text-center">
+                                                <span className="text-xl font-black font-mono text-zinc-100">{totalAllocated}</span>
+                                            </td>
+                                            <td className="px-10 py-6 text-right">
+                                                <Badge variant="success" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black px-4">READY</Badge>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

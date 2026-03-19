@@ -158,9 +158,12 @@ export const OrderList = () => {
             )
         },
         {
-            header: 'Số món',
+            header: 'Tổng số lượng',
             accessorKey: 'orderDetails',
-            cell: (order) => <span className="text-zinc-500 text-sm font-medium">{order.orderDetails?.length || 0} món</span>
+            cell: (order) => {
+                const totalQty = order.orderDetails?.reduce((acc, curr) => acc + curr.quantity, 0) || 0;
+                return <span className="text-zinc-500 text-sm font-medium">{totalQty} sản phẩm</span>;
+            }
         },
         {
             header: 'Tổng tiền',

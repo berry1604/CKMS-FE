@@ -52,11 +52,18 @@ export interface ProductionPlanDetailItem {
     productId: number;
     productName: string;
     plannedQuantity: number;
+    producedQuantity?: number;
     unit?: string;
+}
+
+export interface ProductionPlanOutputItem {
+    productId: number;
+    productName: string;
+    quantity: number;
 }
 
 export interface ProductionPlanDetailResponse extends ProductionPlanSummaryResponse {
     materials: MaterialRequirementResponse[];
     items?: ProductionPlanDetailItem[];
+    outputs?: ProductionPlanOutputItem[];
 }
-

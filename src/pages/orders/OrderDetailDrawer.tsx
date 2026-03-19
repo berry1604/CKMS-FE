@@ -358,7 +358,9 @@ export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCa
                                     </h4>
                                 </div>
                                 <div className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full">
-                                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{currentOrder.orderDetails?.length || 0} ITEMS</span>
+                                    <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">
+                                        {currentOrder.orderDetails?.reduce((acc, curr) => acc + curr.quantity, 0) || 0} SẢN PHẨM
+                                    </span>
                                 </div>
                             </div>
 

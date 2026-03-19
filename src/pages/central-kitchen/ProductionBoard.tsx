@@ -6,7 +6,6 @@ import {
   AlertCircle,
   CheckCircle2,
   ClipboardList,
-  Package,
   Flame,
   ChefHat,
   Sparkles,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { productionPlanApi } from "../../services/productionPlan.api";
+import { allocationApi } from "../../services/allocationApi";
 import type {
   ProductionPlanSummaryResponse,
   ProductionPlanDetailResponse,
@@ -35,9 +35,9 @@ export const ProductionBoard = () => {
   >();
   const [planDetailForYield, setPlanDetailForYield] =
     useState<ProductionPlanDetailResponse | null>(null);
+  const [plannedProducts, setPlannedProducts] = useState<{ productId: number, productName: string, plannedQuantity: number, unit?: string }[]>([]);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [manualProductId, setManualProductId] = useState<number>(1);
-  const [manualActualQty, setManualActualQty] = useState<number>(100);
+  const [yieldInputs, setYieldInputs] = useState<{ productId: number, actualQty: number }[]>([]);
 
   const loadPlans = async () => {
     setIsLoading(true);
@@ -77,9 +77,33 @@ export const ProductionBoard = () => {
     setShowYieldModal(true);
     setIsDetailLoading(true);
     setPlanDetailForYield(null);
+    setPlannedProducts([]);
+    setYieldInputs([]);
     try {
+      // 1. Fetch details for metadata (name, batchCode)
       const detail = await productionPlanApi.getProductionPlanDetail(id);
       setPlanDetailForYield(detail);
+      
+      // 2. Fetch preview allocation to get the ACTUAL products required for this plan
+      // since the backend's getProductionPlanDetail does not return items or outputs.
+      const preview = await allocationApi.previewAllocation(id);
+      
+      const products = preview.rows.map(r => ({
+          productId: r.productId,
+          productName: r.productName,
+          // Extract the total requested quantity from the nested allocations
+          plannedQuantity: r.allocations?.reduce((sum, a) => sum + (a.requestedQuantity || 0), 0) || 0,
+          unit: 'SL'
+      }));
+      setPlannedProducts(products);
+      
+      // Initialize inputs from planned items
+      if (products.length > 0) {
+        setYieldInputs(products.map(item => ({
+          productId: item.productId,
+          actualQty: item.plannedQuantity || 0
+        })));
+      }
     } catch (error) {
       toast.error("Lỗi khi tải dữ liệu chi tiết báo cáo năng suất");
       setShowYieldModal(false);
@@ -92,15 +116,8 @@ export const ProductionBoard = () => {
     if (!finishingPlanId) return;
     setIsDetailLoading(true);
     try {
-      const outputs = [
-        {
-          productId: manualProductId,
-          actualQty: manualActualQty,
-        },
-      ];
-
       const yieldData = {
-        outputs,
+        outputs: yieldInputs,
         requestVersion: finishingPlanVersion,
       };
 
@@ -450,57 +467,38 @@ export const ProductionBoard = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center px-1">
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="flex justify-between items-center px-1 sticky top-0 bg-[#0f0f0f] z-10 py-1">
                       <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
                         Sản lượng thực tế
                       </h4>
                       <Badge variant="info" className="text-[8px] border-0">
-                        Thủ công
+                        Hệ thống đề xuất
                       </Badge>
                     </div>
-                    <div className="border border-white/[0.06] rounded-2xl bg-black/40 p-5 space-y-5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-gray-600">
-                            <Package size={16} />
-                          </div>
-                          <span className="text-[12px] font-medium text-gray-400">
-                            ID Sản phẩm
-                          </span>
-                        </div>
-                        <input
-                          type="number"
-                          className="w-24 h-11 bg-white/[0.04] border border-white/[0.08] rounded-xl text-center text-[14px] font-bold text-amber-400 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 outline-none transition-all hover:bg-white/[0.06]"
-                          value={manualProductId}
-                          onChange={(e) =>
-                            setManualProductId(Number(e.target.value))
-                          }
-                          min={1}
-                        />
-                      </div>
-
-                      <div className="h-px bg-white/[0.04]" />
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] font-medium text-gray-400 pl-12">
-                          Số lượng
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            className="w-24 h-11 bg-white/[0.04] border border-white/[0.08] rounded-xl text-center text-[14px] font-bold text-amber-400 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 outline-none transition-all hover:bg-white/[0.06]"
-                            value={manualActualQty}
-                            onChange={(e) =>
-                              setManualActualQty(Number(e.target.value))
-                            }
-                            min={0}
-                          />
-                          <span className="text-[10px] font-bold text-gray-600 uppercase">
-                            Unit
-                          </span>
-                        </div>
-                      </div>
+                    
+                    <div className="space-y-2">
+                        {plannedProducts.map((item) => (
+                           <div key={item.productId} className="border border-white/[0.06] rounded-2xl bg-black/40 p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                             <div className="flex flex-col gap-1">
+                               <span className="text-[13px] font-bold text-gray-300">{item.productName}</span>
+                               <span className="text-[10px] font-medium text-gray-500">Mục tiêu ban đầu: <strong className="text-gray-400">{item.plannedQuantity} {item.unit || 'SL'}</strong></span>
+                             </div>
+                             <div className="flex items-center gap-2">
+                               <input
+                                  type="number"
+                                  className="w-20 h-10 bg-white/[0.04] border border-white/[0.08] rounded-xl text-center text-[13px] font-bold text-amber-400 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 outline-none transition-all hover:bg-white/[0.06]"
+                                  value={yieldInputs.find(y => y.productId === item.productId)?.actualQty ?? 0}
+                                  onChange={(e) => {
+                                      const val = Number(e.target.value);
+                                      setYieldInputs(prev => prev.map(y => y.productId === item.productId ? { ...y, actualQty: val } : y));
+                                  }}
+                                  min={0}
+                                />
+                                <span className="text-[10px] font-bold text-gray-600 uppercase">{item.unit || 'SL'}</span>
+                             </div>
+                           </div>
+                        ))}
                     </div>
                   </div>
 
