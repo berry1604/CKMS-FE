@@ -34,6 +34,8 @@ import { Drawer } from "../../components/ui/Drawer";
 import { ConfirmationModal } from "../../components/ui/ConfirmationModal";
 import { productionPlanApi } from "../../services/productionPlan.api";
 import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
+import { materialApi } from "../../services/material.api";
+import { productApi } from "../../services/product.api";
 import type {
   ProductionPlanSummaryResponse,
   ProductionPlanDetailResponse,
@@ -80,13 +82,41 @@ export const ProductionSchedule = () => {
     version?: number;
   } | null>(null);
 
+  // Map to store materialId -> unit from master data
+  const [materialUnitsMap, setMaterialUnitsMap] = useState<Map<number, string>>(new Map());
+
   const handleCreateTask = () => {
     navigate("/kitchen/create-plan");
   };
 
   useEffect(() => {
     loadPlans();
+    fetchUnits();
   }, []);
+
+  const fetchUnits = async () => {
+    try {
+      const [materials, productsRes] = await Promise.all([
+        materialApi.getAll().catch(() => []),
+        productApi.getProducts({ size: 1000 }).catch(() => ({ data: { content: [] } }))
+      ]);
+
+      const unitMap = new Map<number, string>();
+      materials.forEach(m => {
+        if (m.id && m.unit) unitMap.set(m.id, m.unit);
+      });
+
+      const products = productsRes.data?.content || [];
+      // If products can also be in the 'materials' list of a plan
+      products.forEach(p => {
+        if (p.id && p.unit) unitMap.set(p.id, p.unit);
+      });
+
+      setMaterialUnitsMap(unitMap);
+    } catch (error) {
+      console.error("Failed to fetch material/product units:", error);
+    }
+  };
 
   useEffect(() => {
     if (selectedPlanId) {
@@ -1066,15 +1096,12 @@ export const ProductionSchedule = () => {
                                     <span className="text-[13px] font-black text-zinc-300 group-hover:text-white transition-colors">
                                       {mat.materialName}
                                     </span>
-                                    <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest font-mono">
-                                      {mat.unit || "Kg"}
-                                    </span>
                                   </div>
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-center">
                                 <span className="text-[13px] font-black text-zinc-400 font-mono tracking-tighter">
-                                  {mat.requiredQuantity}
+                                  {mat.requiredQuantity} {materialUnitsMap.get(mat.materialId) || mat.unit || ""}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-center">
@@ -1086,7 +1113,7 @@ export const ProductionSchedule = () => {
                                       : "text-red-500 bg-red-500/5",
                                   )}
                                 >
-                                  {available}
+                                  {available} {materialUnitsMap.get(mat.materialId) || mat.unit || ""}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-right pr-8">
@@ -1102,7 +1129,7 @@ export const ProductionSchedule = () => {
                                     <AlertTriangle size={12} strokeWidth={3} />
                                     <span className="text-[10px] font-black uppercase tracking-tight shrink-0">
                                       Thiếu{" "}
-                                      {mat.requiredQuantity - available}
+                                      {mat.requiredQuantity - available} {materialUnitsMap.get(mat.materialId) || mat.unit || ""}
                                     </span>
                                   </div>
                                 )}

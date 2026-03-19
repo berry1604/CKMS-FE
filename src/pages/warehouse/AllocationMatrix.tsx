@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Network, AlertCircle, Save, Info, ArrowRight, Truck, Database, CheckCircle, Package, Store } from 'lucide-react';
+import { 
+  Network, 
+  AlertCircle, 
+  Save, 
+  Info, 
+  ArrowRight, 
+  Clock, 
+  CheckCircle, 
+  Package, 
+  Store,
+  Timer
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -9,8 +20,10 @@ import type { ProductionPlanSummaryResponse } from '../../types/productionPlan';
 import { cn } from '../../utils/classNames';
 
 export const AllocationMatrix = () => {
-    const [plans, setPlans] = useState<ProductionPlanSummaryResponse[]>([]);
     const [selectedPlanId, setSelectedPlanId] = useState<number | ''>('');
+    const [selectedPlan, setSelectedPlan] = useState<ProductionPlanSummaryResponse | null>(null);
+    const [unallocatedPlans, setUnallocatedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
+    const [allocatedPlans, setAllocatedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
     const [isLoadingPlans, setIsLoadingPlans] = useState(false);
 
     const [matrix, setMatrix] = useState<AllocationRow[]>([]);
@@ -34,15 +47,20 @@ export const AllocationMatrix = () => {
         try {
             // Fetch completed or finished plans for allocation
             const res = await productionPlanApi.getAllProductionPlans({ size: 50 });
-            const valid = (res.content || []).filter(p =>
-                p.status === 'COMPLETED' ||
-                p.status === 'FINISHED' ||
-                p.status === 'READY_TO_PRODUCE' ||
-                p.status === 'PRODUCED'
-            );
-            setPlans(valid);
-            if (valid.length > 0 && selectedPlanId === '') {
-                setSelectedPlanId(valid[0].planId);
+            const allPlans = res.content || [];
+            
+            const unallocated = allPlans.filter(p => p.status === 'PRODUCED');
+            const allocated = allPlans.filter(p => p.status === 'FINISHED');
+            
+            setUnallocatedPlans(unallocated);
+            setAllocatedPlans(allocated);
+
+            if (selectedPlanId === '' && unallocated.length > 0) {
+                setSelectedPlanId(unallocated[0].planId);
+                setSelectedPlan(unallocated[0]);
+            } else if (selectedPlanId === '' && allocated.length > 0) {
+                setSelectedPlanId(allocated[0].planId);
+                setSelectedPlan(allocated[0]);
             }
         } catch (error) {
             toast.error('Không thể tải kế hoạch sản xuất');
@@ -103,6 +121,7 @@ export const AllocationMatrix = () => {
         try {
             await allocationApi.confirmAllocation(payload);
             toast.success('Xác nhận phân bổ kho thành công!');
+            fetchPlans(); // Refresh the list to move plan to "Allocated" section
             fetchAllocationMatrix(Number(selectedPlanId));
         } catch (error: any) {
             if (error.response?.status === 404) {
@@ -113,6 +132,11 @@ export const AllocationMatrix = () => {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleSelectPlan = (plan: ProductionPlanSummaryResponse) => {
+        setSelectedPlanId(plan.planId);
+        setSelectedPlan(plan);
     };
 
     // Extract all unique stores for columns
@@ -145,266 +169,320 @@ export const AllocationMatrix = () => {
                         <Badge variant="info" className="font-black px-3 py-0.5">COORDINATING</Badge>
                     </div>
                     <div className="w-[1px] h-10 bg-zinc-800"></div>
-                    <Button
-                        onClick={handleSaveAllocation}
-                        disabled={matrix.length === 0 || isSaving}
-                        className="bg-amber-600 hover:bg-amber-500 text-black font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] border-0 flex items-center gap-2 transition-all active:scale-95"
-                    >
-                        {isSaving ? 'Đang lưu...' : <><Save size={18} /> Chốt Phân Bổ</>}
-                    </Button>
-                </div>
-            </div>
-
-            {/* Selection & Controls Bar */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-                <div className="lg:col-span-4 bg-zinc-900/60 p-5 rounded-3xl border border-zinc-800/50 flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3 ml-1">Chọn Lô Sản Xuất Cần Điều Phối</label>
-                    <div className="relative group">
-                        <Database className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-amber-500 transition-colors" size={18} />
-                        <select
-                            className="w-full appearance-none pl-12 pr-10 h-14 bg-zinc-950/80 border border-zinc-800 rounded-2xl text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer shadow-inner"
-                            value={selectedPlanId}
-                            onChange={(e) => setSelectedPlanId(e.target.value ? Number(e.target.value) : '')}
-                            disabled={isLoadingPlans}
+                    {selectedPlan?.status === 'PRODUCED' && (
+                        <Button
+                            onClick={handleSaveAllocation}
+                            disabled={matrix.length === 0 || isSaving}
+                            className="bg-amber-600 hover:bg-amber-500 text-black font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] border-0 flex items-center gap-2 transition-all active:scale-95"
                         >
-                            <option value="">-- Chọn Kế hoạch sản xuất --</option>
-                            {plans.map(p => (
-                                <option key={p.planId} value={p.planId}>#{p.planId} - {p.planName} ({p.status})</option>
-                            ))}
-                        </select>
-                        <ArrowRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 rotate-90 pointer-events-none" />
-                    </div>
-                </div>
-
-                <div className="lg:col-span-8 bg-zinc-900/20 p-5 rounded-3xl border border-zinc-800/30 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                            <Info size={24} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Quy tắc</p>
-                            <p className="text-[11px] text-zinc-400 font-bold leading-tight">Không vượt quá Max Available của lô hàng.</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                            <Truck size={24} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Đối tượng</p>
-                            <p className="text-[11px] text-zinc-400 font-bold leading-tight">{storeColumns.length} chi nhánh đang chờ hàng.</p>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col justify-center border-l border-zinc-800/50 pl-6">
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                                <span className="text-[10px] font-black text-zinc-500 uppercase">Thiếu hàng</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span className="text-[10px] font-black text-zinc-500 uppercase">Đã tối ưu</span>
-                            </div>
-                        </div>
-                        <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-500/50 w-[65%]"></div>
-                        </div>
-                    </div>
+                            {isSaving ? 'Đang lưu...' : <><Save size={18} /> Chốt Phân Bổ</>}
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            {/* Matrix Display */}
-            <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl">
-                <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-left border-collapse border-spacing-0">
-                        <thead>
-                            <tr className="bg-zinc-900 border-b border-zinc-800">
-                                <th className="px-10 py-10 bg-zinc-900 sticky left-0 z-30 border-r border-zinc-800/50 w-[380px] shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-amber-500 border border-zinc-800">
-                                            <Package size={24} />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-base font-black text-white uppercase tracking-tighter">Sản phẩm đầu ra</span>
-                                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-1">Tổng khả dụng (Max)</span>
+            {/* Main Content Layout: Sidebar + Matrix */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left: Plan Selection Sidebar (Sticky) */}
+                <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-8 self-start">
+                    <div className="bg-zinc-900/60 p-5 rounded-3xl border border-zinc-800/50 flex flex-col max-h-[calc(100vh-12rem)]">
+                        <div className="flex items-center justify-between mb-4 px-1">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Kế Hoạch SX</label>
+                            <Badge variant="orange" className="text-[9px] font-black px-2 py-0 h-4">{unallocatedPlans.length + allocatedPlans.length}</Badge>
+                        </div>
+                        
+                        <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                            {isLoadingPlans ? (
+                                <div className="space-y-4 animate-pulse">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="h-14 bg-zinc-800/40 rounded-2xl border border-zinc-800/20" />
+                                    ))}
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Unallocated Section */}
+                                    <div>
+                                        <h3 className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2 opacity-80">
+                                            <Clock size={12} /> Chờ phân bổ ({unallocatedPlans.length})
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {unallocatedPlans.length === 0 ? (
+                                                <p className="text-[9px] text-zinc-600 font-bold italic py-2 px-3 bg-zinc-950/30 rounded-xl">Trống</p>
+                                            ) : (
+                                                unallocatedPlans.map(p => (
+                                                    <button
+                                                        key={p.planId}
+                                                        onClick={() => handleSelectPlan(p)}
+                                                        className={cn(
+                                                            "w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between group",
+                                                            selectedPlanId === p.planId 
+                                                                ? "bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.1)]" 
+                                                                : "bg-zinc-950/40 border-zinc-800/50 hover:bg-zinc-800/40 hover:border-zinc-700"
+                                                        )}
+                                                    >
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className={cn(
+                                                                "text-[11px] font-black uppercase tracking-tight transition-colors truncate",
+                                                                selectedPlanId === p.planId ? "text-white" : "text-zinc-400 group-hover:text-zinc-200"
+                                                            )}>
+                                                                {p.planName}
+                                                            </span>
+                                                            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tighter">#{p.planId}</span>
+                                                        </div>
+                                                        <ArrowRight size={12} className={cn(
+                                                            "transition-all flex-shrink-0",
+                                                            selectedPlanId === p.planId ? "text-amber-500 translate-x-0" : "text-zinc-700 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0"
+                                                        )} />
+                                                    </button>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
-                                </th>
-                                {storeColumns.map(col => (
-                                    <th key={col.storeId} className="px-8 py-10 min-w-[260px] border-b border-zinc-800/50 bg-zinc-900/50">
-                                        <div className="flex flex-col items-center">
-                                            <div className="w-10 h-10 rounded-full bg-zinc-950 flex items-center justify-center text-zinc-400 mb-3 border border-zinc-800">
-                                                <Store size={18} />
-                                            </div>
-                                            <span className="text-sm font-black text-white uppercase tracking-tighter text-center">{col.storeName}</span>
-                                            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1 opacity-60">CHI NHÁNH #{col.storeId}</span>
-                                        </div>
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-800/30">
-                            {isLoadingMatrix ? (
-                                <tr>
-                                    <td colSpan={storeColumns.length + 1} className="px-10 py-40 text-center">
-                                        <div className="flex flex-col items-center gap-6">
-                                            <div className="relative w-16 h-16">
-                                                <div className="absolute inset-0 border-4 border-amber-500/20 rounded-full"></div>
-                                                <div className="absolute inset-0 border-4 border-t-amber-500 rounded-full animate-spin"></div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-black text-zinc-200 uppercase tracking-widest">Building Allocation Matrix</p>
-                                                <p className="text-[10px] text-zinc-500 font-bold uppercase">Hệ thống đang tính toán nhu cầu và khả năng đáp ứng...</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : matrix.length === 0 ? (
-                                <tr>
-                                    <td colSpan={storeColumns.length + 1} className="px-10 py-40 text-center">
-                                        <div className="flex flex-col items-center gap-6 max-w-sm mx-auto opacity-40">
-                                            <div className="w-24 h-24 rounded-[32px] bg-zinc-900 flex items-center justify-center text-zinc-700 border border-zinc-800">
-                                                <Network size={48} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <p className="text-xl font-black text-zinc-100 uppercase tracking-tight">Trống Dữ Liệu</p>
-                                                <p className="text-xs text-zinc-500 font-medium">Vui lòng chọn một kế hoạch sản xuất đã hoàn tất để thực hiện điều phối kho hàng.</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                matrix.map(row => {
-                                    const currentTotal = (row.allocations || []).reduce((s, a) => s + a.allocatedQuantity, 0);
-                                    const isExceeded = currentTotal > (row.totalAvailable || 0);
-                                    const isBalanced = currentTotal === (row.totalAvailable || 0);
 
-                                    return (
-                                        <tr key={row.productId} className="hover:bg-zinc-800/30 group transition-all duration-300">
-                                            <td className="px-10 py-8 bg-zinc-900/90 backdrop-blur-md sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
-                                                <div className="flex flex-col">
-                                                    <span className="text-base font-black text-zinc-100 tracking-tight group-hover:text-amber-500 transition-colors uppercase leading-none mb-3">
-                                                        {row.productName}
-                                                    </span>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={cn(
-                                                            "px-4 py-2 rounded-xl flex items-center gap-3 border transition-all",
-                                                            isExceeded ? "bg-red-500/10 border-red-500/30 text-red-500" :
-                                                                isBalanced ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" :
-                                                                    "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                                                        )}>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[10px] font-bold uppercase opacity-60">Phân bổ</span>
-                                                                <span className="text-lg font-black font-mono leading-none">{currentTotal}</span>
-                                                            </div>
-                                                            <div className="w-[1px] h-6 bg-current opacity-20"></div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[10px] font-bold uppercase opacity-60">Khả dụng</span>
-                                                                <span className="text-lg font-black font-mono leading-none">{row.totalAvailable}</span>
-                                                            </div>
-                                                        </div>
-                                                        {isExceeded && (
-                                                            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-black animate-bounce shadow-lg shadow-red-500/20">
-                                                                <AlertCircle size={18} strokeWidth={3} />
-                                                            </div>
+                                    {/* Allocated Section */}
+                                    <div>
+                                        <h3 className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2 opacity-80">
+                                            <CheckCircle size={12} /> Đã chốt ({allocatedPlans.length})
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {allocatedPlans.length === 0 ? (
+                                                <p className="text-[9px] text-zinc-600 font-bold italic py-2 px-3 bg-zinc-950/30 rounded-xl">Trống</p>
+                                            ) : (
+                                                allocatedPlans.map(p => (
+                                                    <button
+                                                        key={p.planId}
+                                                        onClick={() => handleSelectPlan(p)}
+                                                        className={cn(
+                                                            "w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between group",
+                                                            selectedPlanId === p.planId 
+                                                                ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]" 
+                                                                : "bg-zinc-950/20 border-zinc-800/30 hover:bg-zinc-800/30 hover:border-zinc-700"
                                                         )}
-                                                    </div>
-                                                </div>
-                                            </td>
-
-                                            {storeColumns.map(col => {
-                                                const cell = (row.allocations || []).find((a: any) => a.storeId === col.storeId);
-                                                if (!cell) return (
-                                                    <td key={col.storeId} className="px-8 py-8 text-center bg-zinc-950/20 italic text-zinc-800 text-[10px] font-black uppercase tracking-widest">
-                                                        Không yêu cầu
-                                                    </td>
-                                                );
-
-                                                const isShortage = cell.allocatedQuantity < cell.requestedQuantity;
-                                                const isOptimized = cell.allocatedQuantity === cell.requestedQuantity && cell.requestedQuantity > 0;
-
-                                                return (
-                                                    <td key={col.storeId} className={cn(
-                                                        "px-8 py-8 transition-colors relative",
-                                                        isShortage ? "bg-red-500/[0.02]" : isOptimized ? "bg-emerald-500/[0.02]" : ""
-                                                    )}>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className="relative group/input mb-3">
-                                                                <input
-                                                                    type="number"
-                                                                    className={cn(
-                                                                        "w-36 h-16 bg-zinc-950 border-2 rounded-2xl text-center text-xl font-black font-mono focus:outline-none focus:ring-8 transition-all px-4 shadow-2xl",
-                                                                        isShortage
-                                                                            ? "border-red-500/40 text-red-500 focus:ring-red-500/5 focus:border-red-500"
-                                                                            : isOptimized
-                                                                                ? "border-emerald-500/40 text-emerald-500 focus:ring-emerald-500/5 focus:border-emerald-500"
-                                                                                : "border-zinc-800 text-zinc-100 focus:ring-amber-500/5 focus:border-amber-500"
-                                                                    )}
-                                                                    value={cell.allocatedQuantity.toString()}
-                                                                    onChange={(e) => handleQuantityChange(row.productId, col.storeId, e.target.value)}
-                                                                    min={0}
-                                                                    max={row.totalAvailable}
-                                                                />
-                                                                <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded-md shadow-lg z-10 flex items-center gap-1.5">
-                                                                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-tighter">REQ:</span>
-                                                                    <span className="text-[10px] font-black text-zinc-300 font-mono">{cell.requestedQuantity}</span>
-                                                                </div>
-                                                            </div>
-
-                                                            {isShortage ? (
-                                                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full animate-in zoom-in-50 duration-500">
-                                                                    <AlertCircle size={10} className="text-red-500" />
-                                                                    <span className="text-[9px] font-black text-red-500 uppercase tracking-tight">Hụt {cell.requestedQuantity - cell.allocatedQuantity} sp</span>
-                                                                </div>
-                                                            ) : isOptimized ? (
-                                                                <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full animate-in zoom-in-50 duration-500">
-                                                                    <CheckCircle size={10} className="text-emerald-500" />
-                                                                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tight">Tối ưu</span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="h-5"></div>
-                                                            )}
+                                                    >
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className={cn(
+                                                                "text-[11px] font-black uppercase tracking-tight transition-colors truncate",
+                                                                selectedPlanId === p.planId ? "text-white" : "text-zinc-600 group-hover:text-zinc-400"
+                                                            )}>
+                                                                {p.planName}
+                                                            </span>
+                                                            <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-tighter">#{p.planId}</span>
                                                         </div>
-                                                    </td>
-                                                );
-                                            })}
-                                        </tr>
-                                    );
-                                })
+                                                        <CheckCircle size={12} className={cn(
+                                                            "transition-all flex-shrink-0",
+                                                            selectedPlanId === p.planId ? "text-emerald-500 opacity-100" : "text-zinc-800 opacity-0 group-hover:opacity-100"
+                                                        )} />
+                                                    </button>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
                             )}
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Status Bar */}
-                <div className="bg-zinc-900 p-8 border-t border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-8 px-10">
-                    <div className="flex items-center gap-12">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1 opacity-60">Tổng chi nhánh điều phối</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-2xl font-black text-white">{storeColumns.length}</span>
-                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter self-end mb-1">Cửa hàng</span>
-                            </div>
+                {/* Right: Matrix Display Area */}
+                <div className="lg:col-span-9 space-y-8">
+                    {/* Matrix Table */}
+                    <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+                        <div className="overflow-x-auto custom-scrollbar">
+                            <table className="w-full text-left border-collapse border-spacing-0">
+                                <thead>
+                                    <tr className="bg-zinc-900 border-b border-zinc-800">
+                                        <th className="px-8 py-8 bg-zinc-900 sticky left-0 z-30 border-r border-zinc-800/50 w-[300px] shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-amber-500 border border-zinc-800">
+                                                    <Package size={20} />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-black text-white uppercase tracking-tighter">Sản phẩm đầu ra</span>
+                                                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-0.5">Tiêu chuẩn / Tối đa</span>
+                                                </div>
+                                            </div>
+                                        </th>
+                                        {storeColumns.map(col => (
+                                            <th key={col.storeId} className="px-6 py-8 min-w-[220px] border-b border-zinc-800/50 bg-zinc-900/50">
+                                                <div className="flex flex-col items-center">
+                                                    <div className="w-8 h-8 rounded-full bg-zinc-950 flex items-center justify-center text-zinc-400 mb-2 border border-zinc-800">
+                                                        <Store size={14} />
+                                                    </div>
+                                                    <span className="text-xs font-black text-white uppercase tracking-tighter text-center">{col.storeName}</span>
+                                                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mt-0.5 opacity-60">ID #{col.storeId}</span>
+                                                </div>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-800/30">
+                                    {isLoadingMatrix ? (
+                                        <tr>
+                                            <td colSpan={storeColumns.length + 1} className="px-10 py-32 text-center">
+                                                <div className="flex flex-col items-center gap-6">
+                                                    <div className="relative w-12 h-12">
+                                                        <div className="absolute inset-0 border-3 border-amber-500/20 rounded-full"></div>
+                                                        <div className="absolute inset-0 border-3 border-t-amber-500 rounded-full animate-spin"></div>
+                                                    </div>
+                                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Đang tải dữ liệu phân bổ...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : matrix.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={storeColumns.length + 1} className="px-10 py-40 text-center">
+                                                <div className="flex flex-col items-center gap-6 max-w-xs mx-auto opacity-30">
+                                                    <div className="w-20 h-20 rounded-[28px] bg-zinc-900 flex items-center justify-center text-zinc-700 border border-zinc-800">
+                                                        <Network size={40} />
+                                                    </div>
+                                                    <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-wide">Vui lòng chọn mẻ sản xuất từ danh sách bên trái</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        matrix.map(row => {
+                                            const currentTotal = (row.allocations || []).reduce((s, a) => s + a.allocatedQuantity, 0);
+                                            const isExceeded = currentTotal > (row.totalAvailable || 0);
+                                            const isBalanced = currentTotal === (row.totalAvailable || 0);
+
+                                            return (
+                                                <tr key={row.productId} className="hover:bg-zinc-800/30 group transition-all duration-300 text-[11px]">
+                                                    <td className="px-8 py-6 bg-zinc-900/90 backdrop-blur-md sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-black text-zinc-100 tracking-tight group-hover:text-amber-500 transition-colors uppercase leading-none mb-3 truncate max-w-[200px]">
+                                                                {row.productName}
+                                                            </span>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={cn(
+                                                                    "px-3 py-1.5 rounded-xl flex items-center gap-2 border transition-all",
+                                                                    isExceeded ? "bg-red-500/10 border-red-500/30 text-red-500" :
+                                                                        isBalanced ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" :
+                                                                            "bg-amber-500/10 border-amber-500/30 text-amber-500"
+                                                                )}>
+                                                                    <span className="font-black font-mono leading-none">{currentTotal}</span>
+                                                                    <div className="w-[1px] h-3 bg-current opacity-20"></div>
+                                                                    <span className="font-black font-mono leading-none">{row.totalAvailable}</span>
+                                                                </div>
+                                                                {isExceeded && <AlertCircle size={14} className="text-red-500 animate-pulse" />}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    {storeColumns.map(col => {
+                                                        const cell = (row.allocations || []).find((a: any) => a.storeId === col.storeId);
+                                                        if (!cell) return (
+                                                            <td key={col.storeId} className="px-6 py-6 text-center bg-zinc-950/10 italic text-zinc-800 text-[9px] font-black uppercase tracking-widest">
+                                                                -
+                                                            </td>
+                                                        );
+
+                                                        const isShortage = cell.allocatedQuantity < cell.requestedQuantity;
+                                                        const isOptimized = cell.allocatedQuantity === cell.requestedQuantity && cell.requestedQuantity > 0;
+
+                                                        return (
+                                                            <td key={col.storeId} className={cn(
+                                                                "px-6 py-6 transition-colors relative",
+                                                                isShortage ? "bg-red-500/[0.015]" : isOptimized ? "bg-emerald-500/[0.015]" : ""
+                                                            )}>
+                                                                <div className="flex flex-col items-center">
+                                                                    <div className="relative group/input mb-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            className={cn(
+                                                                                "w-24 h-11 bg-zinc-950 border border-zinc-800 rounded-xl text-center text-sm font-black font-mono focus:outline-none focus:ring-4 transition-all px-2 shadow-inner",
+                                                                                isShortage
+                                                                                    ? "border-red-500/40 text-red-500 focus:ring-red-500/5 focus:border-red-500"
+                                                                                    : isOptimized
+                                                                                        ? "border-emerald-500/40 text-emerald-500 focus:ring-emerald-500/5 focus:border-emerald-500"
+                                                                                        : "border-zinc-800 text-zinc-100 focus:ring-amber-500/5 focus:border-amber-500"
+                                                                            )}
+                                                                            value={cell.allocatedQuantity.toString()}
+                                                                            onChange={(e) => handleQuantityChange(row.productId, col.storeId, e.target.value)}
+                                                                            min={0}
+                                                                            max={row.totalAvailable}
+                                                                        />
+                                                                        <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded shadow-md z-10 flex items-center gap-1 opacity-60">
+                                                                            <span className="text-[7px] font-black text-zinc-500 uppercase">REQ:</span>
+                                                                            <span className="text-[8px] font-black text-zinc-300 font-mono">{cell.requestedQuantity}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-                        <div className="w-[1px] h-10 bg-zinc-800"></div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1 opacity-60">Tổng sản phẩm</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-2xl font-black text-white">{matrix.length}</span>
-                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter self-end mb-1">Món hàng</span>
+
+                        {/* Table Footer / Summary Bar */}
+                        <div className="bg-zinc-900/80 p-6 border-t border-zinc-800/50 flex items-center justify-between">
+                            <div className="flex items-center gap-8">
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-0.5">Chi nhánh nhượng quyền</span>
+                                    <span className="text-xl font-black text-white">{storeColumns.length} <span className="text-[9px] text-zinc-500">STORES</span></span>
+                                </div>
+                                <div className="w-[1px] h-8 bg-zinc-800"></div>
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-0.5">Sản phẩm điều phối</span>
+                                    <span className="text-xl font-black text-white">{matrix.length} <span className="text-[9px] text-zinc-500">ITEMS</span></span>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-amber-500/5 px-6 py-3 rounded-2xl border border-amber-500/10 flex items-center gap-3">
+                                <Info size={14} className="text-amber-500" />
+                                <span className="text-[10px] text-zinc-500 font-black uppercase tracking-tight">Kế hoạch #{selectedPlanId || '---'} Đang được quản lý</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex-1 max-w-lg bg-amber-500/5 p-4 rounded-3xl border border-amber-500/10 flex items-center gap-4 group">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all">
-                            <Info size={18} />
+                    {/* Bottom Stats & Rules Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+                        <div className="md:col-span-8 bg-zinc-900/20 p-8 rounded-[32px] border border-zinc-800/30 flex items-center justify-between gap-8">
+                            <div className="flex items-center gap-6">
+                                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                                    <Network size={28} />
+                                </div>
+                                <div className="max-w-xs">
+                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Quy tắc điều phối</p>
+                                    <p className="text-[11px] text-zinc-500 font-bold leading-relaxed">Hệ thống tự động cân đối dựa trên mức tồn kho tối thiểu và ưu tiên đơn đặt sớm nhất.</p>
+                                </div>
+                            </div>
+                            <div className="w-[1px] h-12 bg-zinc-800"></div>
+                            <div className="flex items-center gap-6 text-right">
+                                <div className="max-w-sm">
+                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1 text-right">Phạm vi tác động</p>
+                                    <p className="text-[11px] text-zinc-500 font-bold leading-relaxed text-right">{storeColumns.length} chi nhánh đang chờ hàng từ lô sản xuất này.</p>
+                                </div>
+                                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+                                    <Store size={28} />
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-[11px] text-zinc-500 font-bold leading-relaxed tracking-tight uppercase">
-                            Hệ thống sẽ tự động ngăn chặn việc phân bổ quá giới hạn sản xuất của Bếp Trung Tâm. Hãy chốt phân bổ để bắt đầu quy trình vận chuyển.
-                        </p>
+
+                        <div className="md:col-span-4 bg-zinc-900/30 p-8 rounded-[32px] border border-zinc-800/50 flex flex-col justify-center space-y-4">
+                            <div className="flex justify-between items-end">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Tiến độ phân bổ</span>
+                                    <span className={cn(
+                                        "text-2xl font-black uppercase tracking-tighter",
+                                        selectedPlan?.status === 'FINISHED' ? "text-emerald-500" : "text-amber-500"
+                                    )}>
+                                        {selectedPlan?.status === 'FINISHED' ? 'Hoàn tất' : '65% Ready'}
+                                    </span>
+                                </div>
+                                {selectedPlan?.status === 'FINISHED' ? <CheckCircle size={32} className="text-emerald-500 mb-1" /> : <Timer size={32} className="text-amber-500 mb-1" />}
+                            </div>
+                            <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden p-[1px]">
+                                <div className={cn(
+                                    "h-full rounded-full transition-all duration-1000 ease-out",
+                                    selectedPlan?.status === 'FINISHED' ? "bg-emerald-500 w-full" : "bg-amber-500 w-[65%]"
+                                )}></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
