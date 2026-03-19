@@ -17,28 +17,31 @@ export const AuthLayout: React.FC = () => {
 
             <div className="sm:mx-auto sm:w-full sm:max-w-[480px] z-10 relative">
                 <div className="text-center mb-10 flex flex-col items-center">
-                    <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/20 rotate-3 hover:rotate-0 transition-transform duration-500">
-                        <span className="text-black text-3xl font-black">B</span>
+                    <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-600 rounded-3xl flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(245,158,11,0.4)] rotate-3 hover:rotate-0 hover:scale-110 transition-all duration-500 border border-amber-300/50">
+                        <span className="text-black text-4xl font-black tracking-tighter">F</span>
                     </div>
-                    <h2 className="text-5xl font-black text-white tracking-tighter drop-shadow-2xl uppercase">
-                        Bistack
+                    <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-500 tracking-tighter drop-shadow-2xl uppercase">
+                        FranchiseSys
                     </h2>
-                    <div className="h-px w-12 bg-amber-500 my-4"></div>
-                    <p className="text-zinc-400 text-xs font-black tracking-[0.3em] uppercase">
-                        Premium Management System
+                    <div className="h-px w-16 bg-gradient-to-r from-transparent via-amber-500 to-transparent my-5"></div>
+                    <p className="text-amber-500/80 text-xs font-black tracking-[0.4em] uppercase">
+                        Elite Management System
                     </p>
                 </div>
 
-                <div className="bg-zinc-900/40 backdrop-blur-2xl py-12 px-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] rounded-[40px] border border-white/5 relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-                    <Outlet />
+                <div className="bg-zinc-950/60 backdrop-blur-3xl py-12 px-8 sm:px-12 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] rounded-[40px] border border-zinc-800/80 relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/80 to-transparent"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(245,158,11,0.05),_transparent_50%)] pointer-events-none"></div>
+                    <div className="relative z-10">
+                        <Outlet />
+                    </div>
                 </div>
 
-                <div className="mt-10 text-center space-y-2">
-                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                        &copy; {new Date().getFullYear()} Bistack Franchise System
+                <div className="mt-12 text-center space-y-3">
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">
+                        &copy; {new Date().getFullYear()} FranchiseSys Protocol
                     </p>
-                    <p className="text-[9px] text-zinc-800 font-medium">Bản quyền thuộc về đội ngũ phát triển Bistack</p>
+                    <p className="text-[9px] text-zinc-700 font-bold tracking-widest uppercase">Bản quyền thuộc về đội ngũ phát triển FranchiseSys</p>
                 </div>
             </div>
         </div>

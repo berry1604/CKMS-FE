@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Store as StoreIcon, MapPin, Activity, Phone, Mail, Box } from 'lucide-react';
+import { Store as StoreIcon, MapPin, Activity, Phone, Mail } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -13,7 +13,6 @@ const storeSchema = z.object({
     address: z.string().min(1, 'Địa chỉ là bắt buộc'),
     phone: z.string().optional(),
     email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
-    warehouseCapacity: z.number().min(0, 'Sức chứa kho phải là số dương hoặc 0'),
     isActive: z.boolean().optional()
 });
 
@@ -22,7 +21,6 @@ interface StoreFormData {
     address: string;
     phone?: string;
     email?: string;
-    warehouseCapacity: number;
     isActive?: boolean;
 }
 
@@ -42,7 +40,6 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
             address: '',
             phone: '',
             email: '',
-            warehouseCapacity: 0,
             isActive: true
         }
     });
@@ -56,7 +53,6 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                 address: initialData.address || '',
                 phone: initialData.phone || '',
                 email: initialData.email || '',
-                warehouseCapacity: initialData.warehouseCapacity || 0,
                 isActive: initialData.isActive ?? true,
             });
         } else {
@@ -65,7 +61,6 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                 address: '',
                 phone: '',
                 email: '',
-                warehouseCapacity: 0,
                 isActive: true,
             });
         }
@@ -77,7 +72,6 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
             address: data.address,
             phone: data.phone || undefined,
             email: data.email || undefined,
-            warehouseCapacity: Number(data.warehouseCapacity),
             isActive: data.isActive !== undefined ? data.isActive : true,
             active: data.isActive !== undefined ? data.isActive : true,
             status: data.isActive ? 'ACTIVE' : 'INACTIVE'
@@ -171,19 +165,6 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                                     className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
                                 />
                             </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Sức chứa kho tối đa (Kg)</label>
-                            <Input
-                                type="number"
-                                min="0"
-                                placeholder="Nhập sức chứa"
-                                icon={<Box size={18} className="text-zinc-600" />}
-                                error={errors.warehouseCapacity?.message}
-                                {...register('warehouseCapacity', { valueAsNumber: true })}
-                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
-                            />
                         </div>
                     </div>
                 </div>

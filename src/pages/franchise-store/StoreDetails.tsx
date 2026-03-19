@@ -28,6 +28,7 @@ export const StoreDetails = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [store, setStore] = useState<StoreResponse | null>(null);
+    const [manager, setManager] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Overview');
 
@@ -38,6 +39,17 @@ export const StoreDetails = () => {
                 try {
                     const response = await storeApi.getStoreById(Number(id));
                     setStore(response.data);
+                    
+                    // Fetch manager details
+                    if (response.data.managerName) {
+                        const { userService } = await import('../../services/user.service');
+                        try {
+                            const userRes = await userService.getUserByUsernameOrEmail(response.data.managerName);
+                            setManager(userRes.data);
+                        } catch (e) {
+                            console.error('Error fetching manager details:', e);
+                        }
+                    }
                 } catch (error) {
                     console.error(error);
                     toast.error('Không thể tải thông tin cửa hàng');
@@ -172,51 +184,21 @@ export const StoreDetails = () => {
                             <div className="grid grid-cols-1 gap-4">
                                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-stone-400 hover:text-white transition-all hover:bg-white/[0.04]">
                                     <Phone size={16} className="text-amber-500/60" />
-                                    <span className="text-sm font-mono tracking-tight">{store.phone || 'Chưa cập nhật'}</span>
+                                    <span className="text-sm font-mono tracking-tight">{store.phone || manager?.phone || 'Chưa cập nhật'}</span>
                                 </div>
                                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-stone-400 hover:text-white transition-all hover:bg-white/[0.04]">
                                     <Mail size={16} className="text-amber-500/60" />
-                                    <span className="text-sm truncate font-medium">{store.email || 'Chưa cập nhật'}</span>
+                                    <span className="text-sm truncate font-medium">{store.email || manager?.email || 'Chưa cập nhật'}</span>
+                                </div>
+                                <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-stone-400 hover:text-white transition-all hover:bg-white/[0.04]">
+                                    <MapPin size={16} className="text-amber-500/60 mt-0.5" />
+                                    <span className="text-sm font-medium leading-relaxed">{store.address || manager?.address || 'Chưa cập nhật'}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div >
 
-                {/* Logistics & Capacity Card */}
-                < div className="group relative bg-[#0a0a0a] border border-white/[0.03] rounded-[2.5rem] p-10 hover:border-amber-500/20 transition-all duration-700 overflow-hidden shadow-2xl" >
-                    <div className="relative space-y-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:rotate-6 transition-transform">
-                                <Box size={24} />
-                            </div>
-                            <div>
-                                <h3 className="text-xs font-black tracking-[0.2em] uppercase text-stone-500 group-hover:text-stone-300 transition-colors">Logistics nội bộ</h3>
-                                <p className="text-sm font-medium text-stone-600 italic">Theo dõi tài nguyên</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6 pt-4 border-t border-white/5">
-                            <div>
-                                <p className="text-[10px] uppercase font-black tracking-widest text-amber-500/60 mb-2">Sức chứa tối đa (Định mức)</p>
-                                <div className="flex items-baseline gap-3">
-                                    <p className="text-5xl font-black text-white tracking-tighter italic">{(store.warehouseCapacity || 1000).toLocaleString('vi-VN')}</p>
-                                    <span className="text-stone-600 font-bold tracking-widest text-[10px] uppercase italic">Đơn vị chuẩn</span>
-                                </div>
-                            </div>
-
-                            <div className="pt-2">
-                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                    <div className="h-full w-2/3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 shadow-[0_0_20px_rgba(245,158,11,0.3)]"></div>
-                                </div>
-                                <div className="flex justify-between mt-3">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-stone-600 italic">Vận hành: Ổn định</span>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-amber-500/80">67% Đã sử dụng</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div >
 
                 {/* System Stats / Overview Card */}
                 < div className="group relative bg-[#0a0a0a] border border-white/[0.03] rounded-[2.5rem] p-10 hover:border-amber-500/20 transition-all duration-700 overflow-hidden shadow-2xl" >

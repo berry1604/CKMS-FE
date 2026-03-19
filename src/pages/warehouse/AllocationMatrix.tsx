@@ -73,7 +73,7 @@ export const AllocationMatrix = () => {
         setIsLoadingMatrix(true);
         try {
             const data = await allocationApi.previewAllocation(planId);
-            setMatrix(data);
+            setMatrix(data.rows || data); // Handle both {rows: ...} and direct array
         } catch (error) {
             toast.error('Không thể phân bổ dữ liệu plan này');
             setMatrix([]);
@@ -90,7 +90,7 @@ export const AllocationMatrix = () => {
             if (row.productId === productId) {
                 // Verify limits
                 const currentSum = (row.allocations || []).reduce((sum, a) => sum + (a.storeId === storeId ? 0 : a.allocatedQuantity), 0);
-                const safeQty = Math.max(0, Math.min(newQty, row.totalAvailable - currentSum));
+                const safeQty = Math.max(0, Math.min(newQty, (row.totalAvailable || 0) - currentSum));
 
                 return {
                     ...row,
@@ -147,7 +147,7 @@ export const AllocationMatrix = () => {
         });
 
     return (
-        <div className="space-y-6 pb-20 animate-in fade-in duration-700">
+        <div className="space-y-6 pb-20 animate-in fade-in duration-700 p-8">
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-900 pb-6">
                 <div>

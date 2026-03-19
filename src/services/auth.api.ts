@@ -6,10 +6,12 @@ import type {
 
 export const authApi = {
     login: async (username: string, password: string): Promise<LoginResponse> => {
-        const response = await axiosClient.post<LoginResponse>('/auth/login', { username, password });
-
-        // Save tokens to localStorage upon successful login
-        const { accessToken, refreshToken, token } = response.data as any;
+        const response = await axiosClient.post<any>('/auth/login', { username, password });
+        
+        // Correctly unwrap from response.data
+        // Handle both { data: { ... } } (wrapped) and { ... } (unwrapped)
+        const data = response.data?.data || response.data;
+        const { accessToken, refreshToken, token } = data;
         const validAccessToken = accessToken || token;
 
         if (validAccessToken) {
@@ -19,7 +21,7 @@ export const authApi = {
             sessionStorage.setItem('refreshToken', refreshToken);
         }
 
-        return response.data;
+        return data;
     },
 
     logout: async (refreshToken: string) => {
@@ -33,13 +35,14 @@ export const authApi = {
 
     refreshToken: async (refreshToken: string): Promise<LoginResponse> => {
         // Send raw string as body, ensure correct content-type if backend expects plain text
-        const response = await axiosClient.post<LoginResponse>(
+        const response = await axiosClient.post<any>(
             '/auth/refresh',
             refreshToken,
             { headers: { 'Content-Type': 'text/plain' } }
         );
 
-        const { accessToken, refreshToken: newRefreshToken, token } = response.data as any;
+        const data = response.data?.data || response.data;
+        const { accessToken, refreshToken: newRefreshToken, token } = data;
         const validAccessToken = accessToken || token;
 
         if (validAccessToken) {
@@ -49,21 +52,24 @@ export const authApi = {
             sessionStorage.setItem('refreshToken', newRefreshToken);
         }
 
-        return response.data;
+        return data;
     },
 
     activateAccount: async (data: ActivateAccountRequest): Promise<string> => {
-        const response = await axiosClient.post<string>('/auth/activate', data);
-        return response.data;
+        const response = await axiosClient.post<any>('/auth/activate', data);
+        const result = response.data?.data !== undefined ? response.data.data : response.data;
+        return result;
     },
 
     forgotPassword: async (email: string): Promise<string> => {
-        const response = await axiosClient.post<string>('/auth/forgot-password', { email });
-        return response.data;
+        const response = await axiosClient.post<any>('/auth/forgot-password', { email });
+        const result = response.data?.data !== undefined ? response.data.data : response.data;
+        return result;
     },
 
     resetPassword: async (token: string, newPassword: string): Promise<string> => {
-        const response = await axiosClient.post<string>('/auth/reset-password', { token, newPassword });
-        return response.data;
+        const response = await axiosClient.post<any>('/auth/reset-password', { token, newPassword });
+        const result = response.data?.data !== undefined ? response.data.data : response.data;
+        return result;
     }
 };

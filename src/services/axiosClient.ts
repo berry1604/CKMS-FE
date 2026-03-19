@@ -11,6 +11,19 @@ const axiosClient = axios.create({
     withCredentials: false,
 });
 
+// Refresh token state
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const subscribeTokenRefresh = (cb: (token: string) => void) => {
+    refreshSubscribers.push(cb);
+};
+
+const onRefreshed = (token: string) => {
+    refreshSubscribers.map((cb) => cb(token));
+    refreshSubscribers = [];
+};
+
 // Request interceptor: attach token
 axiosClient.interceptors.request.use(
     (config) => {
@@ -39,16 +52,76 @@ axiosClient.interceptors.response.use(
     (response) => {
         return response;
     },
-    (error) => {
-        const config = error.config;
-        const url = config?.url || '';
+    async (error) => {
+        const originalRequest = error.config;
+        const url = originalRequest?.url || '';
 
-        if (error.response?.status === 401) {
-            // Token expired or invalid
-            sessionStorage.removeItem('accessToken');
-            sessionStorage.removeItem('refreshToken');
-            window.location.href = '/login';
-        } else if (error.response?.status === 403) {
+        // Handle 400 Bad Request
+        if (error.response?.status === 400) {
+            const message = error.response.data?.message || 'Yêu cầu không hợp lệ.';
+            toast.error(message);
+        } 
+        
+        // Handle 401 Unauthorized - Token expired or invalid
+        else if (error.response?.status === 401 && !originalRequest._retry) {
+            // Prevent infinite loops if refresh token itself fails
+            if (url.includes('/auth/refresh')) {
+                sessionStorage.removeItem('accessToken');
+                sessionStorage.removeItem('refreshToken');
+                window.location.href = '/login';
+                return Promise.reject(error);
+            }
+
+            if (isRefreshing) {
+                return new Promise((resolve) => {
+                    subscribeTokenRefresh((token: string) => {
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                        resolve(axiosClient(originalRequest));
+                    });
+                });
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            const refreshToken = sessionStorage.getItem('refreshToken');
+            if (!refreshToken) {
+                sessionStorage.removeItem('accessToken');
+                window.location.href = '/login';
+                return Promise.reject(error);
+            }
+
+            try {
+                // Use raw axios to avoid interceptor recursion for the refresh call
+                const response = await axios.post(`${BASE_URL}/api/v1/auth/refresh`, {
+                    refreshToken
+                }, {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = response.data?.data || response.data;
+                const newAccessToken = data.accessToken || data.token;
+
+                if (newAccessToken) {
+                    sessionStorage.setItem('accessToken', newAccessToken);
+                    // Update header and retry original request
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                    onRefreshed(newAccessToken);
+                    return axiosClient(originalRequest);
+                }
+            } catch (refreshError) {
+                // Refresh failed, logout
+                sessionStorage.removeItem('accessToken');
+                sessionStorage.removeItem('refreshToken');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
+        } 
+        
+        // Handle 403 Forbidden
+        else if (error.response?.status === 403) {
             // Skip showing toast if we are trying to fetch products/categories (we handle fallback in the component)
             if (!url.includes('/products') && !url.includes('/categories')) {
                 const now = Date.now();

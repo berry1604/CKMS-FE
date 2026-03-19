@@ -64,12 +64,12 @@ export const ProductCatalog = () => {
         setIsDeleting(true);
         try {
             await productApi.deleteProduct(productToDelete);
-            toast.success('Product deleted successfully');
+            toast.success('Đã xóa sản phẩm thành công');
             setIsDeleteModalOpen(false);
             refetch();
         } catch (error: any) {
             if (error.response?.status !== 401 && error.response?.status !== 403) {
-                toast.error(error.response?.data?.message || 'Failed to delete product');
+                toast.error(error.response?.data?.message || 'Xóa sản phẩm thất bại');
             }
         } finally {
             setIsDeleting(false);
@@ -86,10 +86,10 @@ export const ProductCatalog = () => {
             }
             setIsModalOpen(false);
             refetch();
-            toast.success('Product saved successfully');
+            toast.success('Đã lưu sản phẩm thành công');
         } catch (error: any) {
             if (error.response?.status !== 401 && error.response?.status !== 403) {
-                toast.error(error.response?.data?.message || 'Failed to save product');
+                toast.error(error.response?.data?.message || 'Lưu sản phẩm thất bại');
             }
         } finally {
             setIsSaving(false);
@@ -323,10 +323,10 @@ export const ProductCatalog = () => {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={confirmDelete}
-                title="Delete Product"
-                message="Are you sure you want to delete this product? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Xóa sản phẩm"
+                message="Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác."
+                confirmText="Xóa"
+                cancelText="Hủy"
                 isLoading={isDeleting}
                 variant="danger"
             />

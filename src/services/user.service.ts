@@ -25,6 +25,11 @@ export const userService = {
         return response.data;
     },
 
+    updateProfile: async (data: Record<string, any>): Promise<ApiResponse<UserResponse>> => {
+        const response = await axiosClient.put<ApiResponse<UserResponse>>('/users/me', data);
+        return response.data;
+    },
+
     deleteUser: async (id: number): Promise<ApiResponse<string>> => {
         const response = await axiosClient.delete<ApiResponse<string>>(`/users/${id}`);
         return response.data;

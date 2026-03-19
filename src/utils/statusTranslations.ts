@@ -19,11 +19,15 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 export const PRODUCTION_PLAN_STATUS_LABELS: Record<ProductionPlanStatus, string> = {
     PLANNED: 'Đang lập kế hoạch',
     READY_TO_PRODUCE: 'Sẵn sàng sản xuất',
+    PRODUCING: 'Đang chế biến',
     IN_PRODUCTION: 'Đang sản xuất',
     PRODUCED: 'Đã sản xuất',
-    FINISHED: 'Hoàn thành',
-    CANCELLED: 'Đã hủy'
+    COMPLETED: 'Hoàn thành',
+    FINISHED: 'Hoàn tất',
+    CANCELLED: 'Đã hủy',
+    APPROVED: 'Đã duyệt'
 };
+
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
     PENDING: 'Chờ xử lý',

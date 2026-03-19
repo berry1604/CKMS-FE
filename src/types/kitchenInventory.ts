@@ -25,3 +25,11 @@ export interface KitchenStockImportRequest {
     expiryDate?: string; // Format: "YYYY-MM-DD"
     productionPlanId?: number;
 }
+
+export interface KitchenInventorySummaryResponse {
+    itemId?: number;
+    itemName: string;
+    totalQuantity: number;
+    unit: string;
+    itemType: "MATERIAL" | "PRODUCT";
+}

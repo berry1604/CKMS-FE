@@ -1,9 +1,23 @@
-export interface ProductionPlanRequest {
-    plannedDate: string; // Required, format: "YYYY-MM-DD"
-    storeOrderIds: number[];
+export type ProductionPlanStatus = 'DRAFT' | 'READY_TO_PRODUCE' | 'PRODUCING' | 'COMPLETED' | 'CANCELLED' | 'PLANNED' | 'IN_PRODUCTION' | 'PRODUCED' | 'FINISHED' | 'APPROVED';
+
+export interface DispatchSuggestionItem {
+    productName: string;
+    demandQty: number;
+    kitchenCapacity: number;
+    ingredientCapacity: number;
+    suggestedQty: number;
+    shortageDetails?: string;
 }
 
-export type ProductionPlanStatus = 'PLANNED' | 'READY_TO_PRODUCE' | 'IN_PRODUCTION' | 'PRODUCED' | 'FINISHED' | 'CANCELLED';
+export interface DispatchSuggestionResponse {
+    targetDate: string;
+    suggestions: DispatchSuggestionItem[];
+}
+
+export interface ProductionPlanRequest {
+    plannedDate: string; // Changed from targetDate to plannedDate as per backend validation fix
+    storeOrderIds: number[];
+}
 
 export interface ProductionPlanResponse {
     planId: number;
@@ -21,7 +35,7 @@ export interface ProductionPlanSummaryResponse {
     planName: string;
     batchCode: string;
     kitchenId: number;
-    status: string;
+    status: ProductionPlanStatus;
     createdAt: string;
     coordinatorUserId: number;
     version?: number;
@@ -34,14 +48,15 @@ export interface MaterialRequirementResponse {
     unit?: string;
 }
 
-export interface ExpectedProductResponse {
+export interface ProductionPlanDetailItem {
     productId: number;
     productName: string;
-    expectedQuantity: number;
+    plannedQuantity: number;
     unit?: string;
 }
 
 export interface ProductionPlanDetailResponse extends ProductionPlanSummaryResponse {
     materials: MaterialRequirementResponse[];
-    expectedProducts?: ExpectedProductResponse[];
+    items?: ProductionPlanDetailItem[];
 }
+

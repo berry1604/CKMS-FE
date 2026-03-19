@@ -116,7 +116,7 @@ export const CreateUserPage = () => {
 
                     <div className="flex items-center gap-4 mb-4">
                         <div className="h-[2px] w-12 bg-indigo-500" />
-                        <span className="text-indigo-400 font-bold tracking-[0.3em] text-[10px] uppercase">Initialize Account</span>
+                        <span className="text-indigo-400 font-bold tracking-[0.3em] text-[10px] uppercase">Khởi tạo tài khoản</span>
                     </div>
 
                     <h1 className="text-6xl font-black text-white tracking-tighter mb-4">

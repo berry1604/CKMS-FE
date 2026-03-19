@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Store as StoreIcon, MapPin, Box, ArrowLeft, Save } from 'lucide-react';
+import { Store as StoreIcon, MapPin, ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -12,7 +12,6 @@ import { storeApi } from '../../services/store.api';
 const createStoreSchema = z.object({
     name: z.string().min(1, 'Vui lòng nhập tên cửa hàng'),
     location: z.string().min(1, 'Vui lòng nhập địa chỉ'),
-    warehouseCapacity: z.coerce.number().min(0, 'Sức chứa kho phải lớn hơn hoặc bằng 0'),
     isActive: z.boolean().default(true),
 });
 
@@ -32,7 +31,6 @@ export default function CreateStorePage() {
         resolver: zodResolver(createStoreSchema) as any,
         defaultValues: {
             isActive: true,
-            warehouseCapacity: 0,
         },
     });
 
@@ -44,7 +42,6 @@ export default function CreateStorePage() {
             await storeApi.createStore({
                 name: data.name,
                 address: data.location,
-                warehouseCapacity: data.warehouseCapacity,
                 isActive: data.isActive,
             });
             toast.success('Đã tạo cửa hàng thành công');
@@ -106,22 +103,6 @@ export default function CreateStorePage() {
                                 />
                             </div>
                             {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location.message}</p>}
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-300 block mb-2">Sức chứa kho (kg) *</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Box size={16} className="text-gray-400" />
-                                </div>
-                                <input
-                                    type="number"
-                                    className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white ${errors.warehouseCapacity ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
-                                    placeholder="VD: 500"
-                                    {...register('warehouseCapacity')}
-                                />
-                            </div>
-                            {errors.warehouseCapacity && <p className="text-red-500 text-xs mt-1">{errors.warehouseCapacity.message}</p>}
                         </div>
 
                         <div className="space-y-1">

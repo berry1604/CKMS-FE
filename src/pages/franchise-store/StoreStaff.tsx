@@ -16,9 +16,11 @@ const StoreStaff: React.FC<StoreStaffProps> = ({ storeId }) => {
             try {
                 const response = await userService.getUsers({ storeId, size: 100 });
                 if (response.data?.content) {
-                    setStaff(response.data.content);
+                    // Filter by storeId locally just in case the backend returns all users
+                    const filtered = response.data.content.filter((u: UserResponse) => u.storeId === storeId);
+                    setStaff(filtered);
                 }
-            } catch (error) {
+           } catch (error) {
                 console.error('Error fetching staff:', error);
             } finally {
                 setLoading(false);

@@ -2,15 +2,25 @@
 
 export type ShipmentStatus = 'PENDING' | 'PREPARED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
 
+export type AhamoveServiceIdType = 'SGN-BIKE' | 'SGN-PREMIUM' | 'SGN-POOL' | 'SGN-TRUCK-500' | 'SGN-TRUCK-1000' | 'SGN-TRUCK-2000';
+
+export interface DropPointRequest {
+    storeId: number;
+    storeOrderIds: number[];
+    remarks?: string;
+}
+
 export interface CreateShipmentRequest {
-    productionPlanId: number;       // required
-    storeId: number;                // required
-    storeOrderIds: number[];        // required
+    productionPlanId: number;
+    storeId: number;
+    storeOrderIds: number[];
+    dropPoints?: DropPointRequest[];
+    ahamoveServiceId: AhamoveServiceIdType;
     driverName?: string;
     driverPhone?: string;
     vehicleInfo?: string;
     shippingFee?: number;
-    note?: string;
+    remarks?: string;
 }
 
 export interface ConfirmDeliveryRequest {
@@ -20,19 +30,28 @@ export interface ConfirmDeliveryRequest {
 
 export interface ShipmentResponse {
     shipmentId: number;
-    storeId: number;
-    storeName: string;
+    storeId?: number; // Might be null for multi-drop
+    storeName?: string; // Might be null for multi-drop
     productionPlanId: number;
     status: ShipmentStatus;
+
+    // Ahamove specific fields
+    ahamoveOrderId?: string;
+    trackingLink?: string;
+    ahamoveStatus?: string;
+
     driverName?: string;
     driverPhone?: string;
     vehicleInfo?: string;
     shippingFee?: number;
-    note?: string;
+    remarks?: string;
+    note?: string; // Also keeping note for backwards compatibility if used elsewhere
+
     createdByUserId?: number;
     createdByUsername?: string;
     confirmedByUserId?: number;
     confirmedByUsername?: string;
+
     createdAt: string;
     shippedAt?: string;
     deliveredAt?: string;
