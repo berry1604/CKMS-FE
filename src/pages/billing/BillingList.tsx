@@ -60,6 +60,9 @@ export const BillingList = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [statementToDelete, setStatementToDelete] = useState<number | null>(null);
   
+  // Store name map (statementId -> storeName)
+  const [storeNameMap, setStoreNameMap] = useState<Record<number, string>>({});
+
   // VNPay state
   const [isPayingVNPay, setIsPayingVNPay] = useState<number | null>(null);
 
@@ -105,9 +108,24 @@ export const BillingList = () => {
         params.storeId = Number(storeIdFilter);
       }
       const res = await billingApi.getStatements(params);
-      setStatements(res.content || []);
+      const stmts = res.content || [];
+      setStatements(stmts);
       setTotalPages(res.totalPages || 0);
       setTotalElements(res.totalElements || 0);
+
+      // Fetch store names for each statement via detail API
+      if (stmts.length > 0) {
+        const results = await Promise.allSettled(
+          stmts.map((s) => billingApi.getStatementDetail(s.statementId, isStaff ? user?.storeId : undefined))
+        );
+        const nameMap: Record<number, string> = {};
+        results.forEach((result, idx) => {
+          if (result.status === "fulfilled" && result.value?.store?.name) {
+            nameMap[stmts[idx].statementId] = result.value.store.name;
+          }
+        });
+        setStoreNameMap(nameMap);
+      }
     } catch (error) {
       console.error("Failed to fetch billing statements:", error);
       toast.error("Failed to load billing statements");
@@ -426,7 +444,7 @@ export const BillingList = () => {
                 <div className="space-y-1 text-center md:text-left">
                   <div className="flex items-center justify-center md:justify-start gap-3">
                     <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter group-hover:text-amber-400 transition-colors">
-                      {s.storeName || (isStaff && user?.storeName ? user.storeName : `Cửa hàng #${s.storeId}`)}
+                      {storeNameMap[s.statementId] || s.storeName || (isStaff && user?.storeName ? user.storeName : `Cửa hàng #${s.statementId}`)}
                     </h3>
                     <div className={cn(
                       "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] italic border",
