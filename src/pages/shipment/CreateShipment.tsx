@@ -393,9 +393,23 @@ export const CreateShipment = () => {
                                                                             <span className="text-xs font-black text-zinc-200 uppercase tracking-tighter">Đơn #{order.orderId}</span>
                                                                             <Badge variant="secondary" className="text-[8px] px-1 py-0.5 border-0 uppercase">{order.status}</Badge>
                                                                         </div>
-                                                                        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-tight mt-0.5">
-                                                                            {order.orderDetails?.length || 0} món — Tổng: {(order.totalAmount || 0).toLocaleString()}đ
-                                                                        </p>
+                                                                        <div className="mt-2 space-y-1.5">
+                                                                            <div className="flex flex-wrap gap-1">
+                                                                                {order.orderDetails?.map((item, idx) => (
+                                                                                    <div 
+                                                                                        key={idx} 
+                                                                                        className="text-[9px] font-bold bg-zinc-800/80 text-zinc-400 px-2 py-0.5 rounded-lg border border-zinc-700/30 flex items-center gap-1.5"
+                                                                                    >
+                                                                                        <span className="text-[#DE802B]">{item.quantity}x</span>
+                                                                                        <span className="truncate max-w-[150px]">{item.productName}</span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between pt-1 border-t border-zinc-800/30">
+                                                                                <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Tổng thanh toán:</span>
+                                                                                <span className="text-[10px] text-[#DE802B] font-black italic">{(order.totalAmount || 0).toLocaleString()}đ</span>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             ))}

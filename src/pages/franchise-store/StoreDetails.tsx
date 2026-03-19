@@ -28,6 +28,7 @@ export const StoreDetails = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [store, setStore] = useState<StoreResponse | null>(null);
+    const [manager, setManager] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Overview');
 
@@ -38,6 +39,17 @@ export const StoreDetails = () => {
                 try {
                     const response = await storeApi.getStoreById(Number(id));
                     setStore(response.data);
+                    
+                    // Fetch manager details
+                    if (response.data.managerName) {
+                        const { userService } = await import('../../services/user.service');
+                        try {
+                            const userRes = await userService.getUserByUsernameOrEmail(response.data.managerName);
+                            setManager(userRes.data);
+                        } catch (e) {
+                            console.error('Error fetching manager details:', e);
+                        }
+                    }
                 } catch (error) {
                     console.error(error);
                     toast.error('Không thể tải thông tin cửa hàng');
@@ -172,11 +184,15 @@ export const StoreDetails = () => {
                             <div className="grid grid-cols-1 gap-4">
                                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-stone-400 hover:text-white transition-all hover:bg-white/[0.04]">
                                     <Phone size={16} className="text-amber-500/60" />
-                                    <span className="text-sm font-mono tracking-tight">{store.phone || 'Chưa cập nhật'}</span>
+                                    <span className="text-sm font-mono tracking-tight">{store.phone || manager?.phone || 'Chưa cập nhật'}</span>
                                 </div>
                                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-stone-400 hover:text-white transition-all hover:bg-white/[0.04]">
                                     <Mail size={16} className="text-amber-500/60" />
-                                    <span className="text-sm truncate font-medium">{store.email || 'Chưa cập nhật'}</span>
+                                    <span className="text-sm truncate font-medium">{store.email || manager?.email || 'Chưa cập nhật'}</span>
+                                </div>
+                                <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-stone-400 hover:text-white transition-all hover:bg-white/[0.04]">
+                                    <MapPin size={16} className="text-amber-500/60 mt-0.5" />
+                                    <span className="text-sm font-medium leading-relaxed">{store.address || manager?.address || 'Chưa cập nhật'}</span>
                                 </div>
                             </div>
                         </div>

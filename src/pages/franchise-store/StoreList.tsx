@@ -27,6 +27,7 @@ export const StoreList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStore, setEditingStore] = useState<StoreResponse | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [staffNames, setStaffNames] = useState<Record<number, string>>({});
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -45,6 +46,30 @@ export const StoreList = () => {
             setStores(pageData.content);
             setTotalPages(pageData.totalPages);
             setTotalElements(pageData.totalElements);
+
+            // Fetch staff for each store
+            const names: Record<number, string> = {};
+            const { userService } = await import('../../services/user.service');
+            
+            await Promise.all(pageData.content.map(async (store: StoreResponse) => {
+                const sid = store.id || store.storeId;
+                if (sid) {
+                    try {
+                        const staffRes = await userService.getUsers({ storeId: sid, size: 20 });
+                        // Filter by storeId locally to be sure
+                        const list = staffRes.data.content || [];
+                        const assigned = list.filter((u: any) => u.storeId === sid);
+                        if (assigned.length > 0) {
+                            names[sid] = assigned[0].fullName;
+                        } else {
+                            names[sid] = 'Chưa có NV';
+                        }
+                    } catch (e) {
+                        names[sid] = 'Lỗi';
+                    }
+                }
+            }));
+            setStaffNames(prev => ({ ...prev, ...names }));
         } catch (error) {
             console.error(error);
             toast.error('Failed to load stores');
@@ -254,6 +279,7 @@ export const StoreList = () => {
                                                     <div className="flex items-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">
                                                         <User size={12} className="mr-1.5 text-amber-500 opacity-50" />
                                                         {store.managerName || 'N/A'}
+                                                        <span className="ml-2 text-zinc-700">({staffNames[actualId!] || 'Đang tải...'})</span>
                                                     </div>
                                                 </div>
                                             </div>

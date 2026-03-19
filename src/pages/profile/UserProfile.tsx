@@ -6,6 +6,10 @@ import { User as UserIcon, Mail, Lock, Save, Phone, MapPin, Calendar, FileText, 
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../hooks/useAuth';
+import { userService } from '../../services/user.service';
+import { storeApi } from '../../services/store.api';
+import { useAppStore } from '../../app/store';
+import { toast } from 'react-hot-toast';
 
 const profileSchema = z.object({
     name: z.string().min(2, 'Tên là bắt buộc'),
@@ -29,6 +33,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export const UserProfile = () => {
     const { user } = useAuth();
+    const { updateUser } = useAppStore();
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -52,22 +57,58 @@ export const UserProfile = () => {
             setValue('phone', user.phone || '');
             setValue('address', user.address || '');
             setValue('bio', user.bio || '');
-        }
-    }, [user, setValue]);
 
-    const onSubmit = async (_data: ProfileFormValues) => {
+            // Fetch real store name if it's generic (e.g., "Cửa hàng 3")
+            if (user.storeId && (!user.storeName || user.storeName.includes('Cửa hàng'))) {
+                storeApi.getStoreById(Number(user.storeId))
+                    .then(res => {
+                        if (res.data?.name) {
+                            updateUser({ storeName: res.data.name });
+                        }
+                    })
+                    .catch(err => console.error('Failed to fetch store name', err));
+            }
+        }
+    }, [user, setValue, updateUser]);
+
+    const onSubmit = async (data: ProfileFormValues) => {
         if (!user) return;
         setIsLoading(true);
         setSuccessMessage('');
 
         try {
-            // Simulated API Call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            setSuccessMessage('Hồ sơ đã được cập nhật thành công!');
-            setValue('password', '');
-            setValue('confirmPassword', '');
-        } catch (error) {
+            const updateData: any = {
+                fullName: data.name,
+                email: data.email,
+                phone: data.phone,
+                address: data.address,
+                bio: data.bio
+            };
+
+            if (data.password) {
+                updateData.password = data.password;
+            }
+
+            const response = await userService.updateProfile(updateData);
+            
+            if (response) {
+                // Update global store
+                updateUser({
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    address: data.address,
+                    bio: data.bio
+                });
+                
+                toast.success('Hồ sơ đã được cập nhật thành công!');
+                setSuccessMessage('Hồ sơ đã được cập nhật thành công!');
+                setValue('password', '');
+                setValue('confirmPassword', '');
+            }
+        } catch (error: any) {
             console.error('Failed to update profile', error);
+            toast.error(error.response?.data?.message || 'Không thể cập nhật hồ sơ. Vui lòng thử lại sau.');
         } finally {
             setIsLoading(false);
         }

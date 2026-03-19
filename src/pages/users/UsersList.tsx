@@ -206,7 +206,6 @@ export const UsersList = () => {
                                     <th className="px-8 py-6">Thành viên</th>
                                     <th className="px-8 py-6">Vai trò OS</th>
                                     <th className="px-8 py-6">Trạng thái</th>
-                                    <th className="px-8 py-6">Ngày tham gia</th>
                                     <th className="px-8 py-6 text-right">Điều khiển</th>
                                 </tr>
                             </thead>
@@ -262,7 +261,19 @@ export const UsersList = () => {
                                                                     'bg-amber-500'
                                                             }`} />
                                                         <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">
-                                                            {user.roleName?.replace(/_/g, ' ') || 'N/A'}
+                                                            {(() => {
+                                                                const rName = user.roleName || (user as any).role || 'N/A';
+                                                                if (rName === 'N/A') return 'N/A';
+                                                                
+                                                                // Find translation or format
+                                                                const formatted = rName.replace('ROLE_', '').replace(/_/g, ' ');
+                                                                if (formatted === 'ADMIN') return 'Quản trị viên';
+                                                                if (formatted === 'MANAGER') return 'Quản lý';
+                                                                if (formatted === 'STORE STAFF') return 'Nhân viên cửa hàng';
+                                                                if (formatted === 'KITCHEN STAFF') return 'Nhân viên bếp';
+                                                                if (formatted === 'COORDINATOR') return 'Điều phối viên';
+                                                                return formatted;
+                                                            })()}
                                                         </span>
                                                     </div>
                                                     {(user.storeName || user.kitchenName) && (
@@ -290,9 +301,6 @@ export const UsersList = () => {
                                                         Không hoạt động
                                                     </div>
                                                 )}
-                                            </td>
-                                            <td className="px-8 py-6 text-sm text-gray-500 font-light">
-                                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
                                             </td>
                                             <td className="px-8 py-6 text-right">
                                                 <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
