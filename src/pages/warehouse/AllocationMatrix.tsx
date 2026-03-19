@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { productionPlanApi } from '../../services/productionPlan.api';
 import { allocationApi, type AllocationRow } from '../../services/allocationApi';
+import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import type { ProductionPlanSummaryResponse } from '../../types/productionPlan';
 import { cn } from '../../utils/classNames';
 
@@ -72,9 +73,49 @@ export const AllocationMatrix = () => {
     const fetchAllocationMatrix = async (planId: number) => {
         setIsLoadingMatrix(true);
         try {
-            const data = await allocationApi.previewAllocation(planId);
-            setMatrix(data.rows || data); // Handle both {rows: ...} and direct array
+            const selectedPlanData = [...unallocatedPlans, ...allocatedPlans].find(p => p.planId === planId);
+            const kitchenId = selectedPlanData?.kitchenId || 1;
+
+            let currentStock: any[] = [];
+            let previewRes: { rows: AllocationRow[] } = { rows: [] };
+
+            try {
+                // Try fetching both stock and preview in parallel
+                const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(kitchenId);
+                const warehouseId = warehouses.length > 0 ? warehouses[0].warehouseId : 1;
+
+                const [preview, stockRes] = await Promise.all([
+                    allocationApi.previewAllocation(planId),
+                    kitchenInventoryApi.getWarehouseStock(warehouseId)
+                ]);
+                previewRes = preview;
+                currentStock = stockRes.data || [];
+            } catch (innerError) {
+                console.warn("Stock/Warehouse fetch failed, falling back to basic preview:", innerError);
+                // Fallback: Just fetch the preview
+                previewRes = await allocationApi.previewAllocation(planId);
+            }
+
+            const { rows } = previewRes;
+
+            // Merge stock quantities into allocation rows
+            const mergedRows = (rows || []).map(row => {
+                const stockItem = currentStock.find(s =>
+                    (s.itemId && s.itemId === row.productId) ||
+                    (s.itemName && s.itemName.toLowerCase() === row.productName.toLowerCase())
+                );
+
+                const inventoryQty = stockItem ? stockItem.quantity : 0;
+
+                return {
+                    ...row,
+                    totalAvailable: (row.totalAvailable || 0) + inventoryQty
+                };
+            });
+
+            setMatrix(mergedRows);
         } catch (error) {
+            console.error("Critical Allocation preview error:", error);
             toast.error('Không thể phân bổ dữ liệu plan này');
             setMatrix([]);
         } finally {
