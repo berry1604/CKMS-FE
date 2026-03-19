@@ -71,6 +71,9 @@ export const ProductionSchedule = () => {
   const [materialStockMap, setMaterialStockMap] = useState<Map<string, number>>(
     new Map(),
   );
+  const [materialUnitsMap, setMaterialUnitsMap] = useState<Map<number, string>>(
+    new Map(),
+  );
   const [currentDate, setCurrentDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -104,9 +107,6 @@ export const ProductionSchedule = () => {
       return;
     }
     const fetchStock = async () => {
-      // In this system, each CentralKitchen has exactly one KitchenWarehouse,
-      // and they share the same auto-incremented ID (kitchenId=1 → warehouseId=1).
-      // The correct endpoint is: GET /api/v1/kitchen-inventory/{warehouseId}/stock
       const warehouseId = selectedPlanDetail?.kitchenId || user?.kitchenId || 1;
       const stockMap = new Map<string, number>();
 
@@ -122,10 +122,19 @@ export const ProductionSchedule = () => {
           if (nameKey) {
             stockMap.set(nameKey, (stockMap.get(nameKey) || 0) + item.quantity);
           }
-          // Map by material ID for precise matching (used by the table)
+          // Map by material ID for precise matching
           if (item.itemType === "MATERIAL") {
             const idKey = `id-${item.itemId}`;
             stockMap.set(idKey, (stockMap.get(idKey) || 0) + item.quantity);
+            
+            // ENHANCEMENT: Populate unit map from stock
+            if (item.unit) {
+              setMaterialUnitsMap(prev => {
+                const newMap = new Map(prev);
+                newMap.set(item.itemId, item.unit);
+                return newMap;
+              });
+            }
           }
         }
       } catch (e) {
@@ -135,12 +144,7 @@ export const ProductionSchedule = () => {
       setMaterialStockMap(stockMap);
     };
     fetchStock();
-  }, [
-    selectedPlanId,
-    selectedPlanDetail?.kitchenId,
-    user?.kitchenId,
-    selectedPlanDetail?.materials,
-  ]);
+  }, [selectedPlanId, selectedPlanDetail?.kitchenId, user?.kitchenId, selectedPlanDetail?.materials]);
 
   useEffect(() => {
     let result = plans;
@@ -189,11 +193,29 @@ export const ProductionSchedule = () => {
       try {
         const preview = await allocationApi.previewAllocation(id);
         if (preview.materials && preview.materials.length > 0) {
-          detail.materials = preview.materials;
+          // Preserve units since preview materials might not have them
+          const existingUnits = new Map<number, string>();
+          detail.materials?.forEach(m => {
+            if (m.materialId && m.unit) existingUnits.set(m.materialId, m.unit);
+          });
+
+          detail.materials = preview.materials.map(m => ({
+            ...m,
+            unit: m.unit || existingUnits.get(m.materialId)
+          }));
         }
       } catch (e) {
         console.warn("Could not fetch accurate materials preview", e);
       }
+
+      // Store units map to state for reactive updates
+      const unitsMap = new Map<number, string>();
+      detail.materials?.forEach((m: any) => {
+        if (m.materialId && m.unit) {
+          unitsMap.set(m.materialId, m.unit);
+        }
+      });
+      setMaterialUnitsMap(unitsMap);
 
       setSelectedPlanDetail(detail);
     } catch (error) {
@@ -269,15 +291,20 @@ export const ProductionSchedule = () => {
               const { rows: allocationRows } = await allocationApi.previewAllocation(id);
 
               // Map AllocationRow to ProductionPlanDetailItem format
-              displayItems = allocationRows.map((row: AllocationRow) => ({
-                productId: row.productId,
-                productName: row.productName,
-                plannedQuantity: (row.allocations || []).reduce((sum: number, alloc: any) => sum + (alloc.requestedQuantity || 0), 0),
-                unit: "" // Unit might not be in preview, can be added if needed
-              }));
+              // Use units from detail.items if available
+              displayItems = allocationRows.map((row: AllocationRow) => {
+                const originalItem = (detail.items || []).find((it: any) => it.productId === row.productId);
+                return {
+                  productId: row.productId,
+                  productName: row.productName,
+                  plannedQuantity: (row.allocations || []).reduce((sum: number, alloc: any) => sum + (alloc.requestedQuantity || 0), 0),
+                  unit: originalItem?.unit || ""
+                };
+              });
             } catch (allocError) {
               console.error("Failed to fetch allocation preview:", allocError);
-              // Fallback to empty list if allocation fails, but the modal will show "No data"
+              // Fallback to detail.items if allocation preview fails
+              displayItems = detail.items || [];
             }
 
             // Update local state for modal
@@ -872,13 +899,13 @@ export const ProductionSchedule = () => {
             hasAuthority("COORDINATOR") ||
             hasAuthority("MANAGER") ||
             hasAuthority("ADMIN")) && (
-            <Button
-              className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2 rounded-2xl"
-              onClick={handleCreateTask}
-            >
-              <Plus size={18} strokeWidth={3} /> Tạo mẻ mới
-            </Button>
-          )}
+              <Button
+                className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2 rounded-2xl"
+                onClick={handleCreateTask}
+              >
+                <Plus size={18} strokeWidth={3} /> Tạo mẻ mới
+              </Button>
+            )}
         </div>
       </div>
 
@@ -1019,9 +1046,9 @@ export const ProductionSchedule = () => {
                 <div className="relative -mx-8 -mt-8 mb-8 group/img h-64 overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950/90 z-10"></div>
                   <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full scale-150 group-hover/img:bg-amber-500/20 transition-all duration-700"></div>
-                  <img 
-                    src="/src/assets/kitchen_production.png" 
-                    alt="Kitchen Production" 
+                  <img
+                    src="/src/assets/kitchen_production.png"
+                    alt="Kitchen Production"
                     className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 group-hover/img:scale-110 transition-all duration-1000"
                   />
                   <div className="absolute bottom-6 left-8 z-20">
@@ -1044,7 +1071,7 @@ export const ProductionSchedule = () => {
                       </Badge>
                     </div>
                     <div>
-                        {getStatusBadge(selectedPlanDetail.status)}
+                      {getStatusBadge(selectedPlanDetail.status)}
                     </div>
                     <p className="text-xs text-zinc-500 font-medium italic leading-relaxed">
                       Tiến trình hiện tại của kế hoạch nhằm đáp ứng nhu cầu sản
@@ -1158,14 +1185,14 @@ export const ProductionSchedule = () => {
                                         {mat.materialName}
                                       </span>
                                       <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
-                                        {mat.unit || "Kg"}
+                                        {materialUnitsMap.get(mat.materialId) || mat.unit || ""}
                                       </span>
                                     </div>
                                   </div>
                                 </td>
                                 <td className="px-4 py-4 text-center">
                                   <span className="text-sm font-black text-zinc-400 font-mono tracking-tighter italic">
-                                    {mat.requiredQuantity}
+                                    {mat.requiredQuantity} {materialUnitsMap.get(mat.materialId) || mat.unit || ""}
                                   </span>
                                 </td>
                                 <td className="px-4 py-4 text-center">
@@ -1177,7 +1204,7 @@ export const ProductionSchedule = () => {
                                         : "text-red-500 bg-red-500/5 shadow-[inset_0_0_10px_rgba(239,68,68,0.05)]",
                                     )}
                                   >
-                                    {available}
+                                    {available} {materialUnitsMap.get(mat.materialId) || mat.unit || ""}
                                   </span>
                                 </td>
                                 <td className="px-8 py-4 text-right">
@@ -1190,7 +1217,7 @@ export const ProductionSchedule = () => {
                                     <div className="flex items-center justify-end gap-2 text-red-500 animate-pulse">
                                       <AlertTriangle size={14} strokeWidth={3} />
                                       <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-                                        -{mat.requiredQuantity - available} {mat.unit}
+                                        -{mat.requiredQuantity - available} {materialUnitsMap.get(mat.materialId) || mat.unit || ""}
                                       </span>
                                     </div>
                                   )}
@@ -1215,7 +1242,7 @@ export const ProductionSchedule = () => {
               {/* Quick Print Section */}
               <div className="relative group/print overflow-hidden p-8 bg-zinc-950 border border-zinc-800 rounded-[36px] transition-all duration-500 hover:border-amber-500/20">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl transform translate-x-10 -translate-y-10 group-hover/print:scale-150 transition-transform duration-1000"></div>
-                
+
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
                   <div className="flex items-center gap-5">
                     <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/print:text-amber-500 group-hover/print:border-amber-500/30 group-hover/print:bg-amber-500/5 transition-all duration-500">
@@ -1303,7 +1330,7 @@ export const ProductionSchedule = () => {
                                 <span className="text-[15px] font-black text-zinc-100 tracking-tight flex items-center gap-2">
                                   {item.productName}
                                 </span>
-                                <span className="text-[10px] text-zinc-500 font-medium tracking-wider uppercase">ID: #{item.productId} | SL Yêu cầu: <span className="text-amber-500 font-bold">{item.plannedQuantity}</span></span>
+                                <span className="text-[10px] text-zinc-500 font-medium tracking-wider uppercase">ID: #{item.productId} | SL Yêu cầu: <span className="text-amber-500 font-bold">{item.plannedQuantity} {item.unit || ""}</span></span>
                               </div>
                             </div>
                           </div>
