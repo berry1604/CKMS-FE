@@ -48,6 +48,7 @@ export interface InvoiceDetailResponse {
   orderDate?: string;
   amount: number;
   status?: InvoiceStatus;
+  issuedAt?: string;
   note?: string;
 }
 
