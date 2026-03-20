@@ -378,66 +378,54 @@ export const CreateProductionPlan = () => {
                     Không có bếp trung tâm nào
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {kitchens.map((k) => {
-                      const info = kitchensInfo[k.kitchenId];
-                      const isSelected = selectedKitchenId === k.kitchenId;
-                      const maxCap = k.maxDailyCapacity || 1;
-                      const rem = info ? info.remaining : Number(k.maxDailyCapacity) || 0;
-                      const pct = Math.min(Math.max(rem / maxCap, 0), 1) * 100;
-                      
-                      return (
-                        <div 
-                          key={k.kitchenId}
-                          onClick={() => setSelectedKitchenId(k.kitchenId)}
-                          className={cn(
-                              "p-5 rounded-2xl border cursor-pointer transition-all duration-300 flex flex-col gap-4 relative overflow-hidden group/kitchen",
-                              isSelected 
-                                ? "bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]" 
-                                : "bg-zinc-950/50 border-zinc-800/80 hover:border-amber-500/30 hover:bg-zinc-900"
-                          )}
-                        >
-                          {isSelected && <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>}
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-inner", isSelected ? "bg-amber-500 text-black" : "bg-zinc-900 text-zinc-500 group-hover/kitchen:text-amber-500")}>
-                                <ChefHat size={18} />
-                              </div>
-                              <div className="flex flex-col justify-center">
-                                <h4 className="font-black text-zinc-100 text-sm leading-tight uppercase tracking-tight">{k.name}</h4>
-                                {k.kitchenId === user?.kitchenId && <span className="text-amber-500 text-[9px] block uppercase font-bold tracking-widest mt-0.5">Bếp của bạn</span>}
-                              </div>
-                            </div>
-                            <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors", isSelected ? "border-amber-500" : "border-zinc-700")}>
-                              {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
+                  <div className="space-y-4">
+                    <div className="relative group">
+                      <ChefHat 
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 transition-colors" 
+                        size={18} 
+                      />
+                      <select
+                        value={selectedKitchenId || ""}
+                        onChange={(e) => setSelectedKitchenId(Number(e.target.value))}
+                        className="w-full pl-12 pr-10 h-14 bg-zinc-950 border border-zinc-800 rounded-xl text-sm font-black text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer appearance-none uppercase tracking-wide shadow-inner"
+                      >
+                        {kitchens.map((k) => (
+                          <option key={k.kitchenId} value={k.kitchenId} className="bg-zinc-900 text-zinc-100 font-bold">
+                            {k.name} {k.kitchenId === user?.kitchenId ? "(Bếp của bạn)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500 group-hover:text-amber-500 transition-colors flex flex-col -space-y-1">
+                          <ChevronRight className="w-4 h-4 -rotate-90" />
+                          <ChevronRight className="w-4 h-4 rotate-90" />
+                      </div>
+                    </div>
+
+                    {/* Show selected kitchen stats just below the dropdown */}
+                    {selectedKitchenId && kitchensInfo[selectedKitchenId] && (
+                        <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 flex items-center justify-between shadow-[0_0_15px_rgba(245,158,11,0.05)] animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">Khả dụng</span>
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                                <span className="text-lg font-black text-amber-500">{kitchensInfo[selectedKitchenId].remaining}</span>
+                                <span className="text-xs text-zinc-500 font-bold">/ {kitchens.find(k => k.kitchenId === selectedKitchenId)?.maxDailyCapacity}</span>
                             </div>
                           </div>
                           
-                          <div className="pt-4 border-t border-zinc-800/50 space-y-4">
-                             <div className="space-y-2">
-                               <div className="flex justify-between items-baseline">
-                                 <span className="text-[9px] uppercase text-zinc-500 font-bold tracking-widest">Khả dụng</span>
-                                 <span className="text-sm font-black text-zinc-100">{rem} <span className="text-[9px] text-zinc-500">/ {k.maxDailyCapacity}</span></span>
-                               </div>
-                               <div className="w-full bg-zinc-900 border border-zinc-800 h-2 rounded-full overflow-hidden">
-                                 <div 
-                                    className={cn("h-full transition-all duration-1000", pct < 20 ? "bg-red-500" : pct < 50 ? "bg-amber-500" : "bg-emerald-500")} 
-                                    style={{ width: `${pct}%` }}
-                                 />
-                               </div>
-                             </div>
+                          <div className="h-8 w-px bg-zinc-800/80 mx-4"></div>
 
-                             <div className="flex justify-between items-center p-3 bg-zinc-900/50 rounded-xl border border-zinc-800/50">
-                               <div className="flex items-center gap-2 text-zinc-400">
-                                 <Package size={14} />
-                                 <span className="text-[9px] uppercase tracking-widest font-bold">Mức tồn kho</span>
-                               </div>
-                               <span className="text-sm font-black text-zinc-200">{info ? info.inventoryTotal : "---"} <span className="text-[9px] text-zinc-500">SP</span></span>
-                             </div>
+                          <div className="flex flex-col items-end">
+                            <div className="flex items-center gap-1">
+                                <Package size={12} className="text-zinc-500" />
+                                <span className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">Mức tồn kho</span>
+                            </div>
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                                <span className="text-lg font-black text-zinc-200">{kitchensInfo[selectedKitchenId].inventoryTotal}</span>
+                                <span className="text-[9px] text-zinc-600 font-bold px-1 py-0.5 bg-zinc-900 rounded border border-zinc-800">SP</span>
+                            </div>
                           </div>
                         </div>
-                      );
-                    })}
+                    )}
                   </div>
                 )}
               </div>

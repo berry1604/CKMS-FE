@@ -267,17 +267,19 @@ export const MainLayout: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                     {!isCollapsed && (
                         <div className="flex items-center gap-3 relative z-10">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                                F
-                            </div>
-                            <span className="text-lg font-black bg-gradient-to-r from-stone-100 to-stone-400 bg-clip-text text-transparent tracking-tighter uppercase italic">
-                                Franchise<span className="text-amber-500">Sys</span>
+                            <img src="/logo.svg" alt="SteakChain Logo" className="w-8 h-8 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                            <span className="text-xl font-black bg-clip-text tracking-tighter uppercase italic flex flex-col justify-center leading-none">
+                                <div>
+                                    <span className="text-amber-500 drop-shadow-md">Steak</span>
+                                    <span className="text-amber-500 drop-shadow-md">Chain</span>
+                                </div>
+                                <span className="text-stone-400 font-bold text-[9px] mt-0.5 tracking-[0.2em] not-italic">Franchise System</span>
                             </span>
                         </div>
                     )}
                     {isCollapsed && (
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-black mx-auto shadow-lg shadow-amber-500/20 hover:scale-110 transition-transform cursor-pointer" onClick={() => setIsCollapsed(false)}>
-                            F
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto hover:scale-110 transition-transform cursor-pointer" onClick={() => setIsCollapsed(false)}>
+                            <img src="/logo.svg" alt="SteakChain Logo" className="w-8 h-8 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
                         </div>
                     )}
 
@@ -426,8 +428,12 @@ export const MainLayout: React.FC = () => {
                     isCollapsed && "md:ml-20"
                 )}
             >
-                <header className="h-16 bg-zinc-900 shadow-sm flex items-center justify-between px-4 md:px-8 border-b border-zinc-800 md:hidden z-10 sticky top-0">
-                    <span className="text-lg font-bold text-amber-500">FranchiseSys</span>
+                <header className="h-16 bg-zinc-900 shadow-sm flex items-center gap-2 px-4 md:px-8 border-b border-zinc-800 md:hidden z-10 sticky top-0">
+                    <img src="/logo.svg" alt="Logo" className="w-8 h-8 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                    <span className="text-lg font-black tracking-tight uppercase italic">
+                        <span className="text-amber-500">Steak</span>
+                        <span className="text-amber-500">Chain</span>
+                    </span>
                 </header>
 
                 <main className="flex-1 p-4 md:p-8 overflow-auto w-full max-w-[1600px] mx-auto">
