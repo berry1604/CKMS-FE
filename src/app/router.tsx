@@ -136,7 +136,11 @@ export const router = createBrowserRouter([
                             { path: 'inventory', element: <KitchenInventory /> },
                             { path: 'inventory/import', element: <KitchenImportPage /> },
                             { path: 'production', element: <ProductionBoard /> },
-                            { path: 'settings', element: <KitchenSettings /> }
+                            { 
+                                path: 'settings', 
+                                element: <ProtectedRoute allowedRoles={['MANAGER']} />,
+                                children: [{ index: true, element: <KitchenSettings /> }]
+                            }
                         ]
                     },
 

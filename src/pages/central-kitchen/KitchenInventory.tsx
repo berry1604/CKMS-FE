@@ -3,14 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, TrendingUp, Package, Leaf, Edit, Trash2, Clock, Save } from 'lucide-react';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
+import { KitchenSelector } from '../../components/common/KitchenSelector';
 import type { KitchenStockItemResponse } from '../../types/kitchenInventory';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/classNames';
 
 export const KitchenInventory = () => {
     const navigate = useNavigate();
+    const { hasAuthority } = useAuth();
+    const canManageInventory = hasAuthority('KITCHEN_STAFF');
     const [inventory, setInventory] = useState<KitchenStockItemResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -25,12 +29,13 @@ export const KitchenInventory = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const WAREHOUSE_ID = 1; // Default Kitchen Warehouse ID
+    const [selectedKitchenId, setSelectedKitchenId] = useState<number | null>(null);
+    const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(null);
 
-    const loadInventory = async () => {
+    const loadInventory = async (warehouseId: number) => {
         setIsLoading(true);
         try {
-            const res = await kitchenInventoryApi.getWarehouseStock(WAREHOUSE_ID);
+            const res = await kitchenInventoryApi.getWarehouseStock(warehouseId);
             setInventory(res.data || []);
         } catch (error) {
             console.error(error);
@@ -40,9 +45,15 @@ export const KitchenInventory = () => {
         }
     };
 
+    // Load inventory when kitchen changes
     useEffect(() => {
-        loadInventory();
-    }, []);
+        if (!selectedKitchenId) return;
+
+        // In this system, warehouseId for central kitchens is the same as kitchenId
+        const mainWarehouseId = selectedKitchenId;
+        setSelectedWarehouseId(mainWarehouseId);
+        loadInventory(mainWarehouseId);
+    }, [selectedKitchenId]);
 
     const handleEditClick = (item: KitchenStockItemResponse) => {
         setSelectedItem(item);
@@ -52,16 +63,16 @@ export const KitchenInventory = () => {
     };
 
     const handleUpdate = async () => {
-        if (!selectedItem) return;
+        if (!selectedItem || !selectedWarehouseId) return;
         setIsUpdating(true);
         try {
-            await kitchenInventoryApi.updateStockItem(WAREHOUSE_ID, selectedItem.id, {
+            await kitchenInventoryApi.updateStockItem(selectedWarehouseId, selectedItem.id, {
                 quantity: editQuantity,
                 expiryDate: editExpiryDate || undefined
             });
             toast.success('Cập nhật tồn kho thành công');
             setIsEditModalOpen(false);
-            loadInventory();
+            loadInventory(selectedWarehouseId);
         } catch (error) {
             console.error(error);
             toast.error('Không thể cập nhật tồn kho. Vui lòng kiểm tra lại quyền hạn hoặc API.');
@@ -76,13 +87,13 @@ export const KitchenInventory = () => {
     };
 
     const handleDelete = async () => {
-        if (!selectedItem) return;
+        if (!selectedItem || !selectedWarehouseId) return;
         setIsDeleting(true);
         try {
-            await kitchenInventoryApi.deleteStockItem(WAREHOUSE_ID, selectedItem.id);
+            await kitchenInventoryApi.deleteStockItem(selectedWarehouseId, selectedItem.id);
             toast.success('Đã xóa vật phẩm khỏi kho');
             setIsDeleteModalOpen(false);
-            loadInventory();
+            loadInventory(selectedWarehouseId);
         } catch (error) {
             console.error(error);
             toast.error('Không thể xóa vật phẩm. Vui lòng kiểm tra lại Backend.');
@@ -172,9 +183,9 @@ export const KitchenInventory = () => {
                 </div>
             )
         },
-        {
+        ...(canManageInventory ? [{
             header: 'Thao tác',
-            cell: (row) => (
+            cell: (row: KitchenStockItemResponse) => (
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => handleEditClick(row)}
@@ -192,7 +203,7 @@ export const KitchenInventory = () => {
                     </button>
                 </div>
             )
-        }
+        }] : [])
     ];
 
     // Calculate statistics
@@ -228,25 +239,35 @@ export const KitchenInventory = () => {
                                     <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Inventory Command Center</span>
                                 </div>
                             </div>
-                            <div>
-                                <h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2">
-                                    Kho Bếp <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Trung Tâm</span>
-                                </h1>
-                                <p className="text-zinc-400 text-sm font-medium uppercase tracking-widest max-w-xl leading-relaxed opacity-80">
-                                    Quản lý tồn kho nguyên liệu và thành phẩm toàn hệ thống với độ chính xác thời gian thực.
-                                </p>
+                            <div className="flex flex-col md:flex-row md:items-end gap-6">
+                                <div>
+                                    <h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2">
+                                        Kho Bếp <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Trung Tâm</span>
+                                    </h1>
+                                    <p className="text-zinc-400 text-sm font-medium uppercase tracking-widest max-w-xl leading-relaxed opacity-80">
+                                        Quản lý tồn kho nguyên liệu và thành phẩm toàn hệ thống với độ chính xác thời gian thực.
+                                    </p>
+                                </div>
+                                
+                                <KitchenSelector 
+                                    selectedKitchenId={selectedKitchenId}
+                                    onKitchenChange={setSelectedKitchenId}
+                                    className="md:mb-1"
+                                />
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4 animate-in slide-in-from-right-8 duration-1000 delay-200">
-                            <button
-                                onClick={() => navigate('/kitchen/inventory/import')}
-                                className="group relative flex items-center h-14 px-10 rounded-[24px] bg-white text-black font-black uppercase text-[11px] tracking-widest transition-all duration-500 hover:bg-amber-500 hover:scale-[1.05] active:scale-95 shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
-                            >
-                                <TrendingUp size={18} className="mr-3 transition-transform group-hover:translate-y-[-2px]" />
-                                Nhập kho hệ thống
-                            </button>
-                        </div>
+                        {canManageInventory && (
+                            <div className="flex items-center gap-4 animate-in slide-in-from-right-8 duration-1000 delay-200">
+                                <button
+                                    onClick={() => navigate('/kitchen/inventory/import', { state: { kitchenId: selectedKitchenId } })}
+                                    className="group relative flex items-center h-14 px-10 rounded-[24px] bg-white text-black font-black uppercase text-[11px] tracking-widest transition-all duration-500 hover:bg-amber-500 hover:scale-[1.05] active:scale-95 shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+                                >
+                                    <TrendingUp size={18} className="mr-3 transition-transform group-hover:translate-y-[-2px]" />
+                                    Nhập kho hệ thống
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

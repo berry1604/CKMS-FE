@@ -109,12 +109,6 @@ export const ProductionPlanList = () => {
                     >
                         <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
                     </Button>
-                    <Button 
-                        onClick={() => navigate('/kitchen/dispatch')}
-                        className="bg-zinc-100 hover:bg-white text-black font-black uppercase text-xs tracking-widest h-12 px-6 rounded-xl border-0"
-                    >
-                        <Boxes size={14} className="mr-2" /> Tạo Kế hoạch mới
-                    </Button>
                 </div>
             </div>
 
