@@ -148,7 +148,19 @@ export const CreateShipment = () => {
 
             console.log('Shipment Payload:', request);
 
-            await shipmentApi.createShipment(request);
+            const response = await shipmentApi.createShipment(request);
+            
+            // Automatically mark the shipment as PREPARED (Sẵn sàng) right after creation
+            if (response && response.shipmentId) {
+                try {
+                    await shipmentApi.prepareShipment(response.shipmentId);
+                } catch (e) {
+                    console.error('Auto-prepare failed:', e);
+                    // We don't block the success message if only prepare fails, 
+                    // since the shipment was created anyway.
+                }
+            }
+            
             toast.success('Đơn vận chuyển đã được tạo thành công!');
             navigate('/shipment');
         } catch (error: any) {

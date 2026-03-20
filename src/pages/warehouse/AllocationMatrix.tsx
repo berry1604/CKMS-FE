@@ -446,26 +446,42 @@ export const AllocationMatrix = () => {
                 isSaving ||
                 isSuccess ||
                 hasYield === false ||
-                matrix.some(
-                  (row) =>
-                    (row.allocations || []).reduce(
-                      (s, a) => s + a.allocatedQuantity,
-                      0,
-                    ) > row.totalAvailable,
-                )
+                matrix.some((row) => {
+                  const totalAllocated = (row.allocations || []).reduce(
+                    (s, a) => s + a.allocatedQuantity,
+                    0,
+                  );
+                  const totalRequested = (row.allocations || []).reduce(
+                    (s, a) => s + a.requestedQuantity,
+                    0,
+                  );
+                  // Bắt buộc phân bổ đủ hàng (đủ yêu cầu)
+                  // Hoặc nếu không đủ stock thì phải phân bổ tối đa lượng stock hiện có
+                  const requiredToAllocate = Math.min(totalRequested, row.totalAvailable || 0);
+                  
+                  return (
+                    totalAllocated > (row.totalAvailable || 0) || // Phân bổ vượt quá stock
+                    totalAllocated < requiredToAllocate // Chưa phân bổ đủ
+                  );
+                })
               }
               className={cn(
                 "font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-xl border-0 flex items-center gap-2 transition-all active:scale-95",
                 isSuccess
                   ? "bg-emerald-600/20 text-emerald-500 border border-emerald-500/30 cursor-default"
                   : "bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/20",
-                matrix.some(
-                  (row) =>
-                    (row.allocations || []).reduce(
-                      (s, a) => s + a.allocatedQuantity,
-                      0,
-                    ) > row.totalAvailable,
-                ) && "opacity-50 grayscale cursor-not-allowed",
+                matrix.some((row) => {
+                  const totalAllocated = (row.allocations || []).reduce(
+                    (s, a) => s + a.allocatedQuantity,
+                    0,
+                  );
+                  const totalRequested = (row.allocations || []).reduce(
+                    (s, a) => s + a.requestedQuantity,
+                    0,
+                  );
+                  const requiredToAllocate = Math.min(totalRequested, row.totalAvailable || 0);
+                  return totalAllocated > (row.totalAvailable || 0) || totalAllocated < requiredToAllocate;
+                }) && "opacity-50 grayscale cursor-not-allowed",
               )}
             >
               {isSaving ? (

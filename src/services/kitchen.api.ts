@@ -25,5 +25,21 @@ export const kitchenApi = {
     updateKitchen: async (kitchenId: number, data: KitchenUpdateRequest): Promise<ApiResponse<KitchenResponse>> => {
         const response = await axiosClient.patch<ApiResponse<KitchenResponse>>(`/kitchens/${kitchenId}`, data);
         return response.data;
+    },
+
+    /**
+     * POST /kitchens
+     */
+    createKitchen: async (data: KitchenUpdateRequest): Promise<ApiResponse<KitchenResponse>> => {
+        const response = await axiosClient.post<ApiResponse<KitchenResponse>>('/kitchens', data);
+        return response.data;
+    },
+
+    /**
+     * DELETE /kitchens/{kitchenId}
+     */
+    deleteKitchen: async (kitchenId: number): Promise<ApiResponse<void>> => {
+        const response = await axiosClient.delete<ApiResponse<void>>(`/kitchens/${kitchenId}`);
+        return response.data;
     }
 };

@@ -34,7 +34,7 @@ import { ProductionBoard } from '../pages/central-kitchen/ProductionBoard';
 import { DispatchDashboard } from '../pages/central-kitchen/DispatchDashboard';
 import { OrderPool } from '../pages/central-kitchen/OrderPool';
 import { ProductionPlanList } from '../pages/central-kitchen/ProductionPlanList';
-import { KitchenSettings } from '../pages/central-kitchen/KitchenSettings';
+import { WarehousePage } from '../pages/warehouse/WarehousePage';
 
 import { ShipmentList } from '../pages/shipment/ShipmentList';
 import { CreateShipment } from '../pages/shipment/CreateShipment';
@@ -135,12 +135,7 @@ export const router = createBrowserRouter([
                             { path: 'create-plan', element: <CreateProductionPlan /> },
                             { path: 'inventory', element: <KitchenInventory /> },
                             { path: 'inventory/import', element: <KitchenImportPage /> },
-                            { path: 'production', element: <ProductionBoard /> },
-                            { 
-                                path: 'settings', 
-                                element: <ProtectedRoute allowedRoles={['MANAGER']} />,
-                                children: [{ index: true, element: <KitchenSettings /> }]
-                            }
+                            { path: 'production', element: <ProductionBoard /> }
                         ]
                     },
 
@@ -180,6 +175,7 @@ export const router = createBrowserRouter([
                         path: 'warehouse',
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'COORDINATOR']} />,
                         children: [
+                            { index: true, element: <WarehousePage /> },
                             { path: 'fulfillment', element: <WarehouseFulfillment /> },
                             { path: 'allocation', element: <AllocationMatrix /> }
                         ]

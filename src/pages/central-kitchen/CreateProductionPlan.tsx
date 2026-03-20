@@ -10,7 +10,6 @@ import {
   Package,
   ClipboardCheck,
   LayoutGrid,
-  Info,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -20,6 +19,7 @@ import { storeOrderApi } from "../../services/storeOrderApi";
 import { productionPlanApi } from "../../services/productionPlan.api";
 import { kitchenApi } from "../../services/kitchen.api";
 import { dispatchApi } from "../../services/dispatch.api";
+import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
 import { useAuth } from "../../hooks/useAuth";
 import type { StoreOrderResponse } from "../../types/storeOrder";
 import type { KitchenResponse } from "../../types/kitchen";
@@ -45,21 +45,18 @@ export const CreateProductionPlan = () => {
   const [selectedKitchenId, setSelectedKitchenId] = useState<number | null>(
     null,
   );
-  const [isKitchensLoading, setIsKitchensLoading] = useState(false);
 
   const [orders, setOrders] = useState<StoreOrderResponse[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(
     new Set(),
   );
 
-  const [capacityInfo, setCapacityInfo] = useState<{
-    remaining: number;
-    max: number;
-  } | null>(null);
+  const [kitchensInfo, setKitchensInfo] = useState<
+    Record<number, { remaining: number; inventoryTotal: number }>
+  >({});
   const [isCapacityLoading, setIsCapacityLoading] = useState(false);
 
   const fetchKitchens = useCallback(async () => {
-    setIsKitchensLoading(true);
     try {
       const res = await kitchenApi.getAllKitchens();
       const kitchenList = res.data || [];
@@ -78,8 +75,6 @@ export const CreateProductionPlan = () => {
       }
     } catch {
       toast.error("Không thể tải danh sách bếp trung tâm.");
-    } finally {
-      setIsKitchensLoading(false);
     }
   }, [user?.kitchenId]);
 
@@ -87,42 +82,50 @@ export const CreateProductionPlan = () => {
     fetchKitchens();
   }, [fetchKitchens]);
 
-  const fetchCapacity = useCallback(async () => {
-    if (!selectedKitchenId || !plannedDate) return;
+  const fetchAllKitchensInfo = useCallback(async () => {
+    if (kitchens.length === 0 || !plannedDate) return;
     setIsCapacityLoading(true);
     try {
-      const res = await dispatchApi.getSuggestion(
-        selectedKitchenId,
-        plannedDate,
+      const infoMap: Record<number, { remaining: number; inventoryTotal: number }> = {};
+      
+      await Promise.all(
+        kitchens.map(async (k) => {
+          try {
+             // Fetch capacity and inventory in parallel for each kitchen
+             const [capRes, invRes] = await Promise.all([
+               dispatchApi.getSuggestion(k.kitchenId, plannedDate).catch(() => null),
+               kitchenInventoryApi.getWarehouseStock(k.kitchenId).catch(() => null)
+             ]);
+             
+             let remaining = Number(k.maxDailyCapacity) || 0;
+             if (capRes && Array.isArray(capRes.data) && capRes.data.length > 0) {
+               remaining = Number(capRes.data[0].kitchenCapacity) || 0;
+             }
+             
+             let inventoryTotal = 0;
+             if (invRes && Array.isArray(invRes.data)) {
+               inventoryTotal = invRes.data.reduce((sum, item) => sum + (item.quantity || 0), 0);
+             }
+             
+             infoMap[k.kitchenId] = { remaining, inventoryTotal };
+          } catch (e) {
+             infoMap[k.kitchenId] = { remaining: Number(k.maxDailyCapacity) || 0, inventoryTotal: 0 };
+          }
+        })
       );
-      const suggestions = res.data || [];
-      const kitchenObj = kitchens.find(
-        (k) => k.kitchenId === selectedKitchenId,
-      );
-
-      if (Array.isArray(suggestions) && suggestions.length > 0) {
-        setCapacityInfo({
-          remaining: Number(suggestions[0].kitchenCapacity) || 0,
-          max: Number(kitchenObj?.maxDailyCapacity) || 0,
-        });
-      } else {
-        setCapacityInfo({
-          remaining: Number(kitchenObj?.maxDailyCapacity) || 0,
-          max: Number(kitchenObj?.maxDailyCapacity) || 0,
-        });
-      }
+      setKitchensInfo(infoMap);
     } catch {
-      setCapacityInfo(null);
+       // Fail silently, map will just be empty or defaults
     } finally {
       setIsCapacityLoading(false);
     }
-  }, [selectedKitchenId, plannedDate, kitchens]);
+  }, [kitchens, plannedDate]);
 
   useEffect(() => {
-    if (step === 1 && selectedKitchenId && kitchens.length > 0) {
-      fetchCapacity();
+    if (step === 1 && kitchens.length > 0) {
+      fetchAllKitchensInfo();
     }
-  }, [step, selectedKitchenId, plannedDate, fetchCapacity, kitchens.length]);
+  }, [step, kitchens.length, plannedDate, fetchAllKitchensInfo]);
 
   const fetchOrders = useCallback(async () => {
     if (!selectedKitchenId) return;
@@ -331,129 +334,112 @@ export const CreateProductionPlan = () => {
         {step === 1 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="lg:col-span-2 space-y-6 bg-zinc-900/40 p-8 rounded-[32px] border border-zinc-800/50">
-              <div>
-                <h2 className="text-lg font-black text-zinc-100 uppercase tracking-tight">
-                  Cấu hình sản xuất
-                </h2>
-                <p className="text-xs text-zinc-500 font-medium mt-1">
-                  Vui lòng chọn bếp thực hiện và ngày mong muốn hoàn tất mẻ
-                  hàng.
-                </p>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-black text-zinc-100 uppercase tracking-tight">
+                    Cấu hình sản xuất
+                  </h2>
+                  <p className="text-xs text-zinc-500 font-medium mt-1">
+                    Vui lòng chọn bếp thực hiện và ngày mong muốn.
+                  </p>
+                </div>
+                <div className="w-full md:w-64">
+                  <div className="relative group">
+                    <CalendarIcon
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 transition-colors"
+                      size={18}
+                    />
+                    <input
+                      type="date"
+                      value={plannedDate}
+                      onChange={(e) => setPlannedDate(e.target.value)}
+                      className="w-full pl-12 pr-4 h-12 bg-zinc-950 border border-zinc-800 rounded-xl text-sm font-black text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-3 font-inter">
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
                   <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">
-                    Chọn Bếp Thực Hiện
+                    Hệ Thống Bếp Trung Tâm ({kitchens.length})
                   </label>
-                  <div className="relative group">
-                    <ChefHat
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-amber-500 transition-colors"
-                      size={20}
-                    />
-                    <select
-                      value={selectedKitchenId || ""}
-                      onChange={(e) =>
-                        setSelectedKitchenId(Number(e.target.value))
-                      }
-                      className="w-full pl-12 pr-10 h-16 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-black text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 appearance-none transition-all cursor-pointer"
-                      disabled={isKitchensLoading}
-                    >
-                      <option value="" disabled>
-                        --- Chọn Bếp Trung Tâm ---
-                      </option>
-                      {kitchens.map((k) => (
-                        <option key={k.kitchenId} value={k.kitchenId}>
-                          {k.name}{" "}
-                          {k.kitchenId === user?.kitchenId
-                            ? "(Bếp của bạn)"
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
-                      <ChevronRight size={18} className="rotate-90" />
+                  {isCapacityLoading && (
+                    <div className="flex items-center gap-2 text-amber-500">
+                      <div className="animate-spin h-3 w-3 border-2 border-amber-500 border-t-transparent rounded-full" />
+                      <span className="text-[9px] font-black uppercase tracking-widest leading-none">Cập nhật dữ liệu...</span>
                     </div>
-                  </div>
+                  )}
                 </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">
-                      Ngày lập kế hoạch
-                    </label>
-                    <div className="relative group">
-                      <CalendarIcon
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 transition-colors"
-                        size={18}
-                      />
-                      <input
-                        type="date"
-                        value={plannedDate}
-                        onChange={(e) => setPlannedDate(e.target.value)}
-                        className="w-full pl-12 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-black text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer"
-                        required
-                      />
-                    </div>
+                
+                {kitchens.length === 0 ? (
+                  <div className="p-8 text-center text-zinc-500 text-sm border border-zinc-800 rounded-2xl border-dashed">
+                    Không có bếp trung tâm nào
                   </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {kitchens.map((k) => {
+                      const info = kitchensInfo[k.kitchenId];
+                      const isSelected = selectedKitchenId === k.kitchenId;
+                      const maxCap = k.maxDailyCapacity || 1;
+                      const rem = info ? info.remaining : Number(k.maxDailyCapacity) || 0;
+                      const pct = Math.min(Math.max(rem / maxCap, 0), 1) * 100;
+                      
+                      return (
+                        <div 
+                          key={k.kitchenId}
+                          onClick={() => setSelectedKitchenId(k.kitchenId)}
+                          className={cn(
+                              "p-5 rounded-2xl border cursor-pointer transition-all duration-300 flex flex-col gap-4 relative overflow-hidden group/kitchen",
+                              isSelected 
+                                ? "bg-amber-500/10 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]" 
+                                : "bg-zinc-950/50 border-zinc-800/80 hover:border-amber-500/30 hover:bg-zinc-900"
+                          )}
+                        >
+                          {isSelected && <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>}
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-inner", isSelected ? "bg-amber-500 text-black" : "bg-zinc-900 text-zinc-500 group-hover/kitchen:text-amber-500")}>
+                                <ChefHat size={18} />
+                              </div>
+                              <div className="flex flex-col justify-center">
+                                <h4 className="font-black text-zinc-100 text-sm leading-tight uppercase tracking-tight">{k.name}</h4>
+                                {k.kitchenId === user?.kitchenId && <span className="text-amber-500 text-[9px] block uppercase font-bold tracking-widest mt-0.5">Bếp của bạn</span>}
+                              </div>
+                            </div>
+                            <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors", isSelected ? "border-amber-500" : "border-zinc-700")}>
+                              {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
+                            </div>
+                          </div>
+                          
+                          <div className="pt-4 border-t border-zinc-800/50 space-y-4">
+                             <div className="space-y-2">
+                               <div className="flex justify-between items-baseline">
+                                 <span className="text-[9px] uppercase text-zinc-500 font-bold tracking-widest">Khả dụng</span>
+                                 <span className="text-sm font-black text-zinc-100">{rem} <span className="text-[9px] text-zinc-500">/ {k.maxDailyCapacity}</span></span>
+                               </div>
+                               <div className="w-full bg-zinc-900 border border-zinc-800 h-2 rounded-full overflow-hidden">
+                                 <div 
+                                    className={cn("h-full transition-all duration-1000", pct < 20 ? "bg-red-500" : pct < 50 ? "bg-amber-500" : "bg-emerald-500")} 
+                                    style={{ width: `${pct}%` }}
+                                 />
+                               </div>
+                             </div>
 
-                  <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-amber-500">
-                        <Info size={14} strokeWidth={3} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">
-                          Thông tin công suất
-                        </span>
-                      </div>
-                      {isCapacityLoading && (
-                        <div className="animate-spin h-3 w-3 border-2 border-amber-500 border-t-transparent rounded-full" />
-                      )}
-                    </div>
-
-                    {capacityInfo ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-tight">
-                            Khả dụng:
-                          </span>
-                          <span className="text-sm font-black text-zinc-100 tabular-nums">
-                            {capacityInfo.remaining} / {capacityInfo.max}
-                            <span className="text-[8px] text-zinc-500 ml-1">
-                              ĐƠN VỊ
-                            </span>
-                          </span>
+                             <div className="flex justify-between items-center p-3 bg-zinc-900/50 rounded-xl border border-zinc-800/50">
+                               <div className="flex items-center gap-2 text-zinc-400">
+                                 <Package size={14} />
+                                 <span className="text-[9px] uppercase tracking-widest font-bold">Mức tồn kho</span>
+                               </div>
+                               <span className="text-sm font-black text-zinc-200">{info ? info.inventoryTotal : "---"} <span className="text-[9px] text-zinc-500">SP</span></span>
+                             </div>
+                          </div>
                         </div>
-                        <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={cn(
-                              "h-full transition-all duration-500",
-                              capacityInfo.remaining / (capacityInfo.max || 1) <
-                                0.2
-                                ? "bg-red-500"
-                                : capacityInfo.remaining /
-                                      (capacityInfo.max || 1) <
-                                    0.5
-                                  ? "bg-amber-500"
-                                  : "bg-emerald-500",
-                            )}
-                            style={{
-                              width: `${(Math.min(capacityInfo.remaining, capacityInfo.max) / (capacityInfo.max || 1)) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <p className="text-[10px] text-zinc-600 font-medium italic leading-tight pt-1">
-                          {capacityInfo.remaining <= 0
-                            ? "Bếp đã đạt tối đa công suất cho ngày này."
-                            : `Còn trống ${capacityInfo.remaining} đơn vị sản xuất.`}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-zinc-500 font-medium italic leading-relaxed">
-                        Chọn bếp và ngày để kiểm tra khả năng đáp ứng sản xuất.
-                      </p>
-                    )}
+                      );
+                    })}
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -849,14 +835,14 @@ export const CreateProductionPlan = () => {
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <div className="flex items-center gap-2 mb-1">
-                      {capacityInfo && (
+                      {selectedKitchenId && kitchensInfo[selectedKitchenId] && (
                         <Badge
                           className={cn(
                             "text-[8px] font-black px-1.5 py-0 border-0 h-4 uppercase tracking-widest",
                             aggregatedDemand.reduce(
                               (s, i) => s + i.quantity,
                               0,
-                            ) > capacityInfo.remaining
+                            ) > kitchensInfo[selectedKitchenId].remaining
                               ? "bg-red-500/20 text-red-500"
                               : "bg-emerald-500/20 text-emerald-500",
                           )}
@@ -864,7 +850,7 @@ export const CreateProductionPlan = () => {
                           {aggregatedDemand.reduce(
                             (s, i) => s + i.quantity,
                             0,
-                          ) > capacityInfo.remaining
+                          ) > kitchensInfo[selectedKitchenId].remaining
                             ? "QUÁ TẢI"
                             : "HỢP LỆ"}
                         </Badge>
