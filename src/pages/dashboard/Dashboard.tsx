@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
-    DollarSign, ShoppingBag, Users, Activity, TrendingUp,
-    AlertCircle, CheckCircle, Clock, Package, Truck, ChefHat,
-    RefreshCw
+    Activity, AlertCircle, Clock, RefreshCw, Search, Bell,
+    ShoppingBag, Users, Package, Truck, ChefHat
 } from 'lucide-react';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
@@ -18,6 +16,7 @@ import { userService } from '../../services/user.service';
 import { shipmentApi } from '../../services/shipment.api';
 import { billingApi } from '../../services/billing.api';
 import { productionPlanApi } from '../../services/productionPlan.api';
+import { cn } from '../../utils/classNames';
 
 interface DashboardStats {
     totalRevenue: number;
@@ -50,7 +49,7 @@ const statusColor: Record<string, string> = {
     ALLOCATED: 'info',
     DELIVERED: 'success',
     REJECTED: 'danger',
-    DRAFT: 'default',
+    DRAFT: 'secondary',
     PENDING: 'orange',
     PREPARED: 'info',
     IN_TRANSIT: 'primary',
@@ -106,15 +105,13 @@ export const Dashboard = () => {
                 productionPlans: 0,
             };
 
-            // --- Stores count (ADMIN, COORDINATOR) ---
             if (role === 'ADMIN' || role === 'COORDINATOR') {
                 try {
                     const storeRes = await storeApi.getAllStores({ size: 1 });
                     newStats.activeStores = storeRes?.data?.totalElements || 0;
-                } catch { /* permission not available */ }
+                } catch { /* ignore */ }
             }
 
-            // --- Orders (all roles except KITCHEN_STAFF) ---
             if (role !== 'KITCHEN_STAFF') {
                 try {
                     let orderRes;
@@ -123,9 +120,7 @@ export const Dashboard = () => {
                     } else {
                         orderRes = await storeOrderApi.getMyOrders({ size: 5, page: 0 });
                     }
-                    // Total pending/submitted
                     newStats.pendingOrders = orderRes?.totalElements || 0;
-                    // Recent orders for activity feed
                     const items = (orderRes?.content || []).slice(0, 5).map((o: any) => ({
                         id: o.orderId,
                         storeName: o.storeName || `Cửa hàng #${o.storeId}`,
@@ -137,7 +132,6 @@ export const Dashboard = () => {
                 } catch { /* ignore */ }
             }
 
-            // --- Users count (ADMIN only) ---
             if (role === 'ADMIN') {
                 try {
                     const userRes = await userService.getUsers({ size: 1 });
@@ -145,7 +139,6 @@ export const Dashboard = () => {
                 } catch { /* ignore */ }
             }
 
-            // --- Shipments (ADMIN, COORDINATOR, KITCHEN_STAFF) ---
             if (role === 'ADMIN' || role === 'COORDINATOR' || role === 'KITCHEN_STAFF') {
                 try {
                     const shipRes = await shipmentApi.getShipments({ size: 5, page: 0 });
@@ -160,15 +153,13 @@ export const Dashboard = () => {
                 } catch { /* ignore */ }
             }
 
-            // --- Billing (ADMIN only) ---
             if (role === 'ADMIN') {
                 try {
-                    const billRes = await billingApi.getStatements({ size: 1 });
+                    const billRes = await billingApi.getStatements({ size: 1, page: 0 });
                     newStats.totalRevenue = billRes?.totalElements || 0;
                 } catch { /* ignore */ }
             }
 
-            // --- Production Plans (KITCHEN_STAFF, COORDINATOR, ADMIN) ---
             if (role === 'KITCHEN_STAFF' || role === 'COORDINATOR' || role === 'ADMIN') {
                 try {
                     const planRes = await productionPlanApi.getAllProductionPlans({ size: 1, page: 0 });
@@ -190,423 +181,285 @@ export const Dashboard = () => {
         if (user) loadDashboardData();
     }, [user]);
 
-    // Gather permitted quick links from `navigation`
-    const permittedLinks = navigation.reduce<NavItem[]>((acc, nav: NavigationItem) => {
-        if ('category' in nav) {
-            const allowedItems = nav.items.filter((item: NavItem) => !item.permission || hasPermission(user, item.permission));
-            acc.push(...allowedItems);
-        } else {
-            if (!nav.permission || hasPermission(user, nav.permission)) {
-                if (nav.href !== '/') acc.push(nav);
+    const permittedLinks = useMemo(() => {
+        return navigation.reduce<NavItem[]>((acc, nav: NavigationItem) => {
+            if ('category' in nav) {
+                const allowedItems = nav.items.filter((item: NavItem) => !item.permission || hasPermission(user, item.permission));
+                acc.push(...allowedItems);
+            } else {
+                if (!nav.permission || hasPermission(user, nav.permission)) {
+                    if (nav.href !== '/') acc.push(nav);
+                }
             }
-        }
-        return acc;
-    }, []);
+            return acc;
+        }, []);
+    }, [user]);
 
     const StatCard = ({
-        title, value, icon: Icon, colorClass, borderClass, trend, subtitle, onClick
+        title, value, icon: Icon, onClick
     }: {
         title: string;
         value: string | number;
         icon: any;
-        colorClass: string;
-        borderClass: string;
-        trend?: string;
-        subtitle?: string;
         onClick?: () => void;
-    }) => (
-        <Card
-            onClick={onClick}
-            className={`relative overflow-hidden flex flex-col p-6 border-0 shadow-lg ${borderClass} bg-zinc-900/60 backdrop-blur-sm group hover:-translate-y-1 transition-all duration-300 ${onClick ? 'cursor-pointer' : ''}`}
-        >
-            <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full ${colorClass} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`}></div>
-            <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className={`p-3 rounded-2xl ${colorClass} bg-opacity-10 text-white shadow-inner ring-1 ring-white/5`}>
-                    <Icon size={24} className="opacity-90" />
-                </div>
-                {trend && (
-                    <Badge variant="success" className="text-xs px-2 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 shadow-sm">
-                        <TrendingUp size={12} className="mr-1" /> {trend}
-                    </Badge>
+    }) => {
+        return (
+            <div
+                onClick={onClick}
+                className={cn(
+                    "bg-[#141414] p-6 rounded-2xl border border-amber-500/10 flex items-center justify-between gap-4 transition-all duration-300 relative overflow-hidden group shadow-[0_0_20px_rgba(245,158,11,0.02)]",
+                    onClick && "cursor-pointer hover:border-amber-500/30 hover:shadow-[0_0_30px_rgba(245,158,11,0.05)] hover:-translate-y-0.5"
                 )}
-            </div>
-            <div className="relative z-10">
-                <h3 className="text-3xl font-extrabold text-white mb-1 tracking-tight drop-shadow-sm">
-                    {isLoading ? (
-                        <span className="inline-block w-16 h-8 bg-zinc-800 animate-pulse rounded-lg" />
-                    ) : (
-                        value !== undefined && value !== null ? value : '-'
-                    )}
-                </h3>
-                <p className="text-sm font-medium text-zinc-400">{title}</p>
-                {subtitle && <p className="text-xs text-zinc-600 mt-1">{subtitle}</p>}
-            </div>
-        </Card>
-    );
+            >
+                {/* Accent Bar */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 opacity-80" />
 
-    const currentDate = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-amber-500/60 uppercase tracking-[0.2em] mb-1">
+                        {title}
+                    </span>
+                    <h3 className="text-2xl font-black text-white tracking-tighter">
+                        {isLoading ? <span className="inline-block w-16 h-8 bg-white/5 animate-pulse rounded" /> : value}
+                    </h3>
+                </div>
 
-    // Build stat cards based on role
+                <div className="w-12 h-12 rounded-xl bg-amber-500/5 flex items-center justify-center group-hover:bg-amber-500/10 transition-colors">
+                    <Icon size={22} className="text-amber-500" />
+                </div>
+            </div>
+        );
+    };
+
     const buildStatCards = () => {
         const cards = [];
 
         if (role === 'ADMIN') {
-            cards.push(
-                <StatCard
-                    key="billing"
-                    title="Tổng hóa đơn"
-                    value={stats.totalRevenue}
-                    icon={DollarSign}
-                    colorClass="bg-emerald-500"
-                    borderClass="ring-1 ring-emerald-500/20"
-                    subtitle="Tổng số billing statements"
-                    onClick={() => navigate('/billing')}
-                />
-            );
-            cards.push(
-                <StatCard
-                    key="stores"
-                    title="Cửa hàng hoạt động"
-                    value={stats.activeStores}
-                    icon={ShoppingBag}
-                    colorClass="bg-blue-500"
-                    borderClass="ring-1 ring-blue-500/20"
-                    onClick={() => navigate('/stores')}
-                />
-            );
-            cards.push(
-                <StatCard
-                    key="orders"
-                    title="Đơn hàng"
-                    value={stats.pendingOrders}
-                    icon={Activity}
-                    colorClass="bg-orange-500"
-                    borderClass="ring-1 ring-orange-500/20"
-                    onClick={() => navigate('/orders')}
-                />
-            );
-            cards.push(
-                <StatCard
-                    key="users"
-                    title="Tổng người dùng"
-                    value={stats.activeUsers}
-                    icon={Users}
-                    colorClass="bg-purple-500"
-                    borderClass="ring-1 ring-purple-500/20"
-                    onClick={() => navigate('/users')}
-                />
-            );
+            cards.push(<StatCard key="rev" title="Tổng HT" value={stats.totalRevenue} icon={Activity} onClick={() => navigate('/billing')} />);
+            cards.push(<StatCard key="stores" title="Cửa hàng" value={stats.activeStores} icon={ShoppingBag} onClick={() => navigate('/stores')} />);
+            cards.push(<StatCard key="orders" title="Đơn hàng" value={stats.pendingOrders} icon={Package} onClick={() => navigate('/orders')} />);
+            cards.push(<StatCard key="users" title="Người dùng" value={stats.activeUsers} icon={Users} onClick={() => navigate('/users')} />);
         } else if (role === 'COORDINATOR') {
-            cards.push(
-                <StatCard
-                    key="stores"
-                    title="Cửa hàng"
-                    value={stats.activeStores}
-                    icon={ShoppingBag}
-                    colorClass="bg-blue-500"
-                    borderClass="ring-1 ring-blue-500/20"
-                    onClick={() => navigate('/stores')}
-                />
-            );
-            cards.push(
-                <StatCard
-                    key="orders"
-                    title="Tổng đơn hàng"
-                    value={stats.pendingOrders}
-                    icon={Activity}
-                    colorClass="bg-orange-500"
-                    borderClass="ring-1 ring-orange-500/20"
-                    onClick={() => navigate('/orders')}
-                />
-            );
-            cards.push(
-                <StatCard
-                    key="shipments"
-                    title="Tổng vận chuyển"
-                    value={stats.pendingShipments}
-                    icon={Truck}
-                    colorClass="bg-cyan-500"
-                    borderClass="ring-1 ring-cyan-500/20"
-                    onClick={() => navigate('/shipment')}
-                />
-            );
-            cards.push(
-                <StatCard
-                    key="plans"
-                    title="Kế hoạch sản xuất"
-                    value={stats.productionPlans}
-                    icon={Package}
-                    colorClass="bg-indigo-500"
-                    borderClass="ring-1 ring-indigo-500/20"
-                />
-            );
+            cards.push(<StatCard key="stores" title="Store Hoạt động" value={stats.activeStores} icon={ShoppingBag} onClick={() => navigate('/stores')} />);
+            cards.push(<StatCard key="orders" title="Chờ xử lý" value={stats.pendingOrders} icon={Activity} onClick={() => navigate('/orders')} />);
+            cards.push(<StatCard key="ship" title="Vận chuyển" value={stats.pendingShipments} icon={Truck} onClick={() => navigate('/shipment')} />);
+            cards.push(<StatCard key="plans" title="Kế hoạch" value={stats.productionPlans} icon={Package} />);
         } else if (role === 'KITCHEN_STAFF') {
-            cards.push(
-                <StatCard
-                    key="plans"
-                    title="Kế hoạch sản xuất"
-                    value={stats.productionPlans}
-                    icon={ChefHat}
-                    colorClass="bg-amber-500"
-                    borderClass="ring-1 ring-amber-500/20"
-                />
-            );
-            cards.push(
-                <StatCard
-                    key="shipments"
-                    title="Tổng vận chuyển"
-                    value={stats.pendingShipments}
-                    icon={Truck}
-                    colorClass="bg-cyan-500"
-                    borderClass="ring-1 ring-cyan-500/20"
-                    onClick={() => navigate('/shipment')}
-                />
-            );
+            cards.push(<StatCard key="plans" title="SX Hôm nay" value={stats.productionPlans} icon={ChefHat} />);
+            cards.push(<StatCard key="ship" title="Chờ giao" value={stats.pendingShipments} icon={Truck} onClick={() => navigate('/shipment')} />);
         } else {
-            // STORE_STAFF, MANAGER, etc.
-            cards.push(
-                <StatCard
-                    key="orders"
-                    title="Đơn hàng của tôi"
-                    value={stats.pendingOrders}
-                    icon={Activity}
-                    colorClass="bg-orange-500"
-                    borderClass="ring-1 ring-orange-500/20"
-                    onClick={() => navigate('/orders')}
-                />
-            );
+            cards.push(<StatCard key="orders" title="Đơn của tôi" value={stats.pendingOrders} icon={Activity} onClick={() => navigate('/orders')} />);
         }
 
-        return cards;
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                {cards}
+            </div>
+        );
     };
 
+    const StatusBadge = ({ status }: { status: string }) => (
+        <Badge
+            variant={statusColor[status] as any || 'secondary'}
+            className="rounded-none border-amber-500/20 text-amber-500/80 bg-amber-500/5 text-[9px] font-black uppercase tracking-widest px-2 py-0.5"
+        >
+            {statusLabel[status] || status}
+        </Badge>
+    );
+
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
-            {/* Global Cinematic Backdrop */}
-            <div className="fixed inset-0 pointer-events-none z-[-1] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/5 via-zinc-950/80 to-zinc-950"></div>
-
-            {/* Premium Header Section */}
-            <div className="relative overflow-hidden rounded-[40px] border border-zinc-800/80 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] p-10 bg-zinc-950/40 backdrop-blur-3xl group">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-teal-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                
-                {/* Abstract Geometric Accents */}
-                <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-zinc-100 transform rotate-12 group-hover:rotate-6 group-hover:scale-110 transition-all duration-[2s] ease-out">
-                    <Activity size={250} strokeWidth={0.5} />
-                </div>
-                <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-orange-500/20 blur-[80px] rounded-full"></div>
-                <div className="absolute top-10 right-20 w-32 h-32 bg-teal-500/20 blur-[60px] rounded-full"></div>
-
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-950/80 border border-amber-500/30 text-amber-500 text-[11px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                            <Clock size={14} className="animate-pulse" />
-                            {currentDate}
-                        </div>
-                        <div>
-                            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500 tracking-tighter mb-2 leading-tight">
-                                Chào mừng, {user?.name || 'Director'}
-                            </h1>
-                            <p className="text-zinc-500 text-sm font-medium tracking-wide">
-                                {role === 'KITCHEN_STAFF' ? 'COMMAND: PRODUCTION & INVENTORY CONTROL' :
-                                    role === 'COORDINATOR' ? 'COMMAND: LOGISTICS & DISTRIBUTION ' :
-                                        role === 'ADMIN' ? 'COMMAND: SYSTEM MASTERY & OVERSIGHT' :
-                                            'COMMAND: STORE OPERATIONS'}
-                            </p>
-                        </div>
+        <div className="min-h-screen bg-[#0a0a0a] -m-8 p-12 space-y-12 font-sans text-slate-300">
+            {/* Top Navigation Bar */}
+            <div className="flex justify-between items-center bg-[#111] p-4 -mx-12 -mt-12 mb-12 border-b border-white/5">
+                <div className="flex items-center gap-8 pl-8">
+                    <div className="relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-amber-500 transition-colors" size={14} />
+                        <input
+                            type="text"
+                            placeholder="SEARCH_COMMAND..."
+                            className="bg-transparent border-0 py-2 pl-9 pr-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 focus:ring-0 w-64"
+                        />
                     </div>
-                    <div className="flex gap-4 items-center">
-                        {loadError && (
-                            <div className="flex items-center px-4 py-2 bg-red-950/50 border border-red-500/30 text-red-500 text-[11px] font-black uppercase tracking-widest rounded-xl gap-2 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                                <AlertCircle size={14} className="animate-pulse" /> 
-                                Lỗi Đồng Bộ
-                            </div>
-                        )}
-                        <div className="flex flex-col items-end gap-2">
-                            {lastUpdated && !isLoading && (
-                                <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.2em]">
-                                    Cập nhật: {lastUpdated.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                </span>
-                            )}
-                            <button
-                                onClick={loadDashboardData}
-                                disabled={isLoading}
-                                className="group/btn relative flex items-center gap-2 px-6 py-2.5 bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white hover:border-amber-500/50 overflow-hidden text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
-                                <RefreshCw size={14} className={isLoading ? 'animate-spin text-amber-500' : 'group-hover/btn:rotate-180 transition-transform duration-500'} />
-                                {isLoading ? 'Đang tải...' : 'Đồng Bộ Hóa'}
-                            </button>
+                </div>
+                <div className="flex items-center gap-6 pr-8">
+                    <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">System Time</span>
+                        <span className="text-xs font-mono text-white/60">{new Date().toLocaleTimeString('vi-VN')}</span>
+                    </div>
+                    <button className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg border border-white/5 text-white/30 hover:border-amber-500/50 hover:text-amber-500 transition-all">
+                        <Bell size={18} />
+                    </button>
+                    <div className="flex items-center gap-3 pl-4 border-l border-white/5">
+                        <div className="text-right">
+                            <p className="text-xs font-black text-white uppercase tracking-wider">{user?.name || 'Director'}</p>
+                            <p className="text-[9px] font-black text-amber-500/50 uppercase tracking-[0.3em]">{user?.role?.replace('_', ' ')}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 p-1">
+                            <img src={`https://ui-avatars.com/api/?name=${user?.name || 'U'}&background=FFBF00&color=000&bold=true`} alt="User" className="w-full h-full rounded" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-                {buildStatCards()}
+            {/* Main Header Section */}
+            <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                    <h1 className="text-5xl font-black text-white tracking-tighter">
+                        COMMAND_CENTER
+                    </h1>
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_#F59E0B]" />
+                        <p className="text-[11px] font-black text-white/40 uppercase tracking-[0.4em] translate-y-[1px]">
+                            Greetings, {user?.name?.split(' ')[0]} - System Operational {lastUpdated && `// ${lastUpdated.toLocaleTimeString()}`}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    {loadError && (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 text-[9px] font-bold uppercase tracking-widest animate-pulse">
+                            <AlertCircle size={12} />
+                            Sync_Error
+                        </div>
+                    )}
+                    <Button
+                        onClick={loadDashboardData}
+                        className="bg-amber-500 text-black rounded-none px-10 py-7 h-auto text-[11px] font-black uppercase tracking-[0.2em] hover:bg-amber-400 transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)] flex items-center gap-3 border-none"
+                        disabled={isLoading}
+                    >
+                        <RefreshCw size={18} className={cn(isLoading && "animate-spin")} />
+                        {isLoading ? 'EXECUTING...' : 'SYNC_DATA'}
+                    </Button>
+                </div>
             </div>
 
-            {/* Quick Access/Workspace Grid */}
-            {permittedLinks.length > 0 && (
-                <div className="relative rounded-[32px] overflow-hidden border border-zinc-800/80 bg-zinc-950/60 backdrop-blur-3xl p-8 shadow-2xl">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-zinc-700 to-transparent opacity-50"></div>
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
-                            <Activity size={20} className="text-amber-500" />
-                            Command Center
-                        </h2>
-                        <span className="text-[10px] font-black px-3 py-1 rounded-full bg-zinc-900 text-zinc-500 border border-zinc-800 uppercase tracking-[0.2em] shadow-inner">
-                            Truy cập nhanh
-                        </span>
+            {/* Stats Grid - Now Horizontal Row */}
+            {buildStatCards()}
+
+            {/* Layout Grid */}
+            <div className="grid grid-cols-12 gap-10">
+                {/* Workspace area (Expanded) */}
+                <div className="col-span-12 lg:col-span-8 space-y-10">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic">Workspace_Modules</h2>
+                        <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">{permittedLinks.length} AVAILABLE_SLOTS</span>
                     </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-5">
-                        {permittedLinks.map((link: NavItem, idx: number) => {
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {permittedLinks.map((link) => {
                             const Icon = link.icon;
-                            // Curated premium color palette
-                            const glowColors = [
-                                'rgba(59,130,246,0.5)', 'rgba(99,102,241,0.5)', 'rgba(168,85,247,0.5)', 
-                                'rgba(236,72,153,0.5)', 'rgba(244,63,94,0.5)', 'rgba(249,115,22,0.5)', 
-                                'rgba(245,158,11,0.5)', 'rgba(16,185,129,0.5)', 'rgba(20,184,166,0.5)', 
-                                'rgba(6,182,212,0.5)', 'rgba(14,165,233,0.5)'
-                            ];
-                            const textColors = [
-                                'text-blue-400', 'text-indigo-400', 'text-purple-400', 
-                                'text-pink-400', 'text-rose-400', 'text-orange-400', 
-                                'text-amber-400', 'text-emerald-400', 'text-teal-400', 
-                                'text-cyan-400', 'text-sky-400'
-                            ];
-                            const shadowColor = glowColors[idx % glowColors.length];
-                            const textColor = textColors[idx % textColors.length];
-                            
                             return (
                                 <button
                                     key={link.href}
                                     onClick={() => navigate(link.href)}
-                                    className="group relative flex flex-col items-center justify-center p-6 bg-zinc-900/50 rounded-[24px] border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-300 overflow-hidden"
-                                    style={{ '--glow-color': shadowColor } as React.CSSProperties}
+                                    className="group bg-[#111] p-10 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-6 transition-all duration-300 hover:border-amber-500/50 hover:shadow-[0_0_40px_rgba(245,158,11,0.05)] text-center relative overflow-hidden"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--glow-color)] to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-                                    <div 
-                                        className={`relative z-10 p-4 rounded-full bg-zinc-950 mb-3 group-hover:-translate-y-2 group-hover:scale-110 transition-all duration-500 ring-1 ring-zinc-800 shadow-inner group-hover:ring-zinc-600 ${textColor}`}
-                                        style={{ boxShadow: `0 0 20px var(--glow-color)` }}
-                                    >
-                                        <Icon size={24} className="opacity-90 drop-shadow-lg" />
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 translate-x-10 -translate-y-10 rounded-full group-hover:bg-amber-50/10 transition-colors" />
+
+                                    <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all duration-300">
+                                        <Icon size={28} />
                                     </div>
-                                    <span className="relative z-10 text-[11px] font-bold text-zinc-400 group-hover:text-white transition-colors text-center uppercase tracking-wider line-clamp-2">
-                                        {link.name}
-                                    </span>
+                                    <div className="space-y-1">
+                                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-amber-500 transition-colors">
+                                            {link.name}
+                                        </p>
+                                        <div className="h-[2px] w-0 bg-amber-500 mx-auto group-hover:w-full transition-all duration-500" />
+                                    </div>
                                 </button>
                             );
                         })}
                     </div>
                 </div>
-            )}
 
-            {/* Bottom section: Orders + Shipments activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
-                {/* Recent Orders */}
-                {recentOrders.length > 0 && (
-                    <Card title="Giao Dịch Gần Đây" className="border border-zinc-800/80 shadow-2xl bg-zinc-950/60 backdrop-blur-3xl rounded-[32px] p-8 overflow-hidden relative group/card">
-                        <div className="absolute -right-20 -top-20 w-64 h-64 bg-orange-500/5 blur-[100px] rounded-full pointer-events-none group-hover/card:bg-orange-500/10 transition-colors duration-1000"></div>
-                        <div className="space-y-4 mt-6 relative z-10">
-                            {recentOrders.map((order) => (
-                                <div
-                                    key={order.id}
-                                    className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/80 transition-all duration-300 border border-zinc-800/50 hover:border-orange-500/30 cursor-pointer hover:shadow-[0_10px_30px_rgba(249,115,22,0.1)]"
-                                    onClick={() => navigate('/orders')}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-colors shadow-inner">
-                                            <Activity size={20} className="text-zinc-500 group-hover:text-orange-500 transition-colors" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">Order <span className="text-orange-500">#{order.id}</span></p>
-                                            <p className="text-[11px] text-zinc-500 mt-1 uppercase tracking-wider font-medium">
-                                                {order.storeName}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <Badge variant={statusColor[order.status] as any || 'default'} className="text-[9px] px-2.5 py-1 border-0 uppercase tracking-widest font-black shadow-sm">
-                                            {statusLabel[order.status] || order.status}
-                                        </Badge>
-                                        <span className="text-xs text-zinc-300 font-black tracking-tight flex items-baseline gap-1">
-                                            {(order.totalAmount || 0).toLocaleString()} <span className="text-[9px] text-zinc-600 font-bold uppercase">VNĐ</span>
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="mt-6 pt-6 border-t border-zinc-800/50 relative z-10">
-                            <Button
-                                variant="ghost"
-                                className="w-full h-12 text-[11px] font-black uppercase tracking-widest text-zinc-400 hover:text-orange-400 hover:bg-zinc-900 rounded-xl transition-all border border-transparent hover:border-orange-500/20"
-                                onClick={() => navigate('/orders')}
-                            >
-                                Truy xuất toàn bộ hóa đơn
-                            </Button>
-                        </div>
-                    </Card>
-                )}
-
-                {/* Recent Shipments */}
-                {recentShipments.length > 0 && (
-                    <Card title="Vận Tải Gần Đây" className="border border-zinc-800/80 shadow-2xl bg-zinc-950/60 backdrop-blur-3xl rounded-[32px] p-8 overflow-hidden relative group/card">
-                        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none group-hover/card:bg-cyan-500/10 transition-colors duration-1000"></div>
-                        <div className="space-y-4 mt-6 relative z-10">
-                            {recentShipments.map((ship) => (
-                                <div
-                                    key={ship.id}
-                                    className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/80 transition-all duration-300 border border-zinc-800/50 hover:border-cyan-500/30 cursor-pointer hover:shadow-[0_10px_30px_rgba(6,182,212,0.1)]"
-                                    onClick={() => navigate('/shipment')}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 transition-colors shadow-inner">
-                                            <Truck size={20} className="text-zinc-500 group-hover:text-cyan-500 transition-colors" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">Logistics <span className="text-cyan-500">#{ship.id}</span></p>
-                                            <p className="text-[11px] text-zinc-500 mt-1 uppercase tracking-wider font-medium">
-                                                {ship.storeName}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <Badge variant={statusColor[ship.status] as any || 'default'} className="text-[9px] px-2.5 py-1 border-0 uppercase tracking-widest font-black shadow-sm">
-                                            {statusLabel[ship.status] || ship.status}
-                                        </Badge>
-                                        <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-wider flex items-center gap-1">
-                                            <Clock size={10} />
-                                            {new Date(ship.createdAt).toLocaleDateString('vi-VN')}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="mt-6 pt-6 border-t border-zinc-800/50 relative z-10">
-                            <Button
-                                variant="ghost"
-                                className="w-full h-12 text-[11px] font-black uppercase tracking-widest text-zinc-400 hover:text-cyan-400 hover:bg-zinc-900 rounded-xl transition-all border border-transparent hover:border-cyan-500/20"
-                                onClick={() => navigate('/shipment')}
-                            >
-                                Truy xuất toàn bộ vận đơn
-                            </Button>
-                        </div>
-                    </Card>
-                )}
-
-                {/* Fallback if no recent data */}
-                {recentOrders.length === 0 && recentShipments.length === 0 && !isLoading && (
-                    <Card title="Hồ Sơ Hoạt Động" className="lg:col-span-2 border border-zinc-800/80 shadow-2xl bg-zinc-950/60 backdrop-blur-3xl rounded-[32px] p-10">
-                        <div className="flex flex-col items-center justify-center py-20 opacity-30">
-                            <div className="w-24 h-24 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-6 shadow-inner">
-                                <CheckCircle size={40} className="text-zinc-600" />
+                {/* Secondary Sidebar Area */}
+                <div className="col-span-12 lg:col-span-4 space-y-10">
+                    {/* System Diagnostics */}
+                    <div className="bg-[#111] p-8 rounded-2xl border border-white/5 space-y-6">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                            <h3 className="text-xs font-black text-white uppercase tracking-widest">Diagnostics</h3>
+                            <div className="flex gap-1">
+                                <div className="w-1 h-1 bg-amber-500 rounded-full" />
+                                <div className="w-1 h-1 bg-amber-500/20 rounded-full" />
+                                <div className="w-1 h-1 bg-amber-500/20 rounded-full" />
                             </div>
-                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">Hệ thống tĩnh - Không có bản ghi mới</p>
                         </div>
-                    </Card>
-                )}
+
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Network Latency</span>
+                                <span className="text-[10px] font-mono text-amber-500">24ms</span>
+                            </div>
+                            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                <div className="w-[85%] h-full bg-amber-500/40" />
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">Database Sync</span>
+                                <span className="text-[10px] font-mono text-amber-500">OPTIMAL</span>
+                            </div>
+                            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                <div className="w-[98%] h-full bg-amber-500" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Operation Logs (Timeline) */}
+                    <div className="bg-[#111] p-8 rounded-2xl border border-white/5 min-h-[400px]">
+                        <div className="flex justify-between items-center mb-10 border-b border-white/5 pb-4">
+                            <h2 className="text-xs font-black text-white uppercase tracking-widest">Operation_Logs</h2>
+                            <span className="text-[9px] font-mono text-white/20">LIVE_FEED</span>
+                        </div>
+
+                        <div className="space-y-8">
+                            {[...recentOrders, ...recentShipments].length > 0 ? (
+                                <>
+                                    {recentOrders.slice(0, 3).map((order) => (
+                                        <div key={`order-${order.id}`} className="relative pl-6 group">
+                                            <div className="absolute left-0 top-1 w-1 h-1 bg-amber-500 group-hover:h-8 transition-all duration-300" />
+                                            <div className="flex items-start justify-between cursor-pointer" onClick={() => navigate('/orders')}>
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] font-black text-white/80 uppercase tracking-wider group-hover:text-amber-500 transition-colors">
+                                                        TRX_{order.id} <span className="text-white/20">// {order.storeName}</span>
+                                                    </p>
+                                                    <StatusBadge status={order.status} />
+                                                </div>
+                                                <span className="text-[9px] font-mono text-white/20 whitespace-nowrap">
+                                                    {new Date(order.orderDate).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {recentShipments.slice(0, 2).map((shipment) => (
+                                        <div key={`shipment-${shipment.id}`} className="relative pl-6 group">
+                                            <div className="absolute left-0 top-1 w-1 h-3 bg-white/10 group-hover:h-8 group-hover:bg-amber-500 transition-all duration-300" />
+                                            <div className="flex items-start justify-between cursor-pointer" onClick={() => navigate('/shipment')}>
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] font-black text-white/80 uppercase tracking-wider group-hover:text-amber-500 transition-colors">
+                                                        LOG_{shipment.id} <span className="text-white/20">// SHIPMENT_INIT</span>
+                                                    </p>
+                                                    <StatusBadge status={shipment.status} />
+                                                </div>
+                                                <span className="text-[9px] font-mono text-white/20 uppercase">Shipment</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-20 text-center opacity-20">
+                                    <Clock size={30} className="text-white mb-4" />
+                                    <p className="text-[9px] font-black text-white uppercase tracking-[0.4em]">Standby_Mode</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <button className="w-full mt-10 py-4 bg-white/5 text-[9px] font-black text-white/30 uppercase tracking-[0.3em] hover:bg-amber-500 hover:text-black transition-all">
+                            Full_System_History
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Background Decorative Element */}
+            <div className="fixed bottom-0 right-0 p-20 opacity-[0.02] pointer-events-none select-none">
+                <span className="text-[200px] font-black tracking-tighter leading-none">AMBER</span>
             </div>
         </div>
     );
