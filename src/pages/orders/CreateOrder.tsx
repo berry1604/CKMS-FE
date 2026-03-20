@@ -387,7 +387,7 @@ export const CreateOrder = () => {
                                         type="date"
                                         value={deliveryDate}
                                         onChange={(e) => setDeliveryDate(e.target.value)}
-                                        className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 text-sm px-4 py-3.5 rounded-xl focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all cursor-pointer shadow-inner"
+                                        className="w-full bg-zinc-950 border border-zinc-800 text-amber-500 font-black text-sm px-4 py-3.5 rounded-xl focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500 outline-none transition-all cursor-pointer shadow-inner"
                                     />
                                 </div>
                                 <div className="space-y-2">

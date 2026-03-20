@@ -10,7 +10,7 @@ import {
   ChefHat,
   Sparkles,
   RefreshCw,
-  Loader2 as LoaderIcon
+  Loader2 as LoaderIcon,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { productionPlanApi } from "../../services/productionPlan.api";
@@ -35,9 +35,18 @@ export const ProductionBoard = () => {
   >();
   const [planDetailForYield, setPlanDetailForYield] =
     useState<ProductionPlanDetailResponse | null>(null);
-  const [plannedProducts, setPlannedProducts] = useState<{ productId: number, productName: string, plannedQuantity: number, unit?: string }[]>([]);
+  const [plannedProducts, setPlannedProducts] = useState<
+    {
+      productId: number;
+      productName: string;
+      plannedQuantity: number;
+      unit?: string;
+    }[]
+  >([]);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [yieldInputs, setYieldInputs] = useState<{ productId: number, actualQty: number }[]>([]);
+  const [yieldInputs, setYieldInputs] = useState<
+    { productId: number; productName: string; actualProducedQty: number }[]
+  >([]);
 
   const loadPlans = async () => {
     setIsLoading(true);
@@ -83,26 +92,32 @@ export const ProductionBoard = () => {
       // 1. Fetch details for metadata (name, batchCode)
       const detail = await productionPlanApi.getProductionPlanDetail(id);
       setPlanDetailForYield(detail);
-      
+
       // 2. Fetch preview allocation to get the ACTUAL products required for this plan
       // since the backend's getProductionPlanDetail does not return items or outputs.
       const preview = await allocationApi.previewAllocation(id);
-      
-      const products = preview.rows.map(r => ({
-          productId: r.productId,
-          productName: r.productName,
-          // Extract the total requested quantity from the nested allocations
-          plannedQuantity: r.allocations?.reduce((sum, a) => sum + (a.requestedQuantity || 0), 0) || 0,
-          unit: 'SL'
+
+      const products = preview.rows.map((r) => ({
+        productId: r.productId,
+        productName: r.productName,
+        // Extract the total requested quantity from the nested allocations
+        plannedQuantity:
+          r.allocations?.reduce(
+            (sum, a) => sum + (a.requestedQuantity || 0),
+            0,
+          ) || 0,
+        unit: "SL",
       }));
       setPlannedProducts(products);
-      
-      // Initialize inputs from planned items
+
       if (products.length > 0) {
-        setYieldInputs(products.map(item => ({
-          productId: item.productId,
-          actualQty: item.plannedQuantity || 0
-        })));
+        setYieldInputs(
+          products.map((item) => ({
+            productId: item.productId,
+            productName: item.productName,
+            actualProducedQty: item.plannedQuantity || 0,
+          })),
+        );
       }
     } catch (error) {
       toast.error("Lỗi khi tải dữ liệu chi tiết báo cáo năng suất");
@@ -117,7 +132,14 @@ export const ProductionBoard = () => {
     setIsDetailLoading(true);
     try {
       const yieldData = {
-        outputs: yieldInputs,
+        outputs: yieldInputs.map(y => ({
+          productId: y.productId,
+          productName: y.productName,
+          actualQty: y.actualProducedQty,
+          quantity: y.actualProducedQty,
+          producedQuantity: y.actualProducedQty,
+          actualProducedQty: y.actualProducedQty
+        })),
         requestVersion: finishingPlanVersion,
       };
 
@@ -139,7 +161,10 @@ export const ProductionBoard = () => {
 
   // Filter statuses for the board
   const readyPlans = plans.filter(
-    (p) => p.status === "READY_TO_PRODUCE" || p.status === "APPROVED" || p.status === "PLANNED",
+    (p) =>
+      p.status === "READY_TO_PRODUCE" ||
+      p.status === "APPROVED" ||
+      p.status === "PLANNED",
   );
   const inProdPlans = plans.filter(
     (p) => p.status === "IN_PRODUCTION" || p.status === "PRODUCING",
@@ -192,14 +217,27 @@ export const ProductionBoard = () => {
         )}
       >
         {/* Top accent line */}
-        <div className={cn("absolute inset-x-6 top-0 h-px opacity-30", columnType === "IN_PROD" ? "bg-gradient-to-r from-transparent via-amber-500 to-transparent" : columnType === "READY" ? "bg-gradient-to-r from-transparent via-indigo-500 to-transparent" : "bg-gradient-to-r from-transparent via-emerald-500 to-transparent")} />
+        <div
+          className={cn(
+            "absolute inset-x-6 top-0 h-px opacity-30",
+            columnType === "IN_PROD"
+              ? "bg-gradient-to-r from-transparent via-amber-500 to-transparent"
+              : columnType === "READY"
+                ? "bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
+                : "bg-gradient-to-r from-transparent via-emerald-500 to-transparent",
+          )}
+        />
 
         <div className="flex justify-between items-start mb-5">
           <div className="flex flex-col gap-2">
             <span className="font-mono text-[10px] font-bold text-gray-600 bg-black/40 px-2.5 py-1 rounded-lg border border-white/5 w-fit">
               #{plan.planId}
             </span>
-            <h4 className={cn("font-bold text-white leading-snug text-sm group-hover:text-amber-400 transition-colors duration-300")}>
+            <h4
+              className={cn(
+                "font-bold text-white leading-snug text-sm group-hover:text-amber-400 transition-colors duration-300",
+              )}
+            >
               {plan.planName}
             </h4>
           </div>
@@ -207,7 +245,7 @@ export const ProductionBoard = () => {
             <div className="flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20">
               <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
               <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">
-                Live
+                Trực tiếp
               </span>
             </div>
           )}
@@ -233,21 +271,61 @@ export const ProductionBoard = () => {
           </div>
         </div>
 
-        <div className="pt-5">
+        {/* Shortage Warning for PLANNED status */}
+        {columnType === "READY" && plan.status === "PLANNED" && (
+          <div className="mt-4 p-3 rounded-2xl bg-red-500/5 border border-red-500/10 flex items-center gap-3 animate-pulse">
+            <AlertCircle size={16} className="text-red-500 shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-red-500 uppercase tracking-tight">
+                Kho đang thiếu nguyên liệu
+              </span>
+              <span className="text-[9px] text-zinc-500 font-medium leading-none mt-0.5 italic">
+                Cần bổ sung kho để sẵn sàng nấu
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="pt-5 flex flex-col gap-2">
           {columnType === "READY" && (
-            <Button
-              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold uppercase text-[10px] tracking-widest h-11 shadow-[0_8px_24px_-6px_rgba(99,102,241,0.4)] rounded-xl border-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
-              onClick={() => handleStart(plan.planId, plan.version)}
-            >
-              <PlayCircle size={14} className="mr-2" strokeWidth={2.5} /> Bắt đầu nấu
-            </Button>
+            <>
+              {plan.status === "PLANNED" ? (
+                <Button
+                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold uppercase text-[10px] tracking-widest h-11 rounded-xl border border-zinc-700 transition-all"
+                  onClick={async () => {
+                    try {
+                      await productionPlanApi.readyProductionPlan(plan.planId);
+                      toast.success("Kế hoạch đã sẵn sàng sản xuất!");
+                      loadPlans();
+                    } catch (err: any) {
+                      const msg =
+                        err.response?.data?.message ||
+                        "Kho vẫn chưa đủ nguyên liệu";
+                      toast.error(msg);
+                      // If it's 409, we could show more details, but the backend's message usually contains enough info or we can rely on the alert badge.
+                    }
+                  }}
+                >
+                  <RefreshCw size={14} className="mr-2" /> Kiểm tra & Kích hoạt
+                </Button>
+              ) : (
+                <Button
+                  className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold uppercase text-[10px] tracking-widest h-11 shadow-[0_8px_24px_-6px_rgba(99,102,241,0.4)] rounded-xl border-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                  onClick={() => handleStart(plan.planId, plan.version)}
+                >
+                  <PlayCircle size={14} className="mr-2" strokeWidth={2.5} />{" "}
+                  Bắt đầu nấu
+                </Button>
+              )}
+            </>
           )}
           {columnType === "IN_PROD" && (
             <Button
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold uppercase text-[10px] tracking-widest h-11 shadow-[0_8px_24px_-6px_rgba(245,158,11,0.4)] rounded-xl border-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
               onClick={() => openYieldModal(plan.planId, plan.version)}
             >
-              <CheckCircle2 size={14} className="mr-2" strokeWidth={2.5} /> Hoàn tất mẻ
+              <CheckCircle2 size={14} className="mr-2" strokeWidth={2.5} /> Hoàn
+              tất mẻ
             </Button>
           )}
           {columnType === "DONE" && (
@@ -318,17 +396,26 @@ export const ProductionBoard = () => {
         <div className="absolute inset-0 flex flex-col justify-end px-8 pb-10 max-w-[1600px] mx-auto w-full">
           <div className="flex items-center gap-3 mb-3">
             <div className="h-px w-8 bg-amber-500/50" />
-            <span className="text-amber-500 font-medium tracking-[0.3em] text-[10px] uppercase">Central Kitchen Production</span>
+            <span className="text-amber-500 font-medium tracking-[0.3em] text-[10px] uppercase">
+              SẢN XUẤT BẾP TRUNG TÂM
+            </span>
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tighter mb-2">
-                <ChefHat className="inline-block mr-3 mb-1 text-amber-500" size={36} />
-                TIẾN ĐỘ <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">SẢN XUẤT</span>
+                <ChefHat
+                  className="inline-block mr-3 mb-1 text-amber-500"
+                  size={36}
+                />
+                TIẾN ĐỘ{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
+                  SẢN XUẤT
+                </span>
               </h1>
               <p className="text-gray-500 max-w-xl text-base font-light leading-relaxed">
-                Linh hồn của bếp trung tâm — Theo dõi trạng thái nấu và báo cáo năng suất thực tế.
+                Linh hồn của bếp trung tâm — Theo dõi trạng thái nấu và báo cáo
+                năng suất thực tế.
               </p>
             </div>
 
@@ -336,18 +423,30 @@ export const ProductionBoard = () => {
               {/* Stats Pill */}
               <div className="flex items-center gap-6 px-6 py-3 bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl">
                 <div className="text-center">
-                  <span className="text-2xl font-bold text-indigo-400 leading-none">{readyPlans.length}</span>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">Chờ</span>
+                  <span className="text-2xl font-bold text-indigo-400 leading-none">
+                    {readyPlans.length}
+                  </span>
+                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">
+                    Chờ
+                  </span>
                 </div>
                 <div className="w-px h-8 bg-white/10" />
                 <div className="text-center">
-                  <span className="text-2xl font-bold text-amber-400 leading-none">{inProdPlans.length}</span>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">Đang nấu</span>
+                  <span className="text-2xl font-bold text-amber-400 leading-none">
+                    {inProdPlans.length}
+                  </span>
+                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">
+                    Đang nấu
+                  </span>
                 </div>
                 <div className="w-px h-8 bg-white/10" />
                 <div className="text-center">
-                  <span className="text-2xl font-bold text-emerald-400 leading-none">{donePlans.length}</span>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">Xong</span>
+                  <span className="text-2xl font-bold text-emerald-400 leading-none">
+                    {donePlans.length}
+                  </span>
+                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">
+                    Xong
+                  </span>
                 </div>
               </div>
 
@@ -356,7 +455,10 @@ export const ProductionBoard = () => {
                 disabled={isLoading}
                 className="h-14 w-14 p-0 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all"
               >
-                <RefreshCw size={20} className={isLoading ? "animate-spin" : ""} />
+                <RefreshCw
+                  size={20}
+                  className={isLoading ? "animate-spin" : ""}
+                />
               </Button>
             </div>
           </div>
@@ -376,14 +478,29 @@ export const ProductionBoard = () => {
               )}
             >
               {/* Column Header */}
-              <div className={cn("px-6 py-5 border-b border-white/[0.05] flex justify-between items-center shrink-0", col.headerBg)}>
+              <div
+                className={cn(
+                  "px-6 py-5 border-b border-white/[0.05] flex justify-between items-center shrink-0",
+                  col.headerBg,
+                )}
+              >
                 <div className="flex items-center gap-3">
-                  <div className={cn("w-2.5 h-2.5 rounded-full ring-4", col.dotColor, col.ringColor, col.key === "IN_PROD" && "animate-pulse")} />
+                  <div
+                    className={cn(
+                      "w-2.5 h-2.5 rounded-full ring-4",
+                      col.dotColor,
+                      col.ringColor,
+                      col.key === "IN_PROD" && "animate-pulse",
+                    )}
+                  />
                   <h3 className="font-bold text-gray-300 uppercase tracking-widest text-[11px]">
                     {col.title}
                   </h3>
                 </div>
-                <Badge variant={col.badgeVariant} className="text-[10px] font-bold border-0 min-w-[28px] justify-center">
+                <Badge
+                  variant={col.badgeVariant}
+                  className="text-[10px] font-bold border-0 min-w-[28px] justify-center"
+                >
                   {col.plans.length}
                 </Badge>
               </div>
@@ -440,7 +557,10 @@ export const ProductionBoard = () => {
             <div className="p-8 space-y-6">
               {isDetailLoading ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
-                  <LoaderIcon className="animate-spin text-amber-500" size={32} />
+                  <LoaderIcon
+                    className="animate-spin text-amber-500"
+                    size={32}
+                  />
                   <span className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">
                     Đang đối soát dữ liệu...
                   </span>
@@ -476,29 +596,51 @@ export const ProductionBoard = () => {
                         Hệ thống đề xuất
                       </Badge>
                     </div>
-                    
+
                     <div className="space-y-2">
-                        {plannedProducts.map((item) => (
-                           <div key={item.productId} className="border border-white/[0.06] rounded-2xl bg-black/40 p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
-                             <div className="flex flex-col gap-1">
-                               <span className="text-[13px] font-bold text-gray-300">{item.productName}</span>
-                               <span className="text-[10px] font-medium text-gray-500">Mục tiêu ban đầu: <strong className="text-gray-400">{item.plannedQuantity} {item.unit || 'SL'}</strong></span>
-                             </div>
-                             <div className="flex items-center gap-2">
-                               <input
-                                  type="number"
-                                  className="w-20 h-10 bg-white/[0.04] border border-white/[0.08] rounded-xl text-center text-[13px] font-bold text-amber-400 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 outline-none transition-all hover:bg-white/[0.06]"
-                                  value={yieldInputs.find(y => y.productId === item.productId)?.actualQty ?? 0}
-                                  onChange={(e) => {
-                                      const val = Number(e.target.value);
-                                      setYieldInputs(prev => prev.map(y => y.productId === item.productId ? { ...y, actualQty: val } : y));
-                                  }}
-                                  min={0}
-                                />
-                                <span className="text-[10px] font-bold text-gray-600 uppercase">{item.unit || 'SL'}</span>
-                             </div>
-                           </div>
-                        ))}
+                      {plannedProducts.map((item) => (
+                        <div
+                          key={item.productId}
+                          className="border border-white/[0.06] rounded-2xl bg-black/40 p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[13px] font-bold text-gray-300">
+                              {item.productName}
+                            </span>
+                            <span className="text-[10px] font-medium text-gray-500">
+                              Mục tiêu ban đầu:{" "}
+                              <strong className="text-gray-400">
+                                {item.plannedQuantity} {item.unit || "SL"}
+                              </strong>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              className="w-20 h-10 bg-white/[0.04] border border-white/[0.08] rounded-xl text-center text-[13px] font-bold text-amber-400 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 outline-none transition-all hover:bg-white/[0.06]"
+                              value={
+                                yieldInputs.find(
+                                  (y) => y.productId === item.productId,
+                                )?.actualProducedQty ?? 0
+                              }
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setYieldInputs((prev) =>
+                                  prev.map((y) =>
+                                    y.productId === item.productId
+                                      ? { ...y, actualProducedQty: val }
+                                      : y,
+                                  ),
+                                );
+                              }}
+                              min={0}
+                            />
+                            <span className="text-[10px] font-bold text-gray-600 uppercase">
+                              {item.unit || "SL"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
@@ -544,4 +686,3 @@ export const ProductionBoard = () => {
     </div>
   );
 };
-

@@ -4,14 +4,18 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { storeOrderApi } from '../../services/storeOrderApi';
+import { kitchenApi } from '../../services/kitchen.api';
+import { dispatchApi } from '../../services/dispatch.api';
 import { toast } from 'react-hot-toast';
 import { cn } from '../../utils/classNames';
+import type { KitchenResponse } from '../../types/kitchen';
 
 interface RescheduleModalProps {
     isOpen: boolean;
     onClose: () => void;
     orderId: number | string;
     currentDeliveryDate: string;
+    totalQuantity: number;
     onSuccess: (newDate: string) => void;
 }
 
@@ -20,6 +24,7 @@ export const RescheduleModal = ({
     onClose,
     orderId,
     currentDeliveryDate,
+    totalQuantity,
     onSuccess
 }: RescheduleModalProps) => {
     const [selectedDate, setSelectedDate] = useState<string>(currentDeliveryDate);
@@ -27,31 +32,72 @@ export const RescheduleModal = ({
     const [capacityStatus, setCapacityStatus] = useState<'safe' | 'warning' | 'full' | 'checking'>('checking');
     const [capacityInfo, setCapacityInfo] = useState<string>('');
 
-    // Mock capacity check - In real app, call an API
+    const [kitchens, setKitchens] = useState<KitchenResponse[]>([]);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+    // Initial kitchen fetch
     useEffect(() => {
         if (!isOpen) return;
+        const fetchKitchens = async () => {
+            try {
+                const res = await kitchenApi.getAllKitchens();
+                setKitchens(res.data || []);
+            } catch (err) {
+                console.error('Failed to fetch kitchens:', err);
+            } finally {
+                setIsInitialLoading(false);
+            }
+        };
+        fetchKitchens();
+    }, [isOpen]);
+
+    // Real capacity check
+    useEffect(() => {
+        if (!isOpen || isInitialLoading || kitchens.length === 0) return;
         
         const checkCapacity = async () => {
             setCapacityStatus('checking');
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 600));
             
-            // Just a mock logic for demo
-            const day = new Date(selectedDate).getDate();
-            if (day % 7 === 0) {
-                setCapacityStatus('full');
-                setCapacityInfo('Bếp đã đạt 100% công suất cho ngày này.');
-            } else if (day % 3 === 0) {
-                setCapacityStatus('warning');
-                setCapacityInfo('Bếp sắp đầy tải (85%). Vui lòng cân nhắc.');
-            } else {
-                setCapacityStatus('safe');
-                setCapacityInfo('Công suất khả dụng: 45%.');
+            try {
+                let totalRemaining = 0;
+                
+                // Aggregate remaining capacity across all kitchens for this HQ view
+                await Promise.all(kitchens.map(async (kitchen: KitchenResponse) => {
+                    try {
+                        const suggestRes = await dispatchApi.getSuggestion(kitchen.kitchenId, selectedDate);
+                        const suggestions = suggestRes.data || [];
+                        if (Array.isArray(suggestions) && suggestions.length > 0) {
+                            const cap = (suggestions[0] as { kitchenCapacity: number }).kitchenCapacity;
+                            totalRemaining += (Number(cap) || 0);
+                        } else {
+                            totalRemaining += (Number(kitchen.maxDailyCapacity) || 0);
+                        }
+                    } catch {
+                        totalRemaining += (Number(kitchen.maxDailyCapacity) || 0);
+                    }
+                }));
+
+                const isFull = totalQuantity > totalRemaining;
+                const isWarning = totalQuantity > totalRemaining * 0.8; // Warning at 80% usage relative to this order
+
+                if (isFull) {
+                    setCapacityStatus('full');
+                    setCapacityInfo(`Hệ thống quá tải cho ngày này. Còn trống: ${totalRemaining} đơn vị.`);
+                } else if (isWarning) {
+                    setCapacityStatus('warning');
+                    setCapacityInfo(`Công suất còn thấp (${totalRemaining} đơn vị). Vui lòng cân nhắc.`);
+                } else {
+                    setCapacityStatus('safe');
+                    setCapacityInfo(`CÔNG SUẤT KHẢ DỤNG: ${totalRemaining} đơn vị (Đủ cho đơn hàng ${totalQuantity} SP).`);
+                }
+            } catch {
+                setCapacityStatus('safe'); // Fallback
+                setCapacityInfo('Dữ liệu công suất hiện không khả dụng.');
             }
         };
 
         checkCapacity();
-    }, [selectedDate, isOpen]);
+    }, [selectedDate, isOpen, isInitialLoading, kitchens, totalQuantity]);
 
     const handleReschedule = async () => {
         if (!selectedDate) return;
@@ -62,8 +108,7 @@ export const RescheduleModal = ({
             toast.success('Đổi ngày giao hàng thành công!');
             onSuccess(selectedDate);
             onClose();
-        } catch (error: any) {
-            // Error handled by axiosClient interceptor
+        } catch (error: unknown) {
             console.error('Reschedule failed:', error);
         } finally {
             setIsSubmitting(false);
@@ -112,9 +157,6 @@ export const RescheduleModal = ({
                             const isSelected = selectedDate === dateStr;
                             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                             
-                            // Mock capacity for indicator
-                            const mockStatus = day % 7 === 0 ? 'full' : day % 3 === 0 ? 'warning' : 'safe';
-
                             return (
                                 <button
                                     key={dateStr}
@@ -132,10 +174,10 @@ export const RescheduleModal = ({
                                     </span>
                                     <span className="text-sm font-black">{day}</span>
                                     
-                                    {/* Capacity Indicator Dot */}
+                                    {/* Capacity Indicator Dot - Simplified for HQ view */}
                                     <div className={cn(
                                         "absolute bottom-1 w-1 h-1 rounded-full",
-                                        mockStatus === 'full' ? "bg-red-500" : mockStatus === 'warning' ? "bg-yellow-500" : "bg-emerald-500"
+                                        "bg-zinc-700" // Neutral for calendar dots to avoid too many API calls
                                     )} />
                                 </button>
                             );
