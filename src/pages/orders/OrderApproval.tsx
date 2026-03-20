@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Check,
-  X,
   Search,
   Eye,
   CheckCircle2,
@@ -12,6 +10,7 @@ import {
   Leaf,
   Scissors,
   Sparkles,
+  X,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -59,6 +58,7 @@ export const OrderApproval = () => {
   const [rescheduleData, setRescheduleData] = useState<{
     id: number;
     date: string;
+    totalQuantity: number;
   } | null>(null);
   const [rescheduledId, setRescheduledId] = useState<number | null>(null);
   const [isCoordinationModalOpen, setIsCoordinationModalOpen] = useState(false);
@@ -94,7 +94,10 @@ export const OrderApproval = () => {
     console.log("Fetching OrderApproval data...");
     try {
       // Fetch orders and products separately to be resilient
-      const ordersPromise = storeOrderApi.getAllOrders({ size: 100 });
+      const ordersPromise = storeOrderApi.getAllOrders({
+        size: 100,
+        status: "SUBMITTED",
+      });
       const productsPromise = productApi
         .getProducts({ size: 100 })
         .catch((err) => {
@@ -141,7 +144,8 @@ export const OrderApproval = () => {
   }, []);
 
   useEffect(() => {
-    let result = [...orders];
+    // Only show orders that are in SUBMITTED state for approval
+    let result = orders.filter((o) => o.status === "SUBMITTED");
 
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
@@ -260,6 +264,9 @@ export const OrderApproval = () => {
           />
         </div>
       ),
+      className: "w-[40px] px-0",
+      headerClassName: "px-2 py-3",
+      cellClassName: "px-2 py-4",
       cell: (order) => (
         <div className="pl-1" onClick={(e) => e.stopPropagation()}>
           <input
@@ -272,17 +279,24 @@ export const OrderApproval = () => {
       ),
     },
     {
-      header: "ĐƠN HÀNG",
+      header: <div className="w-full text-center">ĐƠN HÀNG</div>,
       accessorKey: "orderId",
-      className: "font-bold text-zinc-100",
+      className: "font-bold text-zinc-100 min-w-[70px]",
+      headerClassName: "px-2 py-3",
+      cellClassName: "px-2 py-4",
       cell: (order) => (
-        <span className="font-black text-[11px] text-zinc-100 tabular-nums tracking-tighter bg-zinc-800/50 px-2 py-1 rounded-lg">
-          #{order.orderId}
-        </span>
+        <div className="flex justify-center w-full">
+          <span className="font-black text-[11px] text-zinc-100 tabular-nums tracking-tighter bg-zinc-800/50 px-2 py-1 rounded-lg">
+            #{order.orderId}
+          </span>
+        </div>
       ),
     },
     {
       header: "NGÀY ĐẶT",
+      className: "whitespace-nowrap min-w-[90px]",
+      headerClassName: "px-2 py-3",
+      cellClassName: "px-2 py-4",
       cell: (order) => (
         <div className="flex flex-col leading-tight">
           <span className="text-[11px] text-zinc-200 font-bold tracking-tight">
@@ -299,6 +313,9 @@ export const OrderApproval = () => {
     },
     {
       header: "CỬA HÀNG",
+      className: "min-w-[110px]",
+      headerClassName: "px-2 py-3",
+      cellClassName: "px-2 py-4",
       cell: (order) => (
         <div className="flex flex-col leading-tight">
           <span className="font-bold text-zinc-200 text-[12px] truncate max-w-[140px]">
@@ -312,21 +329,18 @@ export const OrderApproval = () => {
     },
     {
       header: "SẢN PHẨM",
+      className: "min-w-[150px]",
+      headerClassName: "px-2 py-3",
+      cellClassName: "px-2 py-4",
       cell: (order) => (
-        <div className="flex flex-col gap-1 max-w-[400px]">
+        <div className="flex flex-col gap-1 min-w-[150px]">
           {(order.orderDetails || [])
             .slice(0, 3)
             .map((item: OrderDetailResponse, idx: number) => (
-              <div
-                key={idx}
-                className="flex items-center gap-2 group/prod"
-              >
+              <div key={idx} className="flex items-center gap-2 group/prod">
                 <div className="w-1 h-1 rounded-full bg-amber-500/30 shrink-0 group-hover/prod:bg-amber-500 transition-colors" />
                 <span className="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-200 transition-colors truncate">
                   {item.productName}
-                </span>
-                <span className="text-[10px] text-zinc-600 font-black tabular-nums">
-                  x{item.quantity}
                 </span>
               </div>
             ))}
@@ -339,15 +353,17 @@ export const OrderApproval = () => {
       ),
     },
     {
-      header: "SL (ĐV)",
-      className: "text-center w-[100px]",
+      header: <div className="w-full text-center">SỐ LƯỢNG</div>,
+      className: "min-w-[70px]",
+      headerClassName: "px-2 py-3",
+      cellClassName: "px-2 py-4",
       cell: (order) => {
         const total = order.orderDetails.reduce(
           (acc: number, curr: OrderDetailResponse) => acc + curr.quantity,
           0,
         );
         return (
-          <div className="flex items-baseline justify-center gap-1">
+          <div className="flex items-baseline justify-center gap-1 w-full">
             <span className="text-zinc-100 font-black text-sm tabular-nums leading-none">
               {total}
             </span>
@@ -359,83 +375,86 @@ export const OrderApproval = () => {
       },
     },
     {
-      header: "NGÀY GIAO",
+      header: <div className="w-full text-center">NGÀY GIAO</div>,
+      className: "min-w-[80px]",
+      headerClassName: "px-2 py-3",
+      cellClassName: "px-2 py-4",
       cell: (order) => (
-        <span
-          className={cn(
-            "font-bold text-[11px] tracking-tight whitespace-nowrap px-2 py-1 rounded-lg transition-all",
-            rescheduledId === order.orderId
-              ? "animate-pulse-once bg-amber-500/20 text-amber-500"
-              : "text-zinc-300",
-          )}
-        >
-          {order.deliveryDate
-            ? new Date(order.deliveryDate).toLocaleDateString("vi-VN")
-            : "N/A"}
-        </span>
+        <div className="flex justify-center w-full">
+          <span
+            className={cn(
+              "font-bold text-[11px] tracking-tight whitespace-nowrap px-2 py-1 rounded-lg transition-all",
+              rescheduledId === order.orderId
+                ? "animate-pulse-once bg-amber-500/20 text-amber-500"
+                : "text-zinc-300",
+            )}
+          >
+            {order.deliveryDate
+              ? new Date(order.deliveryDate).toLocaleDateString("vi-VN")
+              : "N/A"}
+          </span>
+        </div>
       ),
     },
     {
       header: "HÀNH ĐỘNG",
-      className: "text-right",
+      className: "min-w-[140px]",
+      headerClassName: "px-1 py-3 text-center",
+      cellClassName: "px-0 py-4",
       cell: (order) => (
-        <div
-          className="flex justify-end items-center gap-1 bg-zinc-950/40 p-1.5 rounded-2xl border border-zinc-800/50"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center gap-1 pr-2 border-r border-zinc-800/50 mr-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedOrder(order)}
-              className="h-7 w-7 p-0 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-all"
-              title="Xem chi tiết"
-            >
-              <Eye size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                setRescheduleData({ id: order.orderId, date: order.deliveryDate })
-              }
-              className="h-7 w-7 p-0 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-all"
-              title="Đổi ngày"
-            >
-              <Calendar size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/orders/${order.orderId}/split`)}
-              className="h-7 w-7 p-0 text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all"
-              title="Tách đơn"
-            >
-              <Scissors size={14} />
-            </Button>
-          </div>
-          
-          <div className="flex items-center gap-1 pl-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleApprove([order.orderId])}
-              disabled={isProcessing}
-              className="h-7 w-7 p-0 text-zinc-500 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
-              title="Duyệt đơn"
-            >
-              <Check size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => openRejectModal(order.orderId)}
-              disabled={isProcessing}
-              className="h-7 w-7 p-0 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-              title="Từ chối"
-            >
-              <X size={14} />
-            </Button>
+        <div className="flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center bg-zinc-950/40 p-0.5 rounded-lg border border-zinc-800/50 shadow-inner">
+            <div className="flex items-center gap-0.5 px-0.5 border-r border-zinc-800/50">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedOrder(order)}
+                className="h-7 w-7 p-0 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-all"
+                title="Xem chi tiết"
+              >
+                <Eye size={14} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setRescheduleData({
+                    id: order.orderId,
+                    date: order.deliveryDate,
+                    totalQuantity: order.orderDetails.reduce(
+                      (sum, item) => sum + item.quantity,
+                      0,
+                    ),
+                  })
+                }
+                className="h-7 w-7 p-0 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-all"
+                title="Đổi ngày"
+              >
+                <Calendar size={14} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/orders/${order.orderId}/split`)}
+                className="h-7 w-7 p-0 text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all"
+                title="Tách đơn"
+              >
+                <Scissors size={14} />
+              </Button>
+            </div>
+
+            <div className="flex items-center px-0.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => openRejectModal(order.orderId)}
+                disabled={isProcessing}
+                className="h-7 w-7 p-0 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                title="Từ chối"
+              >
+                <X size={14} />
+              </Button>
+            </div>
           </div>
         </div>
       ),
@@ -460,7 +479,7 @@ export const OrderApproval = () => {
                 </h2>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-                    Trung tâm Điều phối Thông minh v2.5
+                    Trung tâm Điều phối Thông minh
                   </span>
                   <div className="w-1 h-1 rounded-full bg-zinc-700" />
                   <div
@@ -629,6 +648,7 @@ export const OrderApproval = () => {
               <DataTable
                 data={filteredOrders}
                 columns={columns}
+                layout="fixed"
                 keyExtractor={(order: StoreOrderResponse) =>
                   String(order.orderId)
                 }
@@ -710,7 +730,7 @@ export const OrderApproval = () => {
                       .map((product, pIdx) => (
                         <div
                           key={pIdx}
-                          className="group p-4 rounded-[22px] bg-zinc-950/60 border border-zinc-800 hover:border-amber-500/20 transition-all hover:translate-x-1 duration-300"
+                          className="group p-4 rounded-[22px] bg-zinc-950/60 border border-zinc-800 hover:border-amber-500/20 transition-all duration-300"
                         >
                           <div className="flex justify-between items-start mb-2">
                             <span className="text-[12px] font-bold text-zinc-300 group-hover:text-amber-500 transition-colors line-clamp-2">
@@ -789,7 +809,7 @@ export const OrderApproval = () => {
                 .map((o) => (
                   <div
                     key={o.orderId}
-                    className="flex justify-between items-center p-4 bg-zinc-950/60 border border-emerald-500/10 rounded-2xl hover:border-emerald-500/30 transition-all hover:translate-x-1 duration-300"
+                    className="flex justify-between items-center p-4 bg-zinc-950/60 border border-emerald-500/10 rounded-2xl hover:border-emerald-500/30 transition-all duration-300"
                   >
                     <div className="flex flex-col">
                       <span className="text-sm font-black text-white">
@@ -892,6 +912,7 @@ export const OrderApproval = () => {
           onClose={() => setRescheduleData(null)}
           orderId={rescheduleData.id}
           currentDeliveryDate={rescheduleData.date}
+          totalQuantity={rescheduleData.totalQuantity}
           onSuccess={(newDate: string) => {
             setOrders((prev) =>
               prev.map((o) =>
