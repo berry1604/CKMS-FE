@@ -12,6 +12,7 @@ import { storeApi } from '../../services/store.api';
 const createStoreSchema = z.object({
     name: z.string().min(1, 'Vui lòng nhập tên cửa hàng'),
     location: z.string().min(1, 'Vui lòng nhập địa chỉ'),
+    phone: z.string().regex(/^(84|0[3|5|7|8|9])+([0-9]{8})\b/, 'Số điện thoại không hợp lệ').min(1, 'Vui lòng nhập số điện thoại'),
     isActive: z.boolean().default(true),
 });
 
@@ -24,8 +25,6 @@ export default function CreateStorePage() {
     const {
         register,
         handleSubmit,
-        setValue,
-        watch,
         formState: { errors },
     } = useForm<CreateStoreFormValues>({
         resolver: zodResolver(createStoreSchema) as any,
@@ -34,7 +33,6 @@ export default function CreateStorePage() {
         },
     });
 
-    const isActive = watch('isActive');
 
     const onSubmit = async (data: any) => {
         setIsSubmitting(true);
@@ -42,6 +40,7 @@ export default function CreateStorePage() {
             await storeApi.createStore({
                 name: data.name,
                 address: data.location,
+                phone: data.phone,
                 isActive: data.isActive,
             });
             toast.success('Đã tạo cửa hàng thành công');
@@ -106,27 +105,22 @@ export default function CreateStorePage() {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-300 block mb-2">Trạng thái Hoạt động *</label>
-                            <div className="flex gap-4 p-1">
-                                {[
-                                    { value: true, label: 'Kích hoạt' },
-                                    { value: false, label: 'Vô hiệu hóa' }
-                                ].map((opt) => (
-                                    <label
-                                        key={String(opt.value)}
-                                        className={`flex-1 flex items-center justify-center p-2 rounded-md border cursor-pointer transition-all ${isActive === opt.value ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-transparent border-zinc-800 text-gray-400'}`}
-                                    >
-                                        <input
-                                            type="radio"
-                                            className="sr-only"
-                                            checked={isActive === opt.value}
-                                            onChange={() => setValue('isActive', opt.value)}
-                                        />
-                                        <span className="text-sm">{opt.label}</span>
-                                    </label>
-                                ))}
+                            <label className="text-sm font-medium text-gray-300 block mb-2">Số điện thoại *</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span className="text-gray-400 p-1">📞</span>
+                                </div>
+                                <input
+                                    type="text"
+                                    className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white ${errors.phone ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
+                                    placeholder="VD: 0912345678 or 84912345678"
+                                    {...register('phone')}
+                                />
                             </div>
+                            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
                         </div>
+
+
                     </div>
 
                     <div className="flex justify-end pt-6 border-t border-zinc-800">

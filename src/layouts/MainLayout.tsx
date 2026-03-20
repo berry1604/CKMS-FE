@@ -178,11 +178,14 @@ export const navigation: NavigationItem[] = [
                 permission: PERMISSIONS.REVENUE_REPORTS,
             },
             {
-                name: 'Công suất Bếp',
-                href: '/kitchen/settings',
-                icon: Settings,
+                name: 'Quản lý kho',
+                href: '/warehouse',
+                icon: Store,
                 permission: PERMISSIONS.PRODUCTION_SCHEDULE,
-                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') !== 'MANAGER',
+                hidden: (user) => {
+                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
+                    return role !== 'MANAGER' && role !== 'COORDINATOR';
+                },
             },
         ]
     },
