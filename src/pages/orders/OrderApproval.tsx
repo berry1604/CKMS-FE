@@ -324,6 +324,11 @@ export const OrderApproval = () => {
           <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest mt-0.5">
             ID: {order.storeId}
           </span>
+          {order.storePhone && (
+            <span className="text-[9px] text-zinc-500 font-medium mt-0.5 tracking-tight">
+              📞 {order.storePhone}
+            </span>
+          )}
         </div>
       ),
     },
@@ -402,7 +407,10 @@ export const OrderApproval = () => {
       headerClassName: "px-1 py-3 text-center",
       cellClassName: "px-0 py-4",
       cell: (order) => (
-        <div className="flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex justify-center w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center bg-zinc-950/40 p-0.5 rounded-lg border border-zinc-800/50 shadow-inner">
             <div className="flex items-center gap-0.5 px-0.5 border-r border-zinc-800/50">
               <Button
@@ -501,6 +509,12 @@ export const OrderApproval = () => {
                   Tổng Công suất Hệ thống
                 </span>
                 <span className="text-2xl font-black text-amber-500 tabular-nums tracking-tighter">
+                  {(kitchens || [])
+                    .reduce((sum, k) => sum + (k.todayUsedCapacity ?? 0), 0)
+                    .toLocaleString()}
+                  <span className="text-[10px] text-zinc-600 mx-1 font-black">
+                    /
+                  </span>
                   {totalMaxCapacity.toLocaleString()}
                   <span className="text-[10px] text-zinc-600 ml-2 font-black uppercase">
                     Đơn vị
@@ -522,34 +536,96 @@ export const OrderApproval = () => {
 
           {/* Kitchen Cards - Horizontal Scroll */}
           <div className="flex flex-nowrap gap-3 overflow-x-auto pb-1 custom-scrollbar-thin scroll-smooth snap-x">
-            {(kitchens || []).map((kitchen) => (
-              <div
-                key={kitchen.kitchenId}
-                className="flex-shrink-0 w-64 snap-center bg-zinc-950/40 border border-zinc-800/80 hover:border-amber-500/30 rounded-2xl p-3 transition-all group/card relative overflow-hidden"
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500 group-hover/card:text-amber-500 transition-colors">
-                      <Package size={12} />
+            {(kitchens || []).map((kitchen) => {
+              const isProducing = kitchen.currentStatus === "IN_PRODUCTION";
+              const usedCapacity = kitchen.todayUsedCapacity ?? 0;
+              const maxCapacity = kitchen.maxDailyCapacity || 1;
+              const usagePercent = Math.min(
+                Math.round((usedCapacity / maxCapacity) * 100),
+                100,
+              );
+              const planCount = kitchen.activePlanCount ?? 0;
+
+              // Color thresholds for progress bar
+              const progressColor =
+                usagePercent > 90
+                  ? "bg-red-500"
+                  : usagePercent > 70
+                    ? "bg-amber-500"
+                    : "bg-emerald-500";
+              const progressGlow =
+                usagePercent > 90
+                  ? "shadow-red-500/20"
+                  : usagePercent > 70
+                    ? "shadow-amber-500/20"
+                    : "shadow-emerald-500/20";
+
+              return (
+                <div
+                  key={kitchen.kitchenId}
+                  className="flex-shrink-0 w-72 snap-center bg-zinc-950/40 border border-zinc-800/80 hover:border-amber-500/30 rounded-2xl p-3 transition-all group/card relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500 group-hover/card:text-amber-500 transition-colors">
+                        <Package size={12} />
+                      </div>
+                      <span className="text-[11px] font-black text-zinc-100 uppercase tracking-tight truncate">
+                        {kitchen.name}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-black text-zinc-100 uppercase tracking-tight truncate">
-                      {kitchen.name}
-                    </span>
+                    <Badge
+                      className={cn(
+                        "border-0 text-[8px] font-black px-1.5 py-0 h-4 whitespace-nowrap",
+                        isProducing
+                          ? "bg-emerald-500/10 text-emerald-500"
+                          : "bg-amber-500/10 text-amber-500",
+                      )}
+                    >
+                      {isProducing
+                        ? "🟢 ĐANG SẢN XUẤT"
+                        : "🟡 HOẠT ĐỘNG"}
+                    </Badge>
                   </div>
-                  <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[8px] font-black px-1 py-0 h-4">
-                    HOẠT ĐỘNG
-                  </Badge>
+
+                  {/* Capacity Progress */}
+                  <div className="mb-2">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">
+                        Năng lực
+                      </span>
+                      <span className="text-sm font-black text-zinc-100 tabular-nums">
+                        {usedCapacity.toLocaleString()}
+                        <span className="text-[9px] text-zinc-600 font-bold mx-0.5">
+                          /
+                        </span>
+                        {kitchen.maxDailyCapacity.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-700 shadow-sm",
+                          progressColor,
+                          progressGlow,
+                        )}
+                        style={{ width: `${usagePercent}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center mt-1">
+                      <span className="text-[8px] font-black text-zinc-700 uppercase tracking-widest">
+                        {usagePercent}% đã dùng
+                      </span>
+                      {planCount > 0 && (
+                        <span className="text-[8px] font-black text-amber-500/70 uppercase tracking-widest">
+                          {planCount} plan
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">
-                    Năng lực
-                  </span>
-                  <span className="text-lg font-black text-zinc-100 tabular-nums">
-                    {kitchen.maxDailyCapacity.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

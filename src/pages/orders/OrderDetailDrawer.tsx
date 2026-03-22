@@ -7,6 +7,7 @@ import {
   Printer,
   Download,
   XCircle,
+  Phone,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -302,11 +303,20 @@ export const OrderDetailDrawer = ({
                 <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
                   {currentOrder.storeName || `Shop #${currentOrder.storeId}`}
                 </span>
-                <div className="flex items-center gap-1.5 opacity-60">
-                  <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
-                    Xác thực Terminal
-                  </span>
-                </div>
+                {currentOrder.storePhone ? (
+                  <div className="flex items-center gap-1.5">
+                    <Phone size={10} className="text-amber-500" />
+                    <span className="text-[10px] font-bold text-zinc-400 font-mono tracking-tighter">
+                      {currentOrder.storePhone}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 opacity-60">
+                    <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
+                      Xác thực Terminal
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
                 <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">
