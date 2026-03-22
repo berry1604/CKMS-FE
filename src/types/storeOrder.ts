@@ -25,6 +25,7 @@ export interface StoreOrderResponse {
     orderId: number;
     storeId: number;
     storeName?: string;
+    storePhone?: string;
     createdByUserId: number;
     orderDate: string; // ISO 8601 string
     status: OrderStatus;
