@@ -24,12 +24,18 @@ import { RecipeManager } from '../pages/product/RecipeManager';
 import { OrderList } from '../pages/orders/OrderList';
 import { CreateOrder } from '../pages/orders/CreateOrder';
 import { OrderApproval } from '../pages/orders/OrderApproval';
+import { SplitOrder } from '../pages/orders/SplitOrder';
 import { ProductListExample } from '../pages/product/ProductListExample';
 import { ProductionSchedule } from '../pages/central-kitchen/ProductionSchedule';
 import { CreateProductionPlan } from '../pages/central-kitchen/CreateProductionPlan';
 import { KitchenInventory } from '../pages/central-kitchen/KitchenInventory';
 import { KitchenImportPage } from '../pages/central-kitchen/KitchenImportPage';
 import { ProductionBoard } from '../pages/central-kitchen/ProductionBoard';
+import { DispatchDashboard } from '../pages/central-kitchen/DispatchDashboard';
+import { OrderPool } from '../pages/central-kitchen/OrderPool';
+import { ProductionPlanList } from '../pages/central-kitchen/ProductionPlanList';
+import { WarehousePage } from '../pages/warehouse/WarehousePage';
+
 import { ShipmentList } from '../pages/shipment/ShipmentList';
 import { CreateShipment } from '../pages/shipment/CreateShipment';
 import { BillingList } from '../pages/billing/BillingList';
@@ -40,6 +46,8 @@ import { ComingSoon } from '../components/ComingSoon';
 import { WarehouseFulfillment } from '../pages/warehouse/WarehouseFulfillment';
 import { AllocationMatrix } from '../pages/warehouse/AllocationMatrix';
 import { ReceiveShipment } from '../pages/shipment/ReceiveShipment';
+import { ReceiveShipmentReportPage } from '../pages/shipment/ReceiveShipmentReportPage';
+import { VNPayReturn } from '../pages/billing/VNPayReturn';
 import { useAuth } from '../hooks/useAuth';
 import type { UserRole } from '../types/user';
 
@@ -121,6 +129,9 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'KITCHEN_STAFF', 'COORDINATOR']} />,
                         children: [
                             { index: true, element: <ProductionSchedule /> },
+                            { path: 'dispatch', element: <DispatchDashboard /> },
+                            { path: 'order-pool', element: <OrderPool /> },
+                            { path: 'production-plans', element: <ProductionPlanList /> },
                             { path: 'create-plan', element: <CreateProductionPlan /> },
                             { path: 'inventory', element: <KitchenInventory /> },
                             { path: 'inventory/import', element: <KitchenImportPage /> },
@@ -154,7 +165,8 @@ export const router = createBrowserRouter([
                         children: [
                             { index: true, element: <OrderList /> },
                             { path: 'create', element: <CreateOrder /> },
-                            { path: 'approvals', element: <OrderApproval /> }
+                            { path: 'approvals', element: <OrderApproval /> },
+                            { path: ':id/split', element: <SplitOrder /> }
                         ]
                     },
 
@@ -163,6 +175,7 @@ export const router = createBrowserRouter([
                         path: 'warehouse',
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'COORDINATOR']} />,
                         children: [
+                            { index: true, element: <WarehousePage /> },
                             { path: 'fulfillment', element: <WarehouseFulfillment /> },
                             { path: 'allocation', element: <AllocationMatrix /> }
                         ]
@@ -171,7 +184,7 @@ export const router = createBrowserRouter([
                     // Billing Module (Admin, Manager)
                     {
                         path: 'billing',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'STORE_STAFF']} />,
                         children: [
                             { index: true, element: <BillingList /> },
                             { path: 'invoices', element: <ComingSoon /> }
@@ -181,11 +194,12 @@ export const router = createBrowserRouter([
                     // Shipment Module (Admin, Supply Coordinator, Coordinator)
                     {
                         path: 'shipment',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR', 'STORE_STAFF']} />,
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR', 'KITCHEN_STAFF', 'STORE_STAFF']} />,
                         children: [
                             { index: true, element: <ShipmentList /> },
                             { path: 'create', element: <CreateShipment /> },
-                            { path: 'receive', element: <ReceiveShipment /> }
+                            { path: 'receive', element: <ReceiveShipment /> },
+                            { path: 'receive/:id', element: <ReceiveShipmentReportPage /> }
                         ]
                     },
 
@@ -204,5 +218,10 @@ export const router = createBrowserRouter([
     {
         path: '*',
         element: <Navigate to="/" replace />
+    },
+    // VNPay return — accessible without auth (VNPay redirect doesn't carry session cookie)
+    {
+        path: '/billing/vnpay-return',
+        element: <VNPayReturn />
     }
 ]);

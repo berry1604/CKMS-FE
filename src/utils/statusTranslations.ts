@@ -1,8 +1,8 @@
-import { OrderStatus } from '../types/storeOrder';
-import { ProductionPlanStatus } from '../types/productionPlan';
-import { ShipmentStatus } from '../types/shipment';
-import { BillingStatementStatus, InvoiceStatus } from '../types/billing';
-import { UserStatus } from '../types/user';
+import type { OrderStatus } from '../types/storeOrder';
+import type { ProductionPlanStatus } from '../types/productionPlan';
+import type { ShipmentStatus } from '../types/shipment';
+import type { BillingStatementStatus, InvoiceStatus } from '../types/billing';
+import type { UserStatus } from '../types/user';
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
     SUBMITTED: 'Chờ duyệt',
@@ -12,18 +12,22 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
     ALLOCATED: 'Đã phân bổ',
     IN_TRANSIT: 'Đang giao hàng',
     DELIVERED: 'Đã giao hàng',
-    CONFIRMED: 'Đã xác nhận',
+    CONFIRMED: 'Hoàn thành',
     REJECTED: 'Từ chối'
 };
 
 export const PRODUCTION_PLAN_STATUS_LABELS: Record<ProductionPlanStatus, string> = {
     PLANNED: 'Đang lập kế hoạch',
     READY_TO_PRODUCE: 'Sẵn sàng sản xuất',
+    PRODUCING: 'Đang chế biến',
     IN_PRODUCTION: 'Đang sản xuất',
     PRODUCED: 'Đã sản xuất',
-    FINISHED: 'Hoàn thành',
-    CANCELLED: 'Đã hủy'
+    COMPLETED: 'Hoàn thành',
+    FINISHED: 'Hoàn tất',
+    CANCELLED: 'Đã hủy',
+    APPROVED: 'Đã duyệt'
 };
+
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
     PENDING: 'Chờ xử lý',

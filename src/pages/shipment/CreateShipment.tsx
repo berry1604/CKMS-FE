@@ -2,19 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Truck, ArrowLeft, Save, CheckCircle2,
-    User, Phone, Package, Calendar, ChevronRight, Hash,
-    MapPin, ClipboardList, Info as InfoIcon
+    Calendar, MapPin, ClipboardList, Info as InfoIcon,
+    PlusCircle, Trash2, Package
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { shipmentApi } from '../../services/shipment.api';
 import { productionPlanApi } from '../../services/productionPlan.api';
-import { storeApi } from '../../services/store.api';
 import { storeOrderApi } from '../../services/storeOrderApi';
-import type { CreateShipmentRequest } from '../../types/shipment';
+import type { CreateShipmentRequest, AhamoveServiceIdType } from '../../types/shipment';
 import type { StoreResponse } from '../../types/store';
 import type { StoreOrderResponse } from '../../types/storeOrder';
 import type { ProductionPlanSummaryResponse } from '../../types/productionPlan';
@@ -26,7 +24,7 @@ export const CreateShipment = () => {
     // Data States
     const [availablePlans, setAvailablePlans] = useState<ProductionPlanSummaryResponse[]>([]);
     const [availableStores, setAvailableStores] = useState<StoreResponse[]>([]);
-    const [availableOrders, setAvailableOrders] = useState<StoreOrderResponse[]>([]);
+    const [allOrders, setAllOrders] = useState<StoreOrderResponse[]>([]);
 
     // UI States
     const [isLoading, setIsLoading] = useState(false);
@@ -34,14 +32,12 @@ export const CreateShipment = () => {
 
     // Form State
     const [form, setForm] = useState({
+        ahamoveServiceId: 'SGN-BIKE' as AhamoveServiceIdType,
         productionPlanId: '',
-        storeId: '',
-        storeOrderIds: [] as number[],
-        driverName: '',
-        driverPhone: '',
-        vehicleInfo: '',
-        shippingFee: '',
-        note: ''
+        remarks: '',
+        dropPoints: [
+            { id: Date.now(), storeId: '', storeOrderIds: [] as number[], remarks: '' }
+        ]
     });
 
     useEffect(() => {
@@ -51,20 +47,35 @@ export const CreateShipment = () => {
     const fetchInitialData = async () => {
         setIsLoading(true);
         try {
-            const [planRes, storeRes] = await Promise.all([
+            const [planRes, ordersRes] = await Promise.all([
                 productionPlanApi.getAllProductionPlans({ size: 100 }),
-                storeApi.getAllStores({ size: 100 })
+                storeOrderApi.getAllOrders({ size: 500 }) // Fetch more to cover all branches
             ]);
 
-            // Allow shipments for FINISHED or COMPLETED plans (allocated)
             const validPlans = (planRes.content || []).filter(p =>
                 p.status === 'FINISHED' ||
                 p.status === 'COMPLETED' ||
-                p.status === 'ALLOCATED' ||
-                p.status === 'PRODUCED'
+                p.status === 'PRODUCED' ||
+                p.status === 'READY_TO_PRODUCE'
             );
+            
+            const orders = ordersRes.content || [];
+            
+            // Lấy danh sách Store từ Order có sẵn thay vì gọi storeApi để tránh lỗi 403 Permission
+            const activeStoreMap = new Map<number, StoreResponse>();
+            orders.forEach(o => {
+                const isReady = o.status === 'ALLOCATED' || o.status === 'APPROVED';
+                if (isReady && o.storeId && !activeStoreMap.has(o.storeId)) {
+                    activeStoreMap.set(o.storeId, {
+                        id: o.storeId,
+                        name: o.storeName || `Chi nhánh ${o.storeId}`
+                    } as StoreResponse);
+                }
+            });
+
             setAvailablePlans(validPlans);
-            setAvailableStores(storeRes.data?.content || []);
+            setAvailableStores(Array.from(activeStoreMap.values()));
+            setAllOrders(orders);
         } catch (error) {
             toast.error('Không thể tải các lựa chọn ban đầu');
         } finally {
@@ -72,75 +83,139 @@ export const CreateShipment = () => {
         }
     };
 
-    // Fetch orders when store changes
-    useEffect(() => {
-        const fetchStoreOrders = async () => {
-            if (!form.storeId) {
-                setAvailableOrders([]);
-                return;
-            }
-            try {
-                const ordersRes = await storeOrderApi.getAllOrders({ size: 100 });
-                const storeOrders = (ordersRes.content || []).filter(o =>
-                    o.storeId.toString() === form.storeId &&
-                    (o.status === 'ALLOCATED' || o.status === 'APPROVED')
-                );
-                setAvailableOrders(storeOrders);
-            } catch (error) {
-                toast.error('Không thể tải đơn hàng của chi nhánh này');
-            }
-        };
-        fetchStoreOrders();
-    }, [form.storeId]);
-
     const handleCreate = async () => {
         const productionPlanId = Number(form.productionPlanId);
-        const storeId = Number(form.storeId);
 
         if (!productionPlanId) return toast.error('Vui lòng chọn Kế hoạch sản xuất');
-        if (!storeId) return toast.error('Vui lòng chọn Cửa hàng');
-        if (form.storeOrderIds.length === 0) return toast.error('Vui lòng chọn ít nhất 1 đơn hàng');
+        if (!form.ahamoveServiceId) return toast.error('Vui lòng chọn loại xe hỗ trợ.');
+        
+        // Lấy drop point đầu tiên hợp lệ để gán storeId và storeOrderIds (Backend hiện tại yêu cầu 1 store)
+        const primaryDropPoint = form.dropPoints.find(dp => dp.storeId && dp.storeOrderIds.length > 0);
+        
+        if (!primaryDropPoint) {
+            if (!form.dropPoints[0].storeId) return toast.error('Vui lòng chọn cửa hàng');
+            if (form.dropPoints[0].storeOrderIds.length === 0) return toast.error('Vui lòng chọn ít nhất 1 đơn hàng');
+            return toast.error('Cần ít nhất 1 điểm giao có gắn đơn hàng.');
+        }
+
+        const validDropPoints = form.dropPoints.filter(dp => dp.storeId && dp.storeOrderIds.length > 0);
+        
+        // Ensure no duplicate stores in drop points
+        const storeIds = validDropPoints.map(dp => dp.storeId);
+        if (new Set(storeIds).size !== storeIds.length) {
+            return toast.error('Các điểm giao không được trùng lặp cửa hàng.');
+        }
 
         setIsSubmitting(true);
         try {
             const request: CreateShipmentRequest = {
+                ahamoveServiceId: form.ahamoveServiceId,
                 productionPlanId,
-                storeId,
-                storeOrderIds: form.storeOrderIds,
-                driverName: form.driverName || undefined,
-                driverPhone: form.driverPhone || undefined,
-                vehicleInfo: form.vehicleInfo || undefined,
-                shippingFee: form.shippingFee ? Number(form.shippingFee) : undefined,
-                note: form.note || undefined
+                storeId: Number(primaryDropPoint.storeId),
+                storeOrderIds: primaryDropPoint.storeOrderIds,
+                remarks: form.remarks || undefined, 
+                dropPoints: validDropPoints.map(dp => ({
+                    storeId: Number(dp.storeId),
+                    storeOrderIds: dp.storeOrderIds,
+                    remarks: dp.remarks || undefined 
+                }))
             };
 
-            await shipmentApi.createShipment(request);
+            console.log('Shipment Payload:', request);
+
+            const response = await shipmentApi.createShipment(request);
+            
+            // Automatically mark the shipment as PREPARED (Sẵn sàng) right after creation
+            if (response && response.shipmentId) {
+                try {
+                    await shipmentApi.prepareShipment(response.shipmentId);
+                } catch (e) {
+                    console.error('Auto-prepare failed:', e);
+                    // We don't block the success message if only prepare fails, 
+                    // since the shipment was created anyway.
+                }
+            }
+            
             toast.success('Đơn vận chuyển đã được tạo thành công!');
             navigate('/shipment');
         } catch (error: any) {
+            console.error('Shipment error:', error);
             toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo đơn vận chuyển');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const toggleOrder = (orderId: number) => {
-        setForm(prev => {
-            const current = [...prev.storeOrderIds];
-            if (current.includes(orderId)) {
-                return { ...prev, storeOrderIds: current.filter(id => id !== orderId) };
-            } else {
-                return { ...prev, storeOrderIds: [...current, orderId] };
-            }
-        });
+    const addDropPoint = () => {
+        setForm(prev => ({
+            ...prev,
+            dropPoints: [...prev.dropPoints, { id: Date.now(), storeId: '', storeOrderIds: [], remarks: '' }]
+        }));
     };
 
-    const toggleAllOrders = () => {
-        if (form.storeOrderIds.length === availableOrders.length) {
-            setForm(prev => ({ ...prev, storeOrderIds: [] }));
-        } else {
-            setForm(prev => ({ ...prev, storeOrderIds: availableOrders.map(o => o.orderId) }));
-        }
+    const removeDropPoint = (id: number) => {
+        setForm(prev => ({
+            ...prev,
+            dropPoints: prev.dropPoints.filter(dp => dp.id !== id)
+        }));
+    };
+
+    const updateDropPoint = (id: number, field: string, value: any) => {
+        setForm(prev => ({
+            ...prev,
+            dropPoints: prev.dropPoints.map(dp => {
+                if (dp.id === id) {
+                    // Reset orders if store changed
+                    if (field === 'storeId' && dp.storeId !== value) {
+                        return { ...dp, [field]: value, storeOrderIds: [] };
+                    }
+                    return { ...dp, [field]: value };
+                }
+                return dp;
+            })
+        }));
+    };
+
+    const toggleOrderForDropPoint = (dropPointId: number, orderId: number) => {
+        setForm(prev => ({
+            ...prev,
+            dropPoints: prev.dropPoints.map(dp => {
+                if (dp.id === dropPointId) {
+                    const current = [...dp.storeOrderIds];
+                    if (current.includes(orderId)) {
+                        return { ...dp, storeOrderIds: current.filter(id => id !== orderId) };
+                    } else {
+                        return { ...dp, storeOrderIds: [...current, orderId] };
+                    }
+                }
+                return dp;
+            })
+        }));
+    };
+
+    const toggleAllOrdersForDropPoint = (dropPointId: number, storeId: string) => {
+        const branchOrders = allOrders.filter(o => 
+            o.storeId.toString() === storeId && 
+            (o.status === 'ALLOCATED' || o.status === 'APPROVED')
+        );
+        
+        setForm(prev => ({
+            ...prev,
+            dropPoints: prev.dropPoints.map(dp => {
+                if (dp.id === dropPointId) {
+                    if (dp.storeOrderIds.length === branchOrders.length) {
+                        return { ...dp, storeOrderIds: [] };
+                    } else {
+                        return { ...dp, storeOrderIds: branchOrders.map(o => o.orderId) };
+                    }
+                }
+                return dp;
+            })
+        }));
+    };
+
+    const getTotalOrdersSelected = () => {
+        return form.dropPoints.reduce((acc, dp) => acc + dp.storeOrderIds.length, 0);
     };
 
     return (
@@ -157,10 +232,10 @@ export const CreateShipment = () => {
                     </Button>
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="orange" className="text-[9px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase">Coordinator</Badge>
+                            <Badge variant="orange" className="text-[9px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase bg-[#DE802B]/20 text-[#DE802B]">Bếp trung tâm</Badge>
                             <h1 className="text-2xl font-black text-zinc-100 uppercase tracking-tight">Tạo đơn vận chuyển</h1>
                         </div>
-                        <p className="text-xs text-zinc-500 font-medium tracking-wide">Điều phối xe và chuẩn bị hàng cho các chi nhánh.</p>
+                        <p className="text-xs text-zinc-500 font-medium tracking-wide">Tạo lệnh xuất kho cho bộ phận Bếp chuẩn bị hàng.</p>
                     </div>
                 </div>
 
@@ -175,9 +250,9 @@ export const CreateShipment = () => {
                     <Button
                         onClick={handleCreate}
                         disabled={isSubmitting || isLoading}
-                        className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2"
+                        className="bg-[#DE802B] hover:bg-[#c97327] text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-[#DE802B]/20 border-0 flex items-center gap-2"
                     >
-                        {isSubmitting ? 'Đang tạo...' : <><Save size={18} /> Xuất đơn vận chuyển</>}
+                        {isSubmitting ? 'Đang gửi...' : <><Save size={18} /> Gửi đến bếp</>}
                     </Button>
                 </div>
             </div>
@@ -189,7 +264,7 @@ export const CreateShipment = () => {
                     <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 p-8 space-y-8">
                         <div>
                             <h2 className="text-sm font-black text-zinc-100 uppercase tracking-widest flex items-center gap-2">
-                                <ClipboardList size={16} className="text-amber-500" /> Thông tin cốt lõi
+                                <ClipboardList size={16} className="text-[#5C6F2B]" /> Cấu hình cốt lõi
                             </h2>
                             <p className="text-[11px] text-zinc-600 font-medium mt-1 uppercase tracking-tighter">Bắt buộc để hệ thống đối soát sản lượng</p>
                         </div>
@@ -199,7 +274,7 @@ export const CreateShipment = () => {
                                 <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Kế hoạch sản xuất liên quan</label>
                                 <div className="relative">
                                     <select
-                                        className="w-full appearance-none pl-12 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer"
+                                        className="w-full appearance-none pl-12 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#DE802B]/20 focus:border-[#DE802B]/50 transition-all cursor-pointer"
                                         value={form.productionPlanId}
                                         onChange={e => setForm(prev => ({ ...prev, productionPlanId: e.target.value }))}
                                     >
@@ -213,140 +288,156 @@ export const CreateShipment = () => {
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Cửa hàng đích (Ship-to)</label>
+                                <label className="text-[10px] font-black text-[#DE802B] uppercase tracking-widest ml-1">Loại xe vận chuyển (AhaMove)</label>
                                 <div className="relative">
                                     <select
-                                        className="w-full appearance-none pl-12 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer"
-                                        value={form.storeId}
-                                        onChange={e => setForm(prev => ({ ...prev, storeId: e.target.value, storeOrderIds: [] }))}
+                                        className="w-full appearance-none pl-12 pr-4 h-14 bg-[#DE802B]/5 border border-[#DE802B]/30 rounded-2xl text-sm font-bold text-[#DE802B] focus:outline-none focus:ring-2 focus:ring-[#DE802B]/50 transition-all cursor-pointer"
+                                        value={form.ahamoveServiceId}
+                                        onChange={e => setForm(prev => ({ ...prev, ahamoveServiceId: e.target.value as AhamoveServiceIdType }))}
                                     >
-                                        <option value="">-- Chọn Cửa hàng --</option>
-                                        {availableStores.map(s => {
-                                            const sId = s.id || (s as any).storeId;
-                                            return <option key={sId} value={sId}>{s.name} (CN #{sId})</option>
-                                        })}
+                                        <option value="SGN-BIKE">Bike (Xe máy)</option>
+                                        <option value="SGN-TRUCK-500">Truck (Xe tải 500kg)</option>
+                                        <option value="SGN-TRUCK-1000">Truck (Xe tải 1000kg)</option>
+                                        <option value="SGN-PREMIUM">Premium (Giao Siêu Tốc)</option>
                                     </select>
-                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                                    <Truck className="absolute left-4 top-1/2 -translate-y-1/2 text-[#DE802B]" size={18} />
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Order Selection Table */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Gom đơn hàng vào Shipment</label>
-                                {availableOrders.length > 0 && (
-                                    <button
-                                        onClick={toggleAllOrders}
-                                        className="text-[10px] font-black text-amber-500 uppercase tracking-widest hover:text-amber-400 transition-colors"
-                                    >
-                                        {form.storeOrderIds.length === availableOrders.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả đơn'}
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-950/40">
-                                {availableOrders.length > 0 ? (
-                                    <div className="divide-y divide-zinc-800/50">
-                                        {availableOrders.map(order => (
-                                            <div
-                                                key={order.orderId}
-                                                onClick={() => toggleOrder(order.orderId)}
-                                                className={cn(
-                                                    "flex items-center gap-4 p-4 cursor-pointer transition-colors group",
-                                                    form.storeOrderIds.includes(order.orderId) ? "bg-amber-500/5" : "hover:bg-zinc-800/30"
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    "w-5 h-5 rounded border flex items-center justify-center transition-all",
-                                                    form.storeOrderIds.includes(order.orderId)
-                                                        ? "bg-amber-500 border-amber-500 text-black"
-                                                        : "border-zinc-800 bg-zinc-900 group-hover:border-zinc-700"
-                                                )}>
-                                                    {form.storeOrderIds.includes(order.orderId) && <CheckCircle2 size={12} strokeWidth={4} />}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-black text-zinc-200 uppercase tracking-tighter">Đơn #{order.orderId}</span>
-                                                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 border-0">{order.status}</Badge>
-                                                    </div>
-                                                    <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-tight mt-0.5">
-                                                        {order.orderDetails?.length || 0} món hàng — Tổng: {(order.totalAmount || 0).toLocaleString()}đ
-                                                    </p>
-                                                </div>
-                                                <ChevronRight size={14} className="text-zinc-800 group-hover:text-zinc-600" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-10 text-center flex flex-col items-center gap-3 opacity-20">
-                                        <Package size={48} className="text-zinc-600" />
-                                        <span className="text-xs font-black text-zinc-600 uppercase tracking-widest italic">Vui lòng chọn chi nhánh để xem đơn hàng</span>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Driver & Logistics Card */}
+                    {/* Routing / Drop Points */}
                     <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 p-8 space-y-8">
-                        <div>
-                            <h2 className="text-sm font-black text-zinc-100 uppercase tracking-widest flex items-center gap-2">
-                                <Truck size={16} className="text-indigo-500" /> Logistics & Vận tải
-                            </h2>
-                            <p className="text-[11px] text-zinc-600 font-medium mt-1 uppercase tracking-tighter">Thông tin liên hệ tài xế và phương tiện</p>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-sm font-black text-zinc-100 uppercase tracking-widest flex items-center gap-2">
+                                    <MapPin size={16} className="text-[#DE802B]" /> Lộ trình & Các điểm giao
+                                </h2>
+                                <p className="text-[11px] text-zinc-600 font-medium mt-1 uppercase tracking-tighter">
+                                    Thêm các chi nhánh cần giao trên cùng chuyến xe.
+                                </p>
+                            </div>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="border-[#5C6F2B]/50 text-[#5C6F2B] hover:bg-[#5C6F2B]/10 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2"
+                                onClick={addDropPoint}
+                            >
+                                <PlusCircle size={14}/> Thêm điểm giao
+                            </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-6">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                        <User size={12} /> Tên tài xế
-                                    </label>
-                                    <Input
-                                        className="h-14 bg-zinc-950 border-zinc-800 rounded-2xl font-bold focus:border-indigo-500/50"
-                                        placeholder="Ví dụ: Nguyễn Văn A"
-                                        value={form.driverName}
-                                        onChange={e => setForm(prev => ({ ...prev, driverName: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                        <Phone size={12} /> Số điện thoại
-                                    </label>
-                                    <Input
-                                        className="h-14 bg-zinc-950 border-zinc-800 rounded-2xl font-bold focus:border-indigo-500/50"
-                                        placeholder="Ví dụ: 090 123 4567"
-                                        value={form.driverPhone}
-                                        onChange={e => setForm(prev => ({ ...prev, driverPhone: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-6">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                        <Truck size={12} /> Biển số / Thông tin xe
-                                    </label>
-                                    <Input
-                                        className="h-14 bg-zinc-950 border-zinc-800 rounded-2xl font-bold focus:border-indigo-500/50"
-                                        placeholder="Ví dụ: 59A - 123.45"
-                                        value={form.vehicleInfo}
-                                        onChange={e => setForm(prev => ({ ...prev, vehicleInfo: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                        <Hash size={12} /> Phí ship dự kiến (VNĐ)
-                                    </label>
-                                    <Input
-                                        type="number"
-                                        className="h-14 bg-zinc-950 border-zinc-800 rounded-2xl font-bold focus:border-indigo-500/50"
-                                        placeholder="Ví dụ: 50000"
-                                        value={form.shippingFee}
-                                        onChange={e => setForm(prev => ({ ...prev, shippingFee: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
+                        <div className="space-y-6">
+                            {form.dropPoints.map((dp, idx) => {
+                                const branchOrders = dp.storeId 
+                                    ? allOrders.filter(o => o.storeId.toString() === dp.storeId && (o.status === 'ALLOCATED' || o.status === 'APPROVED'))
+                                    : [];
+
+                                return (
+                                    <div key={dp.id} className="p-6 bg-zinc-950/50 border border-zinc-800 rounded-3xl space-y-5 relative group">
+                                        <div className="absolute -left-3 -top-3 w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center font-black text-zinc-500 text-xs shadow-lg">
+                                            {idx + 1}
+                                        </div>
+                                        {form.dropPoints.length > 1 && (
+                                            <button 
+                                                onClick={() => removeDropPoint(dp.id)}
+                                                className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors p-2"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+
+                                        <div className="space-y-3 pt-2 w-full md:w-3/4">
+                                            <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Cửa hàng đích (Stop #{idx + 1})</label>
+                                            <div className="relative">
+                                                <select
+                                                    className="w-full appearance-none pl-12 pr-4 h-12 bg-zinc-900 border border-zinc-800 rounded-xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#5C6F2B]/20 focus:border-[#5C6F2B]/50 transition-all cursor-pointer"
+                                                    value={dp.storeId}
+                                                    onChange={e => updateDropPoint(dp.id, 'storeId', e.target.value)}
+                                                >
+                                                    <option value="">-- Chọn Cửa hàng --</option>
+                                                    {availableStores.map(s => {
+                                                        const sId = s.id || (s as any).storeId;
+                                                        return <option key={sId} value={sId}>{s.name} (CN #{sId})</option>
+                                                    })}
+                                                </select>
+                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                                            </div>
+                                        </div>
+
+                                        {/* Orders Selection for this drop point */}
+                                        {dp.storeId && (
+                                            <div className="space-y-3 pt-2">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Gom đơn hàng cho điểm giao này</label>
+                                                    {branchOrders.length > 0 && (
+                                                        <button
+                                                            onClick={() => toggleAllOrdersForDropPoint(dp.id, dp.storeId)}
+                                                            className="text-[10px] font-black text-[#5C6F2B] uppercase tracking-widest hover:text-[#7a913e] transition-colors"
+                                                        >
+                                                            {dp.storeOrderIds.length === branchOrders.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả đơn'}
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/30">
+                                                    {branchOrders.length > 0 ? (
+                                                        <div className="divide-y divide-zinc-800/50 max-h-60 overflow-y-auto custom-scrollbar">
+                                                            {branchOrders.map(order => (
+                                                                <div
+                                                                    key={order.orderId}
+                                                                    onClick={() => toggleOrderForDropPoint(dp.id, order.orderId)}
+                                                                    className={cn(
+                                                                        "flex items-center gap-4 p-3 cursor-pointer transition-colors group",
+                                                                        dp.storeOrderIds.includes(order.orderId) ? "bg-[#5C6F2B]/10" : "hover:bg-zinc-800/30"
+                                                                    )}
+                                                                >
+                                                                    <div className={cn(
+                                                                        "w-4 h-4 rounded border flex items-center justify-center transition-all",
+                                                                        dp.storeOrderIds.includes(order.orderId)
+                                                                            ? "bg-[#5C6F2B] border-[#5C6F2B] text-black"
+                                                                            : "border-zinc-700 bg-zinc-800 group-hover:border-zinc-600"
+                                                                    )}>
+                                                                        {dp.storeOrderIds.includes(order.orderId) && <CheckCircle2 size={10} strokeWidth={4} />}
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-xs font-black text-zinc-200 uppercase tracking-tighter">Đơn #{order.orderId}</span>
+                                                                            <Badge variant="secondary" className="text-[8px] px-1 py-0.5 border-0 uppercase">{order.status}</Badge>
+                                                                        </div>
+                                                                        <div className="mt-2 space-y-1.5">
+                                                                            <div className="flex flex-wrap gap-1">
+                                                                                {order.orderDetails?.map((item, idx) => (
+                                                                                    <div 
+                                                                                        key={idx} 
+                                                                                        className="text-[9px] font-bold bg-zinc-800/80 text-zinc-400 px-2 py-0.5 rounded-lg border border-zinc-700/30 flex items-center gap-1.5"
+                                                                                    >
+                                                                                        <span className="text-[#DE802B]">{item.quantity}x</span>
+                                                                                        <span className="truncate max-w-[150px]">{item.productName}</span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between pt-1 border-t border-zinc-800/30">
+                                                                                <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Tổng thanh toán:</span>
+                                                                                <span className="text-[10px] text-[#DE802B] font-black italic">{(order.totalAmount || 0).toLocaleString()}đ</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-6 text-center flex flex-col items-center gap-2 opacity-30">
+                                                            <Package size={32} className="text-zinc-600" />
+                                                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">Không có đơn hàng sẵn sàng</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -358,48 +449,42 @@ export const CreateShipment = () => {
                             <h2 className="text-xs font-black text-zinc-500 uppercase tracking-[0.2em] mb-4">Chi tiết kiện hàng</h2>
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center py-3 border-b border-zinc-800/50">
-                                    <span className="text-[11px] font-bold text-zinc-600 uppercase">Tổng số đơn</span>
-                                    <span className="text-sm font-black text-zinc-200">{form.storeOrderIds.length}</span>
+                                    <span className="text-[11px] font-bold text-zinc-600 uppercase">Tổng số điểm giao</span>
+                                    <span className="text-sm font-black text-zinc-200">{form.dropPoints.filter(dp => dp.storeId).length}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-zinc-800/50">
-                                    <span className="text-[11px] font-bold text-zinc-600 uppercase">Trạng thái tạo</span>
-                                    <Badge variant="orange" className="font-black px-2 py-0 border-0">CREATED</Badge>
+                                    <span className="text-[11px] font-bold text-zinc-600 uppercase">Tổng số đơn hàng</span>
+                                    <span className="text-sm font-black text-zinc-200">{getTotalOrdersSelected()}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-3 border-b border-zinc-800/50">
+                                    <span className="text-[11px] font-bold text-zinc-600 uppercase">Cước bổ sung</span>
+                                    <span className="text-[11px] font-black text-zinc-400 italic">Tính sau khi tạo</span>
                                 </div>
                                 <div className="flex justify-between items-center py-3">
                                     <span className="text-[11px] font-bold text-zinc-600 uppercase">Đối tác VC</span>
-                                    <span className="text-sm font-black text-zinc-400">{form.driverName || 'Chưa định danh'}</span>
+                                    <span className="text-sm font-black text-[#DE802B]">AhaMove</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-6 rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 space-y-3 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/[0.05] blur-2xl"></div>
-                            <div className="flex items-center gap-2 text-amber-500 relative z-10">
+                        <div className="p-6 rounded-3xl bg-[#DE802B]/[0.03] border border-[#DE802B]/10 space-y-3 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-[#DE802B]/[0.05] blur-2xl"></div>
+                            <div className="flex items-center gap-2 text-[#DE802B] relative z-10">
                                 <InfoIcon size={14} strokeWidth={3} />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Hướng dẫn</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">AhaMove Webhook</span>
                             </div>
                             <p className="text-[11px] text-zinc-500 font-medium leading-relaxed tracking-tight relative z-10 italic">
-                                Hãy đảm bảo rằng các món hàng trong đơn đã được sản xuất xong và sẵn sàng tại kho xuất. Đơn hàng sẽ chuyển sang trạng thái "SHIPPING" ngay sau khi xuất đơn.
+                                Sau khi gửi đơn, hệ thống sẽ tự động gọi sang AhaMove để tìm tài xế. Bạn có thể theo dõi tiến trình trực tiếp qua Link Tracking.
                             </p>
                         </div>
 
                         <Button
                             onClick={handleCreate}
-                            disabled={isSubmitting || isLoading || form.storeOrderIds.length === 0}
-                            className="w-full h-16 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-amber-900/20 border-0"
+                            disabled={isSubmitting || isLoading || getTotalOrdersSelected() === 0}
+                            className="w-full h-16 bg-[#DE802B] hover:bg-[#c97327] text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-[#DE802B]/20 border-0"
                         >
-                            {isSubmitting ? 'Đang xuất đơn...' : 'Xuất đơn ngay'}
+                            {isSubmitting ? 'Đang gửi...' : 'Gửi đến bếp'}
                         </Button>
-                    </div>
-
-                    <div className="bg-emerald-500/5 p-6 rounded-[24px] border border-emerald-500/10 flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
-                            <CheckCircle2 size={18} />
-                        </div>
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Tiếp theo</span>
-                            <p className="text-[11px] text-zinc-500 font-medium leading-tight">Sau khi tạo, bếp trung tâm sẽ chuẩn bị kiện hàng (PREPARED) trước khi tài xế bắt đầu hành trình (IN_TRANSIT).</p>
-                        </div>
                     </div>
                 </div>
             </div>

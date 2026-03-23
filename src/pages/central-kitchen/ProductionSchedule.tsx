@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import {
   Calendar as CalendarIcon,
@@ -8,7 +7,6 @@ import {
   PlayCircle,
   ChevronLeft,
   ChevronRight,
-  Plus,
   Search,
   Ban,
   CheckSquare,
@@ -22,9 +20,9 @@ import {
   Printer,
   ClipboardList,
   MapPin,
-  Eye,
   Package,
   AlertCircle,
+  Eye,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -34,17 +32,19 @@ import { Drawer } from "../../components/ui/Drawer";
 import { ConfirmationModal } from "../../components/ui/ConfirmationModal";
 import { productionPlanApi } from "../../services/productionPlan.api";
 import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
+import {
+  allocationApi,
+  type AllocationRow,
+} from "../../services/allocationApi";
 import type {
   ProductionPlanSummaryResponse,
   ProductionPlanDetailResponse,
 } from "../../types/productionPlan";
-import type { KitchenStockItemResponse } from "../../types/kitchenInventory";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { cn } from "../../utils/classNames";
 
 export const ProductionSchedule = () => {
   const { user, hasAuthority } = useAuth();
-  const navigate = useNavigate();
   const [plans, setPlans] = useState<ProductionPlanSummaryResponse[]>([]);
   const [filteredPlans, setFilteredPlans] = useState<
     ProductionPlanSummaryResponse[]
@@ -65,84 +65,26 @@ export const ProductionSchedule = () => {
   const [finishingPlanVersion, setFinishingPlanVersion] = useState<
     number | undefined
   >();
-  const [manualProductId, setManualProductId] = useState<number>(1);
-  const [manualActualQty, setManualActualQty] = useState<number>(100);
+  const [actualQuantities, setActualQuantities] = useState<
+    Record<number, number>
+  >({});
 
-    // Fetch kitchen stock whenever detail panel opens
-    useEffect(() => {
-        if (!selectedPlanId) {
-            setMaterialStockMap(new Map());
-            return;
-        }
-        const fetchStock = async () => {
-            const kitchenId = selectedPlanDetail?.kitchenId || user?.kitchenId || 1;
-            const nameMap = new Map<string, number>();
-            try {
-                // IMPORTANT: Match backend logic which only checks the PRIMARY warehouse
-                // Backend: warehouseRepository.findByKitchen_KitchenId(kitchenId).stream().findFirst()
-                // Frontend: getWarehousesByKitchenId(kitchenId) returns list, we take first one
-                
-                // However, there is no endpoint /kitchen-warehouses in Backend currently!
-                // So getWarehousesByKitchenId returns [] and we fallback to { warehouseId: 1 }.
-                
-                // If Backend logic (ProductionPlanServiceImpl:166) finds a different warehouse ID than 1,
-                // then UI (checking ID 1) and Backend (checking ID X) will mismatch.
-                
-                // Assuming standard setup:
-                // If kitchenId=1, warehouseId is likely 1.
-                // We should rely on what the user sees in Inventory page.
-                
-                // The Inventory page uses WAREHOUSE_ID = 1 hardcoded.
-                // Let's stick to WAREHOUSE_ID = 1 for now if we can't fetch.
-                
-                let warehouseIdToUse = 1;
-                
-                try {
-                     const warehouses = await kitchenInventoryApi.getWarehousesByKitchenId(kitchenId);
-                     if (warehouses && warehouses.length > 0) {
-                         warehouseIdToUse = warehouses[0].warehouseId;
-                     }
-                } catch (e) {
-                    // Ignore, stick to 1
-                }
-
-                // Force warehouseId = 1 if user is admin/manager seeing global view, 
-                // OR if we are in development and know the seed data.
-                // But for correctness, we should use the one found.
-                
-                // Check stock for this warehouse
-                const res = await kitchenInventoryApi.getWarehouseStock(warehouseIdToUse).catch(() => ({ data: [] }));
-                const items: KitchenStockItemResponse[] = res.data || [];
-                for (const item of items) {
-                    // Backend uses materialId to check stock, not name.
-                    // We must map by materialId if available, or fallback to name.
-                    
-                    // In KitchenStockItemResponse: itemId is the ID of material or product.
-                    // itemType distinguishes them.
-                    
-                    if (item.itemType === 'MATERIAL') {
-                        // Use materialId as key (convert to string for Map)
-                        const idKey = `id-${item.itemId}`;
-                        nameMap.set(idKey, (nameMap.get(idKey) || 0) + item.quantity);
-                    }
-                    
-                    // Keep name mapping for UI display (fallback)
-                    const key = item.itemName?.toLowerCase().trim();
-                    if (key) {
-                        nameMap.set(key, (nameMap.get(key) || 0) + item.quantity);
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to load kitchen stock for plan detail', e);
-            }
-
+  // Fetch kitchen stock whenever detail panel opens
+  const [materialStockMap, setMaterialStockMap] = useState<Map<string, number>>(
+    new Map(),
+  );
+  const [materialUnitsMap, setMaterialUnitsMap] = useState<Map<number, string>>(
+    new Map(),
+  );
   const [currentDate, setCurrentDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-
-  const handleCreateTask = () => {
-    navigate("/kitchen/create-plan");
-  };
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [planToCancel, setPlanToCancel] = useState<{
+    id: number;
+    version?: number;
+  } | null>(null);
 
   useEffect(() => {
     loadPlans();
@@ -163,23 +105,33 @@ export const ProductionSchedule = () => {
       return;
     }
     const fetchStock = async () => {
-      const kitchenId = selectedPlanDetail?.kitchenId || user?.kitchenId || 1; // Fallback to kitchen 1
-      const nameMap = new Map<string, number>();
+      const warehouseId = selectedPlanDetail?.kitchenId || user?.kitchenId || 1;
+      const stockMap = new Map<string, number>();
+
       try {
-        const warehouses = await kitchenInventoryApi
-          .getWarehousesByKitchenId(kitchenId)
-          .catch(() => []);
-        if (warehouses && warehouses.length > 0) {
-          for (const w of warehouses) {
-            const res = await kitchenInventoryApi
-              .getWarehouseStock(w.warehouseId)
-              .catch(() => ({ data: [] }));
-            const items: KitchenStockItemResponse[] = res.data || [];
-            for (const item of items) {
-              const key = item.itemName?.toLowerCase().trim();
-              if (key) {
-                nameMap.set(key, (nameMap.get(key) || 0) + item.quantity);
-              }
+        const res = await kitchenInventoryApi
+          .getWarehouseStock(warehouseId)
+          .catch(() => ({ data: [] }));
+
+        const items = res.data || [];
+        for (const item of items) {
+          // Map by name (lowercase) for fuzzy matching
+          const nameKey = item.itemName?.toLowerCase().trim();
+          if (nameKey) {
+            stockMap.set(nameKey, (stockMap.get(nameKey) || 0) + item.quantity);
+          }
+          // Map by material ID for precise matching
+          if (item.itemType === "MATERIAL") {
+            const idKey = `id-${item.itemId}`;
+            stockMap.set(idKey, (stockMap.get(idKey) || 0) + item.quantity);
+
+            // ENHANCEMENT: Populate unit map from stock
+            if (item.unit) {
+              setMaterialUnitsMap((prev) => {
+                const newMap = new Map(prev);
+                newMap.set(item.itemId, item.unit);
+                return newMap;
+              });
             }
           }
         }
@@ -187,25 +139,7 @@ export const ProductionSchedule = () => {
         console.error("Failed to load kitchen stock for plan detail", e);
       }
 
-      // FALLBACK MOCK DATA IF NO ACTUAL DATA WAS LOADED
-      if (nameMap.size === 0 && selectedPlanDetail?.materials?.length) {
-        console.warn(
-          "API returned empty stock. Using mock stock data for demo.",
-        );
-        selectedPlanDetail.materials.forEach((mat, index) => {
-          const key = mat.materialName?.toLowerCase().trim();
-          if (key) {
-            // The first material is sufficient, the second one is deficient, others are sufficient
-            const mockQuantity =
-              index === 1
-                ? Math.max(0, mat.requiredQuantity - 1)
-                : mat.requiredQuantity + 10;
-            nameMap.set(key, mockQuantity);
-          }
-        });
-      }
-
-      setMaterialStockMap(nameMap);
+      setMaterialStockMap(stockMap);
     };
     fetchStock();
   }, [
@@ -234,93 +168,8 @@ export const ProductionSchedule = () => {
       );
     }
 
-        try {
-            switch (action) {
-                case 'ready':
-                    await productionPlanApi.readyProductionPlan(id);
-                    break;
-                case 'start':
-                    await productionPlanApi.startProductionPlan(id, version);
-                    break;
-                case 'finish': {
-                    // Collect outputs from orders linked to this plan
-                    // For now, we simulate full yield for all items in the plan
-                    setIsDetailLoading(true);
-                    try {
-                        // Fetch all orders associated with this plan to aggregate product needs
-                        // Use a larger size or specific query if API supports filtering by batchId
-                        // Since storeOrderApi doesn't expose findByBatchId easily, we fetch more.
-                        const ordersRes = await storeOrderApi.getAllOrders({ size: 500 });
-                        
-                        // Filter orders that belong to this plan
-                        // Also check for orders that are IN_PRODUCTION status and match this batch?
-                        // Or just batchId.
-                        const planOrders = (ordersRes.content || []).filter(o => o.batchId === id); 
-                        
-                        // DEBUG: Log found orders
-                        console.log("Found orders for plan", id, ":", planOrders.length, planOrders);
-
-                        const productMap = new Map<number, number>();
-                        planOrders.forEach(order => {
-                            (order.orderDetails || []).forEach(item => {
-                                productMap.set(item.productId, (productMap.get(item.productId) || 0) + item.quantity);
-                            });
-                        });
-
-                        const outputs = Array.from(productMap.entries()).map(([productId, actualQty]) => ({
-                            productId,
-                            actualQty
-                        }));
-
-                        // If no orders found or no outputs (which is possible if batchId logic fails),
-                        // we must try a fallback.
-                        if (outputs.length === 0) {
-                            // FALLBACK: If we can't find products via orders, check if we can infer from Plan Name or just send a dummy/warning.
-                            // However, backend requires at least one output.
-                            // Let's try to see if the plan detail has any info about what it produces?
-                            // Unfortunately, ProductionPlanDetail only lists MATERIALS requirements, not product outputs directly 
-                            // unless we query the recipes.
-                            
-                            // Last resort: If we are in dev/demo mode, or if data is inconsistent,
-                            // we might want to alert the user OR create a dummy output if that helps unblock (DANGEROUS).
-                            // Better approach: Show a modal to manually input yield (Complex).
-                            
-                            // Simplest fix for now: Log the error clearly and maybe try to fetch ALL orders 
-                            // to see if we missed any pagination (we only fetched 100).
-                            
-                            // Let's try fetching more orders if 100 wasn't enough?
-                            // Or, maybe batchId is not set correctly on orders?
-                            
-                            console.warn("No outputs found for plan", id, "in first 100 orders. Checking if any order is SCHEDULED/ALLOCATED without batchId?");
-                             
-                             toast.error("Không tìm thấy sản phẩm đầu ra từ các đơn hàng liên kết. Vui lòng kiểm tra lại trạng thái đơn hàng.");
-                             return;
-                        }
-
-                        await productionPlanApi.finishProductionPlan(id, version, {
-                            outputs,
-                            requestVersion: version
-                        });
-                    } finally {
-                        setIsDetailLoading(false);
-                    }
-                    break;
-                }
-            }
-            if (action === 'finish') {
-                toast.success('Kế hoạch đã hoàn thành. Sản phẩm đã được cập nhật vào kho.');
-            } else {
-                toast.success('Cập nhật trạng thái thành công');
-            }
-            loadPlans();
-            if (selectedPlanId === id) {
-                loadPlanDetail(id);
-            }
-        } catch (error: any) {
-            const msg = error.response?.data?.message || `Failed to ${action} plan`;
-            toast.error(msg);
-        }
-    };
+    setFilteredPlans(result);
+  }, [plans, searchQuery, statusFilter]);
 
   const loadPlans = async () => {
     setIsLoading(true);
@@ -342,6 +191,100 @@ export const ProductionSchedule = () => {
     setIsDetailLoading(true);
     try {
       const detail = await productionPlanApi.getProductionPlanDetail(id);
+
+      // ENHANCEMENT: Fetch the "most accurate" materials AND items from allocation preview
+      try {
+        const preview = await allocationApi.previewAllocation(id);
+
+        // 1. Merge items (Products)
+        const previewItems = (preview.rows || []).map((r: any) => {
+          const totalReq = (r.allocations || []).reduce(
+            (sum: number, a: any) => sum + (a.requestedQuantity || 0),
+            0,
+          );
+          const totalAllocated = (r.allocations || []).reduce(
+            (sum: number, a: any) => sum + (a.allocatedQuantity || 0),
+            0,
+          );
+          return {
+            productId: r.productId,
+            productName: r.productName,
+            plannedQuantity: totalReq || r.totalAvailable || 0,
+            producedQuantity: totalAllocated || r.totalAvailable || 0,
+            unit: "Món",
+          };
+        });
+
+        if (!detail.items || detail.items.length === 0) {
+          detail.items = previewItems;
+        } else {
+          // Merge missing items from preview into detail.items
+          previewItems.forEach((pItem) => {
+            const existing = (detail.items as any[])?.find(
+              (i) => i.productId === pItem.productId,
+            );
+            if (!existing) {
+              detail.items?.push(pItem);
+            } else if (
+              !existing.plannedQuantity ||
+              existing.plannedQuantity === 0
+            ) {
+              existing.plannedQuantity = pItem.plannedQuantity;
+            }
+
+            // Sync produced quantity from preview if it exists and looks like yield
+            if (
+              pItem.producedQuantity > 0 &&
+              (!existing.producedQuantity || existing.producedQuantity === 0)
+            ) {
+              existing.producedQuantity = pItem.producedQuantity;
+            }
+          });
+        }
+
+        // 2. Merge Produced Quantities from outputs if available
+        if (detail.outputs && detail.outputs.length > 0) {
+          detail.outputs.forEach((output: any) => {
+            const item = (detail.items as any[])?.find(
+              (i) => Number(i.productId) === Number(output.productId),
+            );
+            if (item) {
+              item.producedQuantity =
+                output.actualProducedQty ??
+                output.producedQuantity ??
+                output.quantity ??
+                output.actualQty ??
+                0;
+            }
+          });
+        }
+
+        // 2. Map materials
+        if (preview.materials && preview.materials.length > 0) {
+          // Preserve units since preview materials might not have them
+          const existingUnits = new Map<number, string>();
+          detail.materials?.forEach((m) => {
+            if (m.materialId && m.unit) existingUnits.set(m.materialId, m.unit);
+          });
+
+          detail.materials = preview.materials.map((m) => ({
+            ...m,
+            unit: m.unit || existingUnits.get(m.materialId),
+          }));
+        }
+      } catch (e) {
+        console.warn("Could not fetch accurate materials/items preview", e);
+      }
+
+      // Store units map to state for reactive updates
+      const unitsMap = new Map<number, string>();
+      detail.materials?.forEach((m: any) => {
+        if (m.materialId && m.unit) {
+          unitsMap.set(m.materialId, m.unit);
+        }
+      });
+      setMaterialUnitsMap(unitsMap);
+
       setSelectedPlanDetail(detail);
     } catch (error) {
       console.error("Failed to load plan detail:", error);
@@ -404,10 +347,69 @@ export const ProductionSchedule = () => {
           await productionPlanApi.startProductionPlan(id, version);
           break;
         case "finish":
-          setFinishingPlanId(id);
-          setFinishingPlanVersion(version);
-          setShowYieldModal(true);
-          return; // Stop here, wait for modal confirmation
+          setIsDetailLoading(true);
+          try {
+            // Step 1: Fetch basic plan details
+            const detail = await productionPlanApi.getProductionPlanDetail(id);
+
+            // Step 2: Fetch allocation preview to get the list of products
+            // This requires 'ORGANIZE_PRODUCTION' privilege which we just granted to KITCHEN_STAFF
+            let displayItems: any[] = [];
+            try {
+              const { rows: allocationRows } =
+                await allocationApi.previewAllocation(id);
+
+              // Map AllocationRow to ProductionPlanDetailItem format
+              // Use units from detail.items if available
+              displayItems = allocationRows.map((row: AllocationRow) => {
+                const originalItem = (detail.items || []).find(
+                  (it: any) => it.productId === row.productId,
+                );
+                return {
+                  productId: row.productId,
+                  productName: row.productName,
+                  plannedQuantity: (row.allocations || []).reduce(
+                    (sum: number, alloc: any) =>
+                      sum + (alloc.requestedQuantity || 0),
+                    0,
+                  ),
+                  unit: originalItem?.unit || "",
+                };
+              });
+            } catch (allocError) {
+              console.error("Failed to fetch allocation preview:", allocError);
+              // Fallback to detail.items if allocation preview fails
+              displayItems = detail.items || [];
+            }
+
+            // Update local state for modal
+            setSelectedPlanDetail({
+              ...detail,
+              items: displayItems,
+            });
+
+            setFinishingPlanId(id);
+            setFinishingPlanVersion(version);
+
+            // Pre-populate actualQuantities logic
+            const initQs: Record<number, number> = {};
+            displayItems.forEach((item) => {
+              initQs[item.productId] = item.plannedQuantity;
+            });
+            setActualQuantities(initQs);
+
+            setShowYieldModal(true);
+          } catch (err: any) {
+            console.error("Error preparing yield modal:", err);
+            const msg =
+              err.response?.status === 403
+                ? "Bạn không có quyền thực hiện thao tác này."
+                : "Không thể tải thông tin sản phẩm để nghiệm thu";
+            toast.error(msg);
+          } finally {
+            setIsDetailLoading(false);
+          }
+          return;
       }
       toast.success("Cập nhật trạng thái thành công");
       loadPlans();
@@ -424,12 +426,28 @@ export const ProductionSchedule = () => {
     if (!finishingPlanId) return;
     setIsDetailLoading(true);
     try {
-      const outputs = [
-        {
-          productId: manualProductId,
-          actualQty: manualActualQty,
-        },
-      ];
+      const outputs = Object.entries(actualQuantities)
+        .filter(([_, qty]) => qty > 0)
+        .map(([productIdStr, qty]) => {
+          const productId = parseInt(productIdStr, 10);
+          const item = selectedPlanDetail?.items?.find(
+            (i) => i.productId === productId,
+          );
+          return {
+            productId,
+            productName: item?.productName || "Product",
+            quantity: qty,
+            actualQty: qty,
+            producedQuantity: qty,
+            actualProducedQty: qty,
+          };
+        });
+
+      if (outputs.length === 0) {
+        toast.error("Vui lòng nhập ít nhất 1 sản lượng hợp lệ.");
+        setIsDetailLoading(false);
+        return;
+      }
 
       const yieldData = {
         outputs,
@@ -470,8 +488,14 @@ export const ProductionSchedule = () => {
         label: "ĐANG NẤU",
         icon: PlayCircle,
       },
+      PRODUCING: {
+        variant: "primary",
+        label: "ĐANG NẤU",
+        icon: PlayCircle,
+      },
       COMPLETED: { variant: "success", label: "HOÀN TẤT", icon: CheckCircle },
       FINISHED: { variant: "success", label: "HOÀN TẤT", icon: CheckCircle },
+      PRODUCED: { variant: "success", label: "ĐÃ NẤU XONG", icon: CheckCircle },
       CANCELLED: { variant: "danger", label: "ĐÃ HỦY", icon: Ban },
     };
     const item = config[s] || { variant: "default", label: s, icon: Info };
@@ -590,54 +614,32 @@ export const ProductionSchedule = () => {
       const dayPlans = plans.filter((p) => p.createdAt?.startsWith(dateStr));
       const isToday = new Date().toISOString().split("T")[0] === dateStr;
 
-    const footer = (
-        <div className="flex flex-col gap-6 w-full p-2">
-            {selectedPlanDetail && !['COMPLETED', 'FINISHED', 'CANCELLED'].includes(selectedPlanDetail.status?.toUpperCase()) && (
-                <div className="space-y-4">
-                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Bảng điều khiển trạng thái</span>
-                    <div className="flex flex-wrap gap-3">
-                        {(selectedPlanDetail.status?.toUpperCase() === 'DRAFT' || selectedPlanDetail.status?.toUpperCase() === 'PLANNED') && hasAuthority('ORGANIZE_PRODUCTION') && (
-                            <>
-                                <Button
-                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-indigo-900/20"
-                                    onClick={() => handleStatusAction('ready')}
-                                >
-                                    <CheckSquare size={16} className="mr-2" /> Đánh dấu Sẵn sàng
-                                </Button>
-                                <Button
-                                    className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
-                                    onClick={() => handleStatusAction('cancel')}
-                                >
-                                    <X size={16} className="mr-2" /> Hủy mẻ này
-                                </Button>
-                            </>
-                        )}
-                        {selectedPlanDetail.status?.toUpperCase() === 'READY_TO_PRODUCE' && hasAuthority('EXECUTE_PRODUCTION') && (
-                            <>
-                                <Button
-                                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-amber-900/20"
-                                    onClick={() => handleStatusAction('start')}
-                                >
-                                    <PlayCircle size={16} className="mr-2" strokeWidth={3} /> Bắt đầu nấu ngay
-                                </Button>
-                                <Button
-                                    className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
-                                    onClick={() => handleStatusAction('cancel')}
-                                >
-                                    <X size={16} className="mr-2" /> Hủy mẻ
-                                </Button>
-                            </>
-                        )}
-                        {selectedPlanDetail.status?.toUpperCase() === 'IN_PRODUCTION' && hasAuthority('EXECUTE_PRODUCTION') && (
-                            <Button
-                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-emerald-900/20"
-                                onClick={() => handleStatusAction('finish')}
-                            >
-                                <CheckCircle2 size={16} className="mr-2" strokeWidth={3} /> Hoàn thành sản xuất
-                            </Button>
-                        )}
-                    </div>
-                </div>
+      days.push(
+        <div
+          key={day}
+          className={cn(
+            "min-h-[140px] border-b border-r border-zinc-800/10 p-4 transition-all hover:bg-zinc-800/5 group relative",
+            isToday && "bg-amber-500/[0.02]",
+          )}
+        >
+          <div className="flex justify-between items-start mb-4">
+            <span
+              className={cn(
+                "text-xs font-black transition-all",
+                isToday
+                  ? "text-amber-500"
+                  : "text-zinc-600 group-hover:text-zinc-400",
+              )}
+            >
+              {String(day).padStart(2, "0")}
+            </span>
+            {dayPlans.length > 0 && (
+              <Badge
+                variant="default"
+                className="bg-zinc-900 border-zinc-800 text-zinc-500 text-[8px] h-4 px-1"
+              >
+                {dayPlans.length}
+              </Badge>
             )}
           </div>
 
@@ -852,6 +854,14 @@ export const ProductionSchedule = () => {
     );
   };
 
+  const isReadyDisabled = !(selectedPlanDetail?.materials
+    ? selectedPlanDetail.materials.every(
+        (mat) =>
+          (materialStockMap.get(`id-${mat.materialId}`) || 0) >=
+          mat.requiredQuantity,
+      )
+    : true);
+
   const footer = (
     <div className="flex flex-col gap-6 w-full p-2">
       {selectedPlanDetail &&
@@ -864,48 +874,61 @@ export const ProductionSchedule = () => {
             </span>
             <div className="flex flex-wrap gap-3">
               {(selectedPlanDetail.status === "DRAFT" ||
-                selectedPlanDetail.status === "PLANNED") && (
-                <>
+                selectedPlanDetail.status === "PLANNED") &&
+                (hasAuthority("ORGANIZE_PRODUCTION") ||
+                  hasAuthority("ADMIN")) && (
+                  <>
+                    <Button
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => handleStatusAction("ready")}
+                      disabled={isReadyDisabled}
+                      title={
+                        isReadyDisabled ? "Không đủ nguyên liệu trong kho" : ""
+                      }
+                    >
+                      <CheckSquare size={16} className="mr-2" /> Đánh dấu Sẵn
+                      sàng
+                    </Button>
+                    <Button
+                      className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
+                      onClick={() => handleStatusAction("cancel")}
+                    >
+                      <X size={16} className="mr-2" /> Hủy mẻ này
+                    </Button>
+                  </>
+                )}
+              {selectedPlanDetail.status === "READY_TO_PRODUCE" &&
+                (hasAuthority("EXECUTE_PRODUCTION") ||
+                  hasAuthority("ADMIN") ||
+                  hasAuthority("MANAGER")) && (
+                  <>
+                    <Button
+                      className="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-amber-900/20"
+                      onClick={() => handleStatusAction("start")}
+                    >
+                      <PlayCircle size={16} className="mr-2" strokeWidth={3} />{" "}
+                      Bắt đầu nấu ngay
+                    </Button>
+                    <Button
+                      className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
+                      onClick={() => handleStatusAction("cancel")}
+                    >
+                      <X size={16} className="mr-2" /> Hủy mẻ
+                    </Button>
+                  </>
+                )}
+              {selectedPlanDetail.status === "IN_PRODUCTION" &&
+                (hasAuthority("EXECUTE_PRODUCTION") ||
+                  hasAuthority("ADMIN") ||
+                  hasAuthority("MANAGER")) && (
                   <Button
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-indigo-900/20"
-                    onClick={() => handleStatusAction("ready")}
+                    className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-emerald-900/20"
+                    onClick={() => handleStatusAction("finish")}
                   >
-                    <CheckSquare size={16} className="mr-2" /> Đánh dấu Sẵn sàng
+                    <CheckCircle2 size={16} className="mr-2" strokeWidth={3} />{" "}
+                    Hoàn thành sản xuất
                   </Button>
-                  <Button
-                    className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
-                    onClick={() => handleStatusAction("cancel")}
-                  >
-                    <X size={16} className="mr-2" /> Hủy mẻ này
-                  </Button>
-                </>
-              )}
-              {selectedPlanDetail.status === "READY_TO_PRODUCE" && (
-                <>
-                  <Button
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-amber-900/20"
-                    onClick={() => handleStatusAction("start")}
-                  >
-                    <PlayCircle size={16} className="mr-2" strokeWidth={3} />{" "}
-                    Bắt đầu nấu ngay
-                  </Button>
-                  <Button
-                    className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
-                    onClick={() => handleStatusAction("cancel")}
-                  >
-                    <X size={16} className="mr-2" /> Hủy mẻ
-                  </Button>
-                </>
-              )}
-              {selectedPlanDetail.status === "IN_PRODUCTION" && (
-                <Button
-                  className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl shadow-lg shadow-emerald-900/20"
-                  onClick={() => handleStatusAction("finish")}
-                >
-                  <CheckCircle2 size={16} className="mr-2" strokeWidth={3} />{" "}
-                  Hoàn thành sản xuất
-                </Button>
-              )}
+                )}
             </div>
           </div>
         )}
@@ -979,19 +1002,6 @@ export const ProductionSchedule = () => {
               Trạng thái
             </button>
           </div>
-
-          {(hasAuthority("ORGANIZE_PRODUCTION") ||
-            hasAuthority("CREATE_PRODUCTION_PLAN") ||
-            hasAuthority("COORDINATOR") ||
-            hasAuthority("MANAGER") ||
-            hasAuthority("ADMIN")) && (
-            <Button
-              className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2 rounded-2xl"
-              onClick={handleCreateTask}
-            >
-              <Plus size={18} strokeWidth={3} /> Tạo mẻ mới
-            </Button>
-          )}
         </div>
       </div>
 
@@ -1113,7 +1123,7 @@ export const ProductionSchedule = () => {
             </div>
           </div>
         }
-        width="max-w-2xl"
+        width="max-w-5xl"
         footer={footer}
       >
         {isDetailLoading ? (
@@ -1124,320 +1134,385 @@ export const ProductionSchedule = () => {
             </span>
           </div>
         ) : selectedPlanDetail ? (
-          <div className="space-y-10 py-2 animate-in slide-in-from-right duration-500">
-            {/* Status Summary */}
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative bg-zinc-900/60 p-6 rounded-[32px] border border-zinc-800/50 flex flex-col md:flex-row gap-6 shadow-xl">
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="orange"
-                      className="h-4 text-[8px] font-black border-0"
-                    >
-                      CURRENT_STATE
-                    </Badge>
-                  </div>
-                  {getStatusBadge(selectedPlanDetail.status)}
-                  <p className="text-[11px] text-zinc-500 font-medium italic mt-2 leading-relaxed">
-                    Tiến trình hiện tại của kế hoạch nhằm đáp ứng nhu cầu sản
-                    xuất đã được phê duyệt.
-                  </p>
-                </div>
-                <div className="md:w-px h-px md:h-20 bg-zinc-800"></div>
-                <div className="space-y-4 md:w-48">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon size={14} className="text-zinc-600" />
-                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                      Thời điểm tạo
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-black text-zinc-200 tracking-tight">
-                      {new Date(
-                        selectedPlanDetail.createdAt,
-                      ).toLocaleDateString("vi-VN")}
-                    </span>
-                    <span className="text-[10px] font-black text-zinc-500 font-mono mt-0.5 tracking-tighter uppercase">
-                      {new Date(
-                        selectedPlanDetail.createdAt,
-                      ).toLocaleTimeString("vi-VN")}
-                    </span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 py-2 animate-in slide-in-from-right duration-500">
+            {/* Left Column: Visual & Status */}
+            <div className="lg:col-span-5 space-y-8">
+              <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar">
+                {/* Luxury Visual Element */}
+                <div className="relative -mx-8 -mt-8 mb-8 group/img h-64 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950/90 z-10"></div>
+                  <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full scale-150 group-hover/img:bg-amber-500/20 transition-all duration-700"></div>
+                  <img
+                    src="/src/assets/kitchen_production.png"
+                    alt="Kitchen Production"
+                    className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 group-hover/img:scale-110 transition-all duration-1000"
+                  />
+                  <div className="absolute bottom-6 left-8 z-20">
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-zinc-950/80 backdrop-blur-md border border-amber-500/30">
+                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                      <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
+                        Sản xuất trực tiếp
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Inventory Reconciliation */}
-            <div className="space-y-5">
-              <div className="flex items-center justify-between ml-2">
-                <div className="flex items-center gap-2">
-                  <Database size={16} className="text-zinc-600" />
-                  <h4 className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em]">
-                    Đối chiếu nguyên liệu
-                  </h4>
-                </div>
-                {materialStockMap.size > 0 && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/5 border border-emerald-500/10 rounded-full">
-                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tight">
-                      Dữ liệu kho thực tế
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 overflow-hidden shadow-xl">
-                {selectedPlanDetail.materials &&
-                selectedPlanDetail.materials.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-zinc-800/30">
-                          <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                            Item / Unit
-                          </th>
-                          <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">
-                            Yêu cầu
-                          </th>
-                          <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">
-                            Khả dụng
-                          </th>
-                          <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right pr-8">
-                            Trạng thái
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-800/50">
-                        {selectedPlanDetail.materials.map((mat, idx) => {
-                          const key = mat.materialName?.toLowerCase().trim();
-                          const available = key
-                            ? materialStockMap.get(key)
-                            : undefined;
-                          const stockKnown = available !== undefined;
-                          const sufficient =
-                            !stockKnown || available! >= mat.requiredQuantity;
-                          return (
-                            <tr
-                              key={idx}
-                              className={cn(
-                                "hover:bg-zinc-800/20 transition-colors group",
-                                !sufficient && "bg-red-500/[0.02]",
-                              )}
-                            >
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-600 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
-                                    {mat.materialName?.charAt(0)}
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-[13px] font-black text-zinc-300 group-hover:text-white transition-colors">
-                                      {mat.materialName}
-                                    </span>
-                                    <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest font-mono">
-                                      {mat.unit}
-                                    </span>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                <span className="text-[13px] font-black text-zinc-400 font-mono tracking-tighter">
-                                  {mat.requiredQuantity}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                {stockKnown ? (
-                                  <span
-                                    className={cn(
-                                      "text-[13px] font-black font-mono tracking-tighter px-2 py-0.5 rounded-lg",
-                                      sufficient
-                                        ? "text-emerald-500 bg-emerald-500/5"
-                                        : "text-red-500 bg-red-500/5",
-                                    )}
-                                  >
-                                    {available}
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] text-zinc-600 italic font-medium">
-                                    Chưa kết nối
-                                  </span>
-                                )}
-                            </div>
-
-                            <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 overflow-hidden shadow-xl">
-                                {selectedPlanDetail.materials && selectedPlanDetail.materials.length > 0 ? (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead>
-                                                <tr className="bg-zinc-800/30">
-                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Item / Unit</th>
-                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Yêu cầu</th>
-                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Khả dụng</th>
-                                                    <th className="px-6 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right pr-8">Trạng thái</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-zinc-800/50">
-                                                {selectedPlanDetail.materials.map((mat, idx) => {
-                                                    // First try to match by ID if materialId is available
-                                                    const idKey = mat.materialId ? `id-${mat.materialId}` : null;
-                                                    let available = idKey ? materialStockMap.get(idKey) : undefined;
-                                                    
-                                                    // Fallback to name if ID match fails
-                                                    if (available === undefined) {
-                                                        const key = mat.materialName?.toLowerCase().trim();
-                                                        available = key ? materialStockMap.get(key) : undefined;
-                                                    }
-                                                    
-                                                    const stockKnown = available !== undefined;
-                                                    const sufficient = !stockKnown || available! >= mat.requiredQuantity;
-                                                    return (
-                                                        <tr key={idx} className={cn(
-                                                            "hover:bg-zinc-800/20 transition-colors group",
-                                                            !sufficient && "bg-red-500/[0.02]"
-                                                        )}>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-600 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
-                                                                        {mat.materialName?.charAt(0)}
-                                                                    </div>
-                                                                    <div className="flex flex-col">
-                                                                        <span className="text-[13px] font-black text-zinc-300 group-hover:text-white transition-colors">{mat.materialName}</span>
-                                                                        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest font-mono">{mat.unit || 'Kg'}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                <span className="text-[13px] font-black text-zinc-400 font-mono tracking-tighter">{mat.requiredQuantity}</span>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                {stockKnown ? (
-                                                                    <span className={cn(
-                                                                        "text-[13px] font-black font-mono tracking-tighter px-2 py-0.5 rounded-lg",
-                                                                        sufficient ? "text-emerald-500 bg-emerald-500/5" : "text-red-500 bg-red-500/5"
-                                                                    )}>
-                                                                        {available}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-[10px] text-zinc-600 italic font-medium">Chưa kết nối</span>
-                                                                )}
-                                                            </td>
-                                                            <td className="px-6 py-4 text-right pr-8">
-                                                                {!stockKnown ? (
-                                                                    <Info size={14} className="text-zinc-800 inline ml-auto" />
-                                                                ) : sufficient ? (
-                                                                    <div className="flex items-center justify-end gap-1.5 text-emerald-500/60">
-                                                                        <CheckCircle2 size={12} strokeWidth={3} />
-                                                                        <span className="text-[10px] font-black uppercase tracking-tight">OK</span>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="flex items-center justify-end gap-1.5 text-red-500">
-                                                                        <AlertTriangle size={12} strokeWidth={3} />
-                                                                        <span className="text-[10px] font-black uppercase tracking-tight shrink-0">Thiếu {mat.requiredQuantity - available!}</span>
-                                                                    </div>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className="p-12 text-center flex flex-col items-center gap-4 bg-zinc-900/20">
-                                        <div className="w-16 h-16 rounded-3xl bg-amber-500/5 flex items-center justify-center text-amber-500/20 border border-amber-500/10">
-                                            <ClipboardList size={32} />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">KHÔNG CÓ DANH MỤC NGUYÊN LIỆU</p>
-                                            <p className="text-[10px] text-zinc-600 font-medium max-w-[280px] mx-auto leading-relaxed">
-                                                Các món trong mẻ sản xuất này chưa được cấu hình định lượng (Recipe). Vui lòng kiểm tra lại phần quản lý Recipe của Manager.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="p-12 text-center flex flex-col items-center gap-3 opacity-20">
-                    <Ban size={24} />
-                    <p className="text-[10px] font-black uppercase tracking-widest">
-                      Không có danh mục nguyên liệu
+                {/* Status Summary */}
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="orange"
+                        className="h-5 text-[9px] font-black border-0 tracking-widest"
+                      >
+                        TRẠNG THÁI HIỆN TẠI
+                      </Badge>
+                    </div>
+                    <div>{getStatusBadge(selectedPlanDetail.status)}</div>
+                    <p className="text-xs text-zinc-500 font-medium italic leading-relaxed">
+                      Tiến trình hiện tại của kế hoạch nhằm đáp ứng nhu cầu sản
+                      xuất đã được phê duyệt.
                     </p>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Location Info */}
-            <div className="grid grid-cols-2 gap-6">
-              <div className="p-6 bg-zinc-900/40 rounded-[28px] border border-zinc-800/50 space-y-4 group">
-                <div className="flex items-center gap-2">
-                  <MapPin
-                    size={14}
-                    className="text-zinc-600 group-hover:text-amber-500 transition-colors"
-                  />
-                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                    Trạm sản xuất
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[15px] font-black text-zinc-200 uppercase tracking-tight">
-                    {selectedPlanDetail.kitchenId === 1
-                      ? "Central Kitchen Alpha"
-                      : `Sub-Kitchen #${selectedPlanDetail.kitchenId}`}
-                  </span>
-                  <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter mt-1">
-                    Giao thức: On-Premise Production
-                  </span>
-                </div>
-              </div>
-              <div className="p-6 bg-zinc-900/40 rounded-[28px] border border-zinc-800/50 space-y-4 group">
-                <div className="flex items-center gap-2">
-                  <ArrowRight
-                    size={14}
-                    className="text-zinc-600 group-hover:text-amber-500 transition-colors"
-                  />
-                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                    Cấp độ ưu tiên
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 flex-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full w-[75%] bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                  <div className="h-px bg-zinc-800/50"></div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon size={16} className="text-zinc-600" />
+                      <span className="text-[11px] font-black text-zinc-600 uppercase tracking-widest">
+                        Thời điểm tạo
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-black text-zinc-200 tracking-tight">
+                        {new Date(
+                          selectedPlanDetail.createdAt,
+                        ).toLocaleDateString("vi-VN")}
+                      </span>
+                      <span className="text-xs font-black text-zinc-500 font-mono mt-1 tracking-tighter uppercase blur-[0.2px]">
+                        {new Date(
+                          selectedPlanDetail.createdAt,
+                        ).toLocaleTimeString("vi-VN")}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-black text-amber-500 uppercase tracking-widest">
-                    HIGHT
+                </div>
+              </div>
+
+              {/* Quick Specs */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
+                  <div className="flex items-center gap-2">
+                    <MapPin
+                      size={14}
+                      className="text-zinc-600 group-hover/spec:text-amber-500 transition-colors"
+                    />
+                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                      Trạm
+                    </span>
+                  </div>
+                  <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
+                    {selectedPlanDetail.kitchenId === 1
+                      ? "Alpha Kitchen"
+                      : `Kitchen #${selectedPlanDetail.kitchenId}`}
                   </span>
+                </div>
+                <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
+                  <div className="flex items-center gap-2">
+                    <ArrowRight
+                      size={14}
+                      className="text-zinc-600 group-hover/spec:text-amber-500 transition-colors"
+                    />
+                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                      Ưu tiên
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full w-[75%] bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                    </div>
+                    <span className="text-[9px] font-black text-amber-500">
+                      ƯU TIÊN CAO
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Print */}
-            <div className="flex items-center justify-between p-6 bg-black border border-zinc-900 rounded-[32px] group">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-600 group-hover:text-amber-500 transition-colors">
-                  <Printer size={18} />
+            {/* Right Column: Inventory & Details */}
+            <div className="lg:col-span-7 space-y-12">
+              {/* Product List Section */}
+              <div className="space-y-5 animate-in slide-in-from-bottom-4 duration-700">
+                <div className="flex items-center justify-between ml-2">
+                  <div className="flex items-center gap-2">
+                    <Package size={18} className="text-amber-500" />
+                    <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                      Danh sách món sản xuất
+                    </h4>
+                  </div>
+                  <Badge
+                    variant="orange"
+                    className="h-5 text-[9px] font-black border-0"
+                  >
+                    {selectedPlanDetail.items?.length || 0} SẢN PHẨM
+                  </Badge>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">
-                    Lệnh sản xuất
-                  </span>
-                  <span className="text-[10px] font-medium text-zinc-600 uppercase tracking-tighter">
-                    In bản cứng (.PDF) cho bếp trưởng
-                  </span>
+
+                <div className="bg-zinc-900/40 backdrop-blur-md rounded-[36px] border border-zinc-800/50 overflow-hidden shadow-2xl space-y-px divide-y divide-zinc-800/30">
+                  {selectedPlanDetail.items &&
+                  selectedPlanDetail.items.length > 0 ? (
+                    selectedPlanDetail.items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="p-6 flex items-center justify-between hover:bg-zinc-800/30 transition-all group/item"
+                      >
+                        <div className="flex items-center gap-5">
+                          <div className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/item:border-amber-500/30 group-hover/item:text-amber-500 group-hover/item:bg-amber-500/5 transition-all duration-500">
+                            <Package size={22} />
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-black text-zinc-100 uppercase tracking-tight group-hover/item:text-white transition-colors">
+                              {item.productName}
+                            </h5>
+                            <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mt-1 block">
+                              ID: #{item.productId}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-baseline justify-end gap-1.5">
+                              <span className="text-xl font-black text-amber-500 tabular-nums">
+                                {selectedPlanDetail.status === "COMPLETED" ||
+                                selectedPlanDetail.status === "FINISHED" ||
+                                selectedPlanDetail.status === "PRODUCED"
+                                  ? item.producedQuantity || 0
+                                  : item.plannedQuantity || 0}
+                              </span>
+                              {(selectedPlanDetail.status === "COMPLETED" ||
+                                selectedPlanDetail.status === "FINISHED" ||
+                                selectedPlanDetail.status === "PRODUCED") && (
+                                <span className="text-[10px] font-black text-zinc-600 uppercase">
+                                  / {item.plannedQuantity || 0}
+                                </span>
+                              )}
+                              <span className="text-[10px] font-black text-zinc-600 uppercase">
+                                {item.unit || "Món"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 opacity-80">
+                              <span
+                                className={cn(
+                                  "text-[9px] font-black uppercase tracking-widest",
+                                  selectedPlanDetail.status === "COMPLETED" ||
+                                    selectedPlanDetail.status === "FINISHED" ||
+                                    selectedPlanDetail.status === "PRODUCED"
+                                    ? "text-emerald-500"
+                                    : "text-zinc-500",
+                                )}
+                              >
+                                {selectedPlanDetail.status === "COMPLETED" ||
+                                selectedPlanDetail.status === "FINISHED" ||
+                                selectedPlanDetail.status === "PRODUCED"
+                                  ? "Thực tế"
+                                  : "Mục tiêu"}
+                              </span>
+                              {(selectedPlanDetail.status === "COMPLETED" ||
+                                selectedPlanDetail.status === "FINISHED" ||
+                                selectedPlanDetail.status === "PRODUCED") && (
+                                <>
+                                  <div className="w-1 h-1 rounded-full bg-zinc-800"></div>
+                                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                                    Kế hoạch
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-16 text-center opacity-20">
+                      <p className="text-[11px] font-black uppercase tracking-[0.3em]">
+                        Chưa có món nào được gán
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                className="h-12 px-6 bg-zinc-900 border border-zinc-800 text-amber-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 hover:text-black transition-all"
-              >
-                Download
-              </Button>
+
+              {/* Inventory Reconciliation */}
+              <div className="space-y-5">
+                <div className="flex items-center justify-between ml-2">
+                  <div className="flex items-center gap-2">
+                    <Database size={18} className="text-amber-500/50" />
+                    <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                      Đối chiếu nguyên liệu
+                    </h4>
+                  </div>
+                  {materialStockMap.size > 0 && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-[9px] font-black text-emerald-500 uppercase">
+                        Kho thực tế
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-zinc-900/20 backdrop-blur-sm rounded-[36px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+                  {selectedPlanDetail.materials &&
+                  selectedPlanDetail.materials.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="bg-zinc-800/20">
+                            <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                              Nguyên liệu
+                            </th>
+                            <th className="px-4 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">
+                              Yêu cầu
+                            </th>
+                            <th className="px-4 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">
+                              Khả dụng
+                            </th>
+                            <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right">
+                              Trạng thái
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-800/30">
+                          {selectedPlanDetail.materials.map((mat, idx) => {
+                            const idKey = `id-${mat.materialId}`;
+                            const available = materialStockMap.get(idKey) || 0;
+                            const sufficient =
+                              available >= mat.requiredQuantity;
+                            return (
+                              <tr
+                                key={idx}
+                                className={cn(
+                                  "hover:bg-zinc-800/40 transition-all duration-300 group/row",
+                                  !sufficient && "bg-red-500/[0.03]",
+                                )}
+                              >
+                                <td className="px-8 py-4">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[11px] font-black text-zinc-600 group-hover/row:border-amber-500/30 group-hover/row:text-amber-500 transition-all">
+                                      {mat.materialName?.charAt(0)}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-black text-zinc-200 tracking-tight group-hover/row:text-white transition-colors">
+                                        {mat.materialName}
+                                      </span>
+                                      <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                                        {materialUnitsMap.get(mat.materialId) ||
+                                          mat.unit ||
+                                          ""}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                  <span className="text-sm font-black text-zinc-400 font-mono tracking-tighter italic">
+                                    {mat.requiredQuantity}{" "}
+                                    {materialUnitsMap.get(mat.materialId) ||
+                                      mat.unit ||
+                                      ""}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                  <span
+                                    className={cn(
+                                      "text-sm font-black font-mono tracking-tighter px-3 py-1 rounded-xl",
+                                      sufficient
+                                        ? "text-emerald-500 bg-emerald-500/5 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]"
+                                        : "text-red-500 bg-red-500/5 shadow-[inset_0_0_10px_rgba(239,68,68,0.05)]",
+                                    )}
+                                  >
+                                    {available}{" "}
+                                    {materialUnitsMap.get(mat.materialId) ||
+                                      mat.unit ||
+                                      ""}
+                                  </span>
+                                </td>
+                                <td className="px-8 py-4 text-right">
+                                  {sufficient ? (
+                                    <div className="flex items-center justify-end gap-2 text-emerald-500">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                                      <span className="text-[10px] font-black uppercase tracking-widest">
+                                        Sẵn sàng
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-end gap-2 text-red-500 animate-pulse">
+                                      <AlertTriangle
+                                        size={14}
+                                        strokeWidth={3}
+                                      />
+                                      <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                                        -{mat.requiredQuantity - available}{" "}
+                                        {materialUnitsMap.get(mat.materialId) ||
+                                          mat.unit ||
+                                          ""}
+                                      </span>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-16 text-center flex flex-col items-center gap-4 opacity-20">
+                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
+                        <Ban size={32} />
+                      </div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.3em]">
+                        Chưa có định mức vật tư
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Print Section */}
+              <div className="relative group/print overflow-hidden p-8 bg-zinc-950 border border-zinc-800 rounded-[36px] transition-all duration-500 hover:border-amber-500/20">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl transform translate-x-10 -translate-y-10 group-hover/print:scale-150 transition-transform duration-1000"></div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/print:text-amber-500 group-hover/print:border-amber-500/30 group-hover/print:bg-amber-500/5 transition-all duration-500">
+                      <Printer size={24} />
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-black text-white uppercase tracking-tight">
+                          Lệnh sản xuất
+                        </span>
+                        <Badge
+                          variant="default"
+                          className="h-4 text-[7px] bg-zinc-900 border-zinc-800"
+                        >
+                          PDF-v1.0
+                        </Badge>
+                      </div>
+                      <span className="text-xs text-zinc-500 font-medium mt-1">
+                        Bản in nội bộ dành riêng cho Bếp trưởng (Hardcopy)
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="h-12 px-10 bg-zinc-900 border border-zinc-800 text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-amber-500 hover:text-black hover:border-transparent transition-all duration-500 shadow-lg hover:shadow-amber-500/20"
+                  >
+                    Trích xuất
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
@@ -1464,7 +1539,7 @@ export const ProductionSchedule = () => {
                       variant="orange"
                       className="text-[8px] font-black tracking-[0.2em] h-4 py-0 border-0"
                     >
-                      YIELD REPORT
+                      BÁO CÁO SẢN LƯỢNG
                     </Badge>
                     <span className="text-[10px] font-mono font-black text-zinc-600">
                       ID: #{finishingPlanId}
@@ -1489,48 +1564,68 @@ export const ProductionSchedule = () => {
                       Thủ công
                     </Badge>
                   </div>
-                  <div className="border border-zinc-800 rounded-[24px] bg-black/40 p-4 divide-y divide-zinc-800/50">
-                    <div className="flex flex-col gap-4 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-600">
-                            <Package size={14} />
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {selectedPlanDetail?.items &&
+                    selectedPlanDetail.items.length > 0 ? (
+                      selectedPlanDetail.items.map((item) => (
+                        <div
+                          key={item.productId}
+                          className="group p-5 rounded-[24px] bg-zinc-900/50 border border-zinc-800/50 hover:border-amber-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/5"
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                                <Package size={22} className="text-amber-500" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[15px] font-black text-zinc-100 tracking-tight flex items-center gap-2">
+                                  {item.productName}
+                                </span>
+                                <span className="text-[10px] text-zinc-500 font-medium tracking-wider uppercase">
+                                  ID: #{item.productId} | SL Yêu cầu:{" "}
+                                  <span className="text-amber-500 font-bold">
+                                    {item.plannedQuantity} {item.unit || ""}
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-[13px] font-bold text-zinc-400">
-                            ID Sản phẩm
-                          </span>
-                        </div>
-                        <input
-                          type="number"
-                          className="w-24 h-10 bg-zinc-900 border border-zinc-800 rounded-xl text-center text-[15px] font-black text-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all"
-                          value={manualProductId}
-                          onChange={(e) =>
-                            setManualProductId(Number(e.target.value))
-                          }
-                          min={1}
-                        />
-                      </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-[13px] font-bold text-zinc-400 pl-11">
-                          Số lượng
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            className="w-24 h-10 bg-zinc-900 border border-zinc-800 rounded-xl text-center text-[15px] font-black text-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all"
-                            value={manualActualQty}
-                            onChange={(e) =>
-                              setManualActualQty(Number(e.target.value))
-                            }
-                            min={0}
-                          />
-                          <span className="text-[11px] font-black text-zinc-600 uppercase">
-                            Unit
-                          </span>
+                          <div className="flex items-center justify-between bg-zinc-950/50 p-4 rounded-2xl border border-zinc-800/30">
+                            <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                              Sản lượng thực tế
+                            </span>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="number"
+                                className="w-28 h-12 bg-zinc-900 border border-zinc-800 rounded-xl text-center text-lg font-black text-amber-500 focus:ring-2 focus:ring-amber-500/50 outline-none transition-all duration-300 shadow-inner"
+                                value={actualQuantities[item.productId] ?? ""}
+                                onChange={(e) =>
+                                  setActualQuantities((prev) => ({
+                                    ...prev,
+                                    [item.productId]: Number(e.target.value),
+                                  }))
+                                }
+                                min={0}
+                                placeholder="0"
+                              />
+                              <span className="text-[11px] font-black text-zinc-600 uppercase tracking-tighter w-8">
+                                {item.unit || "Món"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-12 text-center">
+                        <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
+                          <AlertTriangle size={24} className="text-zinc-700" />
+                        </div>
+                        <div className="text-[11px] text-zinc-500 font-bold tracking-[0.2em] uppercase">
+                          Không có dữ liệu món yêu cầu
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 

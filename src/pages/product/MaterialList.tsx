@@ -21,7 +21,7 @@ export const MaterialList = () => {
             setMaterials(data);
         } catch (error) {
             console.error('Failed to fetch materials:', error);
-            toast.error('Failed to load materials');
+            toast.error('Không thể tải danh sách nguyên liệu');
         } finally {
             setIsLoading(false);
         }
@@ -40,7 +40,7 @@ export const MaterialList = () => {
     };
 
     const handleDelete = async (_id: number) => {
-        toast.error('Delete functionality is not implemented on Backend yet.');
+        toast.error('Chức năng xóa chưa được hỗ trợ bởi Backend.');
     };
 
 
@@ -48,52 +48,6 @@ export const MaterialList = () => {
     const filteredMaterials = materials.filter(m =>
         m.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    const columns: Column<MaterialResponse>[] = [
-        {
-            header: 'ID',
-            accessorKey: 'id',
-        },
-        {
-            header: 'Material Name',
-            cell: (row) => <div className="font-medium text-gray-200">{row.name}</div>
-        },
-        {
-            header: 'Unit',
-            accessorKey: 'unit'
-        },
-        {
-            header: 'Status',
-            cell: (row) => (
-                <Badge variant={row.isActive ? 'success' : 'secondary'}>
-                    {row.isActive ? 'ACTIVE' : 'INACTIVE'}
-                </Badge>
-            )
-        },
-        {
-            header: 'Actions',
-            cell: (row) => (
-                <div className="flex gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-amber-600 hover:text-amber-500 p-1 h-auto"
-                        onClick={() => handleEdit(row)}
-                    >
-                        <Edit size={16} />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-800 p-1 h-auto"
-                        onClick={() => handleDelete(row.id)}
-                    >
-                        <Trash2 size={16} />
-                    </Button>
-                </div>
-            )
-        }
-    ];
 
     return (
         <div className="max-w-[1400px] mx-auto pb-20 animate-in fade-in duration-700">

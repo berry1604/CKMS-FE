@@ -1,310 +1,566 @@
-import { useState } from 'react';
-import { Package, Clock, CheckCircle, Truck, Printer, Download, XCircle } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-import { Drawer } from '../../components/ui/Drawer';
-import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
-import type { StoreOrderResponse } from '../../types/storeOrder';
-import { useAuth } from '../../hooks/useAuth';
-import { cn } from '../../utils/classNames';
+import { useState, useEffect } from "react";
+import {
+  Package,
+  Clock,
+  CheckCircle,
+  Truck,
+  Printer,
+  Download,
+  XCircle,
+} from "lucide-react";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { Drawer } from "../../components/ui/Drawer";
+import { ConfirmationModal } from "../../components/ui/ConfirmationModal";
+import type { StoreOrderResponse } from "../../types/storeOrder";
+import { useAuth } from "../../hooks/useAuth";
+import { cn } from "../../utils/classNames";
+import { storeOrderApi } from "../../services/storeOrderApi";
+import { toast } from "react-hot-toast";
+import { RescheduleModal } from "../../components/orders/RescheduleModal";
 
 interface OrderDetailDrawerProps {
-    order: StoreOrderResponse | null;
-    isOpen: boolean;
-    onClose: () => void;
-    onStatusUpdate?: (orderId: number, status: string) => void;
-    onCancelOrder?: (orderId: number) => void;
+  order: StoreOrderResponse | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onStatusUpdate?: (orderId: number, status: string) => void;
+  onCancelOrder?: (orderId: number) => void;
+  onSubmitOrder?: (orderId: number) => void;
 }
 
-export const OrderDetailDrawer = ({ order, isOpen, onClose, onStatusUpdate, onCancelOrder }: OrderDetailDrawerProps) => {
-    const { hasAuthority } = useAuth();
-    const [isCancelling, setIsCancelling] = useState(false);
-    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+export const OrderDetailDrawer = ({
+  order,
+  isOpen,
+  onClose,
+  onStatusUpdate,
+  onCancelOrder,
+  onSubmitOrder,
+}: OrderDetailDrawerProps) => {
+  const { hasAuthority } = useAuth();
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<StoreOrderResponse | null>(
+    null,
+  );
+  const [isFetching, setIsFetching] = useState(false);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
 
-    if (!order) return null;
-
-    // Permissions check
-    const canApprove = hasAuthority('APPROVE_STORE_ORDER') || hasAuthority('COORDINATOR') || hasAuthority('MANAGER') || hasAuthority('ADMIN');
-
-    const getStatusStep = (status: string) => {
-        const steps = ['SUBMITTED', 'APPROVED', 'ALLOCATED', 'DELIVERED'];
-        const index = steps.indexOf(status?.toUpperCase());
-        return index >= 0 ? index + 1 : 0;
-    };
-
-    const currentStep = getStatusStep(order.status);
-    const orderStatus = order.status?.toUpperCase();
-
-    const canCancel = orderStatus === 'SUBMITTED';
-    const canReject = orderStatus === 'SUBMITTED';
-
-    const handleCancel = () => {
-        setIsCancelModalOpen(true);
-    };
-
-    const confirmCancel = async () => {
-        setIsCancelling(true);
+  useEffect(() => {
+    if (isOpen && order?.orderId) {
+      const fetchFullDetails = async () => {
+        setIsFetching(true);
         try {
-            await onCancelOrder?.(order.orderId);
-            setIsCancelModalOpen(false);
+          const fullOrder = await storeOrderApi.getOrderById(order.orderId);
+          setOrderDetails(fullOrder);
+        } catch (error) {
+          console.error("Failed to fetch order details:", error);
+          toast.error("Không thể tải chi tiết đơn hàng");
+          setOrderDetails(null);
         } finally {
-            setIsCancelling(false);
+          setIsFetching(false);
         }
-    };
+      };
+      fetchFullDetails();
+    } else if (!isOpen) {
+      setOrderDetails(null);
+      setIsRescheduleModalOpen(false);
+    }
+  }, [isOpen, order?.orderId]);
 
-    const footer = (
-        <div className="flex justify-between w-full items-center">
-            <div className="flex gap-2 text-zinc-400">
-                <Button variant="outline" size="sm" className="border-zinc-800 text-zinc-400 hover:text-white rounded-lg h-9">
-                    <Printer size={16} className="mr-2" /> In đơn
-                </Button>
-                <Button variant="outline" size="sm" className="border-zinc-800 text-zinc-400 hover:text-white rounded-lg h-9">
-                    <Download size={16} className="mr-2" /> Xuất hóa đơn
-                </Button>
-            </div>
-            <div className="flex gap-3">
-                {canCancel && onCancelOrder && (
-                    <Button
-                        variant="outline"
-                        className="text-red-500 border-red-500/30 hover:bg-red-500/10 font-bold uppercase text-[10px] tracking-widest h-9 px-4 rounded-lg"
-                        onClick={handleCancel}
-                        disabled={isCancelling}
-                    >
-                        <XCircle size={16} className="mr-2" />
-                        {isCancelling ? 'Đang hủy...' : 'Hủy đơn'}
-                    </Button>
-                )}
-                {canReject && onStatusUpdate && canApprove && (
-                    <Button
-                        className="bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-[10px] tracking-widest h-9 px-4 rounded-lg shadow-lg shadow-red-900/20 border-0"
-                        onClick={() => onStatusUpdate(order.orderId, 'REJECTED')}
-                    >
-                        Từ chối
-                    </Button>
-                )}
-                {orderStatus === 'SUBMITTED' && onStatusUpdate && canApprove && (
-                    <Button
-                        onClick={() => onStatusUpdate(order.orderId, 'APPROVED')}
-                        className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-9 px-6 rounded-lg shadow-lg shadow-amber-900/20 border-0"
-                    >
-                        Duyệt Đơn
-                    </Button>
-                )}
+  if (!order) return null;
 
-                <Button variant="ghost" onClick={onClose} className="text-zinc-500 hover:text-zinc-100 font-bold uppercase text-[10px] tracking-widest h-9 px-4">
-                    Đóng
-                </Button>
-            </div>
-        </div>
-    );
+  const currentOrder = orderDetails || order;
+  const orderStatus = currentOrder.status?.toUpperCase();
 
-    return (
-        <>
-            <Drawer
-                isOpen={isOpen}
-                onClose={onClose}
-                title={`Chi tiết đơn hàng #${order.orderId}`}
-                description={`${order.storeName || `Cửa hàng ID: ${order.storeId}`} • Đặt ngày: ${new Date(order.orderDate).toLocaleDateString('vi-VN')}`}
-                width="max-w-4xl"
-                footer={footer}
+  // Permissions check
+  const canApprove =
+    hasAuthority("APPROVE_STORE_ORDER") ||
+    hasAuthority("COORDINATOR") ||
+    hasAuthority("MANAGER") ||
+    hasAuthority("ADMIN");
+
+  const getStatusStep = (status: string) => {
+    const steps = ["SUBMITTED", "APPROVED", "ALLOCATED", "DELIVERED"];
+    const index = steps.indexOf(status?.toUpperCase());
+    return index >= 0 ? index + 1 : 0;
+  };
+
+  const currentStep = getStatusStep(currentOrder.status);
+
+  const canCancel = orderStatus === "SUBMITTED";
+  const canReject = orderStatus === "SUBMITTED";
+
+  const handleCancel = () => {
+    setIsCancelModalOpen(true);
+  };
+
+  const confirmCancel = async () => {
+    setIsCancelling(true);
+    try {
+      await onCancelOrder?.(currentOrder.orderId);
+      setIsCancelModalOpen(false);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleRescheduleSuccess = (newDate: string) => {
+    if (orderDetails) {
+      setOrderDetails({ ...orderDetails, deliveryDate: newDate });
+    } else if (order) {
+      setOrderDetails({ ...order, deliveryDate: newDate });
+    }
+    if (onStatusUpdate) {
+      // Optional: trigger refresh in parent if needed
+    }
+  };
+
+  const footer = (
+    <div className="flex justify-between w-full items-center">
+      <div className="flex gap-2 text-zinc-400">
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-zinc-800 text-zinc-400 hover:text-white rounded-lg h-9"
+        >
+          <Printer size={16} className="mr-2" /> In đơn
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-zinc-800 text-zinc-400 hover:text-white rounded-lg h-9"
+        >
+          <Download size={16} className="mr-2" /> Xuất hóa đơn
+        </Button>
+      </div>
+      <div className="flex gap-3">
+        {canCancel && onCancelOrder && (
+          <Button
+            variant="outline"
+            className="text-red-500 border-red-500/30 hover:bg-red-500/10 font-bold uppercase text-[10px] tracking-widest h-9 px-4 rounded-lg"
+            onClick={handleCancel}
+            disabled={isCancelling}
+          >
+            <XCircle size={16} className="mr-2" />
+            {isCancelling ? "Đang hủy..." : "Hủy đơn"}
+          </Button>
+        )}
+        {orderStatus === "DRAFT" &&
+          onSubmitOrder &&
+          (hasAuthority("STORE_STAFF") ||
+            hasAuthority("CREATE_STORE_ORDER") ||
+            hasAuthority("MANAGER")) && (
+            <Button
+              className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-9 px-6 rounded-lg shadow-lg shadow-emerald-900/20 border-0"
+              onClick={() => onSubmitOrder(currentOrder.orderId)}
             >
-                <div className="space-y-8 py-2">
-                    {/* Status Badge & Total Summary */}
-                    <div className="flex justify-between items-center bg-zinc-950/50 p-6 rounded-2xl border border-zinc-800/50 shadow-inner overflow-hidden relative">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
-                        <div className="flex items-center gap-6 relative z-10">
-                            <div className="space-y-2">
-                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Trạng thái hiện tại</p>
-                                <div className="flex items-center gap-3">
-                                    <Badge variant={
-                                        orderStatus === 'DELIVERED' ? 'success' :
-                                            orderStatus === 'REJECTED' ? 'danger' :
-                                                orderStatus === 'APPROVED' ? 'orange' :
-                                                    orderStatus === 'ALLOCATED' ? 'info' : 'warning'
-                                    } className="text-[11px] font-black px-4 py-1 uppercase tracking-tighter border-0 shadow-lg">
-                                        {orderStatus === 'SUBMITTED' ? 'CHỜ DUYỆT' :
-                                            orderStatus === 'APPROVED' ? 'ĐA DUYỆT' :
-                                                orderStatus === 'ALLOCATED' ? 'ĐA PHÂN BỔ' :
-                                                    orderStatus === 'DELIVERED' ? 'HOÀN THÀNH' :
-                                                        orderStatus === 'REJECTED' ? 'TỪ CHỐI' : orderStatus}
-                                    </Badge>
-                                    <span className="text-[10px] text-zinc-600 font-medium italic">Cập nhật: Mới đây</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-right space-y-1 relative z-10">
-                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Tổng giá trị đơn hàng</p>
-                            <p className="text-3xl font-black text-amber-500 tracking-tighter drop-shadow-sm">
-                                {(order.totalAmount || 0).toLocaleString()} <span className="text-xs text-amber-500/50">VNĐ</span>
-                            </p>
-                        </div>
-                    </div>
+              Gửi Đơn
+            </Button>
+          )}
+        {canReject && onStatusUpdate && canApprove && (
+          <Button
+            className="bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-[10px] tracking-widest h-9 px-4 rounded-lg shadow-lg shadow-red-900/20 border-0"
+            onClick={() => onStatusUpdate(currentOrder.orderId, "REJECTED")}
+          >
+            Từ chối
+          </Button>
+        )}
+        {orderStatus === "SUBMITTED" && onStatusUpdate && canApprove && (
+          <Button
+            onClick={() => onStatusUpdate(currentOrder.orderId, "APPROVED")}
+            className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-9 px-6 rounded-lg shadow-lg shadow-amber-900/20 border-0"
+          >
+            Duyệt Đơn
+          </Button>
+        )}
 
-                    {/* Standardized Progress Bar */}
-                    <div className="px-4">
-                        {orderStatus !== 'REJECTED' ? (
-                            <div className="relative pt-4 pb-10">
-                                {/* Connector Line */}
-                                <div className="absolute top-1/2 left-0 w-full h-[3px] bg-zinc-800 -translate-y-[28px] z-0 rounded-full overflow-hidden">
-                                    <div
-                                        style={{ width: `${Math.max(0, ((currentStep - 1) / 3) * 100)}%` }}
-                                        className="h-full bg-amber-500 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(245,158,11,0.5)]"
-                                    ></div>
-                                </div>
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          className="text-zinc-500 hover:text-zinc-100 font-bold uppercase text-[10px] tracking-widest h-9 px-4"
+        >
+          Đóng
+        </Button>
+      </div>
+    </div>
+  );
 
-                                {/* Steps */}
-                                <div className="relative z-10 flex justify-between">
-                                    {[
-                                        { step: 1, label: 'Chờ duyệt', icon: Clock },
-                                        { step: 2, label: 'Đã duyệt', icon: CheckCircle },
-                                        { step: 3, label: 'Phân bổ', icon: Truck },
-                                        { step: 4, label: 'Giao hàng', icon: Package },
-                                    ].map((item) => {
-                                        const Icon = item.icon;
-                                        const isActive = currentStep >= item.step;
-                                        const isCurrent = currentStep === item.step;
-                                        return (
-                                            <div key={item.step} className="flex flex-col items-center gap-4">
-                                                <div className={cn(
-                                                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border-2",
-                                                    isActive
-                                                        ? "bg-amber-500 border-amber-400 text-black shadow-xl shadow-amber-500/10"
-                                                        : "bg-zinc-900 border-zinc-800/50 text-zinc-700",
-                                                    isCurrent && "ring-4 ring-amber-500/20 scale-110"
-                                                )}>
-                                                    <Icon size={20} strokeWidth={isActive ? 3 : 2} />
-                                                </div>
-                                                <span className={cn(
-                                                    "text-[10px] font-black uppercase tracking-widest transition-colors duration-300",
-                                                    isActive ? "text-zinc-200" : "text-zinc-700"
-                                                )}>
-                                                    {item.label}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center gap-4 py-8 bg-red-500/5 rounded-3xl border border-red-500/10 border-dashed">
-                                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
-                                    <XCircle size={32} />
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-sm font-black text-red-500 uppercase tracking-widest">ĐƠN HÀNG ĐÃ BỊ TỪ CHỐI</p>
-                                    <p className="text-[11px] text-zinc-500 font-medium mt-1">Vui lòng liên hệ Coordinator để biết thêm chi tiết.</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Items Section */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3 px-1">
-                            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center font-bold text-amber-500 text-sm">
-                                <Package size={16} />
-                            </div>
-                            <h3 className="text-xs font-black text-zinc-200 uppercase tracking-widest">Danh sách sản phẩm</h3>
-                            <span className="text-[10px] text-zinc-600 font-bold ml-auto px-2 py-1 bg-zinc-900 rounded-lg">{order.orderDetails?.length || 0} món</span>
-                        </div>
-
-                        <div className="rounded-3xl border border-zinc-800 bg-zinc-900/40 overflow-hidden shadow-sm">
-                            <table className="min-w-full divide-y divide-zinc-800/50">
-                                <thead className="bg-zinc-950/40">
-                                    <tr>
-                                        <th className="px-6 py-5 text-left text-[10px] font-black text-zinc-500 uppercase tracking-widest">Sản phẩm</th>
-                                        <th className="px-6 py-5 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Tồn kho bếp</th>
-                                        <th className="px-6 py-5 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Số lượng</th>
-                                        <th className="px-6 py-5 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Đơn giá</th>
-                                        <th className="px-6 py-5 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">Thành tiền</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-zinc-800/50 bg-zinc-900/20">
-                                    {order.orderDetails && order.orderDetails.length > 0 ? (
-                                        order.orderDetails.map((item, idx) => {
-                                            const stockQty = item.kitchenStockQuantity || 0;
-                                            const isLowStock = stockQty < item.quantity;
-                                            return (
-                                                <tr key={idx} className="hover:bg-zinc-800/30 transition-all group">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-zinc-200 group-hover:text-amber-500 transition-colors">{item.productName || `Sản phẩm #${item.productId}`}</span>
-                                                            <span className="text-[10px] text-zinc-600 font-medium">SKU: {item.productId}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                        <span className={cn(
-                                                            "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-tighter",
-                                                            isLowStock ? "bg-red-500/10 text-red-500 border border-red-500/20" : "bg-zinc-800/50 text-zinc-500 border border-zinc-700/50"
-                                                        )}>
-                                                            {stockQty} đv
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-[13px] font-bold text-zinc-100 text-right">{item.quantity} đv</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-zinc-500 font-medium text-right">{(item.unitPrice || 0).toLocaleString()}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-[13px] font-black text-amber-500/90 text-right">
-                                                        {(item.subTotal || (item.quantity * (item.unitPrice || 0))).toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={5} className="px-6 py-16 text-center">
-                                                <div className="flex flex-col items-center gap-3 opacity-20">
-                                                    <Package size={48} />
-                                                    <p className="text-xs font-black uppercase tracking-[0.2em]">Không tìm thấy dữ liệu</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Info Section */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-6 rounded-3xl bg-zinc-900/40 border border-zinc-800 flex flex-col justify-between">
-                            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                Thông tin vận chuyển
-                            </h4>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center py-2 border-b border-zinc-800/50">
-                                    <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Cửa hàng</span>
-                                    <span className="text-xs font-black text-zinc-200">{order.storeName || order.storeId}</span>
-                                </div>
-                                <div className="flex justify-between items-center py-2">
-                                    <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Mã người tạo</span>
-                                    <span className="text-xs font-black text-zinc-200">UID: {order.createdByUserId || 'N/A'}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-6 rounded-3xl bg-zinc-900/40 border border-zinc-800">
-                            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-6">
-                                Ghi chú bổ sung
-                            </h4>
-                            <div className="min-h-[60px] flex items-center justify-center border-2 border-dashed border-zinc-800 rounded-2xl p-4">
-                                <p className="text-[11px] text-zinc-600 font-bold uppercase tracking-widest opacity-50">
-                                    CHƯA CÓ GHI CHÚ
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+  return (
+    <>
+      <Drawer
+        isOpen={isOpen}
+        onClose={onClose}
+        title={`Chi tiết đơn hàng #${currentOrder.orderId}`}
+        description={`${currentOrder.storeName || `Cửa hàng ID: ${currentOrder.storeId}`} • Ngày đặt hàng: ${new Date(currentOrder.orderDate).toLocaleDateString("vi-VN")}`}
+        width="max-w-5xl"
+        footer={footer}
+      >
+        {isFetching && (
+          <div className="absolute inset-x-0 top-0 h-1 z-[60]">
+            <div className="h-full bg-amber-500 animate-[loading_2s_ease-in-out_infinite] w-1/3"></div>
+          </div>
+        )}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 py-2 animate-in slide-in-from-right duration-500">
+          {/* Left Column: Visual & Global Status */}
+          <div className="lg:col-span-5 space-y-8">
+            <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar shadow-2xl">
+              {/* Luxury Visual Element */}
+              <div className="relative -mx-8 -mt-8 mb-8 group/img h-64 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950/90 z-10"></div>
+                <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full scale-150 group-hover/img:bg-amber-500/20 transition-all duration-700"></div>
+                <img
+                  src="/Users/phunghuyphuoc/.gemini/antigravity/brain/0e7878ef-fd61-49a8-909f-b3ae8c725512/order_management_luxury_1773305899211.png"
+                  alt="Order Management"
+                  className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 group-hover/img:scale-110 transition-all duration-[2s]"
+                />
+                <div className="absolute bottom-6 left-8 z-20">
+                  <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-zinc-950/80 backdrop-blur-md border border-amber-500/30 shadow-lg shadow-amber-500/10">
+                    <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
+                      Trung tâm Quản lý Hệ thống
+                    </span>
+                  </div>
                 </div>
-            </Drawer>
-            <ConfirmationModal
-                isOpen={isCancelModalOpen}
-                onClose={() => setIsCancelModalOpen(false)}
-                onConfirm={confirmCancel}
-                title="Hủy Đơn Hàng"
-                message="Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác."
-                confirmText="Hủy Đơn"
-                cancelText="Quay Lại"
-                isLoading={isCancelling}
-                variant="danger"
-            />
-        </>
-    );
+              </div>
+
+              {/* Order Summary */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <Badge
+                    variant={
+                      orderStatus === "DELIVERED"
+                        ? "success"
+                        : orderStatus === "REJECTED"
+                          ? "danger"
+                          : orderStatus === "APPROVED"
+                            ? "orange"
+                            : orderStatus === "ALLOCATED"
+                              ? "info"
+                              : "warning"
+                    }
+                    className="text-[11px] font-black px-4 py-1 uppercase tracking-widest border-0 shadow-lg"
+                  >
+                    {orderStatus === "SUBMITTED"
+                      ? "CHỜ DUYỆT"
+                      : orderStatus === "APPROVED"
+                        ? "ĐA DUYỆT"
+                        : orderStatus === "ALLOCATED"
+                          ? "ĐA PHÂN BỔ"
+                          : orderStatus === "DELIVERED"
+                            ? "HOÀN THÀNH"
+                            : orderStatus === "REJECTED"
+                              ? "TỪ CHỐI"
+                              : orderStatus}
+                  </Badge>
+                  <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">
+                    Trạng thái Hiện tại
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-amber-500 shadow-inner">
+                    <Package size={28} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">
+                      Mã đơn hàng
+                    </span>
+                    <span className="text-2xl font-black text-white tracking-tighter">
+                      #{currentOrder.orderId}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-zinc-500 font-medium italic leading-relaxed">
+                  Thông tin chi tiết về đơn hàng được khởi tạo từ chuỗi cửa hàng
+                  nhượng quyền.
+                </p>
+              </div>
+
+              <div className="h-px bg-zinc-800/50"></div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                  Tổng giá trị thanh toán
+                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-amber-500 tracking-tighter">
+                    {(currentOrder.totalAmount || 0).toLocaleString()}
+                  </span>
+                  <span className="text-sm font-black text-amber-500/50 uppercase tracking-widest">
+                    VNĐ
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Meta Specs */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
+                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">
+                  Cửa hàng đặt hàng
+                </span>
+                <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
+                  {currentOrder.storeName || `Shop #${currentOrder.storeId}`}
+                </span>
+                <div className="flex items-center gap-1.5 opacity-60">
+                  <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
+                    Xác thực Terminal
+                  </span>
+                </div>
+              </div>
+              <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
+                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">
+                  Ngày đặt hàng
+                </span>
+                <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
+                  {new Date(currentOrder.orderDate).toLocaleDateString("vi-VN")}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black text-zinc-600 font-mono uppercase">
+                    {new Date(currentOrder.orderDate).toLocaleTimeString(
+                      "vi-VN",
+                    )}
+                  </span>
+                </div>
+              </div>
+              <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec col-span-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">
+                    Ngày giao hàng dự kiến
+                  </span>
+                  {canApprove &&
+                    (orderStatus === "SUBMITTED" ||
+                      orderStatus === "APPROVED" ||
+                      orderStatus === "ALLOCATED") && (
+                      <button
+                        onClick={() => setIsRescheduleModalOpen(true)}
+                        className="text-[10px] font-black text-zinc-500 hover:text-amber-500 uppercase tracking-widest transition-colors"
+                      >
+                        Thay đổi
+                      </button>
+                    )}
+                </div>
+
+                <span className="text-[15px] font-black text-white uppercase truncate block">
+                  {currentOrder.deliveryDate
+                    ? new Date(currentOrder.deliveryDate).toLocaleDateString(
+                        "vi-VN",
+                      )
+                    : "N/A"}
+                </span>
+                <div className="flex items-center gap-1.5 opacity-60">
+                  <Clock size={12} className="text-amber-500" />
+                  <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
+                    Lịch trình vận chuyển dự kiến
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Progress & Product List */}
+          <div className="lg:col-span-7 space-y-10">
+            {/* Progress Tracker */}
+            {orderStatus !== "REJECTED" ? (
+              <div className="bg-zinc-900/20 backdrop-blur-sm rounded-[40px] border border-zinc-800/50 p-10 space-y-10 shadow-xl">
+                <div className="flex items-center gap-3 ml-2">
+                  <Clock size={18} className="text-amber-500/50" />
+                  <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                    Lộ trình xử lý đơn hàng
+                  </h4>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute top-[26px] left-[24px] right-[24px] h-[3px] bg-zinc-800/50 rounded-full"></div>
+                  <div
+                    className="absolute top-[26px] left-[24px] h-[3px] bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                    style={{
+                      width: `calc(${((currentStep - 1) / 3) * 100}% - 48px)`,
+                    }}
+                  ></div>
+                  <div className="relative flex justify-between">
+                    {[
+                      { step: 1, label: "Chờ duyệt", icon: Clock },
+                      { step: 2, label: "Đã duyệt", icon: CheckCircle },
+                      { step: 3, label: "Phân bổ", icon: Truck },
+                      { step: 4, label: "Giao hàng", icon: Package },
+                    ].map((item) => {
+                      const StepIcon = item.icon;
+                      const isActive = currentStep >= item.step;
+                      const isCurrent = currentStep === item.step;
+
+                      return (
+                        <div
+                          key={item.step}
+                          className="flex flex-col items-center gap-5 relative z-10 group/step"
+                        >
+                          <div
+                            className={cn(
+                              "w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 bg-zinc-950",
+                              isActive
+                                ? "border-amber-500 text-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.15)] bg-zinc-900"
+                                : "border-zinc-800/50 text-zinc-700 hover:border-zinc-700",
+                            )}
+                          >
+                            <StepIcon
+                              size={22}
+                              strokeWidth={isActive ? 3 : 2}
+                              className={cn(isActive && "animate-pulse-slow")}
+                            />
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span
+                              className={cn(
+                                "text-[10px] font-black tracking-widest uppercase transition-colors whitespace-nowrap",
+                                isActive ? "text-zinc-200" : "text-zinc-700",
+                              )}
+                            >
+                              {item.label}
+                            </span>
+                            {isCurrent && (
+                              <div className="mt-2 h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)] animate-pulse"></div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-6 py-12 bg-red-500/5 rounded-[40px] border border-red-500/20 border-dashed animate-in zoom-in-95 duration-500">
+                <div className="w-20 h-20 rounded-[32px] bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+                  <XCircle size={40} />
+                </div>
+                <div className="text-center space-y-2">
+                  <h5 className="text-[16px] font-black text-red-500 uppercase tracking-[0.2em]">
+                    HỆ THỐNG ĐÃ TỪ CHỐI
+                  </h5>
+                  <p className="text-[12px] text-zinc-500 font-medium max-w-md mx-auto italic">
+                    Vui lòng kiểm tra lại thông tin đơn hàng hoặc liên hệ
+                    Coordinator để nhận hỗ trợ kỹ thuật.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Product List Table */}
+            <div className="space-y-5">
+              <div className="flex items-center justify-between ml-2">
+                <div className="flex items-center gap-3">
+                  <Package size={18} className="text-zinc-600" />
+                  <h4 className="text-[12px] font-black text-zinc-400 uppercase tracking-[0.2em]">
+                    Danh mục sản phẩm
+                  </h4>
+                </div>
+                <div className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full">
+                  <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">
+                    {currentOrder.orderDetails?.reduce(
+                      (acc, curr) => acc + curr.quantity,
+                      0,
+                    ) || 0}{" "}
+                    ĐƠN VỊ
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-zinc-900/20 rounded-[36px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+                <table className="w-full text-left">
+                  <thead className="bg-zinc-950/40 border-b border-zinc-800/50">
+                    <tr>
+                      <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        Sản phẩm
+                      </th>
+                      <th className="px-6 py-5 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                        Số lượng
+                      </th>
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        Thành tiền
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/30">
+                    {currentOrder.orderDetails?.map((item, idx) => {
+                      return (
+                        <tr
+                          key={idx}
+                          className="group/row hover:bg-white/[0.02] transition-colors"
+                        >
+                          <td className="px-8 py-5">
+                            <div className="flex flex-col">
+                              <span className="text-[14px] font-black text-zinc-100 uppercase tracking-tight group-hover/row:text-amber-500 transition-colors">
+                                {item.productName || `SKU #${item.productId}`}
+                              </span>
+                              <span className="text-[10px] text-zinc-600 font-bold font-mono tracking-tighter italic">
+                                Unit ID: {item.productId}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <span className="text-[14px] font-black text-zinc-300">
+                              {item.quantity} đơn vị
+                            </span>
+                          </td>
+                          <td className="px-8 py-5 text-right">
+                            <div className="flex flex-col items-end">
+                              <span className="text-[14px] font-black text-amber-500/90 tracking-tight">
+                                {(
+                                  item.subTotal ||
+                                  item.quantity * (item.unitPrice || 0)
+                                ).toLocaleString()}
+                              </span>
+                              <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
+                                VNĐ
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {/* Note Section */}
+                <div className="bg-amber-500/[0.03] p-8 border-t border-zinc-800/50 flex items-start gap-5">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                    <Clock size={18} />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] block">
+                      Ghi chú điều phối chuyên biệt
+                    </span>
+                    <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">
+                      {currentOrder.note ||
+                        "Hệ thống chưa ghi nhận ghi chú bổ sung cho đơn hàng này."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Drawer>
+      <ConfirmationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={confirmCancel}
+        title="Hủy Đơn Hàng"
+        message="Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác."
+        confirmText="Hủy Đơn"
+        cancelText="Quay Lại"
+        isLoading={isCancelling}
+        variant="danger"
+      />
+      {isRescheduleModalOpen && (
+        <RescheduleModal
+          isOpen={isRescheduleModalOpen}
+          onClose={() => setIsRescheduleModalOpen(false)}
+          orderId={currentOrder.orderId}
+          currentDeliveryDate={currentOrder.deliveryDate}
+          totalQuantity={currentOrder.orderDetails?.reduce((sum, item) => sum + item.quantity, 0) || 0}
+          onSuccess={handleRescheduleSuccess}
+        />
+      )}
+    </>
+  );
 };

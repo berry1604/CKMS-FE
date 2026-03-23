@@ -7,7 +7,6 @@ export interface StoreResponse {
     email?: string;
     managerName?: string;
     isActive: boolean;
-    warehouseCapacity?: number;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -17,7 +16,6 @@ export interface StoreCreateRequest {
     address: string;
     phone?: string;
     email?: string;
-    warehouseCapacity: number;
     isActive?: boolean;
 }
 
@@ -27,7 +25,6 @@ export interface StoreUpdateRequest {
     phone?: string;
     email?: string;
     isActive?: boolean;
-    warehouseCapacity?: number;
 }
 
 export interface GetStoresParams {

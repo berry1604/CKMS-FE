@@ -80,6 +80,19 @@ export const storeOrderApi = {
     },
 
     /**
+     * Submit a draft order
+     */
+    submitOrder: async (id: number | string): Promise<StoreOrderResponse> => {
+        try {
+            const response = await axiosClient.patch<StoreOrderResponse>(`/orders/${id}/submit`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error submitting order ${id}:`, error);
+            throw error;
+        }
+    },
+
+    /**
      * Get simple stores list for dropdown
      */
     getMyStores: async (): Promise<StoreSimpleResponse[]> => {
@@ -125,5 +138,56 @@ export const storeOrderApi = {
      */
     cancelOrder: async (id: number | string): Promise<void> => {
         await axiosClient.delete(`/orders/${id}`);
+    },
+
+    /**
+     * Approve an order
+     */
+    approveOrder: async (id: number | string): Promise<StoreOrderResponse> => {
+        return storeOrderApi.updateOrderStatus(id, 'APPROVED');
+    },
+
+    /**
+     * Reject an order with reason
+     * Note: Current backend status endpoint might not support 'reason' yet.
+     */
+    rejectOrder: async (id: number | string, _reason: string): Promise<StoreOrderResponse> => {
+        return storeOrderApi.updateOrderStatus(id, 'REJECTED');
+    },
+
+
+    /**
+     * Send notification email manually
+     */
+    notifyOrder: async (id: number | string): Promise<void> => {
+        await axiosClient.post(`/orders/${id}/notify`);
+    },
+
+    /**
+     * Reschedule delivery date
+     * PATCH /api/v1/orders/{id}/reschedule
+     */
+    rescheduleOrder: async (id: number | string, deliveryDate: string): Promise<StoreOrderResponse> => {
+        try {
+            const response = await axiosClient.patch<StoreOrderResponse>(`/orders/${id}/reschedule`, { deliveryDate });
+            return response.data;
+        } catch (error) {
+            console.error(`Error rescheduling order ${id}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Split order into two
+     * POST /api/v1/orders/{id}/split
+     */
+    splitOrder: async (id: number | string, items: { productId: number, quantity: number }[]): Promise<StoreOrderResponse[]> => {
+        try {
+            const response = await axiosClient.post<StoreOrderResponse[]>(`/orders/${id}/split`, items);
+            return response.data;
+        } catch (error) {
+            console.error(`Error splitting order ${id}:`, error);
+            throw error;
+        }
     }
 };

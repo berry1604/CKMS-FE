@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Save, Package, Hash, Calendar, Layers, ChevronRight, Zap } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import { materialApi } from '../../services/material.api';
 import { productApi } from '../../services/product.api';
+import { KitchenSelector } from '../../components/common/KitchenSelector';
 import { useAuth } from '../../hooks/useAuth';
 import type { MaterialResponse } from '../../types/material';
 import type { ProductResponse } from '../../types/product';
@@ -13,7 +14,16 @@ import warehouseBg from '../../assets/luxury_steakhouse_bg.png';
 
 export const KitchenImportPage = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const location = useLocation();
+    const { user, hasAuthority } = useAuth();
+
+    // Authorization check: Only KITCHEN_STAFF can access this page
+    useEffect(() => {
+        if (user && !hasAuthority('KITCHEN_STAFF')) {
+            toast.error('Chỉ nhân viên bếp mới có quyền thực hành nghiệp vụ này.');
+            navigate('/kitchen/inventory');
+        }
+    }, [user, hasAuthority, navigate]);
     const [importType, setImportType] = useState<'MATERIAL' | 'PRODUCT'>('MATERIAL');
     const [selectedItemId, setSelectedItemId] = useState<number>(0);
     const [importQuantity, setImportQuantity] = useState<number>(0);
@@ -25,8 +35,18 @@ export const KitchenImportPage = () => {
     const [materials, setMaterials] = useState<MaterialResponse[]>([]);
     const [products, setProducts] = useState<ProductResponse[]>([]);
 
-    // Use kitchenId from user auth or fallback to 1 (Default Warehouse ID)
-    const WAREHOUSE_ID = user?.kitchenId ? Number(user.kitchenId) : 1;
+    // Dynamic Kitchen & Warehouse State
+    const [selectedKitchenId, setSelectedKitchenId] = useState<number | null>(
+        location.state?.kitchenId || user?.kitchenId || null
+    );
+    const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(null);
+
+    // Load warehouse when kitchen changes
+    useEffect(() => {
+        if (!selectedKitchenId) return;
+        // In this system, warehouseId for central kitchens is the same as kitchenId
+        setSelectedWarehouseId(selectedKitchenId);
+    }, [selectedKitchenId]);
 
     const loadLookups = useCallback(async () => {
         setIsLoadingLookups(true);
@@ -71,6 +91,11 @@ export const KitchenImportPage = () => {
             return;
         }
 
+        if (!selectedWarehouseId) {
+            toast.error('Không tìm thấy kho hàng cho bếp đã chọn.');
+            return;
+        }
+
         setIsImporting(true);
         try {
             // Payload follows KitchenStockImportRequest DTO structure
@@ -81,20 +106,21 @@ export const KitchenImportPage = () => {
             }];
 
             if (importType === 'MATERIAL') {
-                await kitchenInventoryApi.importMaterials(WAREHOUSE_ID, requestPayload);
+                await kitchenInventoryApi.importMaterials(selectedWarehouseId, requestPayload);
                 toast.success('Nhập nguyên liệu thành công');
             } else {
-                await kitchenInventoryApi.importProducts(WAREHOUSE_ID, requestPayload);
+                await kitchenInventoryApi.importProducts(selectedWarehouseId, requestPayload);
                 toast.success('Nhập thành phẩm thành công');
             }
 
             navigate('/kitchen/inventory');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Import error:', error);
-            const backendMsg = error.response?.data?.message
-                || error.response?.data?.data
-                || error.response?.data?.error
-                || error.message
+            const err = error as any;
+            const backendMsg = err.response?.data?.message
+                || err.response?.data?.data
+                || err.response?.data?.error
+                || err.message
                 || 'Lỗi không xác định';
             toast.error(`Nhập kho thất bại: ${typeof backendMsg === 'object' ? JSON.stringify(backendMsg) : backendMsg}`);
         } finally {
@@ -129,12 +155,24 @@ export const KitchenImportPage = () => {
                         <span className="text-amber-500 font-medium tracking-widest text-xs uppercase">Kitchen Logistics</span>
                     </div>
 
-                    <h1 className="text-5xl font-bold text-white tracking-tighter mb-2">
-                        NHẬP KHO <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">BẾP TRUNG TÂM</span>
-                    </h1>
-                    <p className="text-gray-400 max-w-xl text-lg font-light leading-relaxed">
-                        Điều phối và nhập mới nguyên liệu, thành phẩm vào hệ thống lưu trữ trung tâm để đảm bảo chuỗi cung ứng.
-                    </p>
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="flex-1">
+                            <h1 className="text-5xl font-bold text-white tracking-tighter mb-2 italic uppercase">
+                                NHẬP KHO <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">HỆ THỐNG</span>
+                            </h1>
+                            <p className="text-gray-400 max-w-xl text-lg font-light leading-relaxed">
+                                Điều phối và nhập mới nguyên liệu, thành phẩm vào hệ thống lưu trữ trung tâm để đảm bảo chuỗi cung ứng.
+                            </p>
+                        </div>
+                        
+                        <div className="w-full md:w-auto pb-1">
+                            <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-3 block ml-1">Cơ sở sản xuất</label>
+                            <KitchenSelector 
+                                selectedKitchenId={selectedKitchenId}
+                                onKitchenChange={setSelectedKitchenId}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -186,7 +224,7 @@ export const KitchenImportPage = () => {
                                         <option value={0} disabled className="bg-[#1a1a1a]">
                                             {isLoadingLookups ? '-- Đang tải dữ liệu... --' : '-- Vui lòng chọn --'}
                                         </option>
-                                        {currentItemsLookup.map(item => (
+                                        {currentItemsLookup.map((item: MaterialResponse | ProductResponse) => (
                                             <option key={item.id} value={item.id} className="bg-[#1a1a1a] text-gray-200">
                                                 {item.name} {importType === 'MATERIAL' && (item as MaterialResponse).unit && `(${(item as MaterialResponse).unit})`}
                                             </option>

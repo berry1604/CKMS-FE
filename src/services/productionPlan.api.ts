@@ -23,7 +23,7 @@ export const productionPlanApi = {
     },
 
     /**
-     * Mark plan as ready
+     * Mark plan as ready (Old specific endpoint)
      * Security: hasRole('COORDINATOR') or hasRole('ADMIN')
      */
     readyProductionPlan: async (id: number): Promise<ProductionPlanResponse> => {
@@ -32,6 +32,21 @@ export const productionPlanApi = {
             return response.data;
         } catch (error) {
             console.error(`Error marking plan ${id} ready:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Confirm material allocation and mark plan ready to produce
+     * Security: hasAuthority('ORGANIZE_PRODUCTION')
+     */
+    confirmAllocation: async (id: number, version?: number, data?: any): Promise<ProductionPlanResponse> => {
+        try {
+            const config = version ? { headers: { 'If-Match': version } } : {};
+            const response = await axiosClient.post<ProductionPlanResponse>(`/allocations/confirm/${id}`, data || {}, config);
+            return response.data;
+        } catch (error) {
+            console.error(`Error confirming allocation for plan ${id}:`, error);
             throw error;
         }
     },

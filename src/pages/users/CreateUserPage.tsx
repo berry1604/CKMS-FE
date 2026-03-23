@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { userService } from '../../services/user.service';
 import { roleApi } from '../../services/role.api';
 import { storeApi } from '../../services/store.api';
+import { kitchenApi } from '../../services/kitchen.api';
 import type { RoleResponse } from '../../types/role';
 
 const createUserSchema = z.object({
@@ -17,7 +18,7 @@ const createUserSchema = z.object({
     fullName: z.string().min(2, 'Họ tên phải có ít nhất 2 ký tự'),
     roleId: z.number().min(1, 'Vui lòng chọn vai trò'),
     storeId: z.coerce.number().optional().nullable(),
-    kitchenId: z.number().optional(),
+    kitchenId: z.coerce.number().optional().nullable(),
 });
 
 type CreateUserFormValues = z.infer<typeof createUserSchema>;
@@ -28,6 +29,7 @@ export const CreateUserPage = () => {
     const [backendError, setBackendError] = useState<string | null>(null);
     const [roles, setRoles] = useState<RoleResponse[]>([]);
     const [stores, setStores] = useState<any[]>([]);
+    const [kitchens, setKitchens] = useState<any[]>([]);
 
     const {
         register,
@@ -42,7 +44,8 @@ export const CreateUserPage = () => {
             email: '',
             fullName: '',
             roleId: 0,
-            storeId: null
+            storeId: null,
+            kitchenId: null
         }
     });
 
@@ -52,12 +55,14 @@ export const CreateUserPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [rolesData, storesData] = await Promise.all([
+                const [rolesData, storesData, kitchensData] = await Promise.all([
                     roleApi.getAllRoles(),
-                    storeApi.getAllStores({ size: 100 })
+                    storeApi.getAllStores({ size: 100 }),
+                    kitchenApi.getAllKitchens()
                 ]);
                 setRoles(rolesData);
                 setStores(storesData.data.content);
+                setKitchens(kitchensData.data || []);
             } catch (error) {
                 console.error('Failed to fetch data:', error);
             }
@@ -74,7 +79,7 @@ export const CreateUserPage = () => {
             fullName: data.fullName,
             roleId: data.roleId,
             storeId: data.storeId && data.storeId !== '' ? Number(data.storeId) : undefined,
-            kitchenId: data.kitchenId
+            kitchenId: data.kitchenId && data.kitchenId !== '' ? Number(data.kitchenId) : undefined
         };
 
         try {
@@ -116,7 +121,7 @@ export const CreateUserPage = () => {
 
                     <div className="flex items-center gap-4 mb-4">
                         <div className="h-[2px] w-12 bg-indigo-500" />
-                        <span className="text-indigo-400 font-bold tracking-[0.3em] text-[10px] uppercase">Initialize Account</span>
+                        <span className="text-indigo-400 font-bold tracking-[0.3em] text-[10px] uppercase">Khởi tạo tài khoản</span>
                     </div>
 
                     <h1 className="text-6xl font-black text-white tracking-tighter mb-4">
@@ -237,7 +242,7 @@ export const CreateUserPage = () => {
                                     <p className="text-[10px] text-gray-600 uppercase tracking-widest mt-3 ml-1">Xác định các module và hành động được phép thực hiện.</p>
                                 </div>
 
-                                {(selectedRole === 'STORE_STAFF' || selectedRole === 'MANAGER' || selectedRole === 'STAFF') && (
+                                {selectedRole === 'STORE_STAFF' && (
                                     <div className="space-y-2 animate-in zoom-in-95 duration-300">
                                         <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Cửa hàng gán trực tiếp</label>
                                         <div className="relative group">
@@ -265,6 +270,37 @@ export const CreateUserPage = () => {
                                             </div>
                                         </div>
                                         {errors.storeId && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1">{errors.storeId.message}</p>}
+                                    </div>
+                                )}
+
+                                {selectedRole === 'KITCHEN_STAFF' && (
+                                    <div className="space-y-2 animate-in zoom-in-95 duration-300">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Bếp trung tâm gán trực tiếp</label>
+                                        <div className="relative group">
+                                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
+                                                <Store size={18} className="text-gray-500 group-focus-within:text-amber-500" />
+                                            </div>
+                                            <select
+                                                className={`w-full pl-12 pr-10 py-4 bg-white/[0.03] border rounded-2xl text-white appearance-none focus:outline-none focus:ring-4 transition-all cursor-pointer ${errors.kitchenId
+                                                    ? 'border-red-500/40 focus:ring-red-500/10'
+                                                    : 'border-white/10 focus:ring-amber-500/10 focus:border-amber-500/50 group-hover:bg-white/[0.05]'
+                                                    }`}
+                                                {...register('kitchenId')}
+                                            >
+                                                <option value="" className="bg-[#1a1a1a]">Chọn Bếp Trung Tâm...</option>
+                                                {kitchens.map(kitchen => (
+                                                    <option key={kitchen.kitchenId} value={kitchen.kitchenId} className="bg-[#1a1a1a]">
+                                                        {kitchen.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-600">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        {errors.kitchenId && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1">{errors.kitchenId.message}</p>}
                                     </div>
                                 )}
                             </div>

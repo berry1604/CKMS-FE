@@ -2,11 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Truck, Filter, Eye, Plus, Search, Calendar,
-    ArrowRight, MapPin, User, Package, Clock,
-    ChevronLeft, ChevronRight, Loader2
+    MapPin, User, Package, Clock,
+    ChevronLeft, ChevronRight, ExternalLink
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { DataTable, type Column } from '../../components/ui/DataTable';
@@ -56,36 +55,82 @@ export const ShipmentList = () => {
     }, [statusFilter]);
 
     const handleStatusAction = async (id: number, action: 'prepare' | 'transit' | 'confirm' | 'cancel', data?: any) => {
+        // Find current shipment to check status
+        const currentShipment = shipments.find(s => s.shipmentId === id) || selectedShipment;
+        if (!currentShipment) return;
+
+        console.log(`[Shipment Action] Attempting ${action} for Shipment #${id}. Current Status: ${currentShipment.status}`);
+
         try {
             switch (action) {
                 case 'prepare':
+                    if (currentShipment.status !== 'PENDING') {
+                        return toast.error(`Không thể chuẩn bị hàng khi trạng thái là ${currentShipment.status}`);
+                    }
                     await shipmentApi.prepareShipment(id);
                     toast.success('Đã chuẩn bị xong hàng');
                     break;
                 case 'transit':
+                    if (currentShipment.status !== 'PREPARED') {
+                        return toast.error(`Không thể xuất kho khi trạng thái là ${currentShipment.status}`);
+                    }
                     await shipmentApi.startTransit(id);
                     toast.success('Đơn hàng đang được vận chuyển');
                     break;
                 case 'confirm':
+                    if (currentShipment.status !== 'IN_TRANSIT') {
+                        return toast.error(`Không thể xác nhận nhận hàng khi trạng thái là ${currentShipment.status}`);
+                    }
                     await shipmentApi.confirmDelivery(id, data);
                     toast.success('Đã xác nhận giao hàng');
                     break;
                 case 'cancel':
+                    if (['DELIVERED', 'CANCELLED'].includes(currentShipment.status)) {
+                        return toast.error(`Không thể hủy đơn hàng khi trạng thái là ${currentShipment.status}`);
+                    }
                     const reason = prompt('Lý do hủy (tùy chọn):');
                     await shipmentApi.cancelShipment(id, reason || undefined);
                     toast.success('Đã hủy đơn vận chuyển');
                     break;
             }
-            setSelectedShipment(null);
+            
+            // Refetch this specific shipment to update the drawer
+            try {
+                const updatedShipment = await shipmentApi.getShipmentById(id);
+                setSelectedShipment(updatedShipment);
+            } catch (err) {
+                // If single fetch fails, close drawer as fallback
+                if (action === 'cancel') setSelectedShipment(null);
+            }
+            
+            // Refresh the entire list in background
             fetchShipments();
         } catch (error: any) {
-            toast.error(error.response?.data?.message || `Không thể thực hiện thao tác ${action}`);
+            const message = error.response?.data?.message || `Không thể thực hiện thao tác ${action}`;
+            toast.error(message);
+            console.error(`[Shipment Action Error] ${message}`, error);
+            
+            // Still refresh to ensure UI is in sync
+            fetchShipments();
+            // Refetch selection if possible to fix local state
+            shipmentApi.getShipmentById(id).then(setSelectedShipment).catch(() => {});
+        }
+    };
+
+    const handleRefresh = async (id: number) => {
+        try {
+            const updatedShipment = await shipmentApi.getShipmentById(id);
+            setSelectedShipment(updatedShipment);
+            fetchShipments();
+            toast.success('Đã làm mới dữ liệu');
+        } catch (error) {
+            toast.error('Không thể làm mới dữ liệu');
         }
     };
 
     const getStatusBadge = (status: string) => {
         const config: Record<string, { variant: any, label: string, icon: any }> = {
-            'CREATED': { variant: 'orange', label: 'Mới tạo', icon: Plus },
+            'PENDING': { variant: 'orange', label: 'Chờ chuẩn bị', icon: Plus },
             'PREPARED': { variant: 'info', label: 'Đã chuẩn bị', icon: Package },
             'IN_TRANSIT': { variant: 'primary', label: 'Đang giao', icon: Truck },
             'DELIVERED': { variant: 'success', label: 'Đã giao', icon: MapPin },
@@ -160,11 +205,35 @@ export const ShipmentList = () => {
             )
         },
         {
+            header: 'Theo dõi',
+            cell: (s) => (
+                <div className="flex items-center gap-2">
+                    {s.trackingLink ? (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(s.trackingLink, '_blank');
+                            }}
+                            className="h-8 px-3 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black rounded-lg border border-amber-500/20 transition-all flex items-center gap-1.5"
+                            title="Mở link theo dõi AhaMove"
+                        >
+                            <ExternalLink size={12} strokeWidth={3} />
+                            <span className="text-[10px] font-black uppercase tracking-tight">Chi tiết</span>
+                        </Button>
+                    ) : (
+                        <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest italic ml-2">Chưa có link</span>
+                    )}
+                </div>
+            )
+        },
+        {
             header: 'Trạng thái',
             cell: (s) => getStatusBadge(s.status)
         },
         {
-            header: 'Action',
+            header: 'Hành động',
             className: 'text-right',
             cell: (s) => (
                 <div className="flex justify-end pr-4">
@@ -183,7 +252,7 @@ export const ShipmentList = () => {
 
     const statusOptions: { value: FilterStatus; label: string; icon: any }[] = [
         { value: 'all', label: 'Tất cả', icon: Package },
-        { value: 'CREATED', label: 'Mới tạo', icon: Plus },
+        { value: 'PENDING', label: 'Chờ chuẩn bị', icon: Plus },
         { value: 'PREPARED', label: 'Đã chuẩn bị', icon: Package },
         { value: 'IN_TRANSIT', label: 'Đang giao', icon: Truck },
         { value: 'DELIVERED', label: 'Đã giao', icon: MapPin },
@@ -196,11 +265,11 @@ export const ShipmentList = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="orange" className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase">SHIPPING</Badge>
+                        <Badge variant="orange" className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase">VẬN CHUYỂN</Badge>
                         <h1 className="text-3xl font-black text-zinc-100 uppercase tracking-tighter">Luồng vận chuyển</h1>
                     </div>
                     <p className="text-xs text-zinc-500 font-medium tracking-wide">
-                        Theo dõi thời gian thực quá trình giao hàng từ <span className="text-amber-500/80">Warehouse</span> tới các điểm tiêu thụ.
+                        Theo dõi thời gian thực quá trình giao hàng từ <span className="text-amber-500/80">Kho bếp</span> tới các điểm tiêu thụ.
                     </p>
                 </div>
 
@@ -312,6 +381,7 @@ export const ShipmentList = () => {
                 isOpen={!!selectedShipment}
                 onClose={() => setSelectedShipment(null)}
                 onStatusAction={handleStatusAction}
+                onRefresh={handleRefresh}
             />
         </div>
     );

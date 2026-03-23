@@ -6,11 +6,14 @@ import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { Drawer } from "../../components/ui/Drawer";
 import { billingApi } from "../../services/billing.api";
+import { storeOrderApi } from "../../services/storeOrderApi";
 import { toast } from "react-hot-toast";
 import type {
   BillingStatementDetailResponse,
   PaymentStatementRequest,
 } from "../../types/billing";
+import type { OrderDetailResponse } from "../../types/storeOrder";
+import { useAuth } from "../../hooks/useAuth";
 
 interface BillingDetailDrawerProps {
   statementId: number | null;
@@ -28,6 +31,8 @@ export const BillingDetailDrawer = ({
   const [detail, setDetail] = useState<BillingStatementDetailResponse | null>(
     null,
   );
+  const { hasAuthority, user } = useAuth();
+  const isStaff = hasAuthority("STORE_STAFF");
   const [isLoading, setIsLoading] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [showPayForm, setShowPayForm] = useState(false);
@@ -36,13 +41,15 @@ export const BillingDetailDrawer = ({
     transactionReference: "",
     note: "",
   });
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [orderDetailsMap, setOrderDetailsMap] = useState<Record<number, OrderDetailResponse[]>>({});
 
   // Fetch detail when opened
   const fetchDetail = useCallback(async () => {
     if (!statementId) return;
     setIsLoading(true);
     try {
-      const data = await billingApi.getStatementDetail(statementId);
+      const data = await billingApi.getStatementDetail(statementId, isStaff ? user?.storeId : undefined);
       setDetail(data);
     } catch (error) {
       console.error("Failed to fetch statement detail:", error);
@@ -52,22 +59,89 @@ export const BillingDetailDrawer = ({
     }
   }, [statementId]);
 
+  // Fetch order details for all invoices once detail is loaded
+  const fetchOrderDetails = useCallback(async (invoices: { orderId?: number }[]) => {
+    const uniqueOrderIds = [...new Set(
+      invoices.map((inv) => inv.orderId).filter((id): id is number => id != null)
+    )];
+    if (uniqueOrderIds.length === 0) return;
+
+    const results = await Promise.allSettled(
+      uniqueOrderIds.map((orderId) => storeOrderApi.getOrderById(orderId))
+    );
+    const map: Record<number, OrderDetailResponse[]> = {};
+    results.forEach((result, idx) => {
+      if (result.status === "fulfilled" && result.value?.orderDetails) {
+        map[uniqueOrderIds[idx]] = result.value.orderDetails;
+      }
+    });
+    setOrderDetailsMap(map);
+  }, []);
+
   // Trigger fetch when drawer opens
   useEffect(() => {
     if (isOpen && statementId) {
       fetchDetail();
+      // Reset form
+      setPayForm({
+        paymentMethodId: 0,
+        transactionReference: "",
+        note: "",
+      });
+      setFormErrors({});
+      setShowPayForm(false);
+      setOrderDetailsMap({});
     }
   }, [isOpen, statementId, fetchDetail]);
 
+  // Fetch order details when detail is loaded
+  useEffect(() => {
+    if (detail?.invoices && detail.invoices.length > 0) {
+      fetchOrderDetails(detail.invoices);
+    }
+  }, [detail, fetchOrderDetails]);
+
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!payForm.paymentMethodId) {
+      errors.paymentMethodId = "Please select a payment method";
+    }
+    if (payForm.paymentMethodId === 2 && !payForm.transactionReference) {
+      // Assuming ID 2 is Bank Transfer
+      errors.transactionReference = "Reference is required for Bank Transfer";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handlePay = async () => {
     if (!statementId) return;
+    if (!validateForm()) return;
+
     setIsPaying(true);
     try {
-      await billingApi.payStatement(statementId, payForm);
+      const response = await billingApi.payStatement(statementId, payForm, isStaff ? user?.storeId : undefined);
       toast.success("Payment processed successfully!");
+      
+      // Update local state immediately
+      setDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "PAID",
+              paidAt: response.paidAt,
+              transactionReference: response.transactionReference,
+              paymentMethodId: payForm.paymentMethodId, // Optimistic update or derived
+            }
+          : null,
+      );
+
       setShowPayForm(false);
       onPaid?.();
-      onClose();
+      // Don't close immediately, let user see the update? Or close?
+      // User might want to see the status change.
+      // But usually "Mark as Paid" -> Close is fine.
+      // Let's keep it open to show the updated status.
     } catch (error: unknown) {
       let msg = "Payment failed";
       if (error && typeof error === "object" && "response" in error) {
@@ -99,7 +173,8 @@ export const BillingDetailDrawer = ({
       <div className="flex gap-2">
         {detail &&
           detail.status?.toUpperCase() !== "PAID" &&
-          detail.status?.toUpperCase() !== "CANCELLED" && (
+          detail.status?.toUpperCase() !== "CANCELLED" &&
+          isStaff && (
             <Button
               onClick={() => setShowPayForm(true)}
               className="bg-green-600 hover:bg-green-700 text-white"
@@ -244,89 +319,109 @@ export const BillingDetailDrawer = ({
               </div>
             )}
 
-            {/* Invoices Table */}
+            {/* Professional Invoice Line Items */}
             {detail.invoices && detail.invoices.length > 0 && (
-              <Card className="overflow-hidden border-zinc-700 shadow-sm">
-                <div className="bg-zinc-900/50">
-                  <table className="min-w-full divide-y divide-zinc-800">
-                    <thead>
-                      <tr className="bg-zinc-900/80">
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Invoice ID
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Order
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Amount
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800">
-                      {detail.invoices.map((inv, idx) => (
-                        <tr key={idx}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200">
-                            <span className="font-mono text-xs bg-zinc-800 px-2 py-1 rounded text-gray-300">
-                              #{inv.invoiceId}
+              <div className="space-y-5">
+                {detail.invoices.map((inv, invIdx) => {
+                  const items = inv.orderId ? (orderDetailsMap[inv.orderId] || []) : [];
+                  return (
+                    <Card key={invIdx} className="overflow-hidden border-zinc-700 shadow-sm">
+                      {/* Invoice sub-header */}
+                      <div className="bg-zinc-900/60 px-6 py-3 border-b border-zinc-800 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-xs bg-zinc-800 px-2.5 py-1 rounded text-amber-400 border border-zinc-700">
+                            Invoice #{inv.invoiceId}
+                          </span>
+                          {inv.orderId && (
+                            <span className="text-xs text-zinc-500">
+                              Order #{inv.orderId}
                             </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {inv.orderId ? (
-                              <div>
-                                <span className="font-mono text-xs">
-                                  Order #{inv.orderId}
-                                </span>
-                                {inv.orderDate && (
-                                  <div className="text-xs text-gray-500 mt-0.5">
-                                    {new Date(inv.orderDate).toLocaleDateString(
-                                      "vi-VN",
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            {inv.status ? (
-                              <Badge
-                                variant={
-                                  inv.status === "PAID" ? "success" : "warning"
-                                }
-                                size="sm"
-                              >
-                                {inv.status}
-                              </Badge>
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-200 text-right">
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {inv.issuedAt && (
+                            <span className="text-xs text-zinc-500">
+                              {new Date(inv.issuedAt).toLocaleDateString("vi-VN")}
+                            </span>
+                          )}
+                          <span className="font-semibold text-sm text-gray-200">
                             {inv.amount?.toLocaleString("vi-VN")} VND
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="bg-zinc-900/80">
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="px-6 py-4 text-right text-base font-bold text-gray-200"
-                        >
-                          Total
-                        </td>
-                        <td className="px-6 py-4 text-right text-base font-bold text-amber-600">
-                          {detail.totalAmount?.toLocaleString("vi-VN")} VND
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Line Items Table */}
+                      <div className="bg-zinc-900/30">
+                        <table className="min-w-full divide-y divide-zinc-800/60">
+                          <thead>
+                            <tr className="bg-zinc-900/50">
+                              <th className="px-6 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]" style={{ width: '60px' }}>
+                                No.
+                              </th>
+                              <th className="px-6 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]">
+                                Item
+                              </th>
+                              <th className="px-6 py-3 text-center text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]" style={{ width: '80px' }}>
+                                Qty
+                              </th>
+                              <th className="px-6 py-3 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]" style={{ width: '140px' }}>
+                                Price
+                              </th>
+                              <th className="px-6 py-3 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]" style={{ width: '150px' }}>
+                                Total
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-800/40">
+                            {items.length > 0 ? (
+                              items.map((item, itemIdx) => (
+                                <tr key={itemIdx} className="hover:bg-zinc-800/30 transition-colors">
+                                  <td className="px-6 py-3.5 text-sm text-zinc-500 font-mono">
+                                    {itemIdx + 1}
+                                  </td>
+                                  <td className="px-6 py-3.5 text-sm text-gray-200 font-medium">
+                                    {item.productName}
+                                  </td>
+                                  <td className="px-6 py-3.5 text-sm text-center text-amber-400 font-semibold">
+                                    {item.quantity}
+                                  </td>
+                                  <td className="px-6 py-3.5 text-sm text-right text-gray-300">
+                                    {item.unitPrice?.toLocaleString("vi-VN")} ₫
+                                  </td>
+                                  <td className="px-6 py-3.5 text-sm text-right text-gray-200 font-semibold">
+                                    {item.subTotal?.toLocaleString("vi-VN")} ₫
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={5} className="px-6 py-6 text-center text-sm text-zinc-600 italic">
+                                  Đang tải chi tiết đơn hàng...
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </Card>
+                  );
+                })}
+
+                {/* Grand Total */}
+                <div className="bg-zinc-900/80 rounded-xl border border-zinc-800 px-6 py-4 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                      Tổng giá trị đối soát
+                    </span>
+                    <span className="text-xs text-zinc-600 mt-0.5">
+                      {detail.invoices.length} hóa đơn
+                    </span>
+                  </div>
+                  <span className="text-2xl font-black text-amber-500 tracking-tight">
+                    {detail.totalAmount?.toLocaleString("vi-VN")} <span className="text-base font-bold text-amber-600">VND</span>
+                  </span>
                 </div>
-              </Card>
+              </div>
             )}
           </div>
         ) : (
@@ -338,18 +433,18 @@ export const BillingDetailDrawer = ({
       {showPayForm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <Card className="w-full max-w-md p-6 bg-zinc-900 shadow-xl border border-zinc-700">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-200">
+            <div className="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+              <h2 className="text-xl font-bold text-gray-200">
                 Confirm Payment
               </h2>
               <button
                 onClick={() => setShowPayForm(false)}
-                className="text-gray-400 hover:text-gray-200"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Payment Method
@@ -364,12 +459,15 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 >
-                  <option value="" disabled>
+                  <option value="" disabled className="bg-zinc-900 text-gray-500">
                     Select Method
                   </option>
-                  <option value="1">CASH</option>
-                  <option value="2">BANK_TRANSFER</option>
+                  <option value="1" className="bg-zinc-900">CASH</option>
+                  <option value="2" className="bg-zinc-900">BANK_TRANSFER</option>
                 </select>
+                {formErrors.paymentMethodId && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.paymentMethodId}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -385,6 +483,9 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 />
+                {formErrors.transactionReference && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.transactionReference}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -404,14 +505,15 @@ export const BillingDetailDrawer = ({
                 variant="outline"
                 onClick={() => setShowPayForm(false)}
                 disabled={isPaying}
+                className="bg-zinc-800 border-zinc-700 text-gray-300 hover:text-white hover:bg-zinc-700"
               >
                 Cancel
               </Button>
               <Button
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
                 onClick={handlePay}
                 isLoading={isPaying}
-                disabled={!payForm.paymentMethodId}
+                disabled={!payForm.paymentMethodId || isPaying}
               >
                 <CreditCard size={16} className="mr-2" /> Pay Now
               </Button>

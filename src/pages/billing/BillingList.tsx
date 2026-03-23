@@ -11,7 +11,9 @@ import {
   Wallet,
   ArrowRight,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  CreditCard,
+  Loader2,
 } from "lucide-react";
 import { BillingDetailDrawer } from "./InvoiceDetailDrawer";
 import { billingApi } from "../../services/billing.api";
@@ -21,6 +23,7 @@ import type { BatchBillingStatementResponse } from "../../types/billing";
 import { cn } from "../../utils/classNames";
 import { Button } from "../../components/ui/Button";
 import billingHeaderBg from "../../assets/billing_dashboard_bg.png";
+import { useAuth } from "../../hooks/useAuth";
 
 type BillingStatus =
   | "all"
@@ -38,6 +41,8 @@ export const BillingList = () => {
   const [selectedStatementId, setSelectedStatementId] = useState<number | null>(
     null,
   );
+  const { hasAuthority, user } = useAuth();
+  const isStaff = hasAuthority("STORE_STAFF");
 
   // Pagination
   const [page, setPage] = useState(0);
@@ -54,7 +59,12 @@ export const BillingList = () => {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [statementToDelete, setStatementToDelete] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Store name map (statementId -> storeName)
+  const [storeNameMap, setStoreNameMap] = useState<Record<number, string>>({});
+
+  // VNPay state
+  const [isPayingVNPay, setIsPayingVNPay] = useState<number | null>(null);
 
   // Manual Statement form
   const [manualForm, setManualForm] = useState({
@@ -83,8 +93,8 @@ export const BillingList = () => {
       const params: {
         storeId?: number;
         status?: string;
-        page?: number;
-        size?: number;
+        page: number;
+        size: number;
       } = {
         page,
         size: 10,
@@ -92,13 +102,30 @@ export const BillingList = () => {
       if (statusFilter !== "all") {
         params.status = statusFilter;
       }
-      if (storeIdFilter) {
+      if (isStaff && user?.storeId) {
+        params.storeId = Number(user.storeId);
+      } else if (storeIdFilter) {
         params.storeId = Number(storeIdFilter);
       }
       const res = await billingApi.getStatements(params);
-      setStatements(res.content || []);
+      const stmts = res.content || [];
+      setStatements(stmts);
       setTotalPages(res.totalPages || 0);
       setTotalElements(res.totalElements || 0);
+
+      // Fetch store names for each statement via detail API
+      if (stmts.length > 0) {
+        const results = await Promise.allSettled(
+          stmts.map((s) => billingApi.getStatementDetail(s.statementId, isStaff ? user?.storeId : undefined))
+        );
+        const nameMap: Record<number, string> = {};
+        results.forEach((result, idx) => {
+          if (result.status === "fulfilled" && result.value?.store?.name) {
+            nameMap[stmts[idx].statementId] = result.value.store.name;
+          }
+        });
+        setStoreNameMap(nameMap);
+      }
     } catch (error) {
       console.error("Failed to fetch billing statements:", error);
       toast.error("Failed to load billing statements");
@@ -123,7 +150,6 @@ export const BillingList = () => {
 
   const confirmDelete = async () => {
     if (!statementToDelete) return;
-    setIsDeleting(true);
     try {
       await billingApi.deleteStatement(statementToDelete);
       toast.success("Billing statement deleted successfully");
@@ -137,9 +163,26 @@ export const BillingList = () => {
       }
       toast.error(msg);
     } finally {
-      setIsDeleting(false);
     }
   };
+
+  const handleVNPayPayment = async (statementId: number) => {
+    setIsPayingVNPay(statementId);
+    try {
+      const paymentUrl = await billingApi.createVnPayUrl(statementId, isStaff ? user?.storeId : undefined);
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      } else {
+        toast.error("Không thể tạo link thanh toán VNPay");
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Lỗi khi tạo link thanh toán VNPay";
+      toast.error(msg);
+    } finally {
+      setIsPayingVNPay(null);
+    }
+  };
+
 
   const handleGenerateManual = async () => {
     if (
@@ -184,7 +227,7 @@ export const BillingList = () => {
       const result = await billingApi.generateBatchStatements(batchForm);
       setBatchResult(result);
       toast.success(
-        `Batch completed: ${result.successCount} success, ${result.failureCount} failed`,
+        `Batch completed: ${result.totalStatementsCreated} created, ${result.storesSkippedNoInvoices} skipped`,
       );
       setShowBatchModal(false);
       setBatchForm({ cycleName: "", periodStart: "", periodEnd: "" });
@@ -209,42 +252,7 @@ export const BillingList = () => {
     return "default";
   };
 
-  const columns: Column<BillingStatementSummaryResponse>[] = [
-    {
-      header: "ID",
-      accessorKey: "statementId",
-      className: "font-medium",
-      cell: (s) => (
-        <span className="font-mono text-xs text-gray-400 bg-zinc-800 px-2 py-1 rounded border border-zinc-700">
-          #{s.statementId}
-        </span>
-      ),
-    },
-    {
-      header: "Store",
-      cell: (s) => (
-        <span className="text-gray-200">
-          {s.storeName || `Store #${s.storeId || "—"}`}
-        </span>
-      ),
-    },
-    {
-      header: "Cycle Name",
-      accessorKey: "cycleName",
-      className: "font-medium text-gray-200",
-      cell: (s) => <span className="text-gray-200">{s.cycleName || "—"}</span>,
-    },
-    {
-      header: "Total Amount",
-      accessorKey: "totalAmount",
-      className: "font-bold",
-      cell: (s) => (
-        <span className="text-gray-200 font-semibold">
-          {s.totalAmount?.toLocaleString("vi-VN")} VND
-        </span>
-      ),
-    },
-  ];
+
 
   const statusOptions: { value: BillingStatus; label: string }[] = [
     { value: "all", label: "All" },
@@ -293,21 +301,23 @@ export const BillingList = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 relative z-10">
-            <Button
-              variant="outline"
-              onClick={() => setShowManualModal(true)}
-              className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] px-8 py-6 h-auto rounded-2xl transition-all hover:scale-105 active:scale-95 italic border-0"
-            >
-              <FileText size={18} className="mr-2 text-zinc-400" /> Tạo đơn lẻ
-            </Button>
-            <Button
-              onClick={() => setShowBatchModal(true)}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase tracking-widest px-10 py-6 h-auto rounded-[1.75rem] shadow-[0_15px_30px_rgba(245,158,11,0.2)] hover:scale-[1.05] active:scale-95 transition-all italic border-0 h-full"
-            >
-              <Layers size={18} className="mr-3" strokeWidth={3} /> Xuất hóa đơn loạt
-            </Button>
-          </div>
+          {!isStaff && (
+            <div className="flex flex-wrap items-center gap-4 relative z-10">
+              <Button
+                variant="outline"
+                onClick={() => setShowManualModal(true)}
+                className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] px-8 py-6 h-auto rounded-2xl transition-all hover:scale-105 active:scale-95 italic border-0"
+              >
+                <FileText size={18} className="mr-2 text-zinc-400" /> Tạo đơn lẻ
+              </Button>
+              <Button
+                onClick={() => setShowBatchModal(true)}
+                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase tracking-widest px-10 py-6 h-auto rounded-[1.75rem] shadow-[0_15px_30px_rgba(245,158,11,0.2)] hover:scale-[1.05] active:scale-95 transition-all italic border-0 h-full"
+              >
+                <Layers size={18} className="mr-3" strokeWidth={3} /> Xuất hóa đơn loạt
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -434,7 +444,7 @@ export const BillingList = () => {
                 <div className="space-y-1 text-center md:text-left">
                   <div className="flex items-center justify-center md:justify-start gap-3">
                     <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter group-hover:text-amber-400 transition-colors">
-                      {s.storeName || `Cửa hàng #${s.storeId}`}
+                      {storeNameMap[s.statementId] || s.storeName || (isStaff && user?.storeName ? user.storeName : `Cửa hàng #${s.statementId}`)}
                     </h3>
                     <div className={cn(
                       "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] italic border",
@@ -478,12 +488,39 @@ export const BillingList = () => {
                   >
                     <Eye size={18} className="transition-transform group-hover/btn:scale-110" /> Xem Chi tiết
                   </button>
-                  <button
-                    onClick={() => handleDelete(s.statementId)}
-                    className="w-14 h-14 rounded-2xl bg-zinc-950 text-zinc-800 hover:text-rose-500 border border-white/5 hover:border-rose-500/40 transition-all flex items-center justify-center shadow-inner"
-                  >
-                    <Trash2 size={24} />
-                  </button>
+
+                  {!['PAID', 'CANCELLED'].includes(s.status?.toUpperCase() || '') && isStaff && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSelectedStatementId(s.statementId)}
+                        className="h-14 px-6 rounded-2xl bg-zinc-950 text-amber-500 hover:bg-amber-500 hover:text-black border border-amber-500/30 transition-all font-black uppercase tracking-widest text-[10px] italic flex items-center justify-center gap-2 shadow-inner"
+                      >
+                        <CreditCard size={16} />
+                        Thanh toán
+                      </button>
+                      <button
+                        onClick={() => handleVNPayPayment(s.statementId)}
+                        disabled={isPayingVNPay === s.statementId}
+                        className="h-14 px-6 rounded-2xl bg-[#004791]/20 text-[#004791] hover:bg-[#004791] hover:text-white border border-[#004791]/30 transition-all font-black uppercase tracking-widest text-[10px] italic flex items-center justify-center gap-2 shadow-inner disabled:opacity-50"
+                      >
+                        {isPayingVNPay === s.statementId ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <CreditCard size={16} />
+                        )}
+                        VNPay
+                      </button>
+                    </div>
+                  )}
+
+                  {!isStaff && (
+                    <button
+                      onClick={() => handleDelete(s.statementId)}
+                      className="w-14 h-14 rounded-2xl bg-zinc-950 text-zinc-800 hover:text-rose-500 border border-white/5 hover:border-rose-500/40 transition-all flex items-center justify-center shadow-inner"
+                    >
+                      <Trash2 size={24} />
+                    </button>
+                  )}
                   <div className="ml-4 hidden md:block">
                     <ArrowRight size={28} className="text-zinc-900 group-hover:text-amber-400 group-hover:translate-x-2 transition-all duration-500" />
                   </div>

@@ -7,7 +7,6 @@ import { storeApi } from '../../services/store.api';
 import { StoreModal } from './StoreModal';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
-import { cn } from '../../utils/classNames';
 import storeHeaderBg from '../../assets/store_list_header_bg.png';
 
 export const StoreList = () => {
@@ -15,7 +14,6 @@ export const StoreList = () => {
     const [stores, setStores] = useState<StoreResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'ALL' | 'active' | 'inactive'>('ALL');
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(0);
@@ -27,6 +25,7 @@ export const StoreList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStore, setEditingStore] = useState<StoreResponse | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [staffNames, setStaffNames] = useState<Record<number, string>>({});
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -45,6 +44,30 @@ export const StoreList = () => {
             setStores(pageData.content);
             setTotalPages(pageData.totalPages);
             setTotalElements(pageData.totalElements);
+
+            // Fetch staff for each store
+            const names: Record<number, string> = {};
+            const { userService } = await import('../../services/user.service');
+            
+            await Promise.all(pageData.content.map(async (store: StoreResponse) => {
+                const sid = store.id || store.storeId;
+                if (sid) {
+                    try {
+                        const staffRes = await userService.getUsers({ storeId: sid, size: 20 });
+                        // Filter by storeId locally to be sure
+                        const list = staffRes.data.content || [];
+                        const assigned = list.filter((u: any) => u.storeId === sid);
+                        if (assigned.length > 0) {
+                            names[sid] = assigned[0].fullName;
+                        } else {
+                            names[sid] = 'Chưa có NV';
+                        }
+                    } catch (e) {
+                        names[sid] = 'Lỗi';
+                    }
+                }
+            }));
+            setStaffNames(prev => ({ ...prev, ...names }));
         } catch (error) {
             console.error(error);
             toast.error('Failed to load stores');
@@ -62,14 +85,7 @@ export const StoreList = () => {
         setCurrentPage(0);
     }, [searchTerm]);
 
-    const filteredStores = stores.filter(store => {
-        const actualIsActive = store.isActive ?? (store as any).active ?? ((store as any).status === 'ACTIVE');
-
-        if (statusFilter === 'ALL') return true;
-        if (statusFilter === 'active') return actualIsActive;
-        if (statusFilter === 'inactive') return !actualIsActive;
-        return true;
-    });
+    const filteredStores = stores;
 
     const handleCreate = () => {
         setEditingStore(null);
@@ -191,22 +207,6 @@ export const StoreList = () => {
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <div className="flex bg-zinc-950 p-1.5 rounded-2xl border border-white/5 shadow-inner">
-                            {(['ALL', 'active', 'inactive'] as const).map((status) => (
-                                <button
-                                    key={status}
-                                    onClick={() => setStatusFilter(status)}
-                                    className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic ${statusFilter === status
-                                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                                        : 'text-zinc-500 hover:text-zinc-300'
-                                        }`}
-                                >
-                                    {status === 'ALL' ? 'Tất cả' : status === 'active' ? 'Hoạt động' : 'Tạm dừng'}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -225,7 +225,6 @@ export const StoreList = () => {
                     <div className="grid grid-cols-1 gap-4">
                         {filteredStores.map((store) => {
                             const actualId = store.id || store.storeId;
-                            const actualIsActive = store.isActive ?? (store as any).active ?? ((store as any).status === 'ACTIVE');
                             return (
                                 <div
                                     key={actualId}
@@ -254,6 +253,7 @@ export const StoreList = () => {
                                                     <div className="flex items-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">
                                                         <User size={12} className="mr-1.5 text-amber-500 opacity-50" />
                                                         {store.managerName || 'N/A'}
+                                                        <span className="ml-2 text-zinc-700">({staffNames[actualId!] || 'Đang tải...'})</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -267,17 +267,6 @@ export const StoreList = () => {
                                                 </span>
                                             </div>
 
-                                            <div className="flex flex-col items-center">
-                                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1 italic">Trạng thái</span>
-                                                <div className={cn(
-                                                    "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] italic border transition-all duration-500",
-                                                    actualIsActive
-                                                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
-                                                        : "bg-zinc-950 text-zinc-600 border-white/5"
-                                                )}>
-                                                    {actualIsActive ? 'Hoạt động' : 'Tạm dừng'}
-                                                </div>
-                                            </div>
 
                                             <div className="flex items-center gap-2 ml-auto lg:ml-0" onClick={(e) => e.stopPropagation()}>
                                                 <Button
@@ -352,10 +341,10 @@ export const StoreList = () => {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                title="Delete Store"
-                message="Are you sure you want to delete this store? This action cannot be undone."
-                confirmText="Delete Store"
-                cancelText="Cancel"
+                title="Xóa cửa hàng"
+                message="Bạn có chắc muốn xóa cửa hàng này? Hành động này không thể hoàn tác."
+                confirmText="Xóa cửa hàng"
+                cancelText="Hủy"
                 isLoading={isDeleting}
                 variant="danger"
             />
