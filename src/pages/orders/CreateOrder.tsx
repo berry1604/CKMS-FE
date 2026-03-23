@@ -71,7 +71,7 @@ export const CreateOrder = () => {
                 productId: product.id,
                 productName: product.name,
                 quantity: 1,
-                unit: product.unit || 'món',
+                unit: product.unit || 'phần',
                 price: product.price
             }]);
         }
@@ -261,7 +261,7 @@ export const CreateOrder = () => {
                                                     <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">Đơn giá</span>
                                                     <span className="text-amber-500 font-black text-base tracking-tight">{(product.price || 0).toLocaleString()} <span className="text-[10px] opacity-60 font-medium">VNĐ</span></span>
                                                 </div>
-                                                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-lg">/ {product.unit || 'món'}</span>
+                                                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-lg">/ {product.unit || 'phần'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -366,7 +366,7 @@ export const CreateOrder = () => {
                             <div className="space-y-4 p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50">
                                 <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-widest border-b border-zinc-800/50 pb-3">
                                     <span className="text-zinc-500">Tổng quy mô đơn:</span>
-                                    <span className="text-zinc-200 bg-zinc-800 px-3 py-1 rounded-md">{totals.quantity.toLocaleString()} đv</span>
+                                    <span className="text-zinc-200 bg-zinc-800 px-3 py-1 rounded-md">{totals.quantity.toLocaleString()} phần</span>
                                 </div>
                                 <div className="flex justify-between items-baseline pt-1">
                                     <span className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Tổng chi phí:</span>

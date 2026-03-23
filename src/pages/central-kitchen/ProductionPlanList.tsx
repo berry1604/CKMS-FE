@@ -153,7 +153,7 @@ export const ProductionPlanList = () => {
                                         <span className={cn(
                                             isOverloaded ? "text-red-500" : "text-amber-500"
                                         )}>
-                                            {usedCapacity} / {maxCapacity} đv
+                                            {usedCapacity} / {maxCapacity} phần
                                         </span>
                                     </div>
                                     <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
