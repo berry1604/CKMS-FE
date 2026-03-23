@@ -200,7 +200,7 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
 
                         <div className="grid grid-cols-2 gap-6 pb-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Vĩ độ (Lat)</label>
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Vĩ độ</label>
                                 <Input
                                     type="number"
                                     step="any"
@@ -212,7 +212,7 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Kinh độ (Long)</label>
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Kinh độ</label>
                                 <Input
                                     type="number"
                                     step="any"

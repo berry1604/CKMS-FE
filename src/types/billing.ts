@@ -40,6 +40,8 @@ export interface BillingStatementSummaryResponse {
 export interface StoreSimpleResponse {
   id: number;
   name: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface InvoiceDetailResponse {

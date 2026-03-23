@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Building2, Calendar, X } from "lucide-react";
+import { CreditCard, Building2, Calendar, X, Navigation } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -234,6 +234,18 @@ export const BillingDetailDrawer = ({
                   <p className="text-sm text-gray-400">
                     {detail.cycleName || "Bill To"}
                   </p>
+                  {detail.store && (detail.store.latitude || detail.store.longitude) && (
+                    <div className="flex items-center gap-3 mt-1 opacity-60">
+                      <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
+                        <Navigation size={10} className="text-amber-500/50 rotate-45" />
+                        Vĩ độ: {detail.store.latitude}
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
+                         <Navigation size={10} className="text-amber-500/50 -rotate-45" />
+                         Kinh độ: {detail.store.longitude}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col items-end">
