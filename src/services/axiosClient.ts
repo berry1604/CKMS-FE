@@ -27,7 +27,7 @@ const onRefreshed = (token: string) => {
 // Request interceptor: attach token
 axiosClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('accessToken');
+        const token = sessionStorage.getItem('accessToken');
 
         // Do not attach token for public endpoints
         const publicEndpoints = ['/auth/login', '/auth/forgot-password', '/auth/reset-password', '/auth/activate', '/auth/refresh'];
@@ -66,8 +66,8 @@ axiosClient.interceptors.response.use(
         else if (error.response?.status === 401 && !originalRequest._retry) {
             // Prevent infinite loops if refresh token itself fails
             if (url.includes('/auth/refresh')) {
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
+                sessionStorage.removeItem('accessToken');
+                sessionStorage.removeItem('refreshToken');
                 window.location.href = '/login';
                 return Promise.reject(error);
             }
@@ -84,9 +84,9 @@ axiosClient.interceptors.response.use(
             originalRequest._retry = true;
             isRefreshing = true;
 
-            const refreshToken = localStorage.getItem('refreshToken');
+            const refreshToken = sessionStorage.getItem('refreshToken');
             if (!refreshToken) {
-                localStorage.removeItem('accessToken');
+                sessionStorage.removeItem('accessToken');
                 window.location.href = '/login';
                 return Promise.reject(error);
             }
@@ -103,7 +103,7 @@ axiosClient.interceptors.response.use(
                 const newAccessToken = data.accessToken || data.token;
 
                 if (newAccessToken) {
-                    localStorage.setItem('accessToken', newAccessToken);
+                    sessionStorage.setItem('accessToken', newAccessToken);
                     // Update header and retry original request
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                     onRefreshed(newAccessToken);
@@ -111,8 +111,8 @@ axiosClient.interceptors.response.use(
                 }
             } catch (refreshError) {
                 // Refresh failed, logout
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
+                sessionStorage.removeItem('accessToken');
+                sessionStorage.removeItem('refreshToken');
                 window.location.href = '/login';
                 return Promise.reject(refreshError);
             } finally {

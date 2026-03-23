@@ -14,10 +14,10 @@ export const authApi = {
 
         // ✅ đổi sessionStorage -> localStorage (không mất khi reload)
         if (validAccessToken) {
-            localStorage.setItem('accessToken', validAccessToken);
+            sessionStorage.setItem('accessToken', validAccessToken);
         }
         if (refreshToken) {
-            localStorage.setItem('refreshToken', refreshToken);
+            sessionStorage.setItem('refreshToken', refreshToken);
         }
 
         return data;
@@ -26,14 +26,14 @@ export const authApi = {
     // ❗ bỏ param refreshToken (tự lấy từ storage cho an toàn)
     logout: async () => {
         try {
-            const refreshToken = localStorage.getItem('refreshToken');
+            const refreshToken = sessionStorage.getItem('refreshToken');
 
             if (refreshToken) {
                 await axiosClient.post('/auth/logout', { refreshToken });
             }
         } finally {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
         }
     },
 
@@ -50,12 +50,12 @@ export const authApi = {
 
         // ✅ dùng localStorage
         if (validAccessToken) {
-            localStorage.setItem('accessToken', validAccessToken);
+            sessionStorage.setItem('accessToken', validAccessToken);
         }
 
         // ⚠️ chỉ overwrite nếu BE trả về refreshToken mới
         if (newRefreshToken) {
-            localStorage.setItem('refreshToken', newRefreshToken);
+            sessionStorage.setItem('refreshToken', newRefreshToken);
         }
 
         return data;
