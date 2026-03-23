@@ -372,6 +372,7 @@ export const MainLayout: React.FC = () => {
                                                 {/* Active Indicator Bar */}
                                                 <NavLink
                                                     to={item.href}
+                                                    end={true}
                                                     className={({ isActive }) =>
                                                         isActive
                                                             ? cn(

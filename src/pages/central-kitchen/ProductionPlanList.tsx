@@ -17,30 +17,38 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { productionPlanApi } from '../../services/productionPlan.api';
+import { kitchenApi } from '../../services/kitchen.api';
 import type { ProductionPlanSummaryResponse } from '../../types/productionPlan';
+import type { KitchenResponse } from '../../types/kitchen';
 import { PRODUCTION_PLAN_STATUS_LABELS } from '../../utils/statusTranslations';
 import { cn } from '../../utils/classNames';
 
 export const ProductionPlanList = () => {
     const navigate = useNavigate();
     const [plans, setPlans] = useState<ProductionPlanSummaryResponse[]>([]);
+    const [kitchens, setKitchens] = useState<KitchenResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeActionId, setActiveActionId] = useState<number | null>(null);
 
-    const fetchPlans = async () => {
+    const fetchData = async () => {
         setIsLoading(true);
         try {
-            const res = await productionPlanApi.getAllProductionPlans({ size: 50 });
-            setPlans(res.content || []);
-        } catch (error) {
-            toast.error("Không thể tải danh sách kế hoạch.");
+            const [plansRes, kitchensRes] = await Promise.all([
+                productionPlanApi.getAllProductionPlans({ size: 50 }),
+                kitchenApi.getAllKitchens()
+            ]);
+            setPlans(plansRes.content || []);
+            setKitchens(kitchensRes.data || []);
+        } catch (err) {
+            toast.error("Không thể tải dữ liệu.");
+            console.error(err);
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchPlans();
+        fetchData();
     }, []);
 
     const handleStartProduction = async (planId: number, version?: number) => {
@@ -48,8 +56,9 @@ export const ProductionPlanList = () => {
         try {
             await productionPlanApi.startProductionPlan(planId, version);
             toast.success("Đã bắt đầu sản xuất.");
-            fetchPlans();
-        } catch (error: any) {
+            fetchData();
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
             toast.error(error.response?.data?.message || "Không thể bắt đầu sản xuất.");
         } finally {
             setActiveActionId(null);
@@ -63,8 +72,9 @@ export const ProductionPlanList = () => {
         try {
             await productionPlanApi.cancelProductionPlan(planId, version);
             toast.success("Đã hủy kế hoạch.");
-            fetchPlans();
-        } catch (error: any) {
+            fetchData();
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
             toast.error(error.response?.data?.message || "Không thể hủy kế hoạch.");
         } finally {
             setActiveActionId(null);
@@ -103,7 +113,7 @@ export const ProductionPlanList = () => {
                 <div className="flex items-center gap-3">
                     <Button 
                         variant="ghost" 
-                        onClick={fetchPlans}
+                        onClick={fetchData}
                         disabled={isLoading}
                         className="h-12 w-12 p-0 bg-zinc-900/40 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl"
                     >
@@ -111,6 +121,57 @@ export const ProductionPlanList = () => {
                     </Button>
                 </div>
             </div>
+
+            {/* Kitchen Status Section */}
+            {kitchens.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {kitchens.map(kitchen => {
+                        const usedCapacity = kitchen.todayUsedCapacity || 0;
+                        const maxCapacity = kitchen.maxDailyCapacity || 1;
+                        const capacityPercentage = Math.min(100, Math.round((usedCapacity / maxCapacity) * 100));
+                        const isOverloaded = usedCapacity > maxCapacity;
+
+                        return (
+                            <div key={kitchen.kitchenId} className="bg-zinc-900/40 border border-zinc-800/50 rounded-2xl p-5 hover:border-amber-500/30 transition-all group">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors">
+                                            <ChefHat size={18} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-black text-zinc-200 tracking-tight">{kitchen.name}</h3>
+                                            <p className="text-[10px] text-zinc-500 font-medium capitalize mt-0.5">{kitchen.currentStatus === 'IN_PRODUCTION' ? 'Đang Nấu' : 'Rảnh Chỗ'}</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant={kitchen.currentStatus === 'IN_PRODUCTION' ? 'orange' : 'success'} className="border-0 px-2 py-0.5 uppercase tracking-widest text-[9px]">
+                                        {kitchen.activePlanCount} kế hoạch
+                                    </Badge>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[10px] font-black uppercase">
+                                        <span className="text-zinc-500">Sản lượng hôm nay</span>
+                                        <span className={cn(
+                                            isOverloaded ? "text-red-500" : "text-amber-500"
+                                        )}>
+                                            {usedCapacity} / {maxCapacity} đv
+                                        </span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
+                                        <div 
+                                            className={cn(
+                                                "h-full transition-all duration-1000",
+                                                isOverloaded ? "bg-red-500" : "bg-amber-500",
+                                                capacityPercentage > 0 && capacityPercentage < 100 && "animate-pulse"
+                                            )}
+                                            style={{ width: `${Math.min(100, capacityPercentage)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* List Content */}
             <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-[32px] overflow-hidden shadow-2xl">
