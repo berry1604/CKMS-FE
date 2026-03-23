@@ -9,6 +9,8 @@ export interface KitchenResponse {
     currentStatus?: KitchenStatus;
     activePlanCount?: number;
     todayUsedCapacity?: number;
+    latitude?: number;
+    longitude?: number;
 }
 
 export interface KitchenCreateRequest {
@@ -16,6 +18,8 @@ export interface KitchenCreateRequest {
     address: string;
     maxDailyCapacity: number;
     isActive: boolean;
+    latitude?: number;
+    longitude?: number;
 }
 
 export interface KitchenUpdateRequest {
@@ -23,4 +27,6 @@ export interface KitchenUpdateRequest {
     address?: string;
     maxDailyCapacity?: number;
     isActive?: boolean;
+    latitude?: number;
+    longitude?: number;
 }
