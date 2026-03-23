@@ -252,7 +252,7 @@ export const StoreList = () => {
                                                     <div className="w-1.5 h-1.5 rounded-full bg-zinc-800"></div>
                                                     <div className="flex items-center text-[9px] font-bold text-zinc-600 uppercase tracking-tighter italic">
                                                         <Navigation size={10} className="mr-1 text-amber-500/40 rotate-45" />
-                                                        Vĩ: {store.latitude?.toFixed(4) || '0.0000'} , Kinh: {store.longitude?.toFixed(4) || '0.0000'}
+                                                        Vĩ: {store.latitude ? Number(store.latitude).toFixed(4) : '0.0000'} , Kinh: {store.longitude ? Number(store.longitude).toFixed(4) : '0.0000'}
                                                     </div>
                                                     <div className="w-1.5 h-1.5 rounded-full bg-zinc-800"></div>
                                                     <div className="flex items-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">

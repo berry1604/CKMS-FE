@@ -26,7 +26,11 @@ export const ReceiveShipment = () => {
 
             // Filter by storeId
             if (user?.storeId) {
-                data = data.filter(s => s.storeId === Number(user.storeId));
+                const userStoreId = Number(user.storeId);
+                data = data.filter(s => 
+                    s.storeId === userStoreId || 
+                    (s.stops && s.stops.some(stop => stop.storeId === userStoreId))
+                );
             }
 
             setShipments(data);
