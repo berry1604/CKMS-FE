@@ -207,7 +207,12 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR', 'KITCHEN_STAFF', 'STORE_STAFF']} />,
                         children: [
                             { index: true, element: <ShipmentList /> },
-                            { path: 'create', element: <CreateShipment /> },
+                            {
+                                element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR']} />,
+                                children: [
+                                    { path: 'create', element: <CreateShipment /> }
+                                ]
+                            },
                             { path: 'receive', element: <ReceiveShipment /> },
                             { path: 'receive/:id', element: <ReceiveShipmentReportPage /> }
                         ]
