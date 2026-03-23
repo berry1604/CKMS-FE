@@ -52,6 +52,7 @@ export interface InvoiceDetailResponse {
   status?: InvoiceStatus;
   issuedAt?: string;
   note?: string;
+  shippingFee?: number;
 }
 
 export interface BillingStatementDetailResponse {
