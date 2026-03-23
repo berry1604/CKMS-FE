@@ -12,6 +12,7 @@ import { CreateRolePage } from '../pages/users/CreateRolePage';
 import { StoreList } from '../pages/franchise-store/StoreList';
 import CreateStorePage from '../pages/franchise-store/CreateStorePage';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
+import { KitchensList } from '../pages/kitchens/KitchensList';
 import { StoreInventoryPage } from '../pages/franchise-store/StoreInventoryPage';
 import { ProductCatalog } from '../pages/product/ProductCatalog';
 import { CreateProductPage } from '../pages/product/CreateProductPage';
@@ -123,6 +124,15 @@ export const router = createBrowserRouter([
                         ]
                     },
 
+                    // Kitchens Management Module (Admin, Manager)
+                    {
+                        path: 'kitchens',
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+                        children: [
+                            { index: true, element: <KitchensList /> }
+                        ]
+                    },
+
                     // Central Kitchen Module (Admin, Manager, Kitchen Staff, Coordinator)
                     {
                         path: 'kitchen',
@@ -197,7 +207,12 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR', 'KITCHEN_STAFF', 'STORE_STAFF']} />,
                         children: [
                             { index: true, element: <ShipmentList /> },
-                            { path: 'create', element: <CreateShipment /> },
+                            {
+                                element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR']} />,
+                                children: [
+                                    { path: 'create', element: <CreateShipment /> }
+                                ]
+                            },
                             { path: 'receive', element: <ReceiveShipment /> },
                             { path: 'receive/:id', element: <ReceiveShipmentReportPage /> }
                         ]

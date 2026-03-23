@@ -25,7 +25,9 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
             name: '',
             address: '',
             maxDailyCapacity: 0,
-            isActive: true
+            isActive: true,
+            latitude: 0,
+            longitude: 0
         }
     });
 
@@ -38,14 +40,18 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                     name: warehouse.name,
                     address: warehouse.address,
                     maxDailyCapacity: warehouse.maxDailyCapacity,
-                    isActive: warehouse.isActive
+                    isActive: warehouse.isActive,
+                    latitude: warehouse.latitude || 0,
+                    longitude: warehouse.longitude || 0
                 });
             } else {
                 reset({
                     name: '',
                     address: '',
                     maxDailyCapacity: 300,
-                    isActive: true
+                    isActive: true,
+                    latitude: 0,
+                    longitude: 0
                 });
             }
         }
@@ -106,6 +112,38 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                                 className="bg-zinc-900/50 border-white/5 focus:border-amber-500/50 hover:bg-zinc-900 focus:bg-zinc-900 transition-colors h-12 text-sm"
                                 error={errors.address?.message}
                             />
+                        </div>
+
+                        {/* Coordinates */}
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="group">
+                                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    Vĩ độ
+                                </label>
+                                <Input
+                                    type="number"
+                                    step="any"
+                                    {...register('latitude')}
+                                    placeholder="10.762..."
+                                    className="bg-zinc-900/50 border-white/5 focus:border-amber-500/50 hover:bg-zinc-900 focus:bg-zinc-900 transition-colors h-12 text-sm"
+                                    error={errors.latitude?.message}
+                                />
+                            </div>
+                            <div className="group">
+                                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    Kinh độ
+                                </label>
+                                <Input
+                                    type="number"
+                                    step="any"
+                                    {...register('longitude')}
+                                    placeholder="106.66..."
+                                    className="bg-zinc-900/50 border-white/5 focus:border-amber-500/50 hover:bg-zinc-900 focus:bg-zinc-900 transition-colors h-12 text-sm"
+                                    error={errors.longitude?.message}
+                                />
+                            </div>
                         </div>
 
                         {/* Capacity */}

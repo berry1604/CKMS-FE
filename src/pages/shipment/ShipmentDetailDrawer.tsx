@@ -326,6 +326,31 @@ export const ShipmentDetailDrawer = ({
                             </div>
                         </div>
                     </div>
+
+                    {/* Store Contact (if available) */}
+                    {(shipment.storePhone || shipment.stops?.some(s => s.storePhone)) && (
+                        <div className="p-4 bg-zinc-900/40 rounded-2xl border border-zinc-800/50 space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Phone size={14} className="text-zinc-600" />
+                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Liên hệ cửa hàng</span>
+                            </div>
+                            {shipment.stops && shipment.stops.length > 0 ? (
+                                <div className="space-y-1.5">
+                                    {shipment.stops.map(stop => (
+                                        <div key={stop.stopId} className="flex items-center justify-between">
+                                            <span className="text-[11px] font-bold text-zinc-400 truncate max-w-[120px]">{stop.storeName}</span>
+                                            <span className="text-[11px] font-bold text-zinc-300 font-mono tracking-tighter">{stop.storePhone || 'N/A'}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : shipment.storePhone ? (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-bold text-zinc-400 truncate max-w-[120px]">{shipment.storeName || 'Cửa hàng'}</span>
+                                    <span className="text-[11px] font-bold text-zinc-300 font-mono tracking-tighter">{shipment.storePhone}</span>
+                                </div>
+                            ) : null}
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Column: Progress & Timeline */}
@@ -445,14 +470,14 @@ export const ShipmentDetailDrawer = ({
                                 )}
                             </div>
 
-                            {(shipment.remarks || (shipment as any).note) && (
+                            {(shipment.remarks || shipment.note) && (
                                 <div className="bg-[#DE802B]/[0.03] p-8 border-t border-[#DE802B]/10 flex items-start gap-5">
                                     <div className="w-10 h-10 rounded-xl bg-[#DE802B]/10 border border-[#DE802B]/20 flex items-center justify-center text-[#DE802B]">
                                         <Info size={18} />
                                     </div>
                                     <div className="space-y-2">
                                         <span className="text-[10px] font-black text-[#DE802B] uppercase tracking-[0.2em] block">Ghi chú Shipment</span>
-                                        <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">"{shipment.remarks || (shipment as any).note}"</p>
+                                        <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">"{shipment.remarks || shipment.note}"</p>
                                     </div>
                                 </div>
                             )}
@@ -526,7 +551,7 @@ export const ShipmentDetailDrawer = ({
                                         <Badge variant="orange" className="h-4 text-[7px] px-1.5 uppercase font-black bg-[#DE802B]/20 text-[#DE802B] border-0">AhaMove Bill</Badge>
                                     </div>
                                     <span className="text-xs text-zinc-500 font-medium mt-1.5 max-w-[200px] leading-relaxed italic">
-                                        {(shipment as any).shippingFee ? `VND ${(shipment as any).shippingFee.toLocaleString()}` : 'Khoản phí sẽ được cập nhật tự động.'}
+                                        {shipment.shippingFee ? `VND ${shipment.shippingFee.toLocaleString()}` : 'Khoản phí sẽ được cập nhật tự động.'}
                                     </span>
                                 </div>
                             </div>

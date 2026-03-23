@@ -96,11 +96,23 @@ export const WarehouseTable: React.FC<WarehouseTableProps> = ({
                                 </div>
                             </td>
                             <td className="px-8 py-6">
-                                <div className="flex items-start gap-2.5 text-zinc-400 group-hover:text-zinc-300 transition-colors">
-                                    <MapPin className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5 group-hover:text-amber-500/70 transition-colors" />
-                                    <span className="truncate max-w-[250px] whitespace-normal line-clamp-2 text-xs leading-relaxed" title={warehouse.address}>
-                                        {warehouse.address || <span className="text-zinc-600 italic">Chưa cấu hình địa chỉ</span>}
-                                    </span>
+                                <div className="space-y-2">
+                                    <div className="flex items-start gap-2.5 text-zinc-400 group-hover:text-zinc-300 transition-colors">
+                                        <MapPin className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5 group-hover:text-amber-500/70 transition-colors" />
+                                        <span className="truncate max-w-[250px] whitespace-normal line-clamp-2 text-xs leading-relaxed" title={warehouse.address}>
+                                            {warehouse.address || <span className="text-zinc-600 italic">Chưa cấu hình địa chỉ</span>}
+                                        </span>
+                                    </div>
+                                    {(warehouse.latitude !== undefined || warehouse.longitude !== undefined) && (
+                                        <div className="flex items-center gap-3 ml-6.5 pl-0.5 opacity-60">
+                                            <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
+                                                Vĩ độ: {warehouse.latitude || '0.0'}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
+                                                Kinh độ: {warehouse.longitude || '0.0'}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </td>
                             <td className="px-8 py-6 text-center">

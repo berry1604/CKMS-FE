@@ -38,7 +38,7 @@ export const DispatchDashboard = () => {
         try {
             // Since /dispatch/suggest is unavailable, we calculate on Frontend
             const [ordersRes, stockRes] = await Promise.all([
-                storeOrderApi.getAllOrders({ status: 'APPROVED' }),
+                storeOrderApi.getAllOrders({ status: 'APPROVED', size: 1000 }),
                 kitchenInventoryApi.getWarehouseStock(1)
             ]);
 
@@ -117,6 +117,7 @@ export const DispatchDashboard = () => {
             // Empty array means auto-calculate on backend.
             
             await productionPlanApi.createProductionPlan({
+                kitchenId: 1,
                 plannedDate,
                 storeOrderIds: [] // Backend handles auto logic when empty
             });

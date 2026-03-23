@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Network,
   AlertCircle,
@@ -7,6 +8,7 @@ import {
   ArrowRight,
   Clock,
   CheckCircle,
+  CheckCircle2,
   Package,
   Store,
   Timer,
@@ -27,16 +29,12 @@ import type {
 import { cn } from "../../utils/classNames";
 
 export const AllocationMatrix = () => {
-  const [selectedPlanId, setSelectedPlanId] = useState<number | "">("");
-  const [selectedPlan, setSelectedPlan] =
-    useState<ProductionPlanSummaryResponse | null>(null);
-  const [unallocatedPlans, setUnallocatedPlans] = useState<
-    ProductionPlanSummaryResponse[]
-  >([]);
-  const [allocatedPlans, setAllocatedPlans] = useState<
-    ProductionPlanSummaryResponse[]
-  >([]);
-  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+    const navigate = useNavigate();
+    const [selectedPlanId, setSelectedPlanId] = useState<number | "">("");
+    const [selectedPlan, setSelectedPlan] = useState<ProductionPlanSummaryResponse | null>(null);
+    const [unallocatedPlans, setUnallocatedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
+    const [allocatedPlans, setAllocatedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
+    const [isLoadingPlans, setIsLoadingPlans] = useState(false);
 
   const [matrix, setMatrix] = useState<AllocationRow[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -244,9 +242,80 @@ export const AllocationMatrix = () => {
     setIsSaving(true);
     try {
       await allocationApi.confirmAllocation(payload);
-      toast.success("Xác nhận phân bổ kho thành công!");
-      setIsSuccess(true);
 
+      // Collect allocated storeIds from matrix for pre-filling CreateShipment
+      const allocatedStoreIds = Array.from(
+        new Set(
+          matrix.flatMap((row) =>
+            row.allocations
+              .filter((a) => a.allocatedQuantity > 0)
+              .map((a) => a.storeId),
+          ),
+        ),
+      );
+
+      // Smart Toast Notification with Action
+      toast(
+        (t) => (
+          <div className="flex flex-col gap-4 min-w-[320px]">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0 border border-amber-500/20">
+                <CheckCircle2 size={22} strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 pt-0.5">
+                <p className="text-[13px] font-black text-slate-100 leading-tight">
+                  Kế hoạch{" "}
+                  <span className="text-amber-400 font-black tracking-tight">
+                    [{selectedPlan?.planName || `#${selectedPlanId}`}]
+                  </span>{" "}
+                  đã được phân bổ thành công!
+                </p>
+                <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-widest">
+                  {allocatedStoreIds.length} CỬA HÀNG ĐÃ ĐƯỢC CHỐT PHÂN BỔ
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-1">
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="text-[10px] font-black text-slate-500 hover:text-slate-300 uppercase tracking-widest transition-colors px-2"
+              >
+                Bỏ qua
+              </button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  navigate("/shipment/create", {
+                    state: {
+                      autoCreate: true,
+                      planId: selectedPlanId,
+                      planName: selectedPlan?.planName,
+                      storeIds: allocatedStoreIds,
+                    },
+                  });
+                }}
+                className="bg-amber-400 hover:bg-amber-500 text-black font-black uppercase text-[10px] tracking-widest h-9 px-4 rounded-xl border-0 shadow-lg shadow-amber-900/20 transition-all active:scale-95"
+              >
+                Tạo đơn vận chuyển ngay
+              </Button>
+            </div>
+          </div>
+        ),
+        {
+          duration: 10000,
+          style: {
+            background: "#0f172a", // slate-900
+            border: "1px solid #1e293b", // slate-800
+            padding: "20px",
+            borderRadius: "24px",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          },
+        },
+      );
+
+      setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);
         fetchPlans();
@@ -258,7 +327,13 @@ export const AllocationMatrix = () => {
       }, 2000);
     } catch (error: any) {
       if (error.response?.status === 404) {
-        toast.success("Xác nhận phân bổ kho thành công!");
+        // Fallback for success if API returns 404 on confirmation (observed behavior)
+        setIsSuccess(true);
+        toast.success("Xác nhận phân bổ thành công!");
+        setTimeout(() => {
+          setIsSuccess(false);
+          fetchPlans();
+        }, 2000);
       } else {
         toast.error(
           error.response?.data?.message || "Có lỗi xảy ra khi phân bổ kho",

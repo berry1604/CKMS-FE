@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Building2, Calendar, X } from "lucide-react";
+import { CreditCard, Building2, Calendar, X, Navigation, Truck } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -42,14 +42,19 @@ export const BillingDetailDrawer = ({
     note: "",
   });
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
-  const [orderDetailsMap, setOrderDetailsMap] = useState<Record<number, OrderDetailResponse[]>>({});
+  const [orderDetailsMap, setOrderDetailsMap] = useState<
+    Record<number, OrderDetailResponse[]>
+  >({});
 
   // Fetch detail when opened
   const fetchDetail = useCallback(async () => {
     if (!statementId) return;
     setIsLoading(true);
     try {
-      const data = await billingApi.getStatementDetail(statementId, isStaff ? user?.storeId : undefined);
+      const data = await billingApi.getStatementDetail(
+        statementId,
+        isStaff ? user?.storeId : undefined,
+      );
       setDetail(data);
     } catch (error) {
       console.error("Failed to fetch statement detail:", error);
@@ -60,23 +65,30 @@ export const BillingDetailDrawer = ({
   }, [statementId]);
 
   // Fetch order details for all invoices once detail is loaded
-  const fetchOrderDetails = useCallback(async (invoices: { orderId?: number }[]) => {
-    const uniqueOrderIds = [...new Set(
-      invoices.map((inv) => inv.orderId).filter((id): id is number => id != null)
-    )];
-    if (uniqueOrderIds.length === 0) return;
+  const fetchOrderDetails = useCallback(
+    async (invoices: { orderId?: number }[]) => {
+      const uniqueOrderIds = [
+        ...new Set(
+          invoices
+            .map((inv) => inv.orderId)
+            .filter((id): id is number => id != null),
+        ),
+      ];
+      if (uniqueOrderIds.length === 0) return;
 
-    const results = await Promise.allSettled(
-      uniqueOrderIds.map((orderId) => storeOrderApi.getOrderById(orderId))
-    );
-    const map: Record<number, OrderDetailResponse[]> = {};
-    results.forEach((result, idx) => {
-      if (result.status === "fulfilled" && result.value?.orderDetails) {
-        map[uniqueOrderIds[idx]] = result.value.orderDetails;
-      }
-    });
-    setOrderDetailsMap(map);
-  }, []);
+      const results = await Promise.allSettled(
+        uniqueOrderIds.map((orderId) => storeOrderApi.getOrderById(orderId)),
+      );
+      const map: Record<number, OrderDetailResponse[]> = {};
+      results.forEach((result, idx) => {
+        if (result.status === "fulfilled" && result.value?.orderDetails) {
+          map[uniqueOrderIds[idx]] = result.value.orderDetails;
+        }
+      });
+      setOrderDetailsMap(map);
+    },
+    [],
+  );
 
   // Trigger fetch when drawer opens
   useEffect(() => {
@@ -120,9 +132,13 @@ export const BillingDetailDrawer = ({
 
     setIsPaying(true);
     try {
-      const response = await billingApi.payStatement(statementId, payForm, isStaff ? user?.storeId : undefined);
+      const response = await billingApi.payStatement(
+        statementId,
+        payForm,
+        isStaff ? user?.storeId : undefined,
+      );
       toast.success("Payment processed successfully!");
-      
+
       // Update local state immediately
       setDetail((prev) =>
         prev
@@ -234,6 +250,18 @@ export const BillingDetailDrawer = ({
                   <p className="text-sm text-gray-400">
                     {detail.cycleName || "Bill To"}
                   </p>
+                  {detail.store && (detail.store.latitude || detail.store.longitude) && (
+                    <div className="flex items-center gap-3 mt-1 opacity-60">
+                      <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
+                        <Navigation size={10} className="text-amber-500/50 rotate-45" />
+                        Vĩ độ: {detail.store.latitude}
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
+                         <Navigation size={10} className="text-amber-500/50 -rotate-45" />
+                         Kinh độ: {detail.store.longitude}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col items-end">
@@ -323,9 +351,14 @@ export const BillingDetailDrawer = ({
             {detail.invoices && detail.invoices.length > 0 && (
               <div className="space-y-5">
                 {detail.invoices.map((inv, invIdx) => {
-                  const items = inv.orderId ? (orderDetailsMap[inv.orderId] || []) : [];
+                  const items = inv.orderId
+                    ? orderDetailsMap[inv.orderId] || []
+                    : [];
                   return (
-                    <Card key={invIdx} className="overflow-hidden border-zinc-700 shadow-sm">
+                    <Card
+                      key={invIdx}
+                      className="overflow-hidden border-zinc-700 shadow-sm"
+                    >
                       {/* Invoice sub-header */}
                       <div className="bg-zinc-900/60 px-6 py-3 border-b border-zinc-800 flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -341,7 +374,9 @@ export const BillingDetailDrawer = ({
                         <div className="flex items-center gap-3">
                           {inv.issuedAt && (
                             <span className="text-xs text-zinc-500">
-                              {new Date(inv.issuedAt).toLocaleDateString("vi-VN")}
+                              {new Date(inv.issuedAt).toLocaleDateString(
+                                "vi-VN",
+                              )}
                             </span>
                           )}
                           <span className="font-semibold text-sm text-gray-200">
@@ -355,19 +390,31 @@ export const BillingDetailDrawer = ({
                         <table className="min-w-full divide-y divide-zinc-800/60">
                           <thead>
                             <tr className="bg-zinc-900/50">
-                              <th className="px-6 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]" style={{ width: '60px' }}>
+                              <th
+                                className="px-6 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]"
+                                style={{ width: "60px" }}
+                              >
                                 No.
                               </th>
                               <th className="px-6 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]">
                                 Item
                               </th>
-                              <th className="px-6 py-3 text-center text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]" style={{ width: '80px' }}>
+                              <th
+                                className="px-6 py-3 text-center text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]"
+                                style={{ width: "80px" }}
+                              >
                                 Qty
                               </th>
-                              <th className="px-6 py-3 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]" style={{ width: '140px' }}>
+                              <th
+                                className="px-6 py-3 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]"
+                                style={{ width: "140px" }}
+                              >
                                 Price
                               </th>
-                              <th className="px-6 py-3 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]" style={{ width: '150px' }}>
+                              <th
+                                className="px-6 py-3 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]"
+                                style={{ width: "150px" }}
+                              >
                                 Total
                               </th>
                             </tr>
@@ -375,7 +422,10 @@ export const BillingDetailDrawer = ({
                           <tbody className="divide-y divide-zinc-800/40">
                             {items.length > 0 ? (
                               items.map((item, itemIdx) => (
-                                <tr key={itemIdx} className="hover:bg-zinc-800/30 transition-colors">
+                                <tr
+                                  key={itemIdx}
+                                  className="hover:bg-zinc-800/30 transition-colors"
+                                >
                                   <td className="px-6 py-3.5 text-sm text-zinc-500 font-mono">
                                     {itemIdx + 1}
                                   </td>
@@ -395,8 +445,33 @@ export const BillingDetailDrawer = ({
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={5} className="px-6 py-6 text-center text-sm text-zinc-600 italic">
+                                <td
+                                  colSpan={5}
+                                  className="px-6 py-6 text-center text-sm text-zinc-600 italic"
+                                >
                                   Đang tải chi tiết đơn hàng...
+                                </td>
+                              </tr>
+                            )}
+
+                            {/* Hiển thị Phí vận chuyển như 1 dòng riêng trong bảng (nếu có) */}
+                            {(inv.shippingFee ?? 0) > 0 && (
+                              <tr className="bg-amber-500/5 hover:bg-amber-500/10 transition-colors border-t border-amber-500/20">
+                                <td className="px-6 py-3.5 text-sm text-amber-500/50 font-mono italic">
+                                  #
+                                </td>
+                                <td className="px-6 py-3.5 text-sm text-amber-400 font-bold flex items-center gap-2">
+                                  <Truck size={14} className="text-amber-500" />{" "}
+                                  Phí vận chuyển
+                                </td>
+                                <td className="px-6 py-3.5 text-sm text-center text-zinc-500 font-semibold italic">
+                                  —
+                                </td>
+                                <td className="px-6 py-3.5 text-sm text-right text-zinc-500 italic">
+                                  —
+                                </td>
+                                <td className="px-6 py-3.5 text-sm text-right text-amber-400 font-bold">
+                                  {inv.shippingFee?.toLocaleString("vi-VN")} ₫
                                 </td>
                               </tr>
                             )}
@@ -418,7 +493,10 @@ export const BillingDetailDrawer = ({
                     </span>
                   </div>
                   <span className="text-2xl font-black text-amber-500 tracking-tight">
-                    {detail.totalAmount?.toLocaleString("vi-VN")} <span className="text-base font-bold text-amber-600">VND</span>
+                    {detail.totalAmount?.toLocaleString("vi-VN")}{" "}
+                    <span className="text-base font-bold text-amber-600">
+                      VND
+                    </span>
                   </span>
                 </div>
               </div>
@@ -459,14 +537,24 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 >
-                  <option value="" disabled className="bg-zinc-900 text-gray-500">
+                  <option
+                    value=""
+                    disabled
+                    className="bg-zinc-900 text-gray-500"
+                  >
                     Select Method
                   </option>
-                  <option value="1" className="bg-zinc-900">CASH</option>
-                  <option value="2" className="bg-zinc-900">BANK_TRANSFER</option>
+                  <option value="1" className="bg-zinc-900">
+                    CASH
+                  </option>
+                  <option value="2" className="bg-zinc-900">
+                    BANK_TRANSFER
+                  </option>
                 </select>
                 {formErrors.paymentMethodId && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.paymentMethodId}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {formErrors.paymentMethodId}
+                  </p>
                 )}
               </div>
               <div>
@@ -484,7 +572,9 @@ export const BillingDetailDrawer = ({
                   }
                 />
                 {formErrors.transactionReference && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.transactionReference}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {formErrors.transactionReference}
+                  </p>
                 )}
               </div>
               <div>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <!-- Gold Gradient for Steak Top -->
+    <linearGradient id="steakGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="30%" stop-color="#f59e0b" />
+      <stop offset="60%" stop-color="#bd6c09" />
+      <stop offset="100%" stop-color="#451a03" />
+    </linearGradient>
+    
+    <!-- Dark Gold for Steak Base -->
+    <linearGradient id="steakDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#92400e" />
+      <stop offset="100%" stop-color="#2c0b02" />
+    </linearGradient>
+
+    <!-- Flame Gradient -->
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ea580c" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#fef08a" />
+    </linearGradient>
+    
+    <linearGradient id="flameInner" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#fffbeb" />
+    </linearGradient>
+
+    <!-- Glow base -->
+    <radialGradient id="glowBase" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d97706" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#d97706" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Bottom Shadow/Glow -->
+  <ellipse cx="100" cy="165" rx="85" ry="15" fill="url(#glowBase)" />
+
+  <!-- Flames Behind -->
+  <!-- Middle Flame -->
+  <path d="M100 20 C115 45 135 60 135 95 C135 120 120 135 100 135 C80 135 65 120 65 95 C65 65 85 45 100 20 Z" fill="url(#flameGrad)" />
+  <path d="M100 40 C108 55 120 70 120 95 C120 110 110 125 100 125 C90 125 80 110 80 95 C80 70 92 55 100 40 Z" fill="url(#flameInner)" />
+  
+  <!-- Left Flame -->
+  <path d="M70 45 C75 60 85 75 85 95 C85 110 75 120 65 120 C55 120 45 110 45 95 C45 75 55 60 70 45 Z" fill="url(#flameGrad)" />
+  <path d="M70 60 C73 70 78 80 78 95 C78 105 70 110 65 110 C60 110 55 105 55 95 C55 80 60 70 70 60 Z" fill="url(#flameInner)" />
+
+  <!-- Right Flame -->
+  <path d="M130 45 C140 60 155 75 155 95 C155 110 145 120 135 120 C125 120 115 110 115 95 C115 75 125 60 130 45 Z" fill="url(#flameGrad)" />
+  <path d="M130 60 C135 70 145 80 145 95 C145 105 140 110 135 110 C130 110 125 105 125 95 C125 80 128 70 130 60 Z" fill="url(#flameInner)" />
+
+  <!-- Black Steak Body -->
+  <path d="M25 125 V140 C25 160 175 160 175 140 V125 Z" fill="#18181b"/>
+  <!-- Dark Gold Lower Trim (Thickness) -->
+  <path d="M28 130 V142 C28 158 172 158 172 142 V130 Z" fill="url(#steakDark)"/>
+  <path d="M30 132 C30 155 170 155 170 132 Z" fill="#09090b" opacity="0.6"/>
+
+  <!-- Top Golden Steak Surface -->
+  <ellipse cx="100" cy="120" rx="75" ry="25" fill="url(#steakGold)"/>
+  
+  <!-- Outer Rim border of the steak to give it a 3D pop -->
+  <ellipse cx="100" cy="120" rx="73" ry="23" fill="none" stroke="#fef08a" stroke-width="2" opacity="0.5"/>
+
+  <!-- Grill Marks (Black/Dark Brown) -->
+  <path d="M 45 115 C 65 110 90 120 135 135" stroke="#2c0b02" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M 60 105 C 80 100 110 110 155 125" stroke="#2c0b02" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+  <path d="M 80 95 C 100 90 130 100 165 115" stroke="#2c0b02" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Grill Highlight Glares (Yellow/White) next to the grill marks -->
+  <path d="M 47 112 C 67 107 92 117 136 132" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M 62 102 C 82 97 112 107 156 122" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M 82 92 C 102 87 132 97 166 112" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+</svg>

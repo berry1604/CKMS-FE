@@ -28,10 +28,19 @@ export interface ConfirmDeliveryRequest {
     receivedQuantities?: Record<number, number>;
 }
 
+export interface ShipmentStop {
+    stopId: number;
+    storeId: number;
+    storeName: string;
+    storePhone?: string;
+    storeOrderIds: number[];
+}
+
 export interface ShipmentResponse {
     shipmentId: number;
     storeId?: number; // Might be null for multi-drop
     storeName?: string; // Might be null for multi-drop
+    storePhone?: string;
     productionPlanId: number;
     status: ShipmentStatus;
 
@@ -56,6 +65,7 @@ export interface ShipmentResponse {
     shippedAt?: string;
     deliveredAt?: string;
     storeOrderIds?: number[];
+    stops?: ShipmentStop[];
 }
 
 export interface ShipmentQueryParams {

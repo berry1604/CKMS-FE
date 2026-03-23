@@ -19,12 +19,13 @@ export interface OrderDetailResponse {
     kitchenStockQuantity?: number;
 }
 
-export type OrderStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'SCHEDULED' | 'LOCKED' | 'ALLOCATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CONFIRMED' | 'REJECTED';
+export type OrderStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'SCHEDULED' | 'LOCKED' | 'ALLOCATED' | 'PREPARING' | 'READY' | 'IN_TRANSIT' | 'DELIVERED' | 'CONFIRMED' | 'REJECTED';
 
 export interface StoreOrderResponse {
     orderId: number;
     storeId: number;
     storeName?: string;
+    storePhone?: string;
     createdByUserId: number;
     orderDate: string; // ISO 8601 string
     status: OrderStatus;

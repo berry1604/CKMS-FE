@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Truck, Filter, Eye, Plus, Search, Calendar,
     MapPin, User, Package, Clock,
@@ -14,14 +14,19 @@ import type { ShipmentResponse, ShipmentStatus } from '../../types/shipment';
 import { ShipmentDetailDrawer } from './ShipmentDetailDrawer';
 import { toast } from 'react-hot-toast';
 import { cn } from '../../utils/classNames';
+import { useAuth } from '../../hooks/useAuth';
 
 type FilterStatus = 'all' | ShipmentStatus;
 
 export const ShipmentList = () => {
+    const { user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [shipments, setShipments] = useState<ShipmentResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedShipment, setSelectedShipment] = useState<ShipmentResponse | null>(null);
+
+    const isKitchenStaff = user?.role?.toUpperCase().includes('KITCHEN_STAFF');
 
     // Filters & Pagination
     const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
@@ -32,7 +37,7 @@ export const ShipmentList = () => {
     const fetchShipments = useCallback(async () => {
         setIsLoading(true);
         try {
-            const params: any = { page, size: 10 };
+            const params: any = { page, size: 10, sort: 'shipmentId,desc' };
             if (statusFilter !== 'all') {
                 params.status = statusFilter;
             }
@@ -49,6 +54,16 @@ export const ShipmentList = () => {
     useEffect(() => {
         fetchShipments();
     }, [fetchShipments]);
+
+    // Handle auto-create from Allocation Matrix
+    useEffect(() => {
+        if (location.state?.autoCreate) {
+            navigate('/shipment/create', { 
+                state: location.state,
+                replace: true // Replace current entry so back button works correctly
+            });
+        }
+    }, [location.state, navigate]);
 
     useEffect(() => {
         setPage(0);
@@ -274,12 +289,14 @@ export const ShipmentList = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Button
-                        onClick={() => navigate('/shipment/create')}
-                        className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2"
-                    >
-                        <Plus size={18} strokeWidth={3} /> Tạo đơn mới
-                    </Button>
+                    {!isKitchenStaff && (
+                        <Button
+                            onClick={() => navigate('/shipment/create')}
+                            className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-amber-900/20 border-0 flex items-center gap-2"
+                        >
+                            <Plus size={18} strokeWidth={3} /> Tạo đơn mới
+                        </Button>
+                    )}
                 </div>
             </div>
 
