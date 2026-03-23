@@ -140,6 +140,12 @@ export const navigation: NavigationItem[] = [
                 permission: PERMISSIONS.MATERIAL_INVENTORY,
             },
             {
+                name: 'Bếp trung tâm',
+                href: '/kitchens',
+                icon: ChefHat,
+                permission: PERMISSIONS.MANAGE_KITCHEN_CONFIG,
+            },
+            {
                 name: 'Sản phẩm & Menu',
                 href: '/products',
                 icon: Package,

@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { KitchenResponse, KitchenUpdateRequest } from '../types/kitchen';
+import type { KitchenResponse, KitchenUpdateRequest, KitchenCreateRequest } from '../types/kitchen';
 import type { ApiResponse } from '../types/product';
 
 export const kitchenApi = {
@@ -30,7 +30,7 @@ export const kitchenApi = {
     /**
      * POST /kitchens
      */
-    createKitchen: async (data: KitchenUpdateRequest): Promise<ApiResponse<KitchenResponse>> => {
+    createKitchen: async (data: KitchenCreateRequest): Promise<ApiResponse<KitchenResponse>> => {
         const response = await axiosClient.post<ApiResponse<KitchenResponse>>('/kitchens', data);
         return response.data;
     },
