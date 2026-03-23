@@ -21,7 +21,8 @@ export type Permission =
     | 'ROLE_PERMISSION_MANAGEMENT'
     | 'STORE_MANAGEMENT'
     | 'ORGANIZE_PRODUCTION'
-    | 'EXECUTE_PRODUCTION';
+    | 'EXECUTE_PRODUCTION'
+    | 'MANAGE_KITCHEN_CONFIG';
 
 export const PERMISSIONS: Record<Permission, Permission> = {
     CREATE_ORDER: 'CREATE_ORDER',
@@ -43,6 +44,7 @@ export const PERMISSIONS: Record<Permission, Permission> = {
     STORE_MANAGEMENT: 'STORE_MANAGEMENT',
     ORGANIZE_PRODUCTION: 'ORGANIZE_PRODUCTION',
     EXECUTE_PRODUCTION: 'EXECUTE_PRODUCTION',
+    MANAGE_KITCHEN_CONFIG: 'MANAGE_KITCHEN_CONFIG',
 };
 
 // Limit roles here to the ones we actually map permissions for
@@ -94,6 +96,7 @@ export const ROLE_PERMISSIONS: Record<MappedRole, Permission[]> = {
         PERMISSIONS.REVENUE_REPORTS,
         PERMISSIONS.MATERIAL_INVENTORY,
         PERMISSIONS.PRODUCTION_SCHEDULE,
+        PERMISSIONS.MANAGE_KITCHEN_CONFIG,
     ],
     ADMIN: [
         PERMISSIONS.USER_MANAGEMENT,
@@ -101,6 +104,7 @@ export const ROLE_PERMISSIONS: Record<MappedRole, Permission[]> = {
         PERMISSIONS.STORE_MANAGEMENT,
         PERMISSIONS.BILLING_MANAGEMENT,
         PERMISSIONS.PRODUCTION_SCHEDULE,
+        PERMISSIONS.MANAGE_KITCHEN_CONFIG,
     ],
 };
 

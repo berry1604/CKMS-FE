@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { CreateUserRequest, CreateUserResponse, UserResponse, GetUsersParams } from '../types/user';
+import type { CreateUserRequest, CreateUserResponse, UserResponse, GetUsersParams, UserUpdateRequest } from '../types/user';
 import type { ApiResponse, Page } from '../types/product';
 
 export const userService = {
@@ -25,8 +25,8 @@ export const userService = {
         return response.data;
     },
 
-    updateProfile: async (data: Record<string, any>): Promise<ApiResponse<UserResponse>> => {
-        const response = await axiosClient.put<ApiResponse<UserResponse>>('/users/me', data);
+    updateProfile: async (id: number, data: UserUpdateRequest): Promise<ApiResponse<UserResponse>> => {
+        const response = await axiosClient.put<ApiResponse<UserResponse>>(`/users/${id}`, data);
         return response.data;
     },
 

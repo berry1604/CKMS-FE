@@ -12,6 +12,8 @@ export interface User {
     phone?: string;
     address?: string;
     bio?: string;
+    latitude?: number;
+    longitude?: number;
     joinDate?: string;
     isActive?: boolean;
     status?: UserStatus;
@@ -59,6 +61,17 @@ export interface GetUsersParams {
     status?: string;
     search?: string;
     storeId?: number;
+}
+
+export interface UserUpdateRequest {
+    fullName?: string;
+    phone?: string;
+    address?: string;
+    bio?: string;
+    latitude?: number;
+    longitude?: number;
+    password?: string;
+    email?: string;
 }
 
 export interface AuthState {

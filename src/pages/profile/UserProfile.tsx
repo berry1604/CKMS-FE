@@ -89,7 +89,7 @@ export const UserProfile = () => {
                 updateData.password = data.password;
             }
 
-            const response = await userService.updateProfile(updateData);
+            const response = await userService.updateProfile(Number(user.id), updateData);
             
             if (response) {
                 // Update global store
