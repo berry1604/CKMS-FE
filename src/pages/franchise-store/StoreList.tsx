@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Store as StoreIcon, Edit2, Trash2, ChevronRight, User, MapPin } from 'lucide-react';
+import { Plus, Search, Store as StoreIcon, Edit2, Trash2, ChevronRight, User, MapPin, Navigation } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import type { StoreResponse } from '../../types/store';
 import { storeApi } from '../../services/store.api';
@@ -248,6 +248,11 @@ export const StoreList = () => {
                                                     <div className="flex items-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">
                                                         <MapPin size={12} className="mr-1.5 text-amber-500 opacity-50" />
                                                         {store.address}
+                                                    </div>
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-800"></div>
+                                                    <div className="flex items-center text-[9px] font-bold text-zinc-600 uppercase tracking-tighter italic">
+                                                        <Navigation size={10} className="mr-1 text-amber-500/40 rotate-45" />
+                                                        Vĩ: {store.latitude?.toFixed(4) || '0.0000'} , Kinh: {store.longitude?.toFixed(4) || '0.0000'}
                                                     </div>
                                                     <div className="w-1.5 h-1.5 rounded-full bg-zinc-800"></div>
                                                     <div className="flex items-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">

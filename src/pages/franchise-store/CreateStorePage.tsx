@@ -153,7 +153,7 @@ export default function CreateStorePage() {
                         <div className="space-y-1 md:col-span-2">
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium text-gray-300 block mb-2">Vĩ độ (Latitude) *</label>
+                                    <label className="text-sm font-medium text-gray-300 block mb-2">Vĩ độ *</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Navigation size={16} className="text-gray-400 rotate-45" />
@@ -170,7 +170,7 @@ export default function CreateStorePage() {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium text-gray-300 block mb-2">Kinh độ (Longitude) *</label>
+                                    <label className="text-sm font-medium text-gray-300 block mb-2">Kinh độ *</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <Navigation size={16} className="text-gray-400 -rotate-45" />

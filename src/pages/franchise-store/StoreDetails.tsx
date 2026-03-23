@@ -13,7 +13,8 @@ import {
     ExternalLink,
     Store as StoreIcon,
     Shield,
-    Loader2
+    Loader2,
+    Navigation
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { storeApi } from '../../services/store.api';
@@ -187,10 +188,26 @@ export const StoreDetails = () => {
                                     <MapPin size={16} className="text-amber-500/60 mt-0.5" />
                                     <span className="text-sm font-medium leading-relaxed">{store.address || manager?.address || 'Chưa cập nhật'}</span>
                                 </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/5 text-stone-500 hover:text-stone-300 transition-all">
+                                        <Navigation size={14} className="text-amber-500/40 rotate-45" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] uppercase font-black tracking-widest opacity-40">Vĩ độ</span>
+                                            <span className="text-xs font-mono">{store.latitude || '0.0'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/5 text-stone-500 hover:text-stone-300 transition-all">
+                                        <Navigation size={14} className="text-amber-500/40 -rotate-45" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] uppercase font-black tracking-widest opacity-40">Kinh độ</span>
+                                            <span className="text-xs font-mono">{store.longitude || '0.0'}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div >
+                </div>
 
 
                 {/* System Stats / Overview Card */}
