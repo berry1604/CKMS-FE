@@ -36,6 +36,7 @@ export const CreateShipment = () => {
         ahamoveServiceId: 'SGN-BIKE' as AhamoveServiceIdType,
         productionPlanId: '',
         remarks: '',
+        shippingFee: '',
         dropPoints: [
             { id: Date.now(), storeId: '', storeOrderIds: [] as number[], remarks: '' }
         ]
@@ -138,7 +139,8 @@ export const CreateShipment = () => {
                 productionPlanId,
                 storeId: Number(primaryDropPoint.storeId),
                 storeOrderIds: primaryDropPoint.storeOrderIds,
-                remarks: form.remarks || undefined, 
+                remarks: form.remarks || undefined,
+                shippingFee: form.shippingFee ? Number(form.shippingFee) : undefined,
                 dropPoints: validDropPoints.map(dp => ({
                     storeId: Number(dp.storeId),
                     storeOrderIds: dp.storeOrderIds,
@@ -464,6 +466,22 @@ export const CreateShipment = () => {
                                 );
                             })}
                         </div>
+
+                        <div className="space-y-3 md:col-span-2">
+                            <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Phí vận chuyển (VNĐ) — Bỏ trống nếu qua AhaMove</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1000"
+                                    placeholder="Ví dụ: 50000"
+                                    className="w-full pl-12 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#DE802B]/20 focus:border-[#DE802B]/50 transition-all placeholder:text-zinc-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    value={form.shippingFee}
+                                    onChange={e => setForm(prev => ({ ...prev, shippingFee: e.target.value }))}
+                                />
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm font-black">₫</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -482,8 +500,15 @@ export const CreateShipment = () => {
                                     <span className="text-sm font-black text-zinc-200">{getTotalOrdersSelected()}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-zinc-800/50">
-                                    <span className="text-[11px] font-bold text-zinc-600 uppercase">Cước bổ sung</span>
-                                    <span className="text-[11px] font-black text-zinc-400 italic">Tính sau khi tạo</span>
+                                    <span className="text-[11px] font-bold text-zinc-600 uppercase">Phí vận chuyển</span>
+                                    <span className={cn(
+                                        "text-[11px] font-black",
+                                        form.shippingFee ? "text-[#DE802B]" : "text-zinc-400 italic"
+                                    )}>
+                                        {form.shippingFee
+                                            ? `${Number(form.shippingFee).toLocaleString()}đ`
+                                            : 'AhaMove tự tính'}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center py-3">
                                     <span className="text-[11px] font-bold text-zinc-600 uppercase">Đối tác VC</span>
