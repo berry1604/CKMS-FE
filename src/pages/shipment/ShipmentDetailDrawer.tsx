@@ -14,6 +14,7 @@ import { shipmentApi } from '../../services/shipment.api';
 import { storeOrderApi } from '../../services/storeOrderApi';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import { cn } from '../../utils/classNames';
+import { useAuth } from '../../hooks/useAuth';
 import type { ShipmentResponse } from '../../types/shipment';
 
 interface ShipmentDetailDrawerProps {
@@ -31,6 +32,7 @@ export const ShipmentDetailDrawer = ({
     onStatusAction,
     onRefresh
 }: ShipmentDetailDrawerProps) => {
+    const { user } = useAuth();
     const [aggregatedItems, setAggregatedItems] = useState<{ productId: number, productName: string, quantity: number }[]>([]);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
@@ -75,10 +77,10 @@ export const ShipmentDetailDrawer = ({
                     }
 
                     // Get role to avoid sending order requests as ADMIN (which throw 403)
-                    const role = localStorage.getItem('role') || sessionStorage.getItem('role');
+                    const userRoleStr = typeof user?.role === 'string' ? user.role.replace('ROLE_', '') : '';
 
                     // Fallback: If not loaded from plan, try loading from individual orders
-                    if (!loadedFromPlan && role !== 'ADMIN') {
+                    if (!loadedFromPlan && userRoleStr !== 'ADMIN') {
                         try {
                             const orderIds = new Set<number>();
                             if (fullShipment.stops && fullShipment.stops.length > 0) {
@@ -130,7 +132,7 @@ export const ShipmentDetailDrawer = ({
         } else {
             setAggregatedItems([]);
         }
-    }, [isOpen, shipment?.shipmentId]);
+    }, [isOpen, shipment?.shipmentId, user?.role]);
 
     const handleCopyAhamoveId = () => {
         if (shipment?.ahamoveOrderId) {

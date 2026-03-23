@@ -28,7 +28,7 @@ export const useAppStore = create<AppStore>()(
                 isAuthenticated: state.isAuthenticated,
                 token: state.token
             }),
-            storage: createJSONStorage(() => sessionStorage),
+            storage: createJSONStorage(() => localStorage),
         }
     )
 );

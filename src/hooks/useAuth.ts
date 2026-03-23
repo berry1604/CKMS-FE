@@ -33,7 +33,7 @@ export const useAuth = () => {
 
             const expiry = expiresIn || accessTokenExpiresIn;
             if (expiry) {
-                sessionStorage.setItem('expiresIn', String(expiry));
+                localStorage.setItem('expiresIn', String(expiry));
             }
 
             // Synthesize user from LoginResponse: Use roles array from backend
@@ -74,16 +74,16 @@ export const useAuth = () => {
 
     const handleLogout = async () => {
         try {
-            const refreshToken = sessionStorage.getItem('refreshToken');
+            const refreshToken = localStorage.getItem('refreshToken');
             if (refreshToken) {
-                await authApi.logout(refreshToken);
+                await authApi.logout();
             }
         } catch (error) {
             console.error('Logout error', error);
         } finally {
             // Include cleanup even if API call fails
-            sessionStorage.removeItem('accessToken');
-            sessionStorage.removeItem('refreshToken');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
             logout();
         }
     };
@@ -98,7 +98,7 @@ export const useAuth = () => {
         let authoritiesArr = user?.authorities || [];
 
         // Fallback: extract role directly from token if it's missing in store
-        const token = sessionStorage.getItem('accessToken');
+        const token = localStorage.getItem('accessToken');
         if (token) {
             try {
                 const base64Url = token.split('.')[1];
