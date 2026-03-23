@@ -373,7 +373,7 @@ export const OrderApproval = () => {
               {total}
             </span>
             <span className="text-[8px] text-zinc-600 font-black uppercase tracking-widest leading-none">
-              ĐV
+              PHẦN
             </span>
           </div>
         );
