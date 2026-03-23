@@ -38,7 +38,7 @@ export const DispatchDashboard = () => {
         try {
             // Since /dispatch/suggest is unavailable, we calculate on Frontend
             const [ordersRes, stockRes] = await Promise.all([
-                storeOrderApi.getAllOrders({ status: 'APPROVED' }),
+                storeOrderApi.getAllOrders({ status: 'APPROVED', size: 1000 }),
                 kitchenInventoryApi.getWarehouseStock(1)
             ]);
 
