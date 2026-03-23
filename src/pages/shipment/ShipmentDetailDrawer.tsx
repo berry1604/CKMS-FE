@@ -11,6 +11,8 @@ import { Badge } from '../../components/ui/Badge';
 import { toast } from 'react-hot-toast';
 import { productionPlanApi } from '../../services/productionPlan.api';
 import { shipmentApi } from '../../services/shipment.api';
+import { storeOrderApi } from '../../services/storeOrderApi';
+import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import { cn } from '../../utils/classNames';
 import type { ShipmentResponse } from '../../types/shipment';
 
@@ -37,18 +39,86 @@ export const ShipmentDetailDrawer = ({
             const loadData = async () => {
                 setIsLoadingDetails(true);
                 try {
-                    // Always try to get full shipment details first to ensure we have productionPlanId
+                    // Always try to get full shipment details first
                     const fullShipment = await shipmentApi.getShipmentById(shipment.shipmentId);
+                    
+                    const itemsMap = new Map<number, { productId: number, productName: string, quantity: number }>();
+                    let loadedFromPlan = false;
+                    
                     if (fullShipment.productionPlanId) {
-                        const plan = await productionPlanApi.getProductionPlanDetail(fullShipment.productionPlanId);
-                        if (plan.items) {
-                            setAggregatedItems(plan.items.map(item => ({
-                                productId: item.productId,
-                                productName: item.productName,
-                                quantity: item.plannedQuantity
-                            })));
+                        try {
+                            // Get plan just to extract the kitchenId (warehouseId)
+                            const plan = await productionPlanApi.getProductionPlanDetail(fullShipment.productionPlanId);
+                            
+                            if (plan && plan.kitchenId) {
+                                // Fetch stock from kitchen inventory API instead of taking from productplan directly
+                                const stockRes = await kitchenInventoryApi.getWarehouseStock(plan.kitchenId);
+                                const allStock = stockRes?.data || (stockRes as any) || [];
+                                
+                                // Filter stock by this shipment's productionPlanId
+                                const relevantStock = allStock.filter((s: any) => s.productionPlanId === fullShipment.productionPlanId);
+                                
+                                if (relevantStock && relevantStock.length > 0) {
+                                    relevantStock.forEach((item: any) => {
+                                        itemsMap.set(item.itemId || item.id, {
+                                            productId: item.itemId || item.id,
+                                            productName: item.itemName,
+                                            quantity: item.quantity
+                                        });
+                                    });
+                                    loadedFromPlan = true;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Could not load items from kitchen inventory stock", e);
                         }
                     }
+
+                    // Get role to avoid sending order requests as ADMIN (which throw 403)
+                    const role = localStorage.getItem('role') || sessionStorage.getItem('role');
+
+                    // Fallback: If not loaded from plan, try loading from individual orders
+                    if (!loadedFromPlan && role !== 'ADMIN') {
+                        try {
+                            const orderIds = new Set<number>();
+                            if (fullShipment.stops && fullShipment.stops.length > 0) {
+                                fullShipment.stops.forEach(stop => {
+                                    (stop.storeOrderIds || []).forEach(id => orderIds.add(id));
+                                });
+                            } else if (fullShipment.storeOrderIds) {
+                                fullShipment.storeOrderIds.forEach(id => orderIds.add(id));
+                            }
+                            
+                            // It's possible for multi-drop to have duplicate order IDs if data is strange, Set prevents that
+                            if (orderIds.size > 0) {
+                                const orderPromises = Array.from(orderIds).map(id => 
+                                    storeOrderApi.getOrderById(id).catch(() => null)
+                                );
+                                const orders = await Promise.all(orderPromises);
+                                
+                                orders.forEach(order => {
+                                    if (order && order.orderDetails) {
+                                        order.orderDetails.forEach((item: any) => {
+                                            const existing = itemsMap.get(item.productId);
+                                            if (existing) {
+                                                existing.quantity += item.quantity;
+                                            } else {
+                                                itemsMap.set(item.productId, {
+                                                    productId: item.productId,
+                                                    productName: item.productName,
+                                                    quantity: item.quantity
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.warn("Could not load items from store orders", e);
+                        }
+                    }
+
+                    setAggregatedItems(Array.from(itemsMap.values()));
                 } catch (error: any) {
                     console.error("Failed to fetch shipment details/items:", error);
                     toast.error("Không thể tải chi tiết món hàng");
