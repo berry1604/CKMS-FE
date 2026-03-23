@@ -157,6 +157,7 @@ export const CreateTaskPage = () => {
                                 <label className="block text-sm font-medium text-gray-300">Ngày sản xuất dự kiến</label>
                                 <input
                                     type="date"
+                                    min={new Date().toISOString().split('T')[0]}
                                     value={plannedDate}
                                     onChange={(e) => setPlannedDate(e.target.value)}
                                     className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-amber-500"

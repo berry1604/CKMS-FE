@@ -21,7 +21,7 @@ export const ReceiveShipment = () => {
         setIsLoading(true);
         try {
             // Fetch multiple pages or a large page size to ensure we get the store's shipments
-            const res = await shipmentApi.getShipments({ size: 100 });
+            const res = await shipmentApi.getShipments({ size: 100, sort: 'shipmentId,desc' });
             let data = res.content || [];
 
             // Filter by storeId

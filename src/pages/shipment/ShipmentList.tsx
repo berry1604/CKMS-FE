@@ -37,7 +37,7 @@ export const ShipmentList = () => {
     const fetchShipments = useCallback(async () => {
         setIsLoading(true);
         try {
-            const params: any = { page, size: 10 };
+            const params: any = { page, size: 10, sort: 'shipmentId,desc' };
             if (statusFilter !== 'all') {
                 params.status = statusFilter;
             }

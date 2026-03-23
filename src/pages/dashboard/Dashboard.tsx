@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { cloneElement, useEffect, useState } from 'react';
 import {
     DollarSign, ShoppingBag, Users, Activity, TrendingUp,
     AlertCircle, CheckCircle, Clock, Package, Truck, ChefHat,
@@ -114,11 +114,11 @@ export const Dashboard = () => {
                 } catch { /* permission not available */ }
             }
 
-            // --- Orders (all roles except KITCHEN_STAFF) ---
-            if (role !== 'KITCHEN_STAFF') {
+            // --- Orders (COORDINATOR, STORE_STAFF) ---
+            if (role === 'COORDINATOR' || role === 'STORE_STAFF') {
                 try {
                     let orderRes;
-                    if (role === 'ADMIN' || role === 'COORDINATOR') {
+                    if (role === 'COORDINATOR') {
                         orderRes = await storeOrderApi.getAllOrders({ size: 5, page: 0 });
                     } else {
                         orderRes = await storeOrderApi.getMyOrders({ size: 5, page: 0 });
@@ -145,8 +145,8 @@ export const Dashboard = () => {
                 } catch { /* ignore */ }
             }
 
-            // --- Shipments (ADMIN, COORDINATOR, KITCHEN_STAFF) ---
-            if (role === 'ADMIN' || role === 'COORDINATOR' || role === 'KITCHEN_STAFF') {
+            // --- Shipments (COORDINATOR, KITCHEN_STAFF) ---
+            if (role === 'COORDINATOR' || role === 'KITCHEN_STAFF') {
                 try {
                     const shipRes = await shipmentApi.getShipments({ size: 5, page: 0 });
                     newStats.pendingShipments = shipRes?.totalElements || 0;
@@ -163,13 +163,13 @@ export const Dashboard = () => {
             // --- Billing (ADMIN only) ---
             if (role === 'ADMIN') {
                 try {
-                    const billRes = await billingApi.getStatements({ size: 1 });
+                    const billRes = await billingApi.getStatements({ size: 1, page: 0 });
                     newStats.totalRevenue = billRes?.totalElements || 0;
                 } catch { /* ignore */ }
             }
 
-            // --- Production Plans (KITCHEN_STAFF, COORDINATOR, ADMIN) ---
-            if (role === 'KITCHEN_STAFF' || role === 'COORDINATOR' || role === 'ADMIN') {
+            // --- Production Plans (KITCHEN_STAFF, COORDINATOR) ---
+            if (role === 'KITCHEN_STAFF' || role === 'COORDINATOR') {
                 try {
                     const planRes = await productionPlanApi.getAllProductionPlans({ size: 1, page: 0 });
                     newStats.productionPlans = (planRes as any)?.totalElements || 0;
@@ -204,7 +204,7 @@ export const Dashboard = () => {
     }, []);
 
     const StatCard = ({
-        title, value, icon: Icon, colorClass, borderClass, trend, subtitle, onClick
+        title, value, icon: Icon, colorClass, borderClass, trend, subtitle, onClick, index = 1
     }: {
         title: string;
         value: string | number;
@@ -214,11 +214,14 @@ export const Dashboard = () => {
         trend?: string;
         subtitle?: string;
         onClick?: () => void;
+        index?: number;
     }) => (
         <Card
             onClick={onClick}
-            className={`relative overflow-hidden flex flex-col p-6 border-0 shadow-lg ${borderClass} bg-zinc-900/60 backdrop-blur-sm group hover:-translate-y-1 transition-all duration-300 ${onClick ? 'cursor-pointer' : ''}`}
+            className={`relative overflow-hidden flex flex-col p-6 border-0 shadow-2xl ${borderClass} bg-zinc-900/60 backdrop-blur-md group hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all duration-500 animate-slide-up-fade opacity-0 ${onClick ? 'cursor-pointer' : ''}`}
+            style={{ animationDelay: `${index * 100}ms` }}
         >
+            <div className={`absolute top-0 left-0 w-1 h-full opacity-50 group-hover:opacity-100 transition-opacity duration-300 ${colorClass}`}></div>
             <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full ${colorClass} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`}></div>
             <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className={`p-3 rounded-2xl ${colorClass} bg-opacity-10 text-white shadow-inner ring-1 ring-white/5`}>
@@ -377,13 +380,18 @@ export const Dashboard = () => {
             );
         }
 
-        return cards;
+        return cards.map((card, i) => cloneElement(card as React.ReactElement<any>, { index: i + 1 }));
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative">
+        <div className="space-y-8 relative">
             {/* Global Cinematic Backdrop */}
-            <div className="fixed inset-0 pointer-events-none z-[-1] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/5 via-zinc-950/80 to-zinc-950"></div>
+            <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/5 via-zinc-950/80 to-zinc-950"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-amber-600/10 blur-[120px] animate-float" style={{ animationDelay: '0s' }}></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-teal-600/10 blur-[120px] animate-float" style={{ animationDelay: '2s' }}></div>
+                <div className="absolute top-[20%] right-[20%] w-[25%] h-[25%] rounded-full bg-orange-600/10 blur-[100px] animate-float" style={{ animationDelay: '4s' }}></div>
+            </div>
 
             {/* Premium Header Section */}
             <div className="relative overflow-hidden rounded-[40px] border border-zinc-800/80 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] p-10 bg-zinc-950/40 backdrop-blur-3xl group">
@@ -403,7 +411,7 @@ export const Dashboard = () => {
                             {currentDate}
                         </div>
                         <div>
-                            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500 tracking-tighter mb-2 leading-tight">
+                            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-zinc-400 animate-gradient-xy tracking-tighter mb-2 leading-tight animate-slide-up-fade opacity-0" style={{ animationDelay: '100ms' }}>
                                 Chào mừng, {user?.name || 'Director'}
                             </h1>
                             <p className="text-zinc-500 text-sm font-medium tracking-wide">
@@ -483,13 +491,13 @@ export const Dashboard = () => {
                                 <button
                                     key={link.href}
                                     onClick={() => navigate(link.href)}
-                                    className="group relative flex flex-col items-center justify-center p-6 bg-zinc-900/50 rounded-[24px] border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-300 overflow-hidden"
-                                    style={{ '--glow-color': shadowColor } as React.CSSProperties}
+                                    className="group relative flex flex-col items-center justify-center p-6 bg-zinc-900/50 rounded-[24px] border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-500 overflow-hidden hover:scale-105 animate-slide-up-fade opacity-0"
+                                    style={{ '--glow-color': shadowColor, animationDelay: `${500 + (idx * 50)}ms` } as React.CSSProperties}
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--glow-color)] to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--glow-color)] to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
                                     <div 
-                                        className={`relative z-10 p-4 rounded-full bg-zinc-950 mb-3 group-hover:-translate-y-2 group-hover:scale-110 transition-all duration-500 ring-1 ring-zinc-800 shadow-inner group-hover:ring-zinc-600 ${textColor}`}
-                                        style={{ boxShadow: `0 0 20px var(--glow-color)` }}
+                                        className={`relative z-10 p-4 rounded-full bg-zinc-950 mb-3 group-hover:-translate-y-2 group-hover:scale-110 transition-all duration-500 ring-1 ring-zinc-800 shadow-[inset_0_2px_10px_rgba(255,255,255,0.05)] group-hover:ring-zinc-600 ${textColor}`}
+                                        style={{ boxShadow: `0 0 25px var(--glow-color)` }}
                                     >
                                         <Icon size={24} className="opacity-90 drop-shadow-lg" />
                                     </div>
@@ -513,9 +521,10 @@ export const Dashboard = () => {
                             {recentOrders.map((order) => (
                                 <div
                                     key={order.id}
-                                    className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/80 transition-all duration-300 border border-zinc-800/50 hover:border-orange-500/30 cursor-pointer hover:shadow-[0_10px_30px_rgba(249,115,22,0.1)]"
+                                    className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/80 transition-all duration-500 border border-zinc-800/50 hover:border-orange-500/30 cursor-pointer hover:shadow-[0_10px_30px_rgba(249,115,22,0.1)] hover:translate-x-2 relative overflow-hidden"
                                     onClick={() => navigate('/orders')}
                                 >
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-[0_0_10px_rgba(249,115,22,0.8)]"></div>
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-colors shadow-inner">
                                             <Activity size={20} className="text-zinc-500 group-hover:text-orange-500 transition-colors" />
@@ -558,9 +567,10 @@ export const Dashboard = () => {
                             {recentShipments.map((ship) => (
                                 <div
                                     key={ship.id}
-                                    className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/80 transition-all duration-300 border border-zinc-800/50 hover:border-cyan-500/30 cursor-pointer hover:shadow-[0_10px_30px_rgba(6,182,212,0.1)]"
+                                    className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/80 transition-all duration-500 border border-zinc-800/50 hover:border-cyan-500/30 cursor-pointer hover:shadow-[0_10px_30px_rgba(6,182,212,0.1)] hover:translate-x-2 relative overflow-hidden"
                                     onClick={() => navigate('/shipment')}
                                 >
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-[0_0_10px_rgba(6,182,212,0.8)]"></div>
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 transition-colors shadow-inner">
                                             <Truck size={20} className="text-zinc-500 group-hover:text-cyan-500 transition-colors" />
