@@ -1,9 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-<<<<<<< HEAD
-import { CreditCard, Building2, Calendar, X, Navigation } from "lucide-react";
-=======
-import { CreditCard, Building2, Calendar, X, Truck } from "lucide-react";
->>>>>>> origin/develop
+import { CreditCard, Building2, Calendar, X, Navigation, Truck } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";

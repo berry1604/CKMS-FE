@@ -117,6 +117,7 @@ export const DispatchDashboard = () => {
             // Empty array means auto-calculate on backend.
             
             await productionPlanApi.createProductionPlan({
+                kitchenId: 1,
                 plannedDate,
                 storeOrderIds: [] // Backend handles auto logic when empty
             });
