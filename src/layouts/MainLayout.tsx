@@ -56,7 +56,7 @@ export const navigation: NavigationItem[] = [
     },
     // SECTION: FRANCHISE STORE
     {
-        category: 'Workspace: Cửa hàng',
+        category: 'Cửa hàng',
         headerPermission: [PERMISSIONS.CREATE_ORDER, PERMISSIONS.VIEW_MY_ORDERS, PERMISSIONS.RECEIVE_SHIPMENT],
         items: [
             {
@@ -89,7 +89,7 @@ export const navigation: NavigationItem[] = [
     },
     // SECTION: COORDINATOR
     {
-        category: 'Workspace: Điều phối',
+        category: 'Điều phối',
         headerPermission: [PERMISSIONS.APPROVE_ORDERS, PERMISSIONS.PRODUCTION_PLANNING, PERMISSIONS.ALLOCATION_MANAGEMENT, PERMISSIONS.CREATE_SHIPMENT],
         items: [
             {
@@ -130,7 +130,7 @@ export const navigation: NavigationItem[] = [
     },
     // SECTION: MANAGER
     {
-        category: 'Workspace: Quản lý',
+        category: 'Quản lý',
         headerPermission: [PERMISSIONS.CATEGORY_MANAGEMENT, PERMISSIONS.BILLING_MANAGEMENT, PERMISSIONS.REVENUE_REPORTS, PERMISSIONS.PRODUCTION_SCHEDULE],
         items: [
             {
@@ -197,7 +197,7 @@ export const navigation: NavigationItem[] = [
     },
     // SECTION: ADMIN
     {
-        category: 'Workspace: Hệ thống',
+        category: 'Hệ thống',
         items: [
             {
                 name: 'Người dùng',
@@ -233,30 +233,20 @@ export const MainLayout: React.FC = () => {
         navigate('/login');
     };
 
-    // Filter navigation items to only those the user has permission for and not hidden
-    const filteredNavigation = navigation
-        .map(nav => {
-            if ('category' in nav) {
-                let categoryName = nav.category;
-
-                // Dynamic category name for Kitchen Staff: "Điều phối" -> "Bếp trung tâm"
-                const userRole = String(user?.role || '').toUpperCase();
-                if (categoryName === 'Workspace: Điều phối' && userRole.includes('KITCHEN_STAFF')) {
-                    categoryName = 'Workspace: Bếp trung tâm';
-                }
-
-                const visibleItems = nav.items.filter(item => {
-                    const isPermissionOk = !item.permission || hasPermission(user, item.permission);
-                    const isNotHidden = typeof item.hidden === 'function' ? !item.hidden(user) : !item.hidden;
-                    return isPermissionOk && isNotHidden;
-                });
-                return visibleItems.length > 0 ? { ...nav, category: categoryName, items: visibleItems } : null;
-            }
-            const isPermissionOk = !nav.permission || hasPermission(user, nav.permission);
-            const isNotHidden = typeof nav.hidden === 'function' ? !nav.hidden(user) : !nav.hidden;
-            return isPermissionOk && isNotHidden ? nav : null;
-        })
-        .filter((item): item is NavigationItem => item !== null);
+    // Filter and flatten navigation items
+    const flattenedNavigation = navigation.reduce((acc: NavItem[], nav) => {
+        if ('category' in nav) {
+            const visibleItems = nav.items.filter(item => {
+                const isPermissionOk = !item.permission || hasPermission(user, item.permission);
+                const isNotHidden = typeof item.hidden === 'function' ? !item.hidden(user) : !item.hidden;
+                return isPermissionOk && isNotHidden;
+            });
+            return [...acc, ...visibleItems];
+        }
+        const isPermissionOk = !nav.permission || hasPermission(user, nav.permission);
+        const isNotHidden = typeof nav.hidden === 'function' ? !nav.hidden(user) : !nav.hidden;
+        return isPermissionOk && isNotHidden ? [...acc, nav] : acc;
+    }, []);
 
     return (
         <div className="min-h-screen bg-zinc-950 flex">
@@ -311,82 +301,61 @@ export const MainLayout: React.FC = () => {
                     </button>
                 )}
 
-                <nav className="flex-1 p-4 space-y-6 overflow-y-auto mt-4 no-scrollbar">
-                    {filteredNavigation.map((group) => {
-                        const isGroup = 'category' in group;
-                        const items = isGroup ? group.items : [group];
-                        const showHeader = isGroup && !isCollapsed && (!group.headerPermission || (Array.isArray(group.headerPermission) 
-                            ? group.headerPermission.some(p => hasPermission(user, p)) 
-                            : hasPermission(user, group.headerPermission)));
-
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto mt-4 no-scrollbar">
+                    {flattenedNavigation.map((item) => {
+                        const Icon = item.icon;
                         return (
-                            <div key={isGroup ? group.category : group.name} className="space-y-2">
-                                {showHeader && (
-                                    <p className="px-4 text-[9px] font-black text-stone-600 uppercase tracking-[0.3em] mb-4 italic opacity-80 flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500/30"></span>
-                                        {group.category}
-                                    </p>
+                            <NavLink
+                                key={item.href}
+                                id={`nav-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                                to={item.href}
+                                end={true}
+                                title={isCollapsed ? item.name : undefined}
+                                className={({ isActive }) =>
+                                    cn(
+                                        'flex items-center px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300 group relative overflow-hidden',
+                                        isCollapsed ? 'justify-center mx-1' : '',
+                                        isActive
+                                            ? 'bg-gradient-to-r from-amber-500/10 to-transparent text-amber-500 shadow-[inset_1px_1px_1px_rgba(255,255,255,0.02)]'
+                                            : 'text-stone-500 hover:text-stone-200 hover:bg-white/[0.03]'
+                                    )
+                                }
+                            >
+                                {/* Active Background Glow */}
+                                <NavLink
+                                    to={item.href}
+                                    end={true}
+                                    className={({ isActive }) =>
+                                        isActive
+                                            ? "absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-100 transition-opacity duration-700"
+                                            : "absolute inset-0 opacity-0"
+                                    }
+                                />
+
+                                <Icon className={cn(
+                                    "h-5 w-5 shrink-0 transition-all duration-500 relative z-10",
+                                    "group-hover:scale-110 group-active:scale-95",
+                                    !isCollapsed && "mr-3"
+                                )} />
+
+                                {!isCollapsed && (
+                                    <span className="flex-1 truncate relative z-10 tracking-tight">{item.name}</span>
                                 )}
 
-                                <div className="space-y-1">
-                                    {items.map((item) => {
-                                        const Icon = item.icon;
-                                        return (
-                                            <NavLink
-                                                key={item.href}
-                                                id={`nav-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                                                to={item.href}
-                                                end={true}
-                                                title={isCollapsed ? item.name : undefined}
-                                                className={({ isActive }) =>
-                                                    cn(
-                                                        'flex items-center px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300 group relative overflow-hidden',
-                                                        isCollapsed ? 'justify-center mx-1' : '',
-                                                        isActive
-                                                            ? 'bg-gradient-to-r from-amber-500/10 to-transparent text-amber-500 shadow-[inset_1px_1px_1px_rgba(255,255,255,0.02)]'
-                                                            : 'text-stone-500 hover:text-stone-200 hover:bg-white/[0.03]'
-                                                    )
-                                                }
-                                            >
-                                                {/* Active Background Glow */}
-                                                <NavLink
-                                                    to={item.href}
-                                                    end={true}
-                                                    className={({ isActive }) =>
-                                                        isActive
-                                                            ? "absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-100 transition-opacity duration-700"
-                                                            : "absolute inset-0 opacity-0"
-                                                    }
-                                                />
-
-                                                <Icon className={cn(
-                                                    "h-5 w-5 shrink-0 transition-all duration-500 relative z-10",
-                                                    "group-hover:scale-110 group-active:scale-95",
-                                                    !isCollapsed && "mr-3"
-                                                )} />
-
-                                                {!isCollapsed && (
-                                                    <span className="flex-1 truncate relative z-10 tracking-tight">{item.name}</span>
-                                                )}
-
-                                                {/* Active Indicator Bar */}
-                                                <NavLink
-                                                    to={item.href}
-                                                    end={true}
-                                                    className={({ isActive }) =>
-                                                        isActive
-                                                            ? cn(
-                                                                "absolute h-6 w-1 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.8)] transition-all duration-500",
-                                                                isCollapsed ? "left-0" : "left-0"
-                                                            )
-                                                            : "hidden"
-                                                    }
-                                                />
-                                            </NavLink>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                                {/* Active Indicator Bar */}
+                                <NavLink
+                                    to={item.href}
+                                    end={true}
+                                    className={({ isActive }) =>
+                                        isActive
+                                            ? cn(
+                                                "absolute h-6 w-1 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.8)] transition-all duration-500",
+                                                isCollapsed ? "left-0" : "left-0"
+                                            )
+                                            : "hidden"
+                                    }
+                                />
+                            </NavLink>
                         );
                     })}
                 </nav>
