@@ -23,7 +23,8 @@ export const CreateShipment = () => {
     const location = useLocation();
 
     // Data States
-    const [availablePlans, setAvailablePlans] = useState<ProductionPlanSummaryResponse[]>([]);
+    const [unshippedPlans, setUnshippedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
+    const [shippedPlans, setShippedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
     const [availableStores, setAvailableStores] = useState<StoreResponse[]>([]);
     const [allOrders, setAllOrders] = useState<StoreOrderResponse[]>([]);
 
@@ -86,11 +87,10 @@ export const CreateShipment = () => {
             
             const orders = ordersRes.content || [];
             
-            // Lấy danh sách Store từ Order có sẵn thay vì gọi storeApi để tránh lỗi 403 Permission
             const activeStoreMap = new Map<number, StoreResponse>();
             orders.forEach(o => {
-                const isReady = o.status === 'ALLOCATED' || o.status === 'APPROVED';
-                if (isReady && o.storeId && !activeStoreMap.has(o.storeId)) {
+                const isRelevant = ['ALLOCATED', 'APPROVED', 'IN_TRANSIT', 'DELIVERED', 'SHIPPED', 'SHIPPING', 'CONFIRMED'].includes(o.status);
+                if (isRelevant && o.storeId && !activeStoreMap.has(o.storeId)) {
                     activeStoreMap.set(o.storeId, {
                         id: o.storeId,
                         name: o.storeName || `Chi nhánh ${o.storeId}`
@@ -98,7 +98,15 @@ export const CreateShipment = () => {
                 }
             });
 
-            setAvailablePlans(validPlans);
+            const shippedPlanIds = new Set(
+                orders
+                    .filter(o => ['IN_TRANSIT', 'DELIVERED', 'SHIPPED', 'SHIPPING', 'CONFIRMED'].includes(o.status))
+                    .map(o => o.planId)
+                    .filter(Boolean)
+            );
+
+            setUnshippedPlans(validPlans.filter(p => !shippedPlanIds.has(p.planId)));
+            setShippedPlans(validPlans.filter(p => shippedPlanIds.has(p.planId)));
             setAvailableStores(Array.from(activeStoreMap.values()));
             setAllOrders(orders);
         } catch (error) {
@@ -294,25 +302,42 @@ export const CreateShipment = () => {
                             <p className="text-[11px] text-zinc-600 font-medium mt-1 uppercase tracking-tighter">Bắt buộc để hệ thống đối soát sản lượng</p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Kế hoạch sản xuất liên quan</label>
+                                <label className="text-[10px] font-black text-[#5C6F2B] uppercase tracking-widest ml-1">KH chưa tạo đơn vận chuyển</label>
                                 <div className="relative">
                                     <select
-                                        className="w-full appearance-none pl-12 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#DE802B]/20 focus:border-[#DE802B]/50 transition-all cursor-pointer"
-                                        value={form.productionPlanId}
+                                        className="w-full appearance-none pl-11 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#5C6F2B]/20 focus:border-[#5C6F2B]/50 transition-all cursor-pointer"
+                                        value={unshippedPlans.some(p => p.planId.toString() === form.productionPlanId) ? form.productionPlanId : ""}
                                         onChange={e => setForm(prev => ({ ...prev, productionPlanId: e.target.value }))}
                                     >
                                         <option value="">-- Chọn Kế hoạch --</option>
-                                        {availablePlans.map(p => (
+                                        {unshippedPlans.map(p => (
                                             <option key={p.planId} value={p.planId}>#{p.planId} - {p.planName}</option>
                                         ))}
                                     </select>
-                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
                                 </div>
                             </div>
 
                             <div className="space-y-3">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">KH đã vận chuyển (Bổ sung/Giao thêm)</label>
+                                <div className="relative">
+                                    <select
+                                        className="w-full appearance-none pl-11 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-600/20 focus:border-zinc-600/50 transition-all cursor-pointer"
+                                        value={shippedPlans.some(p => p.planId.toString() === form.productionPlanId) ? form.productionPlanId : ""}
+                                        onChange={e => setForm(prev => ({ ...prev, productionPlanId: e.target.value }))}
+                                    >
+                                        <option value="">-- Chọn Kế hoạch --</option>
+                                        {shippedPlans.map(p => (
+                                            <option key={p.planId} value={p.planId}>#{p.planId} - {p.planName}</option>
+                                        ))}
+                                    </select>
+                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 md:col-span-2 pt-2 border-t border-zinc-800/50">
                                 <label className="text-[10px] font-black text-[#DE802B] uppercase tracking-widest ml-1">Loại xe vận chuyển (AhaMove)</label>
                                 <div className="relative">
                                     <select
@@ -355,8 +380,11 @@ export const CreateShipment = () => {
                         <div className="space-y-6">
                             {form.dropPoints.map((dp, idx) => {
                                 const branchOrders = dp.storeId 
-                                    ? allOrders.filter(o => o.storeId.toString() === dp.storeId && (o.status === 'ALLOCATED' || o.status === 'APPROVED'))
+                                    ? allOrders.filter(o => o.storeId.toString() === dp.storeId)
                                     : [];
+
+                                const unshippedOrders = branchOrders.filter(o => ['ALLOCATED', 'APPROVED'].includes(o.status));
+                                const shippedOrders = branchOrders.filter(o => ['IN_TRANSIT', 'DELIVERED', 'CONFIRMED', 'SHIPPING', 'SHIPPED'].includes(o.status));
 
                                 return (
                                     <div key={dp.id} className="p-6 bg-zinc-950/50 border border-zinc-800 rounded-3xl space-y-5 relative group">
@@ -383,7 +411,14 @@ export const CreateShipment = () => {
                                                     <option value="">-- Chọn Cửa hàng --</option>
                                                     {availableStores.map(s => {
                                                         const sId = s.id || (s as any).storeId;
-                                                        return <option key={sId} value={sId}>{s.name} (CN #{sId})</option>
+                                                        const isSelectedByOther = form.dropPoints.some(
+                                                            otherDp => otherDp.id !== dp.id && otherDp.storeId === sId.toString()
+                                                        );
+                                                        return (
+                                                            <option key={sId} value={sId} disabled={isSelectedByOther}>
+                                                                {s.name} (CN #{sId}) {isSelectedByOther ? '- Đã chọn' : ''}
+                                                            </option>
+                                                        );
                                                     })}
                                                 </select>
                                                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
@@ -392,72 +427,115 @@ export const CreateShipment = () => {
 
                                         {/* Orders Selection for this drop point */}
                                         {dp.storeId && (
-                                            <div className="space-y-3 pt-2">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Gom đơn hàng cho điểm giao này</label>
-                                                    {branchOrders.length > 0 && (
-                                                        <button
-                                                            onClick={() => toggleAllOrdersForDropPoint(dp.id, dp.storeId)}
-                                                            className="text-[10px] font-black text-[#5C6F2B] uppercase tracking-widest hover:text-[#7a913e] transition-colors"
-                                                        >
-                                                            {dp.storeOrderIds.length === branchOrders.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả đơn'}
-                                                        </button>
-                                                    )}
+                                            <div className="space-y-5 pt-2">
+                                                {/* Chưa vận chuyển Section */}
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Đơn hàng chưa vận chuyển</label>
+                                                        {unshippedOrders.length > 0 && (
+                                                            <button
+                                                                onClick={() => toggleAllOrdersForDropPoint(dp.id, dp.storeId)}
+                                                                className="text-[10px] font-black text-[#5C6F2B] uppercase tracking-widest hover:text-[#7a913e] transition-colors"
+                                                            >
+                                                                {dp.storeOrderIds.length === unshippedOrders.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả đơn'}
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/30">
+                                                        {unshippedOrders.length > 0 ? (
+                                                            <div className="divide-y divide-zinc-800/50 max-h-60 overflow-y-auto custom-scrollbar">
+                                                                {unshippedOrders.map(order => (
+                                                                    <div
+                                                                        key={order.orderId}
+                                                                        onClick={() => toggleOrderForDropPoint(dp.id, order.orderId)}
+                                                                        className={cn(
+                                                                            "flex items-center gap-4 p-3 cursor-pointer transition-colors group",
+                                                                            dp.storeOrderIds.includes(order.orderId) ? "bg-[#5C6F2B]/10" : "hover:bg-zinc-800/30"
+                                                                        )}
+                                                                    >
+                                                                        <div className={cn(
+                                                                            "w-4 h-4 rounded border flex items-center justify-center transition-all",
+                                                                            dp.storeOrderIds.includes(order.orderId)
+                                                                                ? "bg-[#5C6F2B] border-[#5C6F2B] text-black"
+                                                                                : "border-zinc-700 bg-zinc-800 group-hover:border-zinc-600"
+                                                                        )}>
+                                                                            {dp.storeOrderIds.includes(order.orderId) && <CheckCircle2 size={10} strokeWidth={4} />}
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-xs font-black text-zinc-200 uppercase tracking-tighter">Đơn #{order.orderId}</span>
+                                                                                <Badge variant="secondary" className="text-[8px] px-1 py-0.5 border-0 uppercase">{order.status}</Badge>
+                                                                            </div>
+                                                                            <div className="mt-2 space-y-1.5">
+                                                                                <div className="flex flex-wrap gap-1">
+                                                                                    {order.orderDetails?.map((item, idx) => (
+                                                                                        <div 
+                                                                                            key={idx} 
+                                                                                            className="text-[9px] font-bold bg-zinc-800/80 text-zinc-400 px-2 py-0.5 rounded-lg border border-zinc-700/30 flex items-center gap-1.5"
+                                                                                        >
+                                                                                            <span className="text-[#DE802B]">{item.quantity}x</span>
+                                                                                            <span className="truncate max-w-[150px]">{item.productName}</span>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                                <div className="flex items-center justify-between pt-1 border-t border-zinc-800/30">
+                                                                                    <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Tổng thanh toán:</span>
+                                                                                    <span className="text-[10px] text-[#DE802B] font-black italic">{(order.totalAmount || 0).toLocaleString()}đ</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="p-6 text-center flex flex-col items-center gap-2 opacity-30">
+                                                                <Package size={32} className="text-zinc-600" />
+                                                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">Không có đơn hàng sẵn sàng</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
-                                                <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/30">
-                                                    {branchOrders.length > 0 ? (
-                                                        <div className="divide-y divide-zinc-800/50 max-h-60 overflow-y-auto custom-scrollbar">
-                                                            {branchOrders.map(order => (
-                                                                <div
-                                                                    key={order.orderId}
-                                                                    onClick={() => toggleOrderForDropPoint(dp.id, order.orderId)}
-                                                                    className={cn(
-                                                                        "flex items-center gap-4 p-3 cursor-pointer transition-colors group",
-                                                                        dp.storeOrderIds.includes(order.orderId) ? "bg-[#5C6F2B]/10" : "hover:bg-zinc-800/30"
-                                                                    )}
-                                                                >
-                                                                    <div className={cn(
-                                                                        "w-4 h-4 rounded border flex items-center justify-center transition-all",
-                                                                        dp.storeOrderIds.includes(order.orderId)
-                                                                            ? "bg-[#5C6F2B] border-[#5C6F2B] text-black"
-                                                                            : "border-zinc-700 bg-zinc-800 group-hover:border-zinc-600"
-                                                                    )}>
-                                                                        {dp.storeOrderIds.includes(order.orderId) && <CheckCircle2 size={10} strokeWidth={4} />}
-                                                                    </div>
-                                                                    <div className="flex-1">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <span className="text-xs font-black text-zinc-200 uppercase tracking-tighter">Đơn #{order.orderId}</span>
-                                                                            <Badge variant="secondary" className="text-[8px] px-1 py-0.5 border-0 uppercase">{order.status}</Badge>
+                                                {/* Đã vận chuyển Section */}
+                                                {shippedOrders.length > 0 && (
+                                                    <div className="space-y-3 pt-2 opacity-50">
+                                                        <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Đơn hàng đã vận chuyển</label>
+                                                        <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/30">
+                                                            <div className="divide-y divide-zinc-800/50 max-h-60 overflow-y-auto custom-scrollbar">
+                                                                {shippedOrders.map(order => (
+                                                                    <div
+                                                                        key={order.orderId}
+                                                                        className="flex items-center gap-4 p-3 opacity-70"
+                                                                    >
+                                                                        <div className="w-4 h-4 rounded border border-zinc-700/50 bg-zinc-800/50 flex items-center justify-center">
+                                                                            <CheckCircle2 size={10} className="text-zinc-600" />
                                                                         </div>
-                                                                        <div className="mt-2 space-y-1.5">
-                                                                            <div className="flex flex-wrap gap-1">
-                                                                                {order.orderDetails?.map((item, idx) => (
-                                                                                    <div 
-                                                                                        key={idx} 
-                                                                                        className="text-[9px] font-bold bg-zinc-800/80 text-zinc-400 px-2 py-0.5 rounded-lg border border-zinc-700/30 flex items-center gap-1.5"
-                                                                                    >
-                                                                                        <span className="text-[#DE802B]">{item.quantity}x</span>
-                                                                                        <span className="truncate max-w-[150px]">{item.productName}</span>
-                                                                                    </div>
-                                                                                ))}
+                                                                        <div className="flex-1">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-xs font-black text-zinc-400 uppercase tracking-tighter">Đơn #{order.orderId}</span>
+                                                                                <Badge variant="secondary" className="text-[8px] px-1 py-0.5 border-0 uppercase opacity-50">{order.status}</Badge>
                                                                             </div>
-                                                                            <div className="flex items-center justify-between pt-1 border-t border-zinc-800/30">
-                                                                                <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Tổng thanh toán:</span>
-                                                                                <span className="text-[10px] text-[#DE802B] font-black italic">{(order.totalAmount || 0).toLocaleString()}đ</span>
+                                                                            <div className="mt-2 space-y-1.5">
+                                                                                <div className="flex flex-wrap gap-1">
+                                                                                    {order.orderDetails?.map((item, idx) => (
+                                                                                        <div 
+                                                                                            key={idx} 
+                                                                                            className="text-[9px] font-bold bg-zinc-800/30 text-zinc-500 px-2 py-0.5 rounded-lg border border-zinc-700/20 flex items-center gap-1.5"
+                                                                                        >
+                                                                                            <span className="text-zinc-600">{item.quantity}x</span>
+                                                                                            <span className="truncate max-w-[150px]">{item.productName}</span>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            ))}
+                                                                ))}
+                                                            </div>
                                                         </div>
-                                                    ) : (
-                                                        <div className="p-6 text-center flex flex-col items-center gap-2 opacity-30">
-                                                            <Package size={32} className="text-zinc-600" />
-                                                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">Không có đơn hàng sẵn sàng</span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
