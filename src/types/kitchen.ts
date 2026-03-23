@@ -11,6 +11,13 @@ export interface KitchenResponse {
     todayUsedCapacity?: number;
 }
 
+export interface KitchenCreateRequest {
+    name: string;
+    address: string;
+    maxDailyCapacity: number;
+    isActive: boolean;
+}
+
 export interface KitchenUpdateRequest {
     name?: string;
     address?: string;

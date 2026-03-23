@@ -12,6 +12,7 @@ import { CreateRolePage } from '../pages/users/CreateRolePage';
 import { StoreList } from '../pages/franchise-store/StoreList';
 import CreateStorePage from '../pages/franchise-store/CreateStorePage';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
+import { KitchensList } from '../pages/kitchens/KitchensList';
 import { StoreInventoryPage } from '../pages/franchise-store/StoreInventoryPage';
 import { ProductCatalog } from '../pages/product/ProductCatalog';
 import { CreateProductPage } from '../pages/product/CreateProductPage';
@@ -120,6 +121,15 @@ export const router = createBrowserRouter([
                             { path: ':id', element: <StoreDetails /> },
                             { path: 'inventory', element: <StoreInventoryPage /> },
                             { path: 'orders', element: <ComingSoon /> }
+                        ]
+                    },
+
+                    // Kitchens Management Module (Admin, Manager)
+                    {
+                        path: 'kitchens',
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+                        children: [
+                            { index: true, element: <KitchensList /> }
                         ]
                     },
 
