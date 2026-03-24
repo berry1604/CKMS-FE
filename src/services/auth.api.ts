@@ -48,12 +48,11 @@ export const authApi = {
         const { accessToken, refreshToken: newRefreshToken, token } = data;
         const validAccessToken = accessToken || token;
 
-        // ✅ dùng localStorage
         if (validAccessToken) {
             sessionStorage.setItem('accessToken', validAccessToken);
         }
 
-        // ⚠️ chỉ overwrite nếu BE trả về refreshToken mới
+
         if (newRefreshToken) {
             sessionStorage.setItem('refreshToken', newRefreshToken);
         }

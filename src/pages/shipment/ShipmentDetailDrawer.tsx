@@ -32,9 +32,10 @@ export const ShipmentDetailDrawer = ({
     onStatusAction,
     onRefresh
 }: ShipmentDetailDrawerProps) => {
-    const { user } = useAuth();
+    const { user, hasAuthority } = useAuth();
     const [aggregatedItems, setAggregatedItems] = useState<{ productId: number, productName: string, quantity: number }[]>([]);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [shipmentKitchenId, setShipmentKitchenId] = useState<number | null>(null);
 
     useEffect(() => {
         if (isOpen && shipment?.shipmentId) {
@@ -53,6 +54,7 @@ export const ShipmentDetailDrawer = ({
                             const plan = await productionPlanApi.getProductionPlanDetail(fullShipment.productionPlanId);
                             
                             if (plan && plan.kitchenId) {
+                                setShipmentKitchenId(plan.kitchenId);
                                 // Fetch stock from kitchen inventory API instead of taking from productplan directly
                                 const stockRes = await kitchenInventoryApi.getWarehouseStock(plan.kitchenId);
                                 const allStock = stockRes?.data || (stockRes as any) || [];
@@ -134,6 +136,8 @@ export const ShipmentDetailDrawer = ({
         }
     }, [isOpen, shipment?.shipmentId, user?.role]);
 
+    if (!shipment) return null;
+
     const handleCopyAhamoveId = () => {
         if (shipment?.ahamoveOrderId) {
             navigator.clipboard.writeText(shipment.ahamoveOrderId);
@@ -141,7 +145,19 @@ export const ShipmentDetailDrawer = ({
         }
     };
 
-    if (!shipment) return null;
+    const canAction = (permission: string, checkKitchen = true) => {
+        const hasPerm = hasAuthority(permission);
+        if (!hasPerm) return false;
+        
+        if (user?.role === 'ADMIN') return true; 
+
+        // For non-admin, if checkKitchen is required, verify match
+        if (checkKitchen) {
+            return user?.kitchenId === shipmentKitchenId;
+        }
+        
+        return true;
+    };
 
     const steps = [
         { id: 'PENDING', label: 'CHỜ CHUẨN BỊ', icon: Package, color: 'text-orange-500', bg: 'bg-orange-500/10' },
@@ -158,7 +174,7 @@ export const ShipmentDetailDrawer = ({
 
         switch (shipment.status) {
             case 'PENDING':
-                return (
+                return canAction('PREPARE_SHIPMENT', true) && (
                     <Button
                         onClick={() => onStatusAction(shipment.shipmentId, 'prepare')}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[11px] tracking-widest px-8 grow"
@@ -167,7 +183,7 @@ export const ShipmentDetailDrawer = ({
                     </Button>
                 );
             case 'PREPARED':
-                return (
+                return canAction('START_SHIPMENT', true) && (
                     <Button
                         onClick={() => onStatusAction(shipment.shipmentId, 'transit')}
                         className="bg-[#DE802B] hover:bg-[#c97327] text-black font-black uppercase text-[11px] tracking-widest px-8 grow shadow-xl shadow-[#DE802B]/20"
@@ -176,7 +192,7 @@ export const ShipmentDetailDrawer = ({
                     </Button>
                 );
             case 'IN_TRANSIT':
-                return (
+                return canAction('CONFIRM_SHIPMENT', false) && (
                     <Button
                         onClick={() => onStatusAction(shipment.shipmentId, 'confirm')}
                         className="bg-[#5C6F2B] hover:bg-[#4d5c24] text-black font-black uppercase text-[11px] tracking-widest px-8 grow shadow-xl shadow-[#5C6F2B]/20"
@@ -198,7 +214,7 @@ export const ShipmentDetailDrawer = ({
 
     const footer = (
         <div className="flex items-center gap-4 w-full px-2">
-            {!isCancelled && shipment.status !== 'DELIVERED' && (
+            {!isCancelled && shipment.status !== 'DELIVERED' && canAction('CANCEL_SHIPMENT', false) && (
                 <Button
                     variant="ghost"
                     onClick={() => onStatusAction(shipment.shipmentId, 'cancel')}

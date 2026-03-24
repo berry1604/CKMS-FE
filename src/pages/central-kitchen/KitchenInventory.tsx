@@ -13,7 +13,7 @@ import { cn } from '../../utils/classNames';
 
 export const KitchenInventory = () => {
     const navigate = useNavigate();
-    const { hasAuthority } = useAuth();
+    const { user, hasAuthority } = useAuth();
     const canManageInventory = hasAuthority('KITCHEN_STAFF');
     const [inventory, setInventory] = useState<KitchenStockItemResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +29,9 @@ export const KitchenInventory = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const [selectedKitchenId, setSelectedKitchenId] = useState<number | null>(null);
+    const [selectedKitchenId, setSelectedKitchenId] = useState<number | null>(
+        hasAuthority('KITCHEN_STAFF') ? (user?.kitchenId ?? null) : null
+    );
     const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(null);
 
     const loadInventory = async (warehouseId: number) => {

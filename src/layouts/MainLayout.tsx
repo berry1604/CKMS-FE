@@ -124,7 +124,7 @@ export const navigation: NavigationItem[] = [
                 name: 'Vận chuyển',
                 href: '/shipment',
                 icon: Truck,
-                permission: PERMISSIONS.CREATE_SHIPMENT,
+                permission: PERMISSIONS.VIEW_SHIPMENT,
             },
         ]
     },
