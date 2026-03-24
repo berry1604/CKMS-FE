@@ -17,15 +17,16 @@ export const AuthLayout: React.FC = () => {
 
             <div className="sm:mx-auto sm:w-full sm:max-w-[480px] z-10 relative">
                 <div className="text-center mb-10 flex flex-col items-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-600 rounded-3xl flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(245,158,11,0.4)] rotate-3 hover:rotate-0 hover:scale-110 transition-all duration-500 border border-amber-300/50">
-                        <span className="text-black text-4xl font-black tracking-tighter">F</span>
+                    <div className="w-24 h-24 bg-gradient-to-br from-zinc-800 to-zinc-950 rounded-3xl flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(245,158,11,0.4)] hover:scale-110 transition-all duration-500 border border-amber-500/20">
+                        <img src="/logo.svg" alt="SteakChain" className="w-16 h-16 drop-shadow-[0_0_20px_rgba(245,158,11,0.6)]" />
                     </div>
-                    <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-500 tracking-tighter drop-shadow-2xl uppercase">
-                        FranchiseSys
+                    <h2 className="text-5xl font-black tracking-tighter drop-shadow-2xl uppercase italic flex justify-center gap-1">
+                        <span className="text-amber-500">Steak</span>
+                        <span className="text-amber-500">Chain</span>
                     </h2>
-                    <div className="h-px w-16 bg-gradient-to-r from-transparent via-amber-500 to-transparent my-5"></div>
-                    <p className="text-amber-500/80 text-xs font-black tracking-[0.4em] uppercase">
-                        Elite Management System
+                    <div className="h-px w-20 bg-gradient-to-r from-transparent via-amber-500 to-transparent my-5"></div>
+                    <p className="text-stone-300 text-xs font-black tracking-[0.4em] uppercase">
+                        Franchise System
                     </p>
                 </div>
 

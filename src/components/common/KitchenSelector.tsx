@@ -21,11 +21,11 @@ export const KitchenSelector = ({
     const [isLoading, setIsLoading] = useState(false);
 
     const userRole = user?.role?.toUpperCase().replace('ROLE_', '');
-    const isManagerOrCoordinator = userRole === 'MANAGER' || userRole === 'COORDINATOR';
+    const canSelectKitchen = userRole === 'MANAGER' || userRole === 'COORDINATOR' || userRole === 'KITCHEN_STAFF';
     const isAdmin = userRole === 'ADMIN';
 
     const fetchKitchens = useCallback(async () => {
-        if (!isManagerOrCoordinator) return;
+        if (!canSelectKitchen) return;
         
         setIsLoading(true);
         try {
@@ -35,7 +35,7 @@ export const KitchenSelector = ({
             
             // Auto-select if nothing is selected yet
             if (!selectedKitchenId && list.length > 0) {
-                // If coordinator has a linked kitchen, prefer that one as default, otherwise pick first
+                // Prefer linked kitchen if exists
                 const defaultKitchen = list.find(k => k.kitchenId === user?.kitchenId) || list[0];
                 onKitchenChange(defaultKitchen.kitchenId);
             }
@@ -44,25 +44,25 @@ export const KitchenSelector = ({
         } finally {
             setIsLoading(false);
         }
-    }, [isManagerOrCoordinator, selectedKitchenId, onKitchenChange, user?.kitchenId]);
+    }, [canSelectKitchen, selectedKitchenId, onKitchenChange, user?.kitchenId]);
 
     useEffect(() => {
-        // If not manager or coordinator, instantly use user's assigned kitchen if nothing's selected
-        if (!isManagerOrCoordinator && user?.kitchenId && !selectedKitchenId) {
+        // If cannot select kitchen, instantly use user's assigned kitchen if nothing is selected
+        if (!canSelectKitchen && user?.kitchenId && !selectedKitchenId) {
             onKitchenChange(user.kitchenId);
             return;
         }
 
-        if (isManagerOrCoordinator) {
+        if (canSelectKitchen) {
             fetchKitchens();
         }
-    }, [isManagerOrCoordinator, user?.kitchenId, selectedKitchenId, onKitchenChange, fetchKitchens]);
+    }, [canSelectKitchen, user?.kitchenId, selectedKitchenId, onKitchenChange, fetchKitchens]);
 
     // As per user request, hide for ADMIN role
     if (isAdmin) return null;
 
-    // If not manager or coordinator, we might want to just show their assigned kitchen as text or hide
-    if (!isManagerOrCoordinator) {
+    // If cannot select kitchen, just show their assigned kitchen as text
+    if (!canSelectKitchen) {
         return (
             <div className={cn("flex items-center gap-3 px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-xl", className)}>
                 <ChefHat size={16} className="text-zinc-500" />

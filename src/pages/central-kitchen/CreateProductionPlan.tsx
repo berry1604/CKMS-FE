@@ -10,7 +10,6 @@ import {
   Package,
   ClipboardCheck,
   LayoutGrid,
-  Info,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -30,7 +29,7 @@ export const CreateProductionPlan = () => {
   const { user } = useAuth();
 
   // Wizard State
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
 
@@ -45,21 +44,18 @@ export const CreateProductionPlan = () => {
   const [selectedKitchenId, setSelectedKitchenId] = useState<number | null>(
     null,
   );
-  const [isKitchensLoading, setIsKitchensLoading] = useState(false);
 
   const [orders, setOrders] = useState<StoreOrderResponse[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(
     new Set(),
   );
 
-  const [capacityInfo, setCapacityInfo] = useState<{
-    remaining: number;
-    max: number;
-  } | null>(null);
+  const [kitchensInfo, setKitchensInfo] = useState<
+    Record<number, { remaining: number; inventoryTotal: number }>
+  >({});
   const [isCapacityLoading, setIsCapacityLoading] = useState(false);
 
   const fetchKitchens = useCallback(async () => {
-    setIsKitchensLoading(true);
     try {
       const res = await kitchenApi.getAllKitchens();
       const kitchenList = res.data || [];
@@ -78,8 +74,6 @@ export const CreateProductionPlan = () => {
       }
     } catch {
       toast.error("Không thể tải danh sách bếp trung tâm.");
-    } finally {
-      setIsKitchensLoading(false);
     }
   }, [user?.kitchenId]);
 
@@ -87,42 +81,53 @@ export const CreateProductionPlan = () => {
     fetchKitchens();
   }, [fetchKitchens]);
 
-  const fetchCapacity = useCallback(async () => {
-    if (!selectedKitchenId || !plannedDate) return;
+  const fetchAllKitchensInfo = useCallback(async () => {
+    if (kitchens.length === 0 || !plannedDate) return;
     setIsCapacityLoading(true);
     try {
-      const res = await dispatchApi.getSuggestion(
-        selectedKitchenId,
-        plannedDate,
-      );
-      const suggestions = res.data || [];
-      const kitchenObj = kitchens.find(
-        (k) => k.kitchenId === selectedKitchenId,
-      );
+      const infoMap: Record<
+        number,
+        { remaining: number; inventoryTotal: number }
+      > = {};
 
-      if (Array.isArray(suggestions) && suggestions.length > 0) {
-        setCapacityInfo({
-          remaining: Number(suggestions[0].kitchenCapacity) || 0,
-          max: Number(kitchenObj?.maxDailyCapacity) || 0,
-        });
-      } else {
-        setCapacityInfo({
-          remaining: Number(kitchenObj?.maxDailyCapacity) || 0,
-          max: Number(kitchenObj?.maxDailyCapacity) || 0,
-        });
-      }
+      await Promise.all(
+        kitchens.map(async (k) => {
+          try {
+            const capRes = await dispatchApi
+              .getSuggestion(k.kitchenId, plannedDate)
+              .catch(() => null);
+
+            let remaining = Number(k.maxDailyCapacity) || 0;
+            if (
+              capRes &&
+              Array.isArray(capRes.data) &&
+              capRes.data.length > 0
+            ) {
+              remaining = Number(capRes.data[0].kitchenCapacity) || 0;
+            }
+
+            infoMap[k.kitchenId] = { remaining, inventoryTotal: 0 };
+          } catch {
+            infoMap[k.kitchenId] = {
+              remaining: Number(k.maxDailyCapacity) || 0,
+              inventoryTotal: 0,
+            };
+          }
+        }),
+      );
+      setKitchensInfo(infoMap);
     } catch {
-      setCapacityInfo(null);
+      // Fail silently, map will just be empty or defaults
     } finally {
       setIsCapacityLoading(false);
     }
-  }, [selectedKitchenId, plannedDate, kitchens]);
+  }, [kitchens, plannedDate]);
 
   useEffect(() => {
-    if (step === 1 && selectedKitchenId && kitchens.length > 0) {
-      fetchCapacity();
+    if (step === 1 && kitchens.length > 0) {
+      fetchAllKitchensInfo();
     }
-  }, [step, selectedKitchenId, plannedDate, fetchCapacity, kitchens.length]);
+  }, [step, kitchens.length, plannedDate, fetchAllKitchensInfo]);
 
   const fetchOrders = useCallback(async () => {
     if (!selectedKitchenId) return;
@@ -141,7 +146,7 @@ export const CreateProductionPlan = () => {
   }, [selectedKitchenId]);
 
   useEffect(() => {
-    if (step === 2 && selectedKitchenId) {
+    if (step === 1 && selectedKitchenId) {
       fetchOrders();
     }
   }, [step, selectedKitchenId, fetchOrders]);
@@ -203,11 +208,10 @@ export const CreateProductionPlan = () => {
         toast.success("Kế hoạch sản xuất đã được tạo thành công.");
       }
 
-      navigate("/kitchen");
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Tạo kế hoạch thất bại.";
-      toast.error((error as any).response?.data?.message || errorMessage);
+      navigate("/kitchen/production-plans");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Tạo kế hoạch thất bại.");
     } finally {
       setIsSubmitting(false);
     }
@@ -220,7 +224,7 @@ export const CreateProductionPlan = () => {
         <div className="flex items-center gap-5">
           <Button
             variant="ghost"
-            onClick={() => navigate("/kitchen")}
+            onClick={() => navigate("/orders/approvals")}
             className="h-10 w-10 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl"
           >
             <ArrowLeft size={18} />
@@ -244,469 +248,436 @@ export const CreateProductionPlan = () => {
         </div>
 
         <div className="flex gap-2">
-          <div className="px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-xl flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
-              <Package size={16} />
+          <div className="px-3 py-1.5 bg-zinc-900/50 border border-zinc-800 rounded-lg flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-500">
+              <Package size={14} />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-tighter">
+              <span className="text-[9px] font-black text-zinc-500 uppercase tracking-tighter">
                 Đã chọn
               </span>
-              <span className="text-sm font-black text-zinc-200">
-                {selectedOrderIds.size} đơn hàng
+              <span className="text-xs font-black text-zinc-200">
+                {selectedOrderIds.size} đơn
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Premium Wizard Steps */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {[
-          { step: 1, label: "Thiết lập bếp & Ngày", icon: ChefHat },
-          { step: 2, label: "Gom đơn hàng chi nhánh", icon: LayoutGrid },
-          { step: 3, label: "Tổng hợp chỉ tiêu SX", icon: ClipboardCheck },
-        ].map((item) => {
-          const isActive = step === item.step;
-          const isDone = step > item.step;
-          return (
-            <div
-              key={item.step}
-              className={cn(
-                "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300",
-                isActive
-                  ? "bg-amber-500/5 border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.05)]"
-                  : isDone
-                    ? "bg-zinc-900/40 border-emerald-500/20"
-                    : "bg-zinc-900/20 border-zinc-800/50",
-              )}
-            >
-              <div
-                className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center font-black transition-all",
-                  isActive
-                    ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20"
-                    : isDone
-                      ? "bg-emerald-500 text-black"
-                      : "bg-zinc-800 text-zinc-500",
-                )}
-              >
-                {isDone ? <CheckCircle2 size={18} /> : item.step}
-              </div>
-              <div className="flex flex-col">
-                <span
-                  className={cn(
-                    "text-[10px] font-black uppercase tracking-widest",
-                    isActive
-                      ? "text-amber-500"
-                      : isDone
-                        ? "text-emerald-500"
-                        : "text-zinc-600",
-                  )}
-                >
-                  Bước {item.step}
-                </span>
-                <span
-                  className={cn(
-                    "text-xs font-bold",
-                    isActive ? "text-zinc-100" : "text-zinc-500",
-                  )}
-                >
-                  {item.label}
-                </span>
-              </div>
-              {isActive && (
-                <ChevronRight
-                  size={16}
-                  className="ml-auto text-amber-500 animate-pulse"
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
       {/* Wizard Content */}
       <div className="relative min-h-[400px]">
         {step === 1 && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="lg:col-span-2 space-y-6 bg-zinc-900/40 p-8 rounded-[32px] border border-zinc-800/50">
-              <div>
-                <h2 className="text-lg font-black text-zinc-100 uppercase tracking-tight">
-                  Cấu hình sản xuất
-                </h2>
-                <p className="text-xs text-zinc-500 font-medium mt-1">
-                  Vui lòng chọn bếp thực hiện và ngày mong muốn hoàn tất mẻ
-                  hàng.
-                </p>
-              </div>
+          <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* MERGED TOP PANEL (HUB + CONFIG) */}
+            <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-2xl shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[100px] -mr-32 -mt-32 pointer-events-none"></div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-3 font-inter">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">
-                    Chọn Bếp Thực Hiện
-                  </label>
-                  <div className="relative group">
-                    <ChefHat
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-amber-500 transition-colors"
-                      size={20}
-                    />
-                    <select
-                      value={selectedKitchenId || ""}
-                      onChange={(e) =>
-                        setSelectedKitchenId(Number(e.target.value))
-                      }
-                      className="w-full pl-12 pr-10 h-16 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-black text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 appearance-none transition-all cursor-pointer"
-                      disabled={isKitchensLoading}
-                    >
-                      <option value="" disabled>
-                        --- Chọn Bếp Trung Tâm ---
-                      </option>
-                      {kitchens.map((k) => (
-                        <option key={k.kitchenId} value={k.kitchenId}>
-                          {k.name}{" "}
-                          {k.kitchenId === user?.kitchenId
-                            ? "(Bếp của bạn)"
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
-                      <ChevronRight size={18} className="rotate-90" />
+              {/* HUB & CONFIG DASHBOARD */}
+              <div className="p-4 space-y-4 relative z-10">
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-black shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                      <Package size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-black text-white uppercase tracking-tight">
+                        Hub Điều Phối
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest hidden sm:inline">
+                          Trung tâm điều khiển
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-zinc-700 hidden sm:inline"></span>
+                        <span className="text-[9px] text-emerald-500 font-black uppercase tracking-widest flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>{" "}
+                          Ổn định
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">
-                      Ngày lập kế hoạch
-                    </label>
-                    <div className="relative group">
+                  <div className="flex flex-wrap items-center gap-3 xl:gap-6 bg-zinc-950/50 p-2 rounded-xl border border-zinc-800/50">
+                    <div className="text-right px-3">
+                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest flex items-center justify-end gap-1.5">
+                        {isCapacityLoading && (
+                          <div className="animate-spin h-2 w-2 border-2 border-amber-500 border-t-transparent rounded-full" />
+                        )}
+                        Tổng công suất
+                      </p>
+                      <div className="flex items-end justify-end gap-1.5 tabular-nums">
+                        <span className="text-xl font-black text-amber-500 leading-none">
+                          {kitchens
+                            .reduce(
+                              (sum, k) => sum + (k.todayUsedCapacity || 0),
+                              0,
+                            )
+                            .toLocaleString()}
+                        </span>
+                        <span className="text-base font-black text-zinc-600 leading-none">
+                          /
+                        </span>
+                        <span className="text-xl font-black text-white leading-none">
+                          {kitchens
+                            .reduce(
+                              (sum, k) => sum + (k.maxDailyCapacity || 0),
+                              0,
+                            )
+                            .toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="w-px h-8 bg-zinc-800/50 hidden md:block"></div>
+
+                    <div className="relative group min-w-[140px]">
                       <CalendarIcon
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 transition-colors"
-                        size={18}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 transition-colors"
+                        size={14}
                       />
                       <input
                         type="date"
                         value={plannedDate}
                         onChange={(e) => setPlannedDate(e.target.value)}
-                        className="w-full pl-12 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-black text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer"
+                        className="w-full pl-9 pr-3 h-10 bg-zinc-900 border border-zinc-700/50 rounded-lg text-xs font-black text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer hover:bg-zinc-800 shadow-inner"
                         required
                       />
                     </div>
                   </div>
+                </div>
 
-                  <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-amber-500">
-                        <Info size={14} strokeWidth={3} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">
-                          Thông tin công suất
-                        </span>
-                      </div>
-                      {isCapacityLoading && (
-                        <div className="animate-spin h-3 w-3 border-2 border-amber-500 border-t-transparent rounded-full" />
-                      )}
-                    </div>
+                {kitchens.length > 0 && (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 relative z-10">
+                    {kitchens.map((kitchen) => {
+                      const usedCapacity = kitchen.todayUsedCapacity || 0;
+                      const maxCapacity = kitchen.maxDailyCapacity || 1;
+                      const capacityPercentage = Math.min(
+                        100,
+                        Math.round((usedCapacity / maxCapacity) * 100),
+                      );
+                      const isOverloaded = usedCapacity > maxCapacity;
+                      const isSelected =
+                        selectedKitchenId === kitchen.kitchenId;
 
-                    {capacityInfo ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-tight">
-                            Khả dụng:
-                          </span>
-                          <span className="text-sm font-black text-zinc-100 tabular-nums">
-                            {capacityInfo.remaining} / {capacityInfo.max}
-                            <span className="text-[8px] text-zinc-500 ml-1">
-                              ĐƠN VỊ
-                            </span>
-                          </span>
+                      return (
+                        <div
+                          key={kitchen.kitchenId}
+                          onClick={() =>
+                            setSelectedKitchenId(kitchen.kitchenId)
+                          }
+                          className={cn(
+                            "rounded-xl p-3 transition-all group flex flex-col justify-between cursor-pointer relative overflow-hidden",
+                            isSelected
+                              ? "bg-amber-500/10 border-2 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+                              : "bg-zinc-950/50 border border-zinc-800/80 hover:border-amber-500/30 hover:bg-zinc-900/50",
+                          )}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-amber-500/20 to-transparent pointer-events-none"></div>
+                          )}
+                          <div className="flex justify-between items-start mb-2 relative z-10">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={cn(
+                                  "w-6 h-6 rounded-md border flex items-center justify-center transition-colors shadow-sm",
+                                  isSelected
+                                    ? "bg-amber-500 text-black border-amber-400"
+                                    : "bg-zinc-900 border-zinc-800 text-zinc-500 group-hover:text-amber-500",
+                                )}
+                              >
+                                {isSelected ? (
+                                  <CheckCircle2 size={12} strokeWidth={3} />
+                                ) : (
+                                  <Package size={12} />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0 pr-2">
+                                <h3
+                                  className={cn(
+                                    "text-[10px] font-black tracking-tight uppercase line-clamp-2 leading-tight transition-colors",
+                                    isSelected
+                                      ? "text-amber-500"
+                                      : "text-zinc-200",
+                                  )}
+                                  title={kitchen.name}
+                                >
+                                  {kitchen.name}
+                                </h3>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 rounded-full border border-blue-500/20 shrink-0">
+                              <div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+                              <span className="text-[7px] font-bold text-blue-500 uppercase tracking-widest whitespace-nowrap">
+                                {kitchen.currentStatus === "IN_PRODUCTION"
+                                  ? "Hoạt động"
+                                  : "Sẵn sàng"}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-end mb-1">
+                              <span className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">
+                                Năng lực
+                              </span>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-black tracking-tight",
+                                  isOverloaded
+                                    ? "text-red-500"
+                                    : "text-amber-500",
+                                )}
+                              >
+                                {usedCapacity}{" "}
+                                <span className="text-zinc-600">/</span>{" "}
+                                <span className="text-zinc-300">
+                                  {maxCapacity}
+                                </span>
+                              </span>
+                            </div>
+                            <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                              <div
+                                className={cn(
+                                  "h-full transition-all duration-1000",
+                                  isOverloaded ? "bg-red-500" : "bg-amber-500",
+                                  capacityPercentage > 0 &&
+                                    capacityPercentage < 100 &&
+                                    "animate-pulse",
+                                )}
+                                style={{
+                                  width: `${Math.min(100, capacityPercentage)}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={cn(
-                              "h-full transition-all duration-500",
-                              capacityInfo.remaining / (capacityInfo.max || 1) <
-                                0.2
-                                ? "bg-red-500"
-                                : capacityInfo.remaining /
-                                      (capacityInfo.max || 1) <
-                                    0.5
-                                  ? "bg-amber-500"
-                                  : "bg-emerald-500",
-                            )}
-                            style={{
-                              width: `${(Math.min(capacityInfo.remaining, capacityInfo.max) / (capacityInfo.max || 1)) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <p className="text-[10px] text-zinc-600 font-medium italic leading-tight pt-1">
-                          {capacityInfo.remaining <= 0
-                            ? "Bếp đã đạt tối đa công suất cho ngày này."
-                            : `Còn trống ${capacityInfo.remaining} đơn vị sản xuất.`}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-zinc-500 font-medium italic leading-relaxed">
-                        Chọn bếp và ngày để kiểm tra khả năng đáp ứng sản xuất.
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>{" "}
+            {/* END OF HUB DASHBOARD PANEL */}
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Left Column (Main Workspace) */}
+              <div className="flex-1 min-w-0">
+                {/* BOTTOM PANEL: Chọn đơn hàng */}
+                <div className="bg-zinc-900/40 rounded-2xl border border-zinc-800/50 overflow-hidden shadow-xl">
+                  <div className="p-4 border-b border-zinc-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                      <h2 className="text-sm font-black text-zinc-100 uppercase tracking-tight">
+                        Chọn đơn hàng cần sản xuất
+                      </h2>
+                      <p className="text-[10px] text-zinc-500 font-medium">
+                        Danh sách các đơn hàng đã Approved đang chờ Gom mẻ.
                       </p>
-                    )}
+                    </div>
+                  </div>
+
+                  <div className="overflow-y-auto max-h-[40vh] min-h-[250px] custom-scrollbar">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="sticky top-0 bg-zinc-900 z-10 border-b border-zinc-800">
+                        <tr className="text-[10px] uppercase font-black text-zinc-600 tracking-widest">
+                          <th className="px-8 py-4 w-12 text-center">
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-amber-500 focus:ring-amber-500/20"
+                              checked={
+                                selectedOrderIds.size === orders.length &&
+                                orders.length > 0
+                              }
+                              onChange={toggleAll}
+                            />
+                          </th>
+                          <th className="px-4 py-4">Đơn hàng</th>
+                          <th className="px-4 py-4">Chi nhánh</th>
+                          <th className="px-4 py-4 text-center">Số lượng</th>
+                          <th className="px-4 py-4">Chi tiết món</th>
+                          <th className="px-8 py-4 text-right">Giá trị</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-800/30">
+                        {isLoadingOrders ? (
+                          <tr>
+                            <td colSpan={6} className="px-8 py-20 text-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
+                            </td>
+                          </tr>
+                        ) : orders.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="px-8 py-20 text-center text-zinc-600 font-bold uppercase tracking-widest opacity-30"
+                            >
+                              Không có đơn hàng nào chờ gom mẻ
+                            </td>
+                          </tr>
+                        ) : (
+                          orders.map((order) => (
+                            <tr
+                              key={order.orderId}
+                              className={cn(
+                                "hover:bg-zinc-800/20 cursor-pointer transition-colors group",
+                                selectedOrderIds.has(order.orderId)
+                                  ? "bg-amber-500/[0.03]"
+                                  : "",
+                              )}
+                              onClick={() => toggleSelection(order.orderId)}
+                            >
+                              <td className="px-8 py-5 text-center">
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-amber-500 focus:ring-amber-500/20 group-hover:border-amber-500/50"
+                                  checked={selectedOrderIds.has(order.orderId)}
+                                  readOnly
+                                />
+                              </td>
+                              <td className="px-4 py-5">
+                                <div className="flex flex-col">
+                                  <span className="text-[13px] font-black text-zinc-100 uppercase tracking-tighter">
+                                    #ORD-{order.orderId}
+                                  </span>
+                                  <span className="text-[9px] text-zinc-600 font-medium italic">
+                                    Đặt lúc:{" "}
+                                    {new Date(
+                                      order.orderDate,
+                                    ).toLocaleTimeString("vi-VN")}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-5">
+                                <span className="text-[13px] font-bold text-zinc-300">
+                                  {order.storeName || `Store #${order.storeId}`}
+                                </span>
+                              </td>
+                              <td className="px-4 py-5">
+                                <div className="flex items-center justify-center w-10 h-7 bg-zinc-950 rounded-lg border border-zinc-800">
+                                  <span className="text-xs font-black text-amber-500">
+                                    {order.orderDetails?.reduce(
+                                      (sum, i) => sum + i.quantity,
+                                      0,
+                                    ) || 0}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-5">
+                                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                  {order.orderDetails
+                                    ?.slice(0, 2)
+                                    .map((i, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="text-[9px] px-1.5 py-0.5 bg-zinc-950/50 text-zinc-500 border border-zinc-800 rounded-md font-medium"
+                                      >
+                                        {i.productName}
+                                      </span>
+                                    ))}
+                                  {order.orderDetails &&
+                                    order.orderDetails.length > 2 && (
+                                      <span className="text-[9px] px-1.5 py-0.5 text-zinc-600 font-bold">
+                                        +{order.orderDetails.length - 2} món
+                                      </span>
+                                    )}
+                                </div>
+                              </td>
+                              <td className="px-8 py-5 text-right">
+                                <span className="text-[13px] font-black text-zinc-100">
+                                  {(order.totalAmount || 0).toLocaleString()}{" "}
+                                  <span className="text-[9px] text-zinc-500 ml-0.5">
+                                    đ
+                                  </span>
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col justify-end bg-zinc-900/40 p-8 rounded-[32px] border border-zinc-800/50 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 blur-[80px] -mr-24 -mt-24"></div>
-              <div className="relative z-10 space-y-6">
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black text-white leading-tight">
-                    Sẵn sàng để gom đơn hàng?
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-medium tracking-tight">
-                    Bước tiếp theo bạn sẽ chọn các đơn hàng chi nhánh đã duyệt
-                    để tổng hợp chỉ tiêu.
-                  </p>
+              {/* Sticky Selection Sidebar */}
+              <div className="lg:w-[280px] shrink-0 space-y-4">
+                <div className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 shadow-xl">
+                  <div>
+                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-4">
+                      Chi tiết lựa chọn
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-800/50 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
+                            <ChefHat size={16} />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter">
+                              Bếp Thực Hiện
+                            </span>
+                            <span className="text-xs font-black text-zinc-200 uppercase truncate max-w-[160px]">
+                              {kitchens.find(
+                                (k) => k.kitchenId === selectedKitchenId,
+                              )?.name || "Chưa chọn"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                            <CalendarIcon size={16} />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter">
+                              Ngày kế hoạch
+                            </span>
+                            <span className="text-xs font-black text-zinc-200">
+                              {new Date(plannedDate).toLocaleDateString(
+                                "vi-VN",
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-800/50">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] font-black text-zinc-600 uppercase tracking-tighter">
+                            Đã chọn
+                          </span>
+                          <span className="text-xl font-black text-amber-500">
+                            {selectedOrderIds.size}
+                          </span>
+                        </div>
+                        <div className="w-full bg-zinc-900 h-1 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-500 transition-all duration-500"
+                            style={{
+                              width: `${(selectedOrderIds.size / (orders.length || 1)) * 100}%`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Button
+                      className="w-full h-14 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-amber-900/20 border-0"
+                      onClick={() => setStep(2)}
+                      disabled={selectedOrderIds.size === 0}
+                    >
+                      Tiếp tục Bước 2{" "}
+                      <ChevronRight size={18} className="ml-2" />
+                    </Button>
+                    <p className="text-[9px] text-zinc-500 font-medium text-center px-4 italic leading-relaxed">
+                      Tiếp theo bạn sẽ xem tổng hợp nhu cầu sản xuất từ các đơn
+                      hàng đã chọn phía trên.
+                    </p>
+                  </div>
                 </div>
-                <Button
-                  onClick={() => setStep(2)}
-                  disabled={!selectedKitchenId || !plannedDate}
-                  className="w-full h-14 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-amber-900/20 border-0"
-                >
-                  Tiếp tục Bước 2 <ChevronRight size={18} className="ml-2" />
-                </Button>
               </div>
             </div>
           </div>
         )}
 
         {step === 2 && (
-          <div className="flex flex-col lg:flex-row gap-8 animate-in slide-in-from-right-8 duration-500">
-            {/* Main Table Area */}
-            <div className="flex-1 space-y-4">
-              <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 overflow-hidden shadow-2xl">
-                <div className="p-8 border-b border-zinc-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
-                  <div>
-                    <h2 className="text-lg font-black text-zinc-100 uppercase tracking-tight">
-                      Chọn đơn hàng cần sản xuất
-                    </h2>
-                    <p className="text-xs text-zinc-500 font-medium mt-1">
-                      Danh sách các đơn hàng đã Approved đang chờ Gom mẻ.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 bg-zinc-900 z-10 border-b border-zinc-800">
-                      <tr className="text-[10px] uppercase font-black text-zinc-600 tracking-widest">
-                        <th className="px-8 py-4 w-12 text-center">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-amber-500 focus:ring-amber-500/20"
-                            checked={
-                              selectedOrderIds.size === orders.length &&
-                              orders.length > 0
-                            }
-                            onChange={toggleAll}
-                          />
-                        </th>
-                        <th className="px-4 py-4">Đơn hàng</th>
-                        <th className="px-4 py-4">Chi nhánh</th>
-                        <th className="px-4 py-4 text-center">Số lượng</th>
-                        <th className="px-4 py-4">Chi tiết món</th>
-                        <th className="px-8 py-4 text-right">Giá trị</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800/30">
-                      {isLoadingOrders ? (
-                        <tr>
-                          <td colSpan={6} className="px-8 py-20 text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
-                          </td>
-                        </tr>
-                      ) : orders.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="px-8 py-20 text-center text-zinc-600 font-bold uppercase tracking-widest opacity-30"
-                          >
-                            Không có đơn hàng nào chờ gom mẻ
-                          </td>
-                        </tr>
-                      ) : (
-                        orders.map((order) => (
-                          <tr
-                            key={order.orderId}
-                            className={cn(
-                              "hover:bg-zinc-800/20 cursor-pointer transition-colors group",
-                              selectedOrderIds.has(order.orderId)
-                                ? "bg-amber-500/[0.03]"
-                                : "",
-                            )}
-                            onClick={() => toggleSelection(order.orderId)}
-                          >
-                            <td className="px-8 py-5 text-center">
-                              <input
-                                type="checkbox"
-                                className="w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-amber-500 focus:ring-amber-500/20 group-hover:border-amber-500/50"
-                                checked={selectedOrderIds.has(order.orderId)}
-                                readOnly
-                              />
-                            </td>
-                            <td className="px-4 py-5">
-                              <div className="flex flex-col">
-                                <span className="text-[13px] font-black text-zinc-100 uppercase tracking-tighter">
-                                  #ORD-{order.orderId}
-                                </span>
-                                <span className="text-[9px] text-zinc-600 font-medium italic">
-                                  Đặt lúc:{" "}
-                                  {new Date(order.orderDate).toLocaleTimeString(
-                                    "vi-VN",
-                                  )}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-5">
-                              <span className="text-[13px] font-bold text-zinc-300">
-                                {order.storeName || `Store #${order.storeId}`}
-                              </span>
-                            </td>
-                            <td className="px-4 py-5">
-                              <div className="flex items-center justify-center w-10 h-7 bg-zinc-950 rounded-lg border border-zinc-800">
-                                <span className="text-xs font-black text-amber-500">
-                                  {order.orderDetails?.reduce(
-                                    (sum, i) => sum + i.quantity,
-                                    0,
-                                  ) || 0}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-5">
-                              <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                {order.orderDetails
-                                  ?.slice(0, 2)
-                                  .map((i, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="text-[9px] px-1.5 py-0.5 bg-zinc-950/50 text-zinc-500 border border-zinc-800 rounded-md font-medium"
-                                    >
-                                      {i.productName}
-                                    </span>
-                                  ))}
-                                {order.orderDetails &&
-                                  order.orderDetails.length > 2 && (
-                                    <span className="text-[9px] px-1.5 py-0.5 text-zinc-600 font-bold">
-                                      +{order.orderDetails.length - 2} món
-                                    </span>
-                                  )}
-                              </div>
-                            </td>
-                            <td className="px-8 py-5 text-right">
-                              <span className="text-[13px] font-black text-zinc-100">
-                                {(order.totalAmount || 0).toLocaleString()}{" "}
-                                <span className="text-[9px] text-zinc-500 ml-0.5">
-                                  đ
-                                </span>
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                onClick={() => setStep(1)}
-                className="text-zinc-500 hover:text-white font-bold uppercase text-[10px] tracking-widest px-6 h-12"
-              >
-                <ArrowLeft size={16} className="mr-2" /> Quay lại Bước 1
-              </Button>
-            </div>
-
-            {/* Sticky Selection Sidebar */}
-            <div className="lg:w-[320px] space-y-6">
-              <div className="bg-zinc-900/40 p-8 rounded-[32px] border border-zinc-800/50 sticky top-8 space-y-8 shadow-2xl">
-                <div>
-                  <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-4">
-                    Chi tiết lựa chọn
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-800/50 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
-                          <ChefHat size={16} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter">
-                            Bếp Thực Hiện
-                          </span>
-                          <span className="text-xs font-black text-zinc-200 uppercase truncate max-w-[160px]">
-                            {kitchens.find(
-                              (k) => k.kitchenId === selectedKitchenId,
-                            )?.name || "Chưa chọn"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
-                          <CalendarIcon size={16} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter">
-                            Ngày kế hoạch
-                          </span>
-                          <span className="text-xs font-black text-zinc-200">
-                            {new Date(plannedDate).toLocaleDateString("vi-VN")}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-zinc-950 rounded-2xl border border-zinc-800/50">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-tighter">
-                          Đã chọn
-                        </span>
-                        <span className="text-xl font-black text-amber-500">
-                          {selectedOrderIds.size}
-                        </span>
-                      </div>
-                      <div className="w-full bg-zinc-900 h-1 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-amber-500 transition-all duration-500"
-                          style={{
-                            width: `${(selectedOrderIds.size / (orders.length || 1)) * 100}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Button
-                    className="w-full h-14 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-amber-900/20 border-0"
-                    onClick={() => setStep(3)}
-                    disabled={selectedOrderIds.size === 0}
-                  >
-                    Tiếp tục Bước 3 <ChevronRight size={18} className="ml-2" />
-                  </Button>
-                  <p className="text-[9px] text-zinc-500 font-medium text-center px-4 italic leading-relaxed">
-                    Tiếp theo bạn sẽ xem tổng hợp nhu cầu sản xuất từ các đơn
-                    hàng đã chọn phía trên.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
           <div className="max-w-4xl mx-auto space-y-4 animate-in slide-in-from-right-8 duration-500">
             <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl relative">
               {/* Document Header Decor */}
@@ -849,14 +820,14 @@ export const CreateProductionPlan = () => {
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <div className="flex items-center gap-2 mb-1">
-                      {capacityInfo && (
+                      {selectedKitchenId && kitchensInfo[selectedKitchenId] && (
                         <Badge
                           className={cn(
                             "text-[8px] font-black px-1.5 py-0 border-0 h-4 uppercase tracking-widest",
                             aggregatedDemand.reduce(
                               (s, i) => s + i.quantity,
                               0,
-                            ) > capacityInfo.remaining
+                            ) > kitchensInfo[selectedKitchenId].remaining
                               ? "bg-red-500/20 text-red-500"
                               : "bg-emerald-500/20 text-emerald-500",
                           )}
@@ -864,7 +835,7 @@ export const CreateProductionPlan = () => {
                           {aggregatedDemand.reduce(
                             (s, i) => s + i.quantity,
                             0,
-                          ) > capacityInfo.remaining
+                          ) > kitchensInfo[selectedKitchenId].remaining
                             ? "QUÁ TẢI"
                             : "HỢP LỆ"}
                         </Badge>
@@ -887,7 +858,7 @@ export const CreateProductionPlan = () => {
             <div className="flex items-center justify-between gap-4">
               <Button
                 variant="ghost"
-                onClick={() => setStep(2)}
+                onClick={() => setStep(1)}
                 disabled={isSubmitting}
                 className="text-zinc-600 hover:text-white font-black uppercase text-[10px] tracking-widest h-10 transition-colors"
               >

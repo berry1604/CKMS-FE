@@ -29,12 +29,17 @@ import type {
 import { cn } from "../../utils/classNames";
 
 export const AllocationMatrix = () => {
-    const navigate = useNavigate();
-    const [selectedPlanId, setSelectedPlanId] = useState<number | "">("");
-    const [selectedPlan, setSelectedPlan] = useState<ProductionPlanSummaryResponse | null>(null);
-    const [unallocatedPlans, setUnallocatedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
-    const [allocatedPlans, setAllocatedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
-    const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+  const navigate = useNavigate();
+  const [selectedPlanId, setSelectedPlanId] = useState<number | "">("");
+  const [selectedPlan, setSelectedPlan] =
+    useState<ProductionPlanSummaryResponse | null>(null);
+  const [unallocatedPlans, setUnallocatedPlans] = useState<
+    ProductionPlanSummaryResponse[]
+  >([]);
+  const [allocatedPlans, setAllocatedPlans] = useState<
+    ProductionPlanSummaryResponse[]
+  >([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
 
   const [matrix, setMatrix] = useState<AllocationRow[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -446,26 +451,51 @@ export const AllocationMatrix = () => {
                 isSaving ||
                 isSuccess ||
                 hasYield === false ||
-                matrix.some(
-                  (row) =>
-                    (row.allocations || []).reduce(
-                      (s, a) => s + a.allocatedQuantity,
-                      0,
-                    ) > row.totalAvailable,
-                )
+                matrix.some((row) => {
+                  const totalAllocated = (row.allocations || []).reduce(
+                    (s, a) => s + a.allocatedQuantity,
+                    0,
+                  );
+                  const totalRequested = (row.allocations || []).reduce(
+                    (s, a) => s + a.requestedQuantity,
+                    0,
+                  );
+                  // Bắt buộc phân bổ đủ hàng (đủ yêu cầu)
+                  // Hoặc nếu không đủ stock thì phải phân bổ tối đa lượng stock hiện có
+                  const requiredToAllocate = Math.min(
+                    totalRequested,
+                    row.totalAvailable || 0,
+                  );
+
+                  return (
+                    totalAllocated > (row.totalAvailable || 0) || // Phân bổ vượt quá stock
+                    totalAllocated < requiredToAllocate // Chưa phân bổ đủ
+                  );
+                })
               }
               className={cn(
                 "font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-xl border-0 flex items-center gap-2 transition-all active:scale-95",
                 isSuccess
                   ? "bg-emerald-600/20 text-emerald-500 border border-emerald-500/30 cursor-default"
                   : "bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/20",
-                matrix.some(
-                  (row) =>
-                    (row.allocations || []).reduce(
-                      (s, a) => s + a.allocatedQuantity,
-                      0,
-                    ) > row.totalAvailable,
-                ) && "opacity-50 grayscale cursor-not-allowed",
+                matrix.some((row) => {
+                  const totalAllocated = (row.allocations || []).reduce(
+                    (s, a) => s + a.allocatedQuantity,
+                    0,
+                  );
+                  const totalRequested = (row.allocations || []).reduce(
+                    (s, a) => s + a.requestedQuantity,
+                    0,
+                  );
+                  const requiredToAllocate = Math.min(
+                    totalRequested,
+                    row.totalAvailable || 0,
+                  );
+                  return (
+                    totalAllocated > (row.totalAvailable || 0) ||
+                    totalAllocated < requiredToAllocate
+                  );
+                }) && "opacity-50 grayscale cursor-not-allowed",
               )}
             >
               {isSaving ? (
@@ -868,7 +898,10 @@ export const AllocationMatrix = () => {
                                   </div>
                                   {/* Requested label */}
                                   <span className="text-[8px] font-bold text-zinc-500">
-                                    YC: <span className="font-mono text-zinc-400">{cell.requestedQuantity}</span>
+                                    YC:{" "}
+                                    <span className="font-mono text-zinc-400">
+                                      {cell.requestedQuantity}
+                                    </span>
                                   </span>
                                   {/* Mini progress */}
                                   <div className="w-16 h-1 bg-zinc-800 rounded-full overflow-hidden">
@@ -894,49 +927,69 @@ export const AllocationMatrix = () => {
                       );
                     })
                   )}
-                    {/* Summary Row */}
-                    {matrix.length > 0 && (
-                      <tr className="bg-zinc-900/80 border-t-2 border-zinc-700">
-                        <td className="px-6 py-4 bg-zinc-900 sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
-                          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                            Tổng phân bổ
-                          </span>
-                        </td>
-                        {storeColumns.map((col) => {
-                          const storeAllocated = matrix.reduce((sum, row) => {
-                            const cell = (row.allocations || []).find(
-                              (a: any) => a.storeId === col.storeId,
-                            );
-                            return sum + (cell?.allocatedQuantity || 0);
-                          }, 0);
-                          const storeRequested = matrix.reduce((sum, row) => {
-                            const cell = (row.allocations || []).find(
-                              (a: any) => a.storeId === col.storeId,
-                            );
-                            return sum + (cell?.requestedQuantity || 0);
-                          }, 0);
-                          const pct = storeRequested > 0 ? Math.round((storeAllocated / storeRequested) * 100) : 0;
-                          return (
-                            <td key={col.storeId} className="px-4 py-4 text-center">
-                              <div className="flex flex-col items-center gap-1">
-                                <span className={cn(
-                                  "text-sm font-black font-mono",
-                                  pct >= 100 ? "text-emerald-400" : pct > 0 ? "text-amber-400" : "text-zinc-600",
-                                )}>
-                                  {storeAllocated}/{storeRequested}
-                                </span>
-                                <span className={cn(
-                                  "text-[9px] font-black",
-                                  pct >= 100 ? "text-emerald-500" : pct > 0 ? "text-amber-500" : "text-zinc-600",
-                                )}>
-                                  {pct}%
-                                </span>
-                              </div>
-                            </td>
+                  {/* Summary Row */}
+                  {matrix.length > 0 && (
+                    <tr className="bg-zinc-900/80 border-t-2 border-zinc-700">
+                      <td className="px-6 py-4 bg-zinc-900 sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                          Tổng phân bổ
+                        </span>
+                      </td>
+                      {storeColumns.map((col) => {
+                        const storeAllocated = matrix.reduce((sum, row) => {
+                          const cell = (row.allocations || []).find(
+                            (a: any) => a.storeId === col.storeId,
                           );
-                        })}
-                      </tr>
-                    )}
+                          return sum + (cell?.allocatedQuantity || 0);
+                        }, 0);
+                        const storeRequested = matrix.reduce((sum, row) => {
+                          const cell = (row.allocations || []).find(
+                            (a: any) => a.storeId === col.storeId,
+                          );
+                          return sum + (cell?.requestedQuantity || 0);
+                        }, 0);
+                        const pct =
+                          storeRequested > 0
+                            ? Math.round(
+                                (storeAllocated / storeRequested) * 100,
+                              )
+                            : 0;
+                        return (
+                          <td
+                            key={col.storeId}
+                            className="px-4 py-4 text-center"
+                          >
+                            <div className="flex flex-col items-center gap-1">
+                              <span
+                                className={cn(
+                                  "text-sm font-black font-mono",
+                                  pct >= 100
+                                    ? "text-emerald-400"
+                                    : pct > 0
+                                      ? "text-amber-400"
+                                      : "text-zinc-600",
+                                )}
+                              >
+                                {storeAllocated}/{storeRequested}
+                              </span>
+                              <span
+                                className={cn(
+                                  "text-[9px] font-black",
+                                  pct >= 100
+                                    ? "text-emerald-500"
+                                    : pct > 0
+                                      ? "text-amber-500"
+                                      : "text-zinc-600",
+                                )}
+                              >
+                                {pct}%
+                              </span>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

@@ -19,6 +19,46 @@
   animation: shake 0.5s ease-in-out;
 }
 
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes gradient-xy {
+  0%, 100% {
+    background-size: 400% 400%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-gradient-xy {
+  animation: gradient-xy 8s ease infinite;
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-fade {
+  animation: slide-up-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @layer base {
   body {
     @apply antialiased text-gray-200 bg-zinc-950;
@@ -45,4 +85,9 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   @apply bg-amber-500/50;
+}
+
+/* Make calendar icon white for all date inputs system-wide */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
 }

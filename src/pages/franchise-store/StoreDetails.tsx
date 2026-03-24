@@ -13,10 +13,10 @@ import {
     ExternalLink,
     Store as StoreIcon,
     Shield,
-    Loader2
+    Loader2,
+    Navigation
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
 import { storeApi } from '../../services/store.api';
 import { StoreInventory } from './StoreInventory';
 import StoreStaff from './StoreStaff';
@@ -118,12 +118,6 @@ export const StoreDetails = () => {
                                     <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none drop-shadow-2xl">
                                         {store.name}
                                     </h1>
-                                    <Badge
-                                        variant={store.isActive ? 'success' : 'secondary'}
-                                        className={`h - 7 px - 4 text - [10px] font - black tracking - widest border - none rounded - full ${store.isActive ? 'bg-emerald-500 text-black' : 'bg-stone-800 text-stone-500'} `}
-                                    >
-                                        {store.isActive ? 'HOẠT ĐỘNG' : 'TẠM NGƯNG'}
-                                    </Badge>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-8 text-stone-400 font-medium tracking-wide">
                                     <div className="flex items-center gap-2 group/loc cursor-default">
@@ -194,10 +188,26 @@ export const StoreDetails = () => {
                                     <MapPin size={16} className="text-amber-500/60 mt-0.5" />
                                     <span className="text-sm font-medium leading-relaxed">{store.address || manager?.address || 'Chưa cập nhật'}</span>
                                 </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/5 text-stone-500 hover:text-stone-300 transition-all">
+                                        <Navigation size={14} className="text-amber-500/40 rotate-45" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] uppercase font-black tracking-widest opacity-40">Vĩ độ</span>
+                                            <span className="text-xs font-mono">{store.latitude || '0.0'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/5 text-stone-500 hover:text-stone-300 transition-all">
+                                        <Navigation size={14} className="text-amber-500/40 -rotate-45" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] uppercase font-black tracking-widest opacity-40">Kinh độ</span>
+                                            <span className="text-xs font-mono">{store.longitude || '0.0'}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div >
+                </div>
 
 
                 {/* System Stats / Overview Card */}
@@ -334,15 +344,6 @@ export const StoreDetails = () => {
                     activeTab === 'Settings' && (
                         <div className="max-w-3xl mx-auto space-y-8 py-10 animate-in fade-in slide-in-from-bottom-12 duration-1000">
                             <div className="bg-[#0a0a0a] border border-white/[0.03] rounded-[3rem] p-12 space-y-10 shadow-2xl">
-                                <div className="flex items-center justify-between border-b border-white/5 pb-10">
-                                    <div className="max-w-md">
-                                        <h4 className="text-white font-black tracking-widest uppercase text-base mb-2 italic">Trạng thái Kích hoạt Hệ thống</h4>
-                                        <p className="text-xs text-stone-600 font-medium italic leading-relaxed">Khi tắt, toàn bộ các quy trình logistics và đặt hàng liên quan đến cửa hàng này sẽ bị đóng băng ngay lập tức.</p>
-                                    </div>
-                                    <div className="w-20 h-10 bg-emerald-500/10 rounded-full border border-emerald-500/30 relative cursor-pointer shadow-[0_0_30px_rgba(16,185,129,0.1)] group/switch">
-                                        <div className="absolute top-1 right-1 w-8 h-8 bg-emerald-500 rounded-full shadow-2xl shadow-emerald-500/50 group-hover/switch:scale-110 transition-transform"></div>
-                                    </div>
-                                </div>
 
                                 <div className="flex items-center justify-between border-b border-white/5 pb-10 opacity-40">
                                     <div className="max-w-md">

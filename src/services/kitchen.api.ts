@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { KitchenResponse, KitchenUpdateRequest } from '../types/kitchen';
+import type { KitchenResponse, KitchenUpdateRequest, KitchenCreateRequest } from '../types/kitchen';
 import type { ApiResponse } from '../types/product';
 
 export const kitchenApi = {
@@ -24,6 +24,22 @@ export const kitchenApi = {
      */
     updateKitchen: async (kitchenId: number, data: KitchenUpdateRequest): Promise<ApiResponse<KitchenResponse>> => {
         const response = await axiosClient.patch<ApiResponse<KitchenResponse>>(`/kitchens/${kitchenId}`, data);
+        return response.data;
+    },
+
+    /**
+     * POST /kitchens
+     */
+    createKitchen: async (data: KitchenCreateRequest): Promise<ApiResponse<KitchenResponse>> => {
+        const response = await axiosClient.post<ApiResponse<KitchenResponse>>('/kitchens', data);
+        return response.data;
+    },
+
+    /**
+     * DELETE /kitchens/{kitchenId}
+     */
+    deleteKitchen: async (kitchenId: number): Promise<ApiResponse<void>> => {
+        const response = await axiosClient.delete<ApiResponse<void>>(`/kitchens/${kitchenId}`);
         return response.data;
     }
 };

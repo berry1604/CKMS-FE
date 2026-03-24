@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, TrendingUp, Package, Leaf, Edit, Trash2, Clock, Save } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Package, Leaf, Edit, Trash2, Clock, Save, RefreshCw } from 'lucide-react';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import { KitchenSelector } from '../../components/common/KitchenSelector';
@@ -36,7 +36,8 @@ export const KitchenInventory = () => {
         setIsLoading(true);
         try {
             const res = await kitchenInventoryApi.getWarehouseStock(warehouseId);
-            setInventory(res.data || []);
+            const filteredData = (res.data || []).filter(item => item.quantity > 0);
+            setInventory(filteredData);
         } catch (error) {
             console.error(error);
             toast.error('Gặp lỗi khi tải dữ liệu kho.');
@@ -333,6 +334,14 @@ export const KitchenInventory = () => {
                             Chi tiết danh mục tồn kho
                         </h4>
                     </div>
+                    <button
+                        onClick={() => selectedWarehouseId && loadInventory(selectedWarehouseId)}
+                        disabled={isLoading}
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-amber-500/10 text-zinc-300 hover:text-amber-500 rounded-xl font-bold text-xs uppercase tracking-widest transition-all border border-white/10 hover:border-amber-500/30"
+                    >
+                        <RefreshCw size={14} className={isLoading ? "animate-spin text-amber-500" : "text-amber-500"} />
+                        {isLoading ? 'Đang làm mới...' : 'Làm mới'}
+                    </button>
                 </div>
 
                 <div className="bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/50 rounded-[40px] overflow-hidden shadow-2xl relative group/table">

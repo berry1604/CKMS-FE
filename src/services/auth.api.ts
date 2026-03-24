@@ -7,13 +7,12 @@ import type {
 export const authApi = {
     login: async (username: string, password: string): Promise<LoginResponse> => {
         const response = await axiosClient.post<any>('/auth/login', { username, password });
-        
-        // Correctly unwrap from response.data
-        // Handle both { data: { ... } } (wrapped) and { ... } (unwrapped)
+
         const data = response.data?.data || response.data;
         const { accessToken, refreshToken, token } = data;
         const validAccessToken = accessToken || token;
 
+        // ✅ đổi sessionStorage -> localStorage (không mất khi reload)
         if (validAccessToken) {
             sessionStorage.setItem('accessToken', validAccessToken);
         }
@@ -24,30 +23,37 @@ export const authApi = {
         return data;
     },
 
-    logout: async (refreshToken: string) => {
+    // ❗ bỏ param refreshToken (tự lấy từ storage cho an toàn)
+    logout: async () => {
         try {
-            await axiosClient.post('/auth/logout', { refreshToken });
+            const refreshToken = sessionStorage.getItem('refreshToken');
+
+            if (refreshToken) {
+                await axiosClient.post('/auth/logout', { refreshToken });
+            }
         } finally {
             sessionStorage.removeItem('accessToken');
             sessionStorage.removeItem('refreshToken');
         }
     },
 
+    // ✅ FIX QUAN TRỌNG
     refreshToken: async (refreshToken: string): Promise<LoginResponse> => {
-        // Send raw string as body, ensure correct content-type if backend expects plain text
         const response = await axiosClient.post<any>(
             '/auth/refresh',
-            refreshToken,
-            { headers: { 'Content-Type': 'text/plain' } }
+            { refreshToken } // ✅ đúng format BE
         );
 
         const data = response.data?.data || response.data;
         const { accessToken, refreshToken: newRefreshToken, token } = data;
         const validAccessToken = accessToken || token;
 
+        // ✅ dùng localStorage
         if (validAccessToken) {
             sessionStorage.setItem('accessToken', validAccessToken);
         }
+
+        // ⚠️ chỉ overwrite nếu BE trả về refreshToken mới
         if (newRefreshToken) {
             sessionStorage.setItem('refreshToken', newRefreshToken);
         }
@@ -57,19 +63,16 @@ export const authApi = {
 
     activateAccount: async (data: ActivateAccountRequest): Promise<string> => {
         const response = await axiosClient.post<any>('/auth/activate', data);
-        const result = response.data?.data !== undefined ? response.data.data : response.data;
-        return result;
+        return response.data?.data ?? response.data;
     },
 
     forgotPassword: async (email: string): Promise<string> => {
         const response = await axiosClient.post<any>('/auth/forgot-password', { email });
-        const result = response.data?.data !== undefined ? response.data.data : response.data;
-        return result;
+        return response.data?.data ?? response.data;
     },
 
     resetPassword: async (token: string, newPassword: string): Promise<string> => {
         const response = await axiosClient.post<any>('/auth/reset-password', { token, newPassword });
-        const result = response.data?.data !== undefined ? response.data.data : response.data;
-        return result;
+        return response.data?.data ?? response.data;
     }
 };

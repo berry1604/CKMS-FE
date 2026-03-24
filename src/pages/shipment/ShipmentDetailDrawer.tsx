@@ -11,7 +11,10 @@ import { Badge } from '../../components/ui/Badge';
 import { toast } from 'react-hot-toast';
 import { productionPlanApi } from '../../services/productionPlan.api';
 import { shipmentApi } from '../../services/shipment.api';
+import { storeOrderApi } from '../../services/storeOrderApi';
+import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import { cn } from '../../utils/classNames';
+import { useAuth } from '../../hooks/useAuth';
 import type { ShipmentResponse } from '../../types/shipment';
 
 interface ShipmentDetailDrawerProps {
@@ -29,6 +32,7 @@ export const ShipmentDetailDrawer = ({
     onStatusAction,
     onRefresh
 }: ShipmentDetailDrawerProps) => {
+    const { user } = useAuth();
     const [aggregatedItems, setAggregatedItems] = useState<{ productId: number, productName: string, quantity: number }[]>([]);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
@@ -37,18 +41,86 @@ export const ShipmentDetailDrawer = ({
             const loadData = async () => {
                 setIsLoadingDetails(true);
                 try {
-                    // Always try to get full shipment details first to ensure we have productionPlanId
+                    // Always try to get full shipment details first
                     const fullShipment = await shipmentApi.getShipmentById(shipment.shipmentId);
+                    
+                    const itemsMap = new Map<number, { productId: number, productName: string, quantity: number }>();
+                    let loadedFromPlan = false;
+                    
                     if (fullShipment.productionPlanId) {
-                        const plan = await productionPlanApi.getProductionPlanDetail(fullShipment.productionPlanId);
-                        if (plan.items) {
-                            setAggregatedItems(plan.items.map(item => ({
-                                productId: item.productId,
-                                productName: item.productName,
-                                quantity: item.plannedQuantity
-                            })));
+                        try {
+                            // Get plan just to extract the kitchenId (warehouseId)
+                            const plan = await productionPlanApi.getProductionPlanDetail(fullShipment.productionPlanId);
+                            
+                            if (plan && plan.kitchenId) {
+                                // Fetch stock from kitchen inventory API instead of taking from productplan directly
+                                const stockRes = await kitchenInventoryApi.getWarehouseStock(plan.kitchenId);
+                                const allStock = stockRes?.data || (stockRes as any) || [];
+                                
+                                // Filter stock by this shipment's productionPlanId
+                                const relevantStock = allStock.filter((s: any) => s.productionPlanId === fullShipment.productionPlanId);
+                                
+                                if (relevantStock && relevantStock.length > 0) {
+                                    relevantStock.forEach((item: any) => {
+                                        itemsMap.set(item.itemId || item.id, {
+                                            productId: item.itemId || item.id,
+                                            productName: item.itemName,
+                                            quantity: item.quantity
+                                        });
+                                    });
+                                    loadedFromPlan = true;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Could not load items from kitchen inventory stock", e);
                         }
                     }
+
+                    // Get role to avoid sending order requests as ADMIN (which throw 403)
+                    const userRoleStr = typeof user?.role === 'string' ? user.role.replace('ROLE_', '') : '';
+
+                    // Fallback: If not loaded from plan, try loading from individual orders
+                    if (!loadedFromPlan && userRoleStr !== 'ADMIN') {
+                        try {
+                            const orderIds = new Set<number>();
+                            if (fullShipment.stops && fullShipment.stops.length > 0) {
+                                fullShipment.stops.forEach(stop => {
+                                    (stop.storeOrderIds || []).forEach(id => orderIds.add(id));
+                                });
+                            } else if (fullShipment.storeOrderIds) {
+                                fullShipment.storeOrderIds.forEach(id => orderIds.add(id));
+                            }
+                            
+                            // It's possible for multi-drop to have duplicate order IDs if data is strange, Set prevents that
+                            if (orderIds.size > 0) {
+                                const orderPromises = Array.from(orderIds).map(id => 
+                                    storeOrderApi.getOrderById(id).catch(() => null)
+                                );
+                                const orders = await Promise.all(orderPromises);
+                                
+                                orders.forEach(order => {
+                                    if (order && order.orderDetails) {
+                                        order.orderDetails.forEach((item: any) => {
+                                            const existing = itemsMap.get(item.productId);
+                                            if (existing) {
+                                                existing.quantity += item.quantity;
+                                            } else {
+                                                itemsMap.set(item.productId, {
+                                                    productId: item.productId,
+                                                    productName: item.productName,
+                                                    quantity: item.quantity
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.warn("Could not load items from store orders", e);
+                        }
+                    }
+
+                    setAggregatedItems(Array.from(itemsMap.values()));
                 } catch (error: any) {
                     console.error("Failed to fetch shipment details/items:", error);
                     toast.error("Không thể tải chi tiết món hàng");
@@ -60,7 +132,7 @@ export const ShipmentDetailDrawer = ({
         } else {
             setAggregatedItems([]);
         }
-    }, [isOpen, shipment?.shipmentId]);
+    }, [isOpen, shipment?.shipmentId, user?.role]);
 
     const handleCopyAhamoveId = () => {
         if (shipment?.ahamoveOrderId) {
@@ -326,6 +398,31 @@ export const ShipmentDetailDrawer = ({
                             </div>
                         </div>
                     </div>
+
+                    {/* Store Contact (if available) */}
+                    {(shipment.storePhone || shipment.stops?.some(s => s.storePhone)) && (
+                        <div className="p-4 bg-zinc-900/40 rounded-2xl border border-zinc-800/50 space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Phone size={14} className="text-zinc-600" />
+                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Liên hệ cửa hàng</span>
+                            </div>
+                            {shipment.stops && shipment.stops.length > 0 ? (
+                                <div className="space-y-1.5">
+                                    {shipment.stops.map(stop => (
+                                        <div key={stop.stopId} className="flex items-center justify-between">
+                                            <span className="text-[11px] font-bold text-zinc-400 truncate max-w-[120px]">{stop.storeName}</span>
+                                            <span className="text-[11px] font-bold text-zinc-300 font-mono tracking-tighter">{stop.storePhone || 'N/A'}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : shipment.storePhone ? (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-bold text-zinc-400 truncate max-w-[120px]">{shipment.storeName || 'Cửa hàng'}</span>
+                                    <span className="text-[11px] font-bold text-zinc-300 font-mono tracking-tighter">{shipment.storePhone}</span>
+                                </div>
+                            ) : null}
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Column: Progress & Timeline */}
@@ -445,14 +542,14 @@ export const ShipmentDetailDrawer = ({
                                 )}
                             </div>
 
-                            {(shipment.remarks || (shipment as any).note) && (
+                            {(shipment.remarks || shipment.note) && (
                                 <div className="bg-[#DE802B]/[0.03] p-8 border-t border-[#DE802B]/10 flex items-start gap-5">
                                     <div className="w-10 h-10 rounded-xl bg-[#DE802B]/10 border border-[#DE802B]/20 flex items-center justify-center text-[#DE802B]">
                                         <Info size={18} />
                                     </div>
                                     <div className="space-y-2">
                                         <span className="text-[10px] font-black text-[#DE802B] uppercase tracking-[0.2em] block">Ghi chú Shipment</span>
-                                        <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">"{shipment.remarks || (shipment as any).note}"</p>
+                                        <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">"{shipment.remarks || shipment.note}"</p>
                                     </div>
                                 </div>
                             )}
@@ -526,7 +623,7 @@ export const ShipmentDetailDrawer = ({
                                         <Badge variant="orange" className="h-4 text-[7px] px-1.5 uppercase font-black bg-[#DE802B]/20 text-[#DE802B] border-0">AhaMove Bill</Badge>
                                     </div>
                                     <span className="text-xs text-zinc-500 font-medium mt-1.5 max-w-[200px] leading-relaxed italic">
-                                        {(shipment as any).shippingFee ? `VND ${(shipment as any).shippingFee.toLocaleString()}` : 'Khoản phí sẽ được cập nhật tự động.'}
+                                        {shipment.shippingFee ? `VND ${shipment.shippingFee.toLocaleString()}` : 'Khoản phí sẽ được cập nhật tự động.'}
                                     </span>
                                 </div>
                             </div>

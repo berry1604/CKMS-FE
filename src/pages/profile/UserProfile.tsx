@@ -1,24 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User as UserIcon, Mail, Lock, Save, Phone, MapPin, Calendar, FileText, Camera, BadgeCheck, Sparkles } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, Save, Phone, MapPin, Calendar, FileText, Camera, BadgeCheck, Sparkles, Navigation, AlertTriangle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../hooks/useAuth';
 import { userService } from '../../services/user.service';
 import { storeApi } from '../../services/store.api';
 import { useAppStore } from '../../app/store';
 import { toast } from 'react-hot-toast';
 
+interface ProfileFormValues {
+    name: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    bio?: string;
+    latitude: number;
+    longitude: number;
+    password?: string;
+    confirmPassword?: string;
+}
+
 const profileSchema = z.object({
-    name: z.string().min(2, 'Tên là bắt buộc'),
+    name: z.string().min(1, 'Tên là bắt buộc'),
     email: z.string().email('Email không hợp lệ'),
     phone: z.string().optional(),
     address: z.string().optional(),
     bio: z.string().optional(),
-    password: z.string().min(6, 'Mật khẩu phải ít nhất 6 ký tự').optional().or(z.literal('')),
-    confirmPassword: z.string().optional().or(z.literal(''))
+    latitude: z.coerce.number(),
+    longitude: z.coerce.number(),
+    password: z.string().optional(),
+    confirmPassword: z.string().optional(),
 }).refine((data) => {
     if (data.password && data.password !== data.confirmPassword) {
         return false;
@@ -27,28 +42,48 @@ const profileSchema = z.object({
 }, {
     message: "Mật khẩu xác nhận không khớp",
     path: ["confirmPassword"],
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
+}) as z.ZodType<any>;
 
 export const UserProfile = () => {
     const { user } = useAuth();
     const { updateUser } = useAppStore();
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [pendingData, setPendingData] = useState<ProfileFormValues | null>(null);
 
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm<ProfileFormValues>({
-        resolver: zodResolver(profileSchema),
+    const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema) as any,
         defaultValues: {
             name: user?.name || '',
             email: user?.email || '',
             phone: user?.phone || '',
             address: user?.address || '',
             bio: user?.bio || '',
+            latitude: user?.latitude || 0,
+            longitude: user?.longitude || 0,
             password: '',
             confirmPassword: ''
         }
     });
+
+    const currentValues = watch();
+
+    const changedFields = useMemo(() => {
+        if (!user) return [];
+        const diff: { label: string; old: any; new: any }[] = [];
+        
+        if (currentValues.name !== user.name) diff.push({ label: 'Họ và tên', old: user.name, new: currentValues.name || 'Trống' });
+        if (currentValues.email !== user.email) diff.push({ label: 'Email', old: user.email, new: currentValues.email });
+        if (currentValues.phone !== (user.phone || '')) diff.push({ label: 'Số điện thoại', old: user.phone || 'Trống', new: currentValues.phone || 'Trống' });
+        if (currentValues.address !== (user.address || '')) diff.push({ label: 'Địa chỉ', old: user.address || 'Trống', new: currentValues.address || 'Trống' });
+        if (currentValues.bio !== (user.bio || '')) diff.push({ label: 'Tiểu sử', old: 'Đã thay đổi', new: 'Đã thay đổi' });
+        if (Number(currentValues.latitude) !== (user.latitude || 0)) diff.push({ label: 'Vĩ độ', old: user.latitude || 0, new: currentValues.latitude });
+        if (Number(currentValues.longitude) !== (user.longitude || 0)) diff.push({ label: 'Kinh độ', old: user.longitude || 0, new: currentValues.longitude });
+        if (currentValues.password) diff.push({ label: 'Mật khẩu', old: '********', new: '********' });
+        
+        return diff;
+    }, [currentValues, user]);
 
     useEffect(() => {
         if (user) {
@@ -57,6 +92,8 @@ export const UserProfile = () => {
             setValue('phone', user.phone || '');
             setValue('address', user.address || '');
             setValue('bio', user.bio || '');
+            setValue('latitude', Number(user.latitude) || 0);
+            setValue('longitude', Number(user.longitude) || 0);
 
             // Fetch real store name if it's generic (e.g., "Cửa hàng 3")
             if (user.storeId && (!user.storeName || user.storeName.includes('Cửa hàng'))) {
@@ -71,34 +108,47 @@ export const UserProfile = () => {
         }
     }, [user, setValue, updateUser]);
 
-    const onSubmit = async (data: ProfileFormValues) => {
-        if (!user) return;
+    const onSubmit = (data: any) => {
+        if (changedFields.length === 0) {
+            toast.error('Không có thông tin nào thay đổi.');
+            return;
+        }
+        setPendingData(data);
+        setShowConfirmModal(true);
+    };
+
+    const confirmUpdate = async () => {
+        if (!user || !pendingData) return;
+        setShowConfirmModal(false);
         setIsLoading(true);
         setSuccessMessage('');
 
         try {
             const updateData: any = {
-                fullName: data.name,
-                email: data.email,
-                phone: data.phone,
-                address: data.address,
-                bio: data.bio
+                fullName: pendingData.name,
+                email: pendingData.email,
+                phone: pendingData.phone,
+                address: pendingData.address,
+                bio: pendingData.bio,
+                latitude: Number(pendingData.latitude),
+                longitude: Number(pendingData.longitude)
             };
 
-            if (data.password) {
-                updateData.password = data.password;
+            if (pendingData.password) {
+                updateData.password = pendingData.password;
             }
 
-            const response = await userService.updateProfile(updateData);
+            const response = await userService.updateProfile(Number(user.id), updateData);
             
             if (response) {
-                // Update global store
                 updateUser({
-                    name: data.name,
-                    email: data.email,
-                    phone: data.phone,
-                    address: data.address,
-                    bio: data.bio
+                    name: pendingData.name,
+                    email: pendingData.email,
+                    phone: pendingData.phone,
+                    address: pendingData.address,
+                    bio: pendingData.bio,
+                    latitude: Number(pendingData.latitude),
+                    longitude: Number(pendingData.longitude)
                 });
                 
                 toast.success('Hồ sơ đã được cập nhật thành công!');
@@ -108,9 +158,11 @@ export const UserProfile = () => {
             }
         } catch (error: any) {
             console.error('Failed to update profile', error);
-            toast.error(error.response?.data?.message || 'Không thể cập nhật hồ sơ. Vui lòng thử lại sau.');
+            const errorMsg = error.response?.data?.message || 'Không thể cập nhật hồ sơ. Vui lòng thử lại sau.';
+            toast.error(errorMsg);
         } finally {
             setIsLoading(false);
+            setPendingData(null);
         }
     };
 
@@ -317,6 +369,46 @@ export const UserProfile = () => {
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Vĩ độ</label>
+                                    <div className="group relative transition-all duration-300">
+                                        <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                                            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <Navigation size={18} className="rotate-45" />
+                                            </div>
+                                        </div>
+                                        <Input
+                                            type="number"
+                                            step="any"
+                                            {...register('latitude')}
+                                            className="pl-14 h-14 bg-zinc-950/50 border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700 transition-all duration-300"
+                                            placeholder="10.762..."
+                                            error={errors.latitude?.message}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Kinh độ</label>
+                                    <div className="group relative transition-all duration-300">
+                                        <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
+                                            <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <Navigation size={18} className="-rotate-45" />
+                                            </div>
+                                        </div>
+                                        <Input
+                                            type="number"
+                                            step="any"
+                                            {...register('longitude')}
+                                            className="pl-14 h-14 bg-zinc-950/50 border-white/5 focus:border-amber-500/50 rounded-2xl text-zinc-100 font-bold placeholder:text-zinc-700 transition-all duration-300"
+                                            placeholder="106.66..."
+                                            error={errors.longitude?.message}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-2 italic">Tiểu sử cá nhân</label>
                                 <div className="group relative transition-all duration-300">
@@ -380,6 +472,59 @@ export const UserProfile = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            <Modal
+                isOpen={showConfirmModal}
+                onClose={() => setShowConfirmModal(false)}
+                title="Xác nhận thay đổi thông tin"
+                footer={
+                    <div className="flex gap-3 w-full">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setShowConfirmModal(false)}
+                            className="flex-1 h-12 rounded-2xl bg-white/5 text-zinc-400 font-black uppercase text-[10px] tracking-widest"
+                        >
+                            Hủy bỏ
+                        </Button>
+                        <Button
+                            onClick={confirmUpdate}
+                            isLoading={isLoading}
+                            className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black uppercase text-[10px] tracking-widest"
+                        >
+                            Xác nhận cập nhật
+                        </Button>
+                    </div>
+                }
+            >
+                <div className="space-y-6">
+                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                        <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-black">
+                            <AlertTriangle size={24} strokeWidth={3} />
+                        </div>
+                        <div>
+                            <p className="text-white font-black text-sm uppercase tracking-tight">Xác nhận thay đổi</p>
+                            <p className="text-amber-500/80 text-[10px] font-bold uppercase tracking-widest">Bạn có chắc muốn lưu các thay đổi này?</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Danh sách thay đổi:</p>
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                            {changedFields.map((field, idx) => (
+                                <div key={idx} className="p-3 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-1">
+                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{field.label}</span>
+                                    <div className="flex items-center gap-2 text-xs font-bold">
+                                        <span className="text-zinc-500 line-through truncate max-w-[120px]">{field.old}</span>
+                                        <Navigation size={10} className="text-zinc-700 rotate-90" />
+                                        <span className="text-white truncate">{field.new}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

@@ -27,7 +27,7 @@ export const WarehouseFulfillment = () => {
     const fetchOrders = async () => {
         setIsLoading(true);
         try {
-            const res = await storeOrderApi.getAllOrders();
+            const res = await storeOrderApi.getAllOrders({ size: 1000 });
             // Only show orders that need fulfillment
             const fulfillmentOrders = (res.content || []).filter(
                 (o) => o.status === 'APPROVED' || o.status === 'PREPARING' || o.status === 'READY'

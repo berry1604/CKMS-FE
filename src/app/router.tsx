@@ -12,6 +12,7 @@ import { CreateRolePage } from '../pages/users/CreateRolePage';
 import { StoreList } from '../pages/franchise-store/StoreList';
 import CreateStorePage from '../pages/franchise-store/CreateStorePage';
 import { StoreDetails } from '../pages/franchise-store/StoreDetails';
+import { KitchensList } from '../pages/kitchens/KitchensList';
 import { StoreInventoryPage } from '../pages/franchise-store/StoreInventoryPage';
 import { ProductCatalog } from '../pages/product/ProductCatalog';
 import { CreateProductPage } from '../pages/product/CreateProductPage';
@@ -34,7 +35,7 @@ import { ProductionBoard } from '../pages/central-kitchen/ProductionBoard';
 import { DispatchDashboard } from '../pages/central-kitchen/DispatchDashboard';
 import { OrderPool } from '../pages/central-kitchen/OrderPool';
 import { ProductionPlanList } from '../pages/central-kitchen/ProductionPlanList';
-import { KitchenSettings } from '../pages/central-kitchen/KitchenSettings';
+import { WarehousePage } from '../pages/warehouse/WarehousePage';
 
 import { ShipmentList } from '../pages/shipment/ShipmentList';
 import { CreateShipment } from '../pages/shipment/CreateShipment';
@@ -123,6 +124,15 @@ export const router = createBrowserRouter([
                         ]
                     },
 
+                    // Kitchens Management Module (Admin, Manager)
+                    {
+                        path: 'kitchens',
+                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
+                        children: [
+                            { index: true, element: <KitchensList /> }
+                        ]
+                    },
+
                     // Central Kitchen Module (Admin, Manager, Kitchen Staff, Coordinator)
                     {
                         path: 'kitchen',
@@ -135,12 +145,7 @@ export const router = createBrowserRouter([
                             { path: 'create-plan', element: <CreateProductionPlan /> },
                             { path: 'inventory', element: <KitchenInventory /> },
                             { path: 'inventory/import', element: <KitchenImportPage /> },
-                            { path: 'production', element: <ProductionBoard /> },
-                            { 
-                                path: 'settings', 
-                                element: <ProtectedRoute allowedRoles={['MANAGER']} />,
-                                children: [{ index: true, element: <KitchenSettings /> }]
-                            }
+                            { path: 'production', element: <ProductionBoard /> }
                         ]
                     },
 
@@ -180,6 +185,7 @@ export const router = createBrowserRouter([
                         path: 'warehouse',
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'COORDINATOR']} />,
                         children: [
+                            { index: true, element: <WarehousePage /> },
                             { path: 'fulfillment', element: <WarehouseFulfillment /> },
                             { path: 'allocation', element: <AllocationMatrix /> }
                         ]
@@ -201,7 +207,12 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR', 'KITCHEN_STAFF', 'STORE_STAFF']} />,
                         children: [
                             { index: true, element: <ShipmentList /> },
-                            { path: 'create', element: <CreateShipment /> },
+                            {
+                                element: <ProtectedRoute allowedRoles={['ADMIN', 'SUPPLY_COORDINATOR', 'COORDINATOR']} />,
+                                children: [
+                                    { path: 'create', element: <CreateShipment /> }
+                                ]
+                            },
                             { path: 'receive', element: <ReceiveShipment /> },
                             { path: 'receive/:id', element: <ReceiveShipmentReportPage /> }
                         ]
