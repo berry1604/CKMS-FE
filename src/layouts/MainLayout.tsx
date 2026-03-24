@@ -13,7 +13,6 @@ import {
     ShoppingCart,
     FileText,
     Truck,
-    BarChart,
     LogOut,
     ChevronLeft,
     ChevronRight,
@@ -23,7 +22,6 @@ import {
     Network,
     LibraryBig,
     Wheat,
-    Settings
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -176,22 +174,6 @@ export const navigation: NavigationItem[] = [
                 href: '/billing',
                 icon: FileText,
                 permission: PERMISSIONS.BILLING_MANAGEMENT,
-            },
-            {
-                name: 'Báo cáo doanh thu',
-                href: '/reports',
-                icon: BarChart,
-                permission: PERMISSIONS.REVENUE_REPORTS,
-            },
-            {
-                name: 'Quản lý kho',
-                href: '/warehouse',
-                icon: Store,
-                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
-                hidden: (user) => {
-                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
-                    return role !== 'MANAGER' && role !== 'COORDINATOR';
-                },
             },
         ]
     },

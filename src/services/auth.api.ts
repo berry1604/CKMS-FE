@@ -12,7 +12,7 @@ export const authApi = {
         const { accessToken, refreshToken, token } = data;
         const validAccessToken = accessToken || token;
 
-        // ✅ đổi sessionStorage -> localStorage (không mất khi reload)
+        // ✅ dùng sessionStorage (không chia sẻ tab)
         if (validAccessToken) {
             sessionStorage.setItem('accessToken', validAccessToken);
         }
@@ -48,7 +48,7 @@ export const authApi = {
         const { accessToken, refreshToken: newRefreshToken, token } = data;
         const validAccessToken = accessToken || token;
 
-        // ✅ dùng localStorage
+        // ✅ dùng sessionStorage
         if (validAccessToken) {
             sessionStorage.setItem('accessToken', validAccessToken);
         }
