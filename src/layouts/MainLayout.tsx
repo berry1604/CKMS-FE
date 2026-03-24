@@ -218,7 +218,7 @@ export const navigation: NavigationItem[] = [
         permission: PERMISSIONS.PRODUCTION_SCHEDULE,
         hidden: (user) => {
           const role = user?.role?.toUpperCase().replace("ROLE_", "");
-          return role !== "MANAGER" && role !== "COORDINATOR";
+          return role !== "COORDINATOR";
         },
       },
     ],

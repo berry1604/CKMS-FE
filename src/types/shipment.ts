@@ -39,7 +39,8 @@ export interface ShipmentResponse {
     storeId?: number; // Might be null for multi-drop
     storeName?: string; // Might be null for multi-drop
     storePhone?: string;
-    productionPlanId: number;
+    productionPlanId?: number; // Legacy/Optional
+    planId?: number; // Primary Plan ID
     status: ShipmentStatus;
 
     // Ahamove specific fields

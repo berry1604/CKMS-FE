@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Truck,
-  Filter,
   Eye,
   Plus,
   Search,
@@ -15,6 +14,8 @@ import {
   ChevronRight,
   ExternalLink,
   CheckCircle2,
+  AlertTriangle,
+  XCircle,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -197,19 +198,23 @@ export const ShipmentList = () => {
       IN_TRANSIT: { variant: "primary", label: "Đang giao", icon: Truck },
       ARRIVED: { variant: "warning", label: "Đã đến", icon: MapPin },
       DELIVERED: { variant: "success", label: "Hoàn tất", icon: CheckCircle2 },
-      CANCELLED: { variant: "danger", label: "Đã hủy", icon: Filter },
+      CANCELLED: { variant: "danger", label: "Đã hủy", icon: XCircle },
     };
     const item = config[status] || {
       variant: "default",
       label: status,
       icon: Clock,
     };
+    const isCancelled = status === "CANCELLED";
     const Icon = item.icon;
 
     return (
       <Badge
         variant={item.variant}
-        className="px-3 py-1 font-black text-[10px] tracking-widest uppercase border-0 flex items-center gap-1.5 h-6"
+        className={cn(
+          "px-3 py-1 font-black text-[10px] tracking-widest uppercase border-0 flex items-center gap-1.5 h-6",
+          isCancelled && "animate-pulse shadow-lg shadow-red-900/20"
+        )}
       >
         <Icon size={10} strokeWidth={3} />
         {item.label}
@@ -226,7 +231,7 @@ export const ShipmentList = () => {
             #{s.shipmentId}
           </span>
           <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mt-1">
-            Ref: {s.productionPlanId}
+            Ref: {s.planId || s.productionPlanId}
           </span>
         </div>
       ),
@@ -319,7 +324,17 @@ export const ShipmentList = () => {
     },
     {
       header: "Trạng thái",
-      cell: (s) => getStatusBadge(s.status),
+      cell: (s) => (
+        <div className="flex flex-col gap-1.5">
+          {getStatusBadge(s.status)}
+          {s.status === "CANCELLED" && (s.remarks || s.note) && (
+            <div className="flex items-center gap-1 text-[9px] text-red-500/70 font-bold italic max-w-[150px] truncate" title={s.remarks || s.note}>
+              <AlertTriangle size={8} />
+              {s.remarks || s.note}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       header: "Hành động",

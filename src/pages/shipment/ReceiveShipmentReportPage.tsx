@@ -201,6 +201,17 @@ export const ReceiveShipmentReportPage = () => {
                                     {shipment.stops?.find(s => s.storeId === Number(user?.storeId))?.storeName || shipment.storeName || 'Cửa hàng'}
                                 </span>
                             </div>
+                            {(shipment.shippingFee ?? 0) > 0 && (
+                                <>
+                                    <div className="h-12 w-px bg-white/5"></div>
+                                    <div className="flex-1 text-right">
+                                        <span className="text-zinc-600 text-[9px] uppercase tracking-[0.3em] block mb-2 font-black">Cước phí</span>
+                                        <span className="text-lg font-black text-emerald-500 tracking-tighter font-mono">
+                                            {shipment.shippingFee?.toLocaleString('vi-VN')} ₫
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -270,6 +281,7 @@ export const ReceiveShipmentReportPage = () => {
                                             : (shipment.storeOrderIds || [])
                                     }
                                     status={shipment.status}
+                                    shippingFee={shipment.shippingFee}
                                     onCancel={() => navigate('/shipment/receive')}
                                     onSubmit={handleConfirmDelivery}
                                     isSubmitting={isConfirming}
