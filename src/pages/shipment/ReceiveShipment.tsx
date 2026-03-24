@@ -34,7 +34,7 @@ export const ReceiveShipment = () => {
             }
 
             setShipments(data);
-        } catch (error) {
+        } catch {
             toast.error('Không thể tải danh sách vận chuyển');
         } finally {
             setIsLoading(false);
@@ -61,7 +61,7 @@ export const ReceiveShipment = () => {
     });
 
     const getStatusBadge = (status: string) => {
-        const config: Record<string, { variant: any, label: string }> = {
+        const config: Record<string, { variant: 'orange' | 'info' | 'primary' | 'success' | 'danger' | 'default', label: string }> = {
             'CREATED': { variant: 'orange', label: 'Chờ xuất kho' },
             'PREPARED': { variant: 'info', label: 'Đã chuẩn bị' },
             'IN_TRANSIT': { variant: 'primary', label: 'Đang giao đến' },
@@ -69,7 +69,7 @@ export const ReceiveShipment = () => {
             'CANCELLED': { variant: 'danger', label: 'Đã hủy' },
         };
         const item = config[status] || { variant: 'default', label: status };
-
+        
         return (
             <Badge variant={item.variant} className="px-2 py-0.5 border-0 font-black text-[10px] tracking-widest uppercase">
                 {item.label}
@@ -135,10 +135,10 @@ export const ReceiveShipment = () => {
                                 <Filter size={16} className="text-amber-500" />
                                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">HIỂN THỊ</span>
                             </div>
-                            {['all', 'IN_TRANSIT', 'DELIVERED'].map(status => (
+                            {(['all', 'IN_TRANSIT', 'DELIVERED'] as const).map(status => (
                                 <button
                                     key={status}
-                                    onClick={() => setStatusFilter(status as any)}
+                                    onClick={() => setStatusFilter(status)}
                                     className={cn(
                                         "px-6 py-2.5 rounded-xl text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest border",
                                         statusFilter === status
@@ -233,7 +233,7 @@ export const ReceiveShipment = () => {
                                         <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
                                         <div className="relative z-10 flex items-center justify-center gap-2">
                                             {shipment.status === 'IN_TRANSIT' ? (
-                                                <>NHẬN VẬN ĐƠN <Eye size={16} /></>
+                                                <>CHI TIẾT ĐƠN HÀNG <Eye size={16} /></>
                                             ) : (
                                                 <>THÔNG TIN CHI TIẾT <Eye size={16} /></>
                                             )}

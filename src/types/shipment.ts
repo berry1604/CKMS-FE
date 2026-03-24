@@ -1,6 +1,4 @@
-// Types matching backend ShipmentController DTOs — from Swagger
-
-export type ShipmentStatus = 'PENDING' | 'PREPARED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
+export type ShipmentStatus = 'PENDING' | 'PREPARED' | 'IN_TRANSIT' | 'ARRIVED' | 'DELIVERED' | 'CANCELLED';
 
 export type AhamoveServiceIdType = 'SGN-BIKE' | 'SGN-PREMIUM' | 'SGN-POOL' | 'SGN-TRUCK-500' | 'SGN-TRUCK-1000' | 'SGN-TRUCK-2000';
 

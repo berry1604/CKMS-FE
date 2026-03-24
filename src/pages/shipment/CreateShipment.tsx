@@ -49,7 +49,7 @@ export const CreateShipment = () => {
 
     // Handle auto-fill from Allocation Matrix
     useEffect(() => {
-        const state = location.state as any;
+        const state = location.state as { planId?: number; planName?: string; storeIds?: number[] } | null;
         if (!state?.planId || form.productionPlanId) return;
 
         const updates: Partial<typeof form> = {
@@ -80,17 +80,14 @@ export const CreateShipment = () => {
             ]);
 
             const validPlans = (planRes.content || []).filter(p =>
-                p.status === 'FINISHED' ||
-                p.status === 'COMPLETED' ||
-                p.status === 'PRODUCED' ||
-                p.status === 'READY_TO_PRODUCE'
+                p.status === 'FINISHED'
             );
             
             const orders = ordersRes.content || [];
             
             const activeStoreMap = new Map<number, StoreResponse>();
             orders.forEach(o => {
-                const isRelevant = ['ALLOCATED', 'APPROVED', 'IN_TRANSIT', 'DELIVERED', 'SHIPPED', 'SHIPPING', 'CONFIRMED'].includes(o.status);
+                const isRelevant = o.status === 'READY';
                 if (isRelevant && o.storeId && !activeStoreMap.has(o.storeId)) {
                     activeStoreMap.set(o.storeId, {
                         id: o.storeId,
@@ -101,7 +98,7 @@ export const CreateShipment = () => {
 
             const shippedPlanIds = new Set(
                 orders
-                    .filter(o => ['IN_TRANSIT', 'DELIVERED', 'SHIPPED', 'SHIPPING', 'CONFIRMED'].includes(o.status))
+                    .filter(o => ['IN_TRANSIT', 'DELIVERED', 'SHIPPED', 'SHIPPING', 'CONFIRMED'].includes(o.status) || o.shipmentStopId != null)
                     .map(o => o.planId)
                     .filter(Boolean)
             );
@@ -110,7 +107,7 @@ export const CreateShipment = () => {
             setShippedPlans(validPlans.filter(p => shippedPlanIds.has(p.planId)));
             setAvailableStores(Array.from(activeStoreMap.values()));
             setAllOrders(orders);
-        } catch (error) {
+        } catch {
             toast.error('Không thể tải các lựa chọn ban đầu');
         } finally {
             setIsLoading(false);
@@ -123,17 +120,12 @@ export const CreateShipment = () => {
         if (!productionPlanId) return toast.error('Vui lòng chọn Kế hoạch sản xuất');
         if (!form.ahamoveServiceId) return toast.error('Vui lòng chọn loại xe hỗ trợ.');
         
-        // Lấy drop point đầu tiên hợp lệ để gán storeId và storeOrderIds (Backend hiện tại yêu cầu 1 store)
-        const primaryDropPoint = form.dropPoints.find(dp => dp.storeId && dp.storeOrderIds.length > 0);
+        const validDropPoints = form.dropPoints.filter(dp => dp.storeId && dp.storeOrderIds.length > 0);
         
-        if (!primaryDropPoint) {
-            if (!form.dropPoints[0].storeId) return toast.error('Vui lòng chọn cửa hàng');
-            if (form.dropPoints[0].storeOrderIds.length === 0) return toast.error('Vui lòng chọn ít nhất 1 đơn hàng');
+        if (validDropPoints.length === 0) {
             return toast.error('Cần ít nhất 1 điểm giao có gắn đơn hàng.');
         }
 
-        const validDropPoints = form.dropPoints.filter(dp => dp.storeId && dp.storeOrderIds.length > 0);
-        
         // Ensure no duplicate stores in drop points
         const storeIds = validDropPoints.map(dp => dp.storeId);
         if (new Set(storeIds).size !== storeIds.length) {
@@ -145,8 +137,8 @@ export const CreateShipment = () => {
             const request: CreateShipmentRequest = {
                 ahamoveServiceId: form.ahamoveServiceId,
                 productionPlanId,
-                storeId: Number(primaryDropPoint.storeId),
-                storeOrderIds: primaryDropPoint.storeOrderIds,
+                storeId: Number(validDropPoints[0].storeId),
+                storeOrderIds: validDropPoints[0].storeOrderIds,
                 remarks: form.remarks || undefined,
                 shippingFee: form.shippingFee ? Number(form.shippingFee) : undefined,
                 dropPoints: validDropPoints.map(dp => ({
@@ -196,19 +188,20 @@ export const CreateShipment = () => {
     };
 
     const updateDropPoint = (id: number, field: string, value: any) => {
-        setForm(prev => ({
-            ...prev,
-            dropPoints: prev.dropPoints.map(dp => {
+        setForm(prev => {
+            const newDropPoints = prev.dropPoints.map(dp => {
                 if (dp.id === id) {
+                    const updated = { ...dp, [field]: value };
                     // Reset orders if store changed
                     if (field === 'storeId' && dp.storeId !== value) {
-                        return { ...dp, [field]: value, storeOrderIds: [] };
+                        updated.storeOrderIds = [];
                     }
-                    return { ...dp, [field]: value };
+                    return updated;
                 }
                 return dp;
-            })
-        }));
+            });
+            return { ...prev, dropPoints: newDropPoints };
+        });
     };
 
     const toggleOrderForDropPoint = (dropPointId: number, orderId: number) => {
@@ -412,7 +405,7 @@ export const CreateShipment = () => {
                                                 >
                                                     <option value="">-- Chọn Cửa hàng --</option>
                                                     {availableStores.map(s => {
-                                                        const sId = s.id || (s as any).storeId;
+                                                        const sId = (s as any).id || (s as any).storeId;
                                                         const isSelectedByOther = form.dropPoints.some(
                                                             otherDp => otherDp.id !== dp.id && otherDp.storeId === sId.toString()
                                                         );

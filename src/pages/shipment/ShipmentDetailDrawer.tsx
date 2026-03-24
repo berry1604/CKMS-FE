@@ -3,7 +3,7 @@ import {
     Truck, Package, User, Phone,
     Calendar, Clock, CheckCircle2,
     Printer, Trash2, Info, Plus, ExternalLink,
-    ClipboardList, ChevronRight, Copy, RefreshCw
+    ClipboardList, ChevronRight, Copy, RefreshCw, MapPin
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
@@ -12,6 +12,7 @@ import { toast } from 'react-hot-toast';
 import { productionPlanApi } from '../../services/productionPlan.api';
 import { shipmentApi } from '../../services/shipment.api';
 import { storeOrderApi } from '../../services/storeOrderApi';
+import type { OrderDetailResponse, StoreOrderResponse } from '../../types/storeOrder';
 import { kitchenInventoryApi } from '../../services/kitchenInventory.api';
 import { cn } from '../../utils/classNames';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,7 +22,7 @@ interface ShipmentDetailDrawerProps {
     shipment: ShipmentResponse | null;
     isOpen: boolean;
     onClose: () => void;
-    onStatusAction: (id: number, action: 'prepare' | 'transit' | 'confirm' | 'cancel', data?: any) => void;
+    onStatusAction: (id: number, action: 'prepare' | 'transit' | 'confirm' | 'cancel', data?: unknown) => void;
     onRefresh?: (id: number) => void;
 }
 
@@ -34,41 +35,52 @@ export const ShipmentDetailDrawer = ({
 }: ShipmentDetailDrawerProps) => {
     const { user, hasAuthority } = useAuth();
     const [aggregatedItems, setAggregatedItems] = useState<{ productId: number, productName: string, quantity: number }[]>([]);
+    const [detailedOrders, setDetailedOrders] = useState<StoreOrderResponse[]>([]);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [shipmentKitchenId, setShipmentKitchenId] = useState<number | null>(null);
+
+    const handleResendOrder = async (orderId: number) => {
+        if (!window.confirm(`Bạn có chắc muốn gửi lại đơn hàng #${orderId}? Đơn hàng sẽ được đưa về trạng thái chờ giao.`)) return;
+        
+        try {
+            await storeOrderApi.updateOrderStatus(orderId, 'READY');
+            toast.success(`Đã đưa đơn hàng #${orderId} về danh sách chờ giao`);
+            if (onRefresh) onRefresh(shipment?.shipmentId || 0);
+        } catch (error) {
+            console.error('Error resending order:', error);
+            toast.error('Không thể gửi lại đơn hàng');
+        }
+    };
 
     useEffect(() => {
         if (isOpen && shipment?.shipmentId) {
             const loadData = async () => {
                 setIsLoadingDetails(true);
                 try {
-                    // Always try to get full shipment details first
                     const fullShipment = await shipmentApi.getShipmentById(shipment.shipmentId);
-                    
                     const itemsMap = new Map<number, { productId: number, productName: string, quantity: number }>();
                     let loadedFromPlan = false;
                     
                     if (fullShipment.productionPlanId) {
                         try {
-                            // Get plan just to extract the kitchenId (warehouseId)
                             const plan = await productionPlanApi.getProductionPlanDetail(fullShipment.productionPlanId);
-                            
                             if (plan && plan.kitchenId) {
                                 setShipmentKitchenId(plan.kitchenId);
-                                // Fetch stock from kitchen inventory API instead of taking from productplan directly
                                 const stockRes = await kitchenInventoryApi.getWarehouseStock(plan.kitchenId);
-                                const allStock = stockRes?.data || (stockRes as any) || [];
-                                
-                                // Filter stock by this shipment's productionPlanId
-                                const relevantStock = allStock.filter((s: any) => s.productionPlanId === fullShipment.productionPlanId);
+                                const allStock = stockRes?.data || [];
+                                const allStockArray = Array.isArray(allStock) ? allStock : [];
+                                const relevantStock = allStockArray.filter((s: { productionPlanId?: number }) => s.productionPlanId === fullShipment.productionPlanId);
                                 
                                 if (relevantStock && relevantStock.length > 0) {
-                                    relevantStock.forEach((item: any) => {
-                                        itemsMap.set(item.itemId || item.id, {
-                                            productId: item.itemId || item.id,
-                                            productName: item.itemName,
-                                            quantity: item.quantity
-                                        });
+                                    relevantStock.forEach((item: { itemId?: number, id?: number, itemName: string, quantity: number }) => {
+                                        const pid = item.itemId || item.id;
+                                        if (pid) {
+                                            itemsMap.set(pid, {
+                                                productId: pid,
+                                                productName: item.itemName,
+                                                quantity: item.quantity
+                                            });
+                                        }
                                     });
                                     loadedFromPlan = true;
                                 }
@@ -78,10 +90,8 @@ export const ShipmentDetailDrawer = ({
                         }
                     }
 
-                    // Get role to avoid sending order requests as ADMIN (which throw 403)
                     const userRoleStr = typeof user?.role === 'string' ? user.role.replace('ROLE_', '') : '';
 
-                    // Fallback: If not loaded from plan, try loading from individual orders
                     if (!loadedFromPlan && userRoleStr !== 'ADMIN') {
                         try {
                             const orderIds = new Set<number>();
@@ -93,16 +103,17 @@ export const ShipmentDetailDrawer = ({
                                 fullShipment.storeOrderIds.forEach(id => orderIds.add(id));
                             }
                             
-                            // It's possible for multi-drop to have duplicate order IDs if data is strange, Set prevents that
                             if (orderIds.size > 0) {
                                 const orderPromises = Array.from(orderIds).map(id => 
                                     storeOrderApi.getOrderById(id).catch(() => null)
                                 );
                                 const orders = await Promise.all(orderPromises);
+                                const validOrders = orders.filter((o): o is StoreOrderResponse => o !== null);
+                                setDetailedOrders(validOrders);
                                 
-                                orders.forEach(order => {
+                                validOrders.forEach(order => {
                                     if (order && order.orderDetails) {
-                                        order.orderDetails.forEach((item: any) => {
+                                        order.orderDetails.forEach((item: OrderDetailResponse) => {
                                             const existing = itemsMap.get(item.productId);
                                             if (existing) {
                                                 existing.quantity += item.quantity;
@@ -123,7 +134,7 @@ export const ShipmentDetailDrawer = ({
                     }
 
                     setAggregatedItems(Array.from(itemsMap.values()));
-                } catch (error: any) {
+                } catch (error) {
                     console.error("Failed to fetch shipment details/items:", error);
                     toast.error("Không thể tải chi tiết món hàng");
                 } finally {
@@ -133,13 +144,14 @@ export const ShipmentDetailDrawer = ({
             loadData();
         } else {
             setAggregatedItems([]);
+            setDetailedOrders([]);
         }
-    }, [isOpen, shipment?.shipmentId, user?.role]);
+    }, [isOpen, shipment?.shipmentId, user?.role, onRefresh]);
 
     if (!shipment) return null;
 
     const handleCopyAhamoveId = () => {
-        if (shipment?.ahamoveOrderId) {
+        if (shipment.ahamoveOrderId) {
             navigator.clipboard.writeText(shipment.ahamoveOrderId);
             toast.success('Đã sao chép mã đơn AhaMove');
         }
@@ -162,8 +174,9 @@ export const ShipmentDetailDrawer = ({
     const steps = [
         { id: 'PENDING', label: 'CHỜ CHUẨN BỊ', icon: Package, color: 'text-orange-500', bg: 'bg-orange-500/10' },
         { id: 'PREPARED', label: 'ĐÃ CHUẨN BỊ', icon: Package, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-        { id: 'IN_TRANSIT', label: 'ĐANG GIAO', icon: Truck, color: 'text-[#DE802B]', bg: 'bg-[#DE802B]/10' },
-        { id: 'DELIVERED', label: 'ĐÃ GIAO', icon: CheckCircle2, color: 'text-[#5C6F2B]', bg: 'bg-[#5C6F2B]/10' }
+        { id: 'IN_TRANSIT', label: 'ĐANG GIAO', icon: Truck, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+        { id: 'ARRIVED', label: 'ĐÃ ĐẾN', icon: MapPin, color: 'text-[#DE802B]', bg: 'bg-[#DE802B]/10' },
+        { id: 'DELIVERED', label: 'HOÀN TẤT', icon: CheckCircle2, color: 'text-[#5C6F2B]', bg: 'bg-[#5C6F2B]/10' }
     ];
 
     const currentStepIndex = steps.findIndex(s => s.id === shipment.status);
@@ -192,12 +205,13 @@ export const ShipmentDetailDrawer = ({
                     </Button>
                 );
             case 'IN_TRANSIT':
+            case 'ARRIVED':
                 return canAction('CONFIRM_SHIPMENT', false) && (
                     <Button
                         onClick={() => onStatusAction(shipment.shipmentId, 'confirm')}
                         className="bg-[#5C6F2B] hover:bg-[#4d5c24] text-black font-black uppercase text-[11px] tracking-widest px-8 grow shadow-xl shadow-[#5C6F2B]/20"
                     >
-                        Xác nhận đã giao hàng
+                        Xác nhận đã nhận hàng
                     </Button>
                 );
             default:
@@ -572,25 +586,87 @@ export const ShipmentDetailDrawer = ({
                         </div>
                     </div>
 
-                    {/* Item Details Panel */}
-                    <div className="bg-zinc-900/40 backdrop-blur-sm rounded-[40px] border border-zinc-800/50 p-10 space-y-6">
-                        <div className="flex items-center justify-between ml-2">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
-                                    <ClipboardList size={18} />
+                        {/* Individual Orders Section */}
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between ml-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                        <Package size={18} />
+                                    </div>
+                                    <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                                        Danh sách đơn hàng
+                                    </h4>
                                 </div>
-                                <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
-                                    Danh sách món hàng
-                                </h4>
                             </div>
-                            <Badge variant="orange" className="text-[10px] font-black tracking-widest px-3 py-1 border-0 uppercase">
-                                {aggregatedItems.length} Món
-                            </Badge>
+
+                            <div className="space-y-4">
+                                {shipment.stops?.map(stop => (
+                                    <div key={stop.stopId} className="space-y-2">
+                                        <div className="flex items-center gap-2 px-4">
+                                            <MapPin size={12} className="text-zinc-500" />
+                                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{stop.storeName}</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {stop.storeOrderIds?.map(orderId => {
+                                                const order = detailedOrders.find(o => o.orderId === orderId);
+                                                if (!order) return null;
+
+                                                return (
+                                                    <div key={order.orderId} className="p-4 bg-zinc-950/40 border border-zinc-800/50 rounded-2xl flex items-center justify-between hover:border-zinc-700 transition-all">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[11px] font-black text-zinc-200">Đơn hàng #{order.orderId}</span>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <Badge variant={order.status === 'DELIVERED' ? 'success' : order.status === 'READY' ? 'orange' : 'secondary'} className="text-[8px] h-4 px-1.5 uppercase font-black">
+                                                                    {order.status}
+                                                                </Badge>
+                                                                <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter italic">
+                                                                    {new Date(order.orderDate).toLocaleDateString('vi-VN')}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {hasAuthority('CREATE_SHIPMENT') && order.status !== 'READY' && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleResendOrder(order.orderId);
+                                                                }}
+                                                                className="h-8 px-3 bg-zinc-900 border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/10 text-zinc-500 hover:text-amber-500 transition-all rounded-xl gap-2"
+                                                            >
+                                                                <RefreshCw size={12} />
+                                                                <span className="text-[9px] font-black uppercase tracking-widest">Gửi lại</span>
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
-                        {isLoadingDetails ? (
-                            <div className="flex flex-col items-center justify-center py-20 gap-4">
-                                <div className="w-10 h-10 border-2 border-amber-500/10 border-t-amber-500 rounded-full animate-spin"></div>
+                        {/* Item Details Panel (Aggregated) */}
+                        <div className="space-y-6 pt-6 border-t border-zinc-800/30">
+                            <div className="flex items-center justify-between ml-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                        <ClipboardList size={18} />
+                                    </div>
+                                    <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                                        Tổng hợp mặt hàng
+                                    </h4>
+                                </div>
+                                <Badge variant="orange" className="text-[10px] font-black tracking-widest px-3 py-1 border-0 uppercase">
+                                    {aggregatedItems.length} Món
+                                </Badge>
+                            </div>
+
+                            {isLoadingDetails ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                    <div className="w-10 h-10 border-2 border-amber-500/10 border-t-amber-500 rounded-full animate-spin"></div>
                                 <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Đang tải danh sách mặt hàng...</span>
                             </div>
                         ) : aggregatedItems.length === 0 ? (

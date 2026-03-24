@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -31,7 +32,7 @@ type FilterStatus = "all" | ShipmentStatus;
 export const ShipmentList = () => {
   const { hasAuthority } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation() as any; // Use any to avoid complex type issues with state
+  const location = useLocation() as unknown as { state?: { autoCreate?: boolean } }; 
   const [shipments, setShipments] = useState<ShipmentResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedShipment, setSelectedShipment] =
@@ -46,16 +47,17 @@ export const ShipmentList = () => {
   const fetchShipments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params: any = { page, size: 10, sort: "shipmentId,desc" };
+      const params: Record<string, string | number> = { page, size: 10, sort: "shipmentId,desc" };
       if (statusFilter !== "all") {
         params.status = statusFilter;
       }
       const res = await shipmentApi.getShipments(params);
       setShipments(res.content || []);
       setTotalPages(res.totalPages || 0);
+      setIsLoading(false);
     } catch (error) {
       toast.error("Không thể tải danh sách vận chuyển");
-    } finally {
+      console.error(error);
       setIsLoading(false);
     }
   }, [page, statusFilter]);
@@ -81,7 +83,7 @@ export const ShipmentList = () => {
   const handleStatusAction = async (
     id: number,
     action: "prepare" | "transit" | "confirm" | "cancel",
-    data?: any,
+    data?: unknown,
   ) => {
     // Find current shipment to check status
     const currentShipment =
@@ -118,10 +120,10 @@ export const ShipmentList = () => {
               `Không thể xác nhận nhận hàng khi trạng thái là ${currentShipment.status}`,
             );
           }
-          await shipmentApi.confirmDelivery(id, data);
+          await shipmentApi.confirmDelivery(id, data as any);
           toast.success("Đã xác nhận giao hàng");
           break;
-        case "cancel":
+        case "cancel": {
           if (["DELIVERED", "CANCELLED"].includes(currentShipment.status)) {
             return toast.error(
               `Không thể hủy đơn hàng khi trạng thái là ${currentShipment.status}`,
@@ -131,6 +133,7 @@ export const ShipmentList = () => {
           await shipmentApi.cancelShipment(id, reason || undefined);
           toast.success("Đã hủy đơn vận chuyển");
           break;
+        }
       }
 
       // Refetch this specific shipment to update the drawer
@@ -138,6 +141,7 @@ export const ShipmentList = () => {
         const updatedShipment = await shipmentApi.getShipmentById(id);
         setSelectedShipment(updatedShipment);
       } catch (err) {
+        console.error(err);
         // If single fetch fails, close drawer as fallback
         if (action === "cancel") setSelectedShipment(null);
       }
@@ -173,11 +177,26 @@ export const ShipmentList = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const config: Record<string, { variant: any; label: string; icon: any }> = {
+    const config: Record<
+      string,
+      {
+        variant:
+          | "orange"
+          | "info"
+          | "primary"
+          | "warning"
+          | "success"
+          | "danger"
+          | "default";
+        label: string;
+        icon: any;
+      }
+    > = {
       PENDING: { variant: "orange", label: "Chờ chuẩn bị", icon: Plus },
       PREPARED: { variant: "info", label: "Đã chuẩn bị", icon: Package },
       IN_TRANSIT: { variant: "primary", label: "Đang giao", icon: Truck },
-      DELIVERED: { variant: "success", label: "Đã giao", icon: MapPin },
+      ARRIVED: { variant: "warning", label: "Đã đến", icon: MapPin },
+      DELIVERED: { variant: "success", label: "Hoàn tất", icon: CheckCircle2 },
       CANCELLED: { variant: "danger", label: "Đã hủy", icon: Filter },
     };
     const item = config[status] || {

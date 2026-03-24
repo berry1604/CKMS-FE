@@ -34,6 +34,7 @@ export interface StoreOrderResponse {
     totalAmount: number;
     deliveryDate: string; // ISO 8601 date string
     note?: string;
+    shipmentStopId?: number;
     orderDetails: OrderDetailResponse[];
 }
 
