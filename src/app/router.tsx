@@ -35,17 +35,12 @@ import { ProductionBoard } from '../pages/central-kitchen/ProductionBoard';
 import { DispatchDashboard } from '../pages/central-kitchen/DispatchDashboard';
 import { OrderPool } from '../pages/central-kitchen/OrderPool';
 import { ProductionPlanList } from '../pages/central-kitchen/ProductionPlanList';
-import { WarehousePage } from '../pages/warehouse/WarehousePage';
-
 import { ShipmentList } from '../pages/shipment/ShipmentList';
 import { CreateShipment } from '../pages/shipment/CreateShipment';
 import { BillingList } from '../pages/billing/BillingList';
-import { ReportsDashboard } from '../pages/reports/ReportsDashboard';
 import { UserProfile } from '../pages/profile/UserProfile';
 import { Notifications } from '../pages/common/Notifications';
 import { ComingSoon } from '../components/ComingSoon';
-import { WarehouseFulfillment } from '../pages/warehouse/WarehouseFulfillment';
-import { AllocationMatrix } from '../pages/warehouse/AllocationMatrix';
 import { ReceiveShipment } from '../pages/shipment/ReceiveShipment';
 import { ReceiveShipmentReportPage } from '../pages/shipment/ReceiveShipmentReportPage';
 import { VNPayReturn } from '../pages/billing/VNPayReturn';
@@ -180,17 +175,6 @@ export const router = createBrowserRouter([
                         ]
                     },
 
-                    // Warehouse Module
-                    {
-                        path: 'warehouse',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'COORDINATOR']} />,
-                        children: [
-                            { index: true, element: <WarehousePage /> },
-                            { path: 'fulfillment', element: <WarehouseFulfillment /> },
-                            { path: 'allocation', element: <AllocationMatrix /> }
-                        ]
-                    },
-
                     // Billing Module (Admin, Manager)
                     {
                         path: 'billing',
@@ -217,15 +201,6 @@ export const router = createBrowserRouter([
                             { path: 'receive/:id', element: <ReceiveShipmentReportPage /> }
                         ]
                     },
-
-                    // Reports Module (Admin, Manager)
-                    {
-                        path: 'reports',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
-                        children: [
-                            { index: true, element: <ReportsDashboard /> }
-                        ]
-                    }
                 ]
             }
         ]

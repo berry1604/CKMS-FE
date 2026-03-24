@@ -29,12 +29,17 @@ import type {
 import { cn } from "../../utils/classNames";
 
 export const AllocationMatrix = () => {
-    const navigate = useNavigate();
-    const [selectedPlanId, setSelectedPlanId] = useState<number | "">("");
-    const [selectedPlan, setSelectedPlan] = useState<ProductionPlanSummaryResponse | null>(null);
-    const [unallocatedPlans, setUnallocatedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
-    const [allocatedPlans, setAllocatedPlans] = useState<ProductionPlanSummaryResponse[]>([]);
-    const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+  const navigate = useNavigate();
+  const [selectedPlanId, setSelectedPlanId] = useState<number | "">("");
+  const [selectedPlan, setSelectedPlan] =
+    useState<ProductionPlanSummaryResponse | null>(null);
+  const [unallocatedPlans, setUnallocatedPlans] = useState<
+    ProductionPlanSummaryResponse[]
+  >([]);
+  const [allocatedPlans, setAllocatedPlans] = useState<
+    ProductionPlanSummaryResponse[]
+  >([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
 
   const [matrix, setMatrix] = useState<AllocationRow[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -457,8 +462,11 @@ export const AllocationMatrix = () => {
                   );
                   // Bắt buộc phân bổ đủ hàng (đủ yêu cầu)
                   // Hoặc nếu không đủ stock thì phải phân bổ tối đa lượng stock hiện có
-                  const requiredToAllocate = Math.min(totalRequested, row.totalAvailable || 0);
-                  
+                  const requiredToAllocate = Math.min(
+                    totalRequested,
+                    row.totalAvailable || 0,
+                  );
+
                   return (
                     totalAllocated > (row.totalAvailable || 0) || // Phân bổ vượt quá stock
                     totalAllocated < requiredToAllocate // Chưa phân bổ đủ
@@ -479,8 +487,14 @@ export const AllocationMatrix = () => {
                     (s, a) => s + a.requestedQuantity,
                     0,
                   );
-                  const requiredToAllocate = Math.min(totalRequested, row.totalAvailable || 0);
-                  return totalAllocated > (row.totalAvailable || 0) || totalAllocated < requiredToAllocate;
+                  const requiredToAllocate = Math.min(
+                    totalRequested,
+                    row.totalAvailable || 0,
+                  );
+                  return (
+                    totalAllocated > (row.totalAvailable || 0) ||
+                    totalAllocated < requiredToAllocate
+                  );
                 }) && "opacity-50 grayscale cursor-not-allowed",
               )}
             >
@@ -884,7 +898,10 @@ export const AllocationMatrix = () => {
                                   </div>
                                   {/* Requested label */}
                                   <span className="text-[8px] font-bold text-zinc-500">
-                                    YC: <span className="font-mono text-zinc-400">{cell.requestedQuantity}</span>
+                                    YC:{" "}
+                                    <span className="font-mono text-zinc-400">
+                                      {cell.requestedQuantity}
+                                    </span>
                                   </span>
                                   {/* Mini progress */}
                                   <div className="w-16 h-1 bg-zinc-800 rounded-full overflow-hidden">
@@ -910,49 +927,69 @@ export const AllocationMatrix = () => {
                       );
                     })
                   )}
-                    {/* Summary Row */}
-                    {matrix.length > 0 && (
-                      <tr className="bg-zinc-900/80 border-t-2 border-zinc-700">
-                        <td className="px-6 py-4 bg-zinc-900 sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
-                          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                            Tổng phân bổ
-                          </span>
-                        </td>
-                        {storeColumns.map((col) => {
-                          const storeAllocated = matrix.reduce((sum, row) => {
-                            const cell = (row.allocations || []).find(
-                              (a: any) => a.storeId === col.storeId,
-                            );
-                            return sum + (cell?.allocatedQuantity || 0);
-                          }, 0);
-                          const storeRequested = matrix.reduce((sum, row) => {
-                            const cell = (row.allocations || []).find(
-                              (a: any) => a.storeId === col.storeId,
-                            );
-                            return sum + (cell?.requestedQuantity || 0);
-                          }, 0);
-                          const pct = storeRequested > 0 ? Math.round((storeAllocated / storeRequested) * 100) : 0;
-                          return (
-                            <td key={col.storeId} className="px-4 py-4 text-center">
-                              <div className="flex flex-col items-center gap-1">
-                                <span className={cn(
-                                  "text-sm font-black font-mono",
-                                  pct >= 100 ? "text-emerald-400" : pct > 0 ? "text-amber-400" : "text-zinc-600",
-                                )}>
-                                  {storeAllocated}/{storeRequested}
-                                </span>
-                                <span className={cn(
-                                  "text-[9px] font-black",
-                                  pct >= 100 ? "text-emerald-500" : pct > 0 ? "text-amber-500" : "text-zinc-600",
-                                )}>
-                                  {pct}%
-                                </span>
-                              </div>
-                            </td>
+                  {/* Summary Row */}
+                  {matrix.length > 0 && (
+                    <tr className="bg-zinc-900/80 border-t-2 border-zinc-700">
+                      <td className="px-6 py-4 bg-zinc-900 sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                          Tổng phân bổ
+                        </span>
+                      </td>
+                      {storeColumns.map((col) => {
+                        const storeAllocated = matrix.reduce((sum, row) => {
+                          const cell = (row.allocations || []).find(
+                            (a: any) => a.storeId === col.storeId,
                           );
-                        })}
-                      </tr>
-                    )}
+                          return sum + (cell?.allocatedQuantity || 0);
+                        }, 0);
+                        const storeRequested = matrix.reduce((sum, row) => {
+                          const cell = (row.allocations || []).find(
+                            (a: any) => a.storeId === col.storeId,
+                          );
+                          return sum + (cell?.requestedQuantity || 0);
+                        }, 0);
+                        const pct =
+                          storeRequested > 0
+                            ? Math.round(
+                                (storeAllocated / storeRequested) * 100,
+                              )
+                            : 0;
+                        return (
+                          <td
+                            key={col.storeId}
+                            className="px-4 py-4 text-center"
+                          >
+                            <div className="flex flex-col items-center gap-1">
+                              <span
+                                className={cn(
+                                  "text-sm font-black font-mono",
+                                  pct >= 100
+                                    ? "text-emerald-400"
+                                    : pct > 0
+                                      ? "text-amber-400"
+                                      : "text-zinc-600",
+                                )}
+                              >
+                                {storeAllocated}/{storeRequested}
+                              </span>
+                              <span
+                                className={cn(
+                                  "text-[9px] font-black",
+                                  pct >= 100
+                                    ? "text-emerald-500"
+                                    : pct > 0
+                                      ? "text-amber-500"
+                                      : "text-zinc-600",
+                                )}
+                              >
+                                {pct}%
+                              </span>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

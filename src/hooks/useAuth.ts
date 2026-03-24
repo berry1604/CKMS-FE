@@ -76,7 +76,7 @@ export const useAuth = () => {
         try {
             const refreshToken = sessionStorage.getItem('refreshToken');
             if (refreshToken) {
-                await authApi.logout(refreshToken);
+                await authApi.logout();
             }
         } catch (error) {
             console.error('Logout error', error);

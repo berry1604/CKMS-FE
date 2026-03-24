@@ -5,10 +5,12 @@ import { shipmentApi } from '../../services/shipment.api';
 import type { ShipmentResponse } from '../../types/shipment';
 import { ReceiveShipmentForm } from './ReceiveShipmentForm';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
 
 export const ReceiveShipmentReportPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [shipment, setShipment] = useState<ShipmentResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isConfirming, setIsConfirming] = useState(false);
@@ -148,7 +150,11 @@ export const ReceiveShipmentReportPage = () => {
                         <div className="relative">
                             <ReceiveShipmentForm
                                 shipmentId={shipment.shipmentId}
-                                storeOrderIds={shipment.storeOrderIds || []}
+                                storeOrderIds={
+                                    user?.role === 'STORE_STAFF' && user?.storeId
+                                        ? (shipment.stops?.filter(s => s.storeId === Number(user.storeId)).flatMap(s => s.storeOrderIds || []) || [])
+                                        : (shipment.storeOrderIds || [])
+                                }
                                 status={shipment.status}
                                 onCancel={() => navigate('/shipment/receive')}
                                 onSubmit={handleConfirmDelivery}

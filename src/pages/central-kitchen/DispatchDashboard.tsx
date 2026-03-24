@@ -56,7 +56,7 @@ export const DispatchDashboard = () => {
                         demandMap.set(item.productName, { 
                             productId: item.productId, 
                             demandQty: item.quantity,
-                            unit: item.unit || "đv"
+                            unit: item.unit || "phần"
                         });
                     }
                 });
@@ -251,7 +251,7 @@ export const DispatchDashboard = () => {
                                                             <AlertTriangle className="text-amber-500 animate-pulse" size={16} />
                                                             <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-20">
                                                                 <h4 className="text-[10px] font-black text-amber-500 uppercase mb-1">Cảnh báo thiếu hụt</h4>
-                                                                <p className="text-[10px] text-zinc-400 leading-relaxed italic">{item.shortageDetails || `Thiếu sản lượng: ${item.demandQty - item.suggestedQty} đv.`}</p>
+                                                                <p className="text-[10px] text-zinc-400 leading-relaxed italic">{item.shortageDetails || `Thiếu sản lượng: ${item.demandQty - item.suggestedQty} phần.`}</p>
                                                             </div>
                                                         </div>
                                                     )}
