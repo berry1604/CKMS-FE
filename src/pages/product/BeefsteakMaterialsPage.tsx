@@ -11,19 +11,19 @@ interface BeefsteakMaterial {
     unit: string;
     costPerUnit: number;
     category: string;
-    status: 'In Stock' | 'Low Stock' | 'Out of Stock';
+    status: 'Còn hàng' | 'Sắp hết' | 'Hết hàng';
 }
 
 const beefsteakMaterials: BeefsteakMaterial[] = [
-    { id: '1', name: 'Thịt bò Tenderloin (Thăn nội)', quantity: 250, unit: 'gram', costPerUnit: 1200, category: 'Thịt tươi', status: 'In Stock' },
-    { id: '2', name: 'Tiêu đen xay', quantity: 5, unit: 'gram', costPerUnit: 50, category: 'Gia vị', status: 'In Stock' },
-    { id: '3', name: 'Muối biển hồng', quantity: 5, unit: 'gram', costPerUnit: 40, category: 'Gia vị', status: 'In Stock' },
-    { id: '4', name: 'Bơ nhạt (Thực vật/Động vật)', quantity: 30, unit: 'gram', costPerUnit: 250, category: 'Bơ sữa', status: 'In Stock' },
-    { id: '5', name: 'Tỏi nguyên tép', quantity: 15, unit: 'gram', costPerUnit: 20, category: 'Rau củ', status: 'In Stock' },
-    { id: '6', name: 'Cỏ hương thảo (Rosemary)', quantity: 10, unit: 'gram', costPerUnit: 100, category: 'Gia vị thảo mộc', status: 'Low Stock' },
-    { id: '7', name: 'Dầu ô liu', quantity: 20, unit: 'ml', costPerUnit: 150, category: 'Dầu ăn', status: 'In Stock' },
-    { id: '8', name: 'Khoai tây (ăn kèm)', quantity: 150, unit: 'gram', costPerUnit: 40, category: 'Rau củ', status: 'In Stock' },
-    { id: '9', name: 'Măng tây đỏ', quantity: 50, unit: 'gram', costPerUnit: 300, category: 'Rau củ', status: 'Out of Stock' },
+    { id: '1', name: 'Thịt bò Tenderloin (Thăn nội)', quantity: 250, unit: 'gram', costPerUnit: 1200, category: 'Thịt tươi', status: 'Còn hàng' },
+    { id: '2', name: 'Tiêu đen xay', quantity: 5, unit: 'gram', costPerUnit: 50, category: 'Gia vị', status: 'Còn hàng' },
+    { id: '3', name: 'Muối biển hồng', quantity: 5, unit: 'gram', costPerUnit: 40, category: 'Gia vị', status: 'Còn hàng' },
+    { id: '4', name: 'Bơ nhạt (Thực vật/Động vật)', quantity: 30, unit: 'gram', costPerUnit: 250, category: 'Bơ sữa', status: 'Còn hàng' },
+    { id: '5', name: 'Tỏi nguyên tép', quantity: 15, unit: 'gram', costPerUnit: 20, category: 'Rau củ', status: 'Còn hàng' },
+    { id: '6', name: 'Cỏ hương thảo (Rosemary)', quantity: 10, unit: 'gram', costPerUnit: 100, category: 'Gia vị thảo mộc', status: 'Sắp hết' },
+    { id: '7', name: 'Dầu ô liu', quantity: 20, unit: 'ml', costPerUnit: 150, category: 'Dầu ăn', status: 'Còn hàng' },
+    { id: '8', name: 'Khoai tây (ăn kèm)', quantity: 150, unit: 'gram', costPerUnit: 40, category: 'Rau củ', status: 'Còn hàng' },
+    { id: '9', name: 'Măng tây đỏ', quantity: 50, unit: 'gram', costPerUnit: 300, category: 'Rau củ', status: 'Hết hàng' },
 ];
 
 export const BeefsteakMaterialsPage = () => {
@@ -75,8 +75,8 @@ export const BeefsteakMaterialsPage = () => {
         {
             header: 'Tình Trạng Kho',
             cell: (row) => (
-                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${row.status === 'In Stock' ? 'bg-green-100 text-green-700' :
-                    row.status === 'Low Stock' ? 'bg-yellow-100 text-yellow-700' :
+                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${row.status === 'Còn hàng' ? 'bg-green-100 text-green-700' :
+                    row.status === 'Sắp hết' ? 'bg-yellow-100 text-yellow-700' :
                         'bg-red-100 text-red-700'
                     }`}>
                     {row.status}

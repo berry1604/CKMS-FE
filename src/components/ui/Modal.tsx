@@ -40,7 +40,7 @@ export const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }:
                             className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
                         >
                             <X className="h-5 w-5" />
-                            <span className="sr-only">Close modal</span>
+                            <span className="sr-only">Đóng hộp thoại</span>
                         </button>
                     </div>
                 )}

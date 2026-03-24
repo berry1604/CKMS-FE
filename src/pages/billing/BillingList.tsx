@@ -127,8 +127,8 @@ export const BillingList = () => {
         setStoreNameMap(nameMap);
       }
     } catch (error) {
-      console.error("Failed to fetch billing statements:", error);
-      toast.error("Failed to load billing statements");
+      console.error("Không thể tải danh sách bảng kê:", error);
+      toast.error("Không thể tải danh sách bảng kê");
     } finally {
       setIsLoading(false);
     }
@@ -152,11 +152,11 @@ export const BillingList = () => {
     if (!statementToDelete) return;
     try {
       await billingApi.deleteStatement(statementToDelete);
-      toast.success("Billing statement deleted successfully");
+      toast.success("Xóa bảng kê thành công");
       fetchStatements();
       setIsDeleteModalOpen(false);
     } catch (error: unknown) {
-      let msg = "Failed to delete billing statement";
+      let msg = "Không thể xóa bảng kê";
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as any;
         msg = axiosError.response?.data?.message || msg;
@@ -190,7 +190,7 @@ export const BillingList = () => {
       !manualForm.periodStart ||
       !manualForm.periodEnd
     ) {
-      toast.error("Please fill all fields");
+      toast.error("Vui lòng nhập đầy đủ các trường");
       return;
     }
     setIsGenerating(true);
@@ -200,13 +200,13 @@ export const BillingList = () => {
         manualForm.periodStart,
         manualForm.periodEnd,
       );
-      toast.success("Billing statement generated successfully!");
+      toast.success("Tạo bảng kê thành công!");
       setShowManualModal(false);
       setManualForm({ storeId: "", periodStart: "", periodEnd: "" });
       fetchStatements();
     } catch (error: any) {
       const msg =
-        error.response?.data?.message || "Failed to generate billing statement";
+        error.response?.data?.message || "Không thể tạo bảng kê";
       toast.error(msg);
     } finally {
       setIsGenerating(false);
@@ -219,7 +219,7 @@ export const BillingList = () => {
       !batchForm.periodStart ||
       !batchForm.periodEnd
     ) {
-      toast.error("Please fill all fields");
+      toast.error("Vui lòng nhập đầy đủ các trường");
       return;
     }
     setIsGenerating(true);
@@ -227,7 +227,7 @@ export const BillingList = () => {
       const result = await billingApi.generateBatchStatements(batchForm);
       setBatchResult(result);
       toast.success(
-        `Batch completed: ${result.totalStatementsCreated} created, ${result.storesSkippedNoInvoices} skipped`,
+        `Hoàn tất xử lý loạt: tạo ${result.totalStatementsCreated}, bỏ qua ${result.storesSkippedNoInvoices}`,
       );
       setShowBatchModal(false);
       setBatchForm({ cycleName: "", periodStart: "", periodEnd: "" });
@@ -235,7 +235,7 @@ export const BillingList = () => {
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||
-        "Failed to generate batch billing statements";
+        "Không thể tạo bảng kê hàng loạt";
       toast.error(msg);
     } finally {
       setIsGenerating(false);
@@ -255,12 +255,12 @@ export const BillingList = () => {
 
 
   const statusOptions: { value: BillingStatus; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "DRAFT", label: "Draft" },
-    { value: "ISSUED", label: "Issued" },
-    { value: "PAID", label: "Paid" },
-    { value: "OVERDUE", label: "Overdue" },
-    { value: "CANCELLED", label: "Cancelled" },
+    { value: "all", label: "Tất cả" },
+    { value: "DRAFT", label: "Nháp" },
+    { value: "ISSUED", label: "Đã phát hành" },
+    { value: "PAID", label: "Đã thanh toán" },
+    { value: "OVERDUE", label: "Quá hạn" },
+    { value: "CANCELLED", label: "Đã hủy" },
   ];
 
   // Count summary stats from current page (basic)
@@ -604,7 +604,7 @@ export const BillingList = () => {
                 <input
                   type="number"
                   min="1"
-                  placeholder="e.g. 1"
+                  placeholder="ví dụ: 1"
                   value={manualForm.storeId}
                   onChange={(e) => setManualForm({ ...manualForm, storeId: e.target.value })}
                   className="w-full h-16 px-6 bg-zinc-950 border border-white/5 focus:border-amber-500/50 rounded-2xl text-white font-bold outline-none transition-all"
@@ -665,7 +665,7 @@ export const BillingList = () => {
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic ml-1">Tên chu kỳ tài chính</label>
                 <input
-                  placeholder="e.g. Q1-2026"
+                  placeholder="ví dụ: Q1-2026"
                   value={batchForm.cycleName}
                   onChange={(e) => setBatchForm({ ...batchForm, cycleName: e.target.value })}
                   className="w-full h-16 px-6 bg-zinc-950 border border-white/5 focus:border-orange-500/50 rounded-2xl text-white font-bold outline-none transition-all"

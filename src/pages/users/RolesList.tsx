@@ -233,10 +233,10 @@ export const RolesList = () => {
                         </div>
                         <div className="bg-zinc-950/60 p-6 border-t border-zinc-800/50 flex justify-between items-center">
                             <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.3em]">
-                                Encryption Protocol: AES-256 Enabled
+                                Giao thức mã hóa: AES-256 đang bật
                             </div>
                             <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.3em]">
-                                Last Sync: {new Date().toLocaleTimeString()}
+                                Đồng bộ lần cuối: {new Date().toLocaleTimeString()}
                             </div>
                         </div>
                     </div>

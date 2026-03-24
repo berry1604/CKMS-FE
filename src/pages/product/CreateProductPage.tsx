@@ -15,10 +15,10 @@ import { useProducts } from '../../hooks/useProducts';
 import type { CategoryResponse } from '../../types/category';
 
 const createProductSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    categoryId: z.number().min(1, 'Category ID is required'),
-    price: z.number().min(0, 'Price must be positive'),
-    unit: z.string().min(1, 'Unit is required'),
+    name: z.string().min(1, 'Tên là bắt buộc'),
+    categoryId: z.number().min(1, 'Mã danh mục là bắt buộc'),
+    price: z.number().min(0, 'Giá phải lớn hơn hoặc bằng 0'),
+    unit: z.string().min(1, 'Đơn vị là bắt buộc'),
     description: z.string().optional()
 });
 
@@ -40,8 +40,8 @@ export const CreateProductPage = () => {
                 // Filter only active categories if backend supports it, else just map
                 setCategories(data);
             } catch (error) {
-                console.error('Failed to load categories', error);
-                toast.error('Failed to load categories for selection');
+                console.error('Không thể tải danh mục', error);
+                toast.error('Không thể tải danh mục để lựa chọn');
             }
         };
         fetchCategories();
@@ -66,7 +66,7 @@ export const CreateProductPage = () => {
 
     const onSubmit = async (data: CreateProductFormData) => {
         if (!data.categoryId || data.categoryId === 0) {
-            toast.error("Vui lòng chọn Category!");
+            toast.error("Vui lòng chọn danh mục!");
             return;
         }
 
@@ -74,13 +74,13 @@ export const CreateProductPage = () => {
         setIsSubmitting(true);
         try {
             await productApi.createProduct(data);
-            toast.success('Product created successfully');
+            toast.success('Tạo sản phẩm thành công');
             reset();
             refetch(); // Trigger a refetch in cache if using a global store or context
             navigate('/products');
         } catch (error: any) {
             console.error('Create product error:', error);
-            const message = error.response?.data?.message || 'Failed to create product. Please try again.';
+            const message = error.response?.data?.message || 'Không thể tạo sản phẩm. Vui lòng thử lại.';
             setBackendError(message);
             toast.error(message);
         } finally {

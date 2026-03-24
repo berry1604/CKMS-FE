@@ -25,7 +25,7 @@ export function DataTable<T>({
   columns,
   keyExtractor,
   isLoading = false,
-  emptyMessage = "No data available",
+  emptyMessage = "Không có dữ liệu",
   onRowClick,
   className,
   layout = "auto",
@@ -35,7 +35,7 @@ export function DataTable<T>({
       <div
         className={`w-full h-48 flex items-center justify-center text-gray-400 ${className}`}
       >
-        Loading...
+        Đang tải...
       </div>
     );
   }

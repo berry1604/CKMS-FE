@@ -61,8 +61,8 @@ const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: UserRole[] }) => {
     if (allowedRoles && userRoleStr && !allowedRoles.includes(userRoleStr as any)) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-                <h2 className="text-2xl font-bold text-red-600 mb-2">Unauthorized Access</h2>
-                <p className="text-gray-500">You do not have permission to view this page.</p>
+                <h2 className="text-2xl font-bold text-red-600 mb-2">Truy cập bị từ chối</h2>
+                <p className="text-gray-500">Bạn không có quyền xem trang này.</p>
             </div>
         );
     }

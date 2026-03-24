@@ -211,7 +211,7 @@ export const CreateRolePage = () => {
                             <div className="absolute bottom-4 left-6 z-20">
                                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-950/80 backdrop-blur-md border border-amber-500/30">
                                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></div>
-                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em]">Core Protocol</span>
+                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em]">Giao thức lõi</span>
                                 </div>
                             </div>
                         </div>

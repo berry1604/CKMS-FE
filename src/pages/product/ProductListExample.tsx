@@ -29,7 +29,7 @@ export const ProductListExample: React.FC = () => {
                 setProducts([]);
             }
         } catch (err: any) {
-            setError(err.message || 'An error occurred while fetching products.');
+            setError(err.message || 'Đã xảy ra lỗi khi tải danh sách sản phẩm.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -40,7 +40,7 @@ export const ProductListExample: React.FC = () => {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
-                <span className="ml-2 text-gray-400">Loading products...</span>
+                <span className="ml-2 text-gray-400">Đang tải sản phẩm...</span>
             </div>
         );
     }
@@ -48,17 +48,17 @@ export const ProductListExample: React.FC = () => {
     if (error) {
         return (
             <div className="p-4 bg-red-900/20 border border-red-900/50 rounded-lg text-red-400 text-center">
-                Error: {error}
+                Lỗi: {error}
             </div>
         );
     }
 
     return (
         <div className="p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Product List Example</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">Ví dụ danh sách sản phẩm</h2>
 
             {products.length === 0 ? (
-                <p className="text-gray-400">No products found.</p>
+                <p className="text-gray-400">Không tìm thấy sản phẩm.</p>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => (
@@ -69,12 +69,12 @@ export const ProductListExample: React.FC = () => {
                                     ? 'bg-green-500/20 text-green-400'
                                     : 'bg-gray-500/20 text-gray-400'
                                     }`}>
-                                    {product.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                    {product.isActive ? 'ĐANG KINH DOANH' : 'NGỪNG KINH DOANH'}
                                 </span>
                             </div>
 
                             <p className="text-sm text-gray-400 mb-4 line-clamp-2">
-                                {product.description || 'No description available'}
+                                {product.description || 'Không có mô tả'}
                             </p>
 
                             <div className="flex items-center justify-between mt-auto">
@@ -83,7 +83,7 @@ export const ProductListExample: React.FC = () => {
                                 </span>
 
                                 <button className="text-sm text-amber-400 hover:text-amber-300">
-                                    View Details →
+                                    Xem chi tiết →
                                 </button>
                             </div>
                         </div>
