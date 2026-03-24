@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Store as StoreIcon, MapPin, Phone, Mail, CreditCard, Navigation } from 'lucide-react';
+import { Store as StoreIcon, Phone, Mail, CreditCard, Navigation } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { AddressInput } from '../../components/ui/AddressInput';
+import { useAddressAutocomplete } from '../../hooks/useAddressAutocomplete';
 import type { StoreResponse, StoreCreateRequest } from '../../types/store';
 
 const storeSchema = z.object({
@@ -30,7 +32,7 @@ interface StoreModalProps {
 }
 
 export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }: StoreModalProps) => {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<StoreFormData>({
+    const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<StoreFormData>({
         resolver: zodResolver(storeSchema) as any,
         defaultValues: {
             name: '',
@@ -44,6 +46,14 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
         }
     });
 
+    const addressValue = watch('address');
+    const { 
+        suggestions, 
+        loading, 
+        error,
+        setQuery: setAddressQuery,
+        clearSuggestions 
+    } = useAddressAutocomplete(addressValue);
 
     useEffect(() => {
         if (initialData) {
@@ -70,6 +80,18 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
             });
         }
     }, [initialData, reset, isOpen]);
+
+    const handleAddressChange = (value: string) => {
+        setAddressQuery(value);
+        setValue('address', value);
+    };
+
+    const handleAddressSelect = (result: any) => {
+        setValue('address', result.formattedAddress);
+        setValue('latitude', result.latitude);
+        setValue('longitude', result.longitude);
+        clearSuggestions();
+    };
 
     const onSubmitForm = (data: StoreFormData) => {
         const payload = {
@@ -143,11 +165,15 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
 
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Địa chỉ chính xác</label>
-                            <Input
+                            <AddressInput
+                                value={addressValue}
+                                onChange={handleAddressChange}
+                                onSelectAddress={handleAddressSelect}
+                                suggestions={suggestions}
+                                loading={loading}
+                                error={error || errors.address?.message}
                                 placeholder="Nhập địa chỉ cửa hàng"
-                                icon={<MapPin size={18} className="text-zinc-600" />}
-                                error={errors.address?.message}
-                                {...register('address')}
+                                disabled={isLoading}
                                 className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
                             />
                         </div>
