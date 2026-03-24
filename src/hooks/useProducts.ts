@@ -25,9 +25,9 @@ export const useProducts = (initialSize = 10) => {
             });
             setData(res.data);
         } catch (error: any) {
-            console.error('Failed to fetch products', error);
+            console.error('Không thể tải danh sách sản phẩm', error);
             if (error.response?.status !== 401 && error.response?.status !== 403) {
-                toast.error('Failed to load products');
+                toast.error('Không thể tải danh sách sản phẩm');
             }
         } finally {
             setIsLoading(false);

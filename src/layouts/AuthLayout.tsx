@@ -26,7 +26,7 @@ export const AuthLayout: React.FC = () => {
                     </h2>
                     <div className="h-px w-20 bg-gradient-to-r from-transparent via-amber-500 to-transparent my-5"></div>
                     <p className="text-stone-300 text-xs font-black tracking-[0.4em] uppercase">
-                        Franchise System
+                        Hệ thống nhượng quyền
                     </p>
                 </div>
 

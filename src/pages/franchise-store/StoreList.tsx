@@ -70,7 +70,7 @@ export const StoreList = () => {
             setStaffNames(prev => ({ ...prev, ...names }));
         } catch (error) {
             console.error(error);
-            toast.error('Failed to load stores');
+            toast.error('Không thể tải danh sách cửa hàng');
         } finally {
             setIsLoading(false);
         }
@@ -111,7 +111,7 @@ export const StoreList = () => {
             setIsDeleteModalOpen(false);
             loadStores();
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'Failed to delete store';
+            const msg = error.response?.data?.message || 'Không thể xóa cửa hàng';
             toast.error(msg);
         } finally {
             setIsDeleting(false);
