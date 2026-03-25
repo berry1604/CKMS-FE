@@ -19,7 +19,7 @@ export interface OrderDetailResponse {
     kitchenStockQuantity?: number;
 }
 
-export type OrderStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'SCHEDULED' | 'LOCKED' | 'ALLOCATED' | 'PREPARING' | 'READY' | 'IN_TRANSIT' | 'DELIVERED' | 'CONFIRMED' | 'REJECTED';
+export type OrderStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'SCHEDULED' | 'LOCKED' | 'ALLOCATED' | 'PREPARING' | 'READY' | 'IN_TRANSIT' | 'DELIVERED' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED';
 
 export interface StoreOrderResponse {
     orderId: number;
@@ -34,6 +34,7 @@ export interface StoreOrderResponse {
     totalAmount: number;
     deliveryDate: string; // ISO 8601 date string
     note?: string;
+    shipmentStopId?: number;
     orderDetails: OrderDetailResponse[];
 }
 
@@ -86,4 +87,5 @@ export interface OrderQueryParams {
     sortBy?: string;   // default=orderId or orderDate
     sortDir?: string;  // default=desc
     storeId?: number;
+    productionPlanId?: number;
 }

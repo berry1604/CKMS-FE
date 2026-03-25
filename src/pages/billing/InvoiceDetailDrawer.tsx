@@ -246,6 +246,130 @@ export const BillingDetailDrawer = ({
 
             {/* Invoices Table */}
             {detail.invoices && detail.invoices.length > 0 && (
+<<<<<<< HEAD
+              <div className="space-y-5">
+                {detail.invoices.map((inv, invIdx) => {
+                  const items = inv.orderId
+                    ? orderDetailsMap[inv.orderId] || []
+                    : [];
+                  return (
+                    <Card
+                      key={invIdx}
+                      className="overflow-hidden border-zinc-700 shadow-sm"
+                    >
+                          {/* Invoice sub-header */}
+                          <div className="bg-zinc-900/60 px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <span className="font-mono text-[10px] bg-amber-500/10 px-3 py-1.5 rounded-lg text-amber-500 border border-amber-500/20 font-black tracking-widest">
+                                INVOICE #{inv.invoiceId}
+                              </span>
+                              {inv.orderId && (
+                                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                                  Order #{inv.orderId}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-6">
+                              {inv.issuedAt && (
+                                <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
+                                  {new Date(inv.issuedAt).toLocaleDateString(
+                                    "vi-VN",
+                                  )}
+                                </span>
+                              )}
+                              <div className="text-right">
+                                {(inv.shippingFee ?? 0) > 0 && (
+                                  <div className="text-[9px] text-amber-500/70 font-black uppercase tracking-widest leading-none mb-1">
+                                    Gồm {inv.shippingFee?.toLocaleString("vi-VN")}₫ ship
+                                  </div>
+                                )}
+                                <span className="font-black text-lg text-white tracking-tighter italic">
+                                  {inv.amount?.toLocaleString("vi-VN")} <span className="text-xs not-italic text-zinc-500 font-bold ml-0.5">VND</span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+    
+                          {/* Line Items Table */}
+                          <div className="bg-zinc-900/10">
+                            <table className="min-w-full divide-y divide-zinc-800/40">
+                              <thead>
+                                <tr className="bg-black/20">
+                                  <th className="px-6 py-3 text-left text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]" style={{ width: "60px" }}>No.</th>
+                                  <th className="px-6 py-3 text-left text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">Sản phẩm</th>
+                                  <th className="px-6 py-3 text-center text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]" style={{ width: "80px" }}>SL</th>
+                                  <th className="px-6 py-3 text-right text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]" style={{ width: "140px" }}>Đơn giá</th>
+                                  <th className="px-6 py-3 text-right text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]" style={{ width: "150px" }}>Thành tiền</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-zinc-800/20">
+                                {items.length > 0 ? (
+                                  items.map((item, itemIdx) => (
+                                    <tr key={itemIdx} className="hover:bg-amber-500/[0.02] transition-colors group/row">
+                                      <td className="px-6 py-4 text-[10px] text-zinc-600 font-black font-mono">{itemIdx + 1}</td>
+                                      <td className="px-6 py-4 text-sm text-gray-200 font-black tracking-tight">{item.productName}</td>
+                                      <td className="px-6 py-4 text-sm text-center text-amber-500 font-black font-mono">
+                                        {item.quantity}
+                                      </td>
+                                      <td className="px-6 py-4 text-xs text-right text-gray-400 font-bold">
+                                        {item.unitPrice?.toLocaleString("vi-VN")} ₫
+                                      </td>
+                                      <td className="px-6 py-4 text-sm text-right text-gray-200 font-black tracking-tighter font-mono">
+                                        {item.subTotal?.toLocaleString("vi-VN")} ₫
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={5} className="px-6 py-10 text-center text-[10px] text-zinc-600 font-black uppercase tracking-widest italic animate-pulse">
+                                      Đang truy xuất chi tiết đơn hàng...
+                                    </td>
+                                  </tr>
+                                )}
+    
+                                {/* Shipping Fee Row - High Visibility */}
+                                {((inv.shippingFee ?? 0) > 0 || (inv.amount > items.reduce((sum, i) => sum + (i.subTotal || 0), 0) && items.length > 0)) && (
+                                  <tr className="bg-emerald-500/[0.03] border-t border-emerald-500/10">
+                                    <td className="px-6 py-4 text-[10px] text-emerald-500/50 font-black font-mono">
+                                      <Truck size={12} />
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">Phí vận chuyển (Shipment)</span>
+                                        <Badge variant="success" className="h-4 text-[8px] px-1 font-black bg-emerald-500/10 text-emerald-500 border-0">SYSTEM_FEE</Badge>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center text-zinc-600 font-black">—</td>
+                                    <td className="px-6 py-4 text-right text-zinc-600 font-black">—</td>
+                                    <td className="px-6 py-4 text-sm text-right text-emerald-500 font-black font-mono tracking-tighter">
+                                      {(inv.shippingFee || (inv.amount - items.reduce((sum, i) => sum + (i.subTotal || 0), 0))).toLocaleString("vi-VN")} ₫
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                    </Card>
+                  );
+                })}
+
+                {/* Grand Total */}
+                <div className="bg-zinc-900/80 rounded-xl border border-zinc-800 px-6 py-4 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                      Tổng giá trị đối soát
+                    </span>
+                    <span className="text-xs text-zinc-600 mt-0.5">
+                      {detail.invoices.length} hóa đơn
+                    </span>
+                  </div>
+                  <span className="text-2xl font-black text-amber-500 tracking-tight">
+                    {detail.totalAmount?.toLocaleString("vi-VN")}{" "}
+                    <span className="text-base font-bold text-amber-600">
+                      VND
+                    </span>
+                  </span>
+=======
               <Card className="overflow-hidden border-zinc-700 shadow-sm">
                 <div className="bg-zinc-900/50">
                   <table className="min-w-full divide-y divide-zinc-800">
@@ -325,6 +449,7 @@ export const BillingDetailDrawer = ({
                       </tr>
                     </tfoot>
                   </table>
+>>>>>>> 0d4ce73df23fbf9a9a565850c10379bfb83f9ec9
                 </div>
               </Card>
             )}

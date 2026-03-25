@@ -21,7 +21,7 @@ export const KitchenSelector = ({
     const [isLoading, setIsLoading] = useState(false);
 
     const userRole = user?.role?.toUpperCase().replace('ROLE_', '');
-    const canSelectKitchen = userRole === 'MANAGER' || userRole === 'COORDINATOR' || userRole === 'KITCHEN_STAFF';
+    const canSelectKitchen = userRole === 'MANAGER' || userRole === 'COORDINATOR';
     const isAdmin = userRole === 'ADMIN';
 
     const fetchKitchens = useCallback(async () => {

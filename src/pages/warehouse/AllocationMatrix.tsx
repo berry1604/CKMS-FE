@@ -67,10 +67,17 @@ export const AllocationMatrix = () => {
     setIsLoadingPlans(true);
     try {
       const res = await productionPlanApi.getAllProductionPlans({ size: 50 });
-      const allPlans = res.content || [];
+      // Robust extraction for plans (handles both wrapped and unwrapped res)
+      const resPlan: any = res;
+      const allPlans = resPlan?.data?.content || resPlan?.content || [];
 
-      const unallocated = allPlans.filter((p) => p.status === "PRODUCED");
-      const allocated = allPlans.filter((p) => p.status === "FINISHED");
+      // Unallocated: Plans that have yielded (PRODUCED) but not finished allocation
+      const unallocated = allPlans.filter((p: any) => p.status === "PRODUCED");
+
+      // Allocated: Plans that are done (FINISHED) or ready for shipment (READY)
+      const allocated = allPlans.filter(
+        (p: any) => p.status === "FINISHED" || p.status === "READY",
+      );
 
       setUnallocatedPlans(unallocated);
       setAllocatedPlans(allocated);
