@@ -94,10 +94,24 @@ export const navigation: NavigationItem[] = [
         },
       },
       {
-        name: "Kho cửa hàng",
+        name: "Quản Lý Kho",
         href: "/stores/inventory",
         icon: Database,
         permission: PERMISSIONS.STORE_INVENTORY,
+        hidden: (user) => {
+          const role = user?.role?.toUpperCase().replace("ROLE_", "");
+          return role === "ADMIN" || role === "MANAGER";
+        },
+      },
+      {
+        name: "Bếp trung tâm",
+        href: "/warehouse",
+        icon: ChefHat,
+        permission: PERMISSIONS.STORE_INVENTORY,
+        hidden: (user) => {
+          const role = user?.role?.toUpperCase().replace("ROLE_", "");
+          return role !== "ADMIN" && role !== "MANAGER";
+        },
       },
     ],
   },
@@ -166,12 +180,20 @@ export const navigation: NavigationItem[] = [
         href: "/kitchen/inventory",
         icon: Database,
         permission: PERMISSIONS.MATERIAL_INVENTORY,
+        hidden: (user) => {
+          const role = user?.role?.toUpperCase().replace("ROLE_", "");
+          return role === "MANAGER" || role === "COORDINATOR";
+        },
       },
       {
-        name: "Bếp trung tâm",
-        href: "/kitchens",
-        icon: ChefHat,
-        permission: PERMISSIONS.MANAGE_KITCHEN_CONFIG,
+        name: "Cửa hàng",
+        href: "/stores",
+        icon: Store,
+        permission: PERMISSIONS.STORE_MANAGEMENT,
+        hidden: (user) => {
+          const role = user?.role?.toUpperCase().replace("ROLE_", "");
+          return role !== "MANAGER" && role !== "ADMIN";
+        },
       },
       {
         name: "Sản phẩm & Menu",
@@ -212,7 +234,7 @@ export const navigation: NavigationItem[] = [
         permission: PERMISSIONS.REVENUE_REPORTS,
       },
       {
-        name: "Quản lý kho",
+        name: "Quản lý kho bếp",
         href: "/warehouse",
         icon: Store,
         permission: PERMISSIONS.PRODUCTION_SCHEDULE,
@@ -244,6 +266,7 @@ export const navigation: NavigationItem[] = [
         href: "/stores",
         icon: Store,
         permission: PERMISSIONS.STORE_MANAGEMENT,
+        hidden: true, // Hidden because Quản lý Cửa hàng covers this
       },
     ],
   },
@@ -262,7 +285,7 @@ export const MainLayout: React.FC = () => {
   };
 
   // Filter and flatten navigation items
-  const flattenedNavigation = navigation.reduce((acc: NavItem[], nav) => {
+  let flattenedNavigation = navigation.reduce((acc: NavItem[], nav) => {
     if ("category" in nav) {
       const visibleItems = nav.items.filter((item) => {
         const isPermissionOk =
@@ -279,6 +302,25 @@ export const MainLayout: React.FC = () => {
       typeof nav.hidden === "function" ? !nav.hidden(user) : !nav.hidden;
     return isPermissionOk && isNotHidden ? [...acc, nav] : acc;
   }, []);
+
+  if (user?.role?.toUpperCase().replace("ROLE_", "") === "ADMIN") {
+    const adminOrder = [
+      "Tổng quan",
+      "Người dùng",
+      "Cửa hàng",
+      "Bếp trung tâm",
+      "Vai trò & Quyền",
+      "Lịch sản xuất",
+      "Hóa đơn & Billing",
+    ];
+    flattenedNavigation.sort((a, b) => {
+      let indexA = adminOrder.indexOf(a.name);
+      let indexB = adminOrder.indexOf(b.name);
+      if (indexA === -1) indexA = 999;
+      if (indexB === -1) indexB = 999;
+      return indexA - indexB;
+    });
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 flex">
@@ -398,9 +440,9 @@ export const MainLayout: React.FC = () => {
                   className={({ isActive }) =>
                     isActive
                       ? cn(
-                          "absolute h-6 w-1 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.8)] transition-all duration-500",
-                          isCollapsed ? "left-0" : "left-0",
-                        )
+                        "absolute h-6 w-1 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.8)] transition-all duration-500",
+                        isCollapsed ? "left-0" : "left-0",
+                      )
                       : "hidden"
                   }
                 />

@@ -179,17 +179,44 @@ export const Dashboard = () => {
     }, [user]);
 
     const permittedLinks = useMemo(() => {
-        return navigation.reduce<NavItem[]>((acc, nav: NavigationItem) => {
+        const flattened = navigation.reduce<NavItem[]>((acc, nav: NavigationItem) => {
             if ('category' in nav) {
-                const allowedItems = nav.items.filter((item: NavItem) => !item.permission || hasPermission(user, item.permission));
+                const allowedItems = nav.items.filter((item: NavItem) => {
+                    const hasPerm = !item.permission || hasPermission(user, item.permission);
+                    const isHidden = typeof item.hidden === 'function' ? item.hidden(user) : !!item.hidden;
+                    return hasPerm && !isHidden;
+                });
                 acc.push(...allowedItems);
             } else {
-                if (!nav.permission || hasPermission(user, nav.permission)) {
+                const hasPerm = !nav.permission || hasPermission(user, nav.permission);
+                const isHidden = typeof nav.hidden === 'function' ? nav.hidden(user) : !!nav.hidden;
+                if (hasPerm && !isHidden) {
                     if (nav.href !== '/') acc.push(nav);
                 }
             }
             return acc;
         }, []);
+
+        if (user?.role?.toUpperCase().replace("ROLE_", "") === "ADMIN") {
+            const adminOrder = [
+                "Tổng quan",
+                "Người dùng",
+                "Cửa hàng",
+                "Bếp trung tâm",
+                "Vai trò & Quyền",
+                "Lịch sản xuất",
+                "Hóa đơn & Billing",
+            ];
+            flattened.sort((a, b) => {
+                let indexA = adminOrder.indexOf(a.name);
+                let indexB = adminOrder.indexOf(b.name);
+                if (indexA === -1) indexA = 999;
+                if (indexB === -1) indexB = 999;
+                return indexA - indexB;
+            });
+        }
+        
+        return flattened;
     }, [user]);
 
     const StatCard = ({
@@ -314,7 +341,7 @@ export const Dashboard = () => {
                         <Store size={16} className="text-amber-500" /> Trung Tâm Quản Lý
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {permittedLinks.slice(0, 9).map((link, idx) => {
+                        {permittedLinks.slice(0, 9).map((link) => {
                             const Icon = link.icon;
                             return (
                                 <button
@@ -363,7 +390,7 @@ export const Dashboard = () => {
                                             <p className="text-[11px] text-zinc-500 font-medium">{order.storeName}</p>
                                         </div>
                                     </div>
-                                    <Badge variant={statusColor[order.status] as any || 'default'} className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-white/5 shadow-sm border border-white/5" style={{ color: "var(--tw-colors-amber-500)"}}>
+                                    <Badge variant={statusColor[order.status] as any || 'default'} className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-white/5 shadow-sm border border-white/5 text-amber-500">
                                         {statusLabel[order.status] || order.status}
                                     </Badge>
                                 </div>

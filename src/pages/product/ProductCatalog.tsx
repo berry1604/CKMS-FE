@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Package, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, LibraryBig, Wheat, ChefHat, Sparkles } from 'lucide-react';
+import { Plus, Search, Package, Tag, Edit2, Trash2, ChevronLeft, ChevronRight, ChefHat, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { productApi } from '../../services/product.api';
 import type { ProductResponse as Product } from '../../types/product';
+import type { RecipeResponse } from '../../types/recipe';
 import { ProductModal } from './ProductModal';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { useProducts } from '../../hooks/useProducts';
+import { recipeApi } from '../../services/recipe.api';
 import toast from 'react-hot-toast';
 import { cn } from '../../utils/classNames';
 import productHeaderBg from '../../assets/product_catalog_bg.png';
@@ -36,6 +38,7 @@ export const ProductCatalog = () => {
 
     // Use a local state for input delay (debounce)
     const [localSearch, setLocalSearch] = useState('');
+    const [recipeMap, setRecipeMap] = useState<Record<number, RecipeResponse | null>>({});
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -44,6 +47,26 @@ export const ProductCatalog = () => {
         }, 500);
         return () => clearTimeout(timeoutId);
     }, [localSearch, setSearch, setPage]);
+
+    // Fetch recipes for all products in current page
+    useEffect(() => {
+        if (products.length === 0) return;
+        const fetchRecipes = async () => {
+            const map: Record<number, RecipeResponse | null> = {};
+            await Promise.allSettled(
+                products.map(async (p) => {
+                    try {
+                        const res = await recipeApi.getActiveRecipe(p.id);
+                        map[p.id] = res.data;
+                    } catch {
+                        map[p.id] = null;
+                    }
+                })
+            );
+            setRecipeMap(map);
+        };
+        fetchRecipes();
+    }, [products]);
 
     const handleCreate = () => {
         navigate('/products/create');
@@ -85,6 +108,7 @@ export const ProductCatalog = () => {
                 await productApi.createProduct(data);
             }
             setIsModalOpen(false);
+            setRecipeMap({}); // force re-fetch recipes
             refetch();
             toast.success('Đã lưu sản phẩm thành công');
         } catch (error: any) {
@@ -131,29 +155,8 @@ export const ProductCatalog = () => {
 
                     <div className="flex flex-wrap items-center gap-4 relative z-10">
                         <Button
-                            variant="outline"
-                            onClick={() => navigate('/products/categories')}
-                            className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] px-6 py-6 h-auto rounded-2xl transition-all hover:scale-105 active:scale-95 italic"
-                        >
-                            <LibraryBig size={18} className="mr-2 text-indigo-400" /> Danh mục
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => navigate('/products/materials')}
-                            className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] px-6 py-6 h-auto rounded-2xl transition-all hover:scale-105 active:scale-95 italic"
-                        >
-                            <Wheat size={18} className="mr-2 text-amber-400" /> Nguyên liệu
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => navigate('/products/recipes')}
-                            className="bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 text-zinc-300 font-black uppercase tracking-widest text-[10px] px-6 py-6 h-auto rounded-2xl transition-all hover:scale-105 active:scale-95 italic"
-                        >
-                            <ChefHat size={18} className="mr-2 text-emerald-400" /> Công thức
-                        </Button>
-                        <Button
                             onClick={handleCreate}
-                            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black uppercase tracking-widest px-10 py-6 h-auto rounded-[1.75rem] shadow-[0_15px_30px_rgba(16,185,129,0.3)] hover:scale-[1.05] active:scale-95 transition-all italic border-0 ml-4 h-full"
+                            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-black uppercase tracking-widest px-10 py-6 h-auto rounded-[1.75rem] shadow-[0_15px_30px_rgba(16,185,129,0.3)] hover:scale-[1.05] active:scale-95 transition-all italic border-0 h-full"
                         >
                             <Plus className="mr-3 h-6 w-6" strokeWidth={3} /> Thêm Sản phẩm
                         </Button>
@@ -245,6 +248,24 @@ export const ProductCatalog = () => {
                                             {product.name}
                                         </h3>
                                         <span className="text-[10px] font-mono text-zinc-600 block pt-1 opacity-50">SKU: PD-{String(product.id).padStart(5, '0')}</span>
+
+                                        {/* Recipe badge */}
+                                        {recipeMap[product.id] !== undefined && (
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <div className={cn(
+                                                    "flex items-center gap-1.5 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border",
+                                                    recipeMap[product.id]
+                                                        ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                                        : "bg-zinc-900 text-zinc-600 border-white/5"
+                                                )}>
+                                                    <ChefHat size={10} />
+                                                    {recipeMap[product.id]
+                                                        ? `${recipeMap[product.id]!.recipeDetails.length} NL · Yield ${recipeMap[product.id]!.yield}`
+                                                        : 'Chưa có công thức'
+                                                    }
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex items-end justify-between pt-4 border-t border-white/5 mt-2">
