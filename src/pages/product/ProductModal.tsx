@@ -9,10 +9,10 @@ import type { ProductResponse } from '../../types/product';
 import { Package, Tag } from 'lucide-react';
 
 const productSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    categoryId: z.number().min(1, 'Category ID is required'),
-    price: z.number().min(0, 'Price must be positive'),
-    unit: z.string().min(1, 'Unit is required'),
+    name: z.string().min(1, 'Tên là bắt buộc'),
+    categoryId: z.number().min(1, 'Mã danh mục là bắt buộc'),
+    price: z.number().min(0, 'Giá phải lớn hơn hoặc bằng 0'),
+    unit: z.string().min(1, 'Đơn vị là bắt buộc'),
     description: z.string().optional()
 });
 
