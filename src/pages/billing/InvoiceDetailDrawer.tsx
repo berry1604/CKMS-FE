@@ -11,6 +11,9 @@ import type {
   BillingStatementDetailResponse,
   PaymentStatementRequest,
 } from "../../types/billing";
+import { storeOrderApi } from "../../services/storeOrderApi";
+import type { OrderDetailResponse } from "../../types/storeOrder";
+import { Truck } from "lucide-react";
 
 interface BillingDetailDrawerProps {
   statementId: number | null;
@@ -36,6 +39,9 @@ export const BillingDetailDrawer = ({
     transactionReference: "",
     note: "",
   });
+  const [orderDetailsMap, setOrderDetailsMap] = useState<
+    Record<number, OrderDetailResponse[]>
+  >({});
 
   // Fetch detail when opened
   const fetchDetail = useCallback(async () => {
@@ -59,6 +65,39 @@ export const BillingDetailDrawer = ({
     }
   }, [isOpen, statementId, fetchDetail]);
 
+  // Fetch order details for each invoice
+  useEffect(() => {
+    if (detail?.invoices) {
+      const fetchAllOrderDetails = async () => {
+        const newMap: Record<number, OrderDetailResponse[]> = {
+          ...orderDetailsMap,
+        };
+        let changed = false;
+
+        const promises = detail.invoices
+          .filter((inv) => inv.orderId && !orderDetailsMap[inv.orderId])
+          .map(async (inv) => {
+            try {
+              const order = await storeOrderApi.getOrderById(inv.orderId!);
+              if (order?.orderDetails) {
+                newMap[inv.orderId!] = order.orderDetails;
+                changed = true;
+              }
+            } catch (err) {
+              console.error(`Failed to fetch order ${inv.orderId}`, err);
+            }
+          });
+
+        await Promise.all(promises);
+        if (changed) {
+          setOrderDetailsMap(newMap);
+        }
+      };
+
+      fetchAllOrderDetails();
+    }
+  }, [detail?.invoices, orderDetailsMap]);
+
   const handlePay = async () => {
     if (!statementId) return;
     setIsPaying(true);
@@ -71,7 +110,7 @@ export const BillingDetailDrawer = ({
     } catch (error: unknown) {
       let msg = "Thanh toán thất bại";
       if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as any;
+        const axiosError = error as { response?: { data?: { message?: string } } };
         msg = axiosError.response?.data?.message || msg;
       }
       toast.error(msg);
@@ -246,7 +285,6 @@ export const BillingDetailDrawer = ({
 
             {/* Invoices Table */}
             {detail.invoices && detail.invoices.length > 0 && (
-<<<<<<< HEAD
               <div className="space-y-5">
                 {detail.invoices.map((inv, invIdx) => {
                   const items = inv.orderId
@@ -257,98 +295,159 @@ export const BillingDetailDrawer = ({
                       key={invIdx}
                       className="overflow-hidden border-zinc-700 shadow-sm"
                     >
-                          {/* Invoice sub-header */}
-                          <div className="bg-zinc-900/60 px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <span className="font-mono text-[10px] bg-amber-500/10 px-3 py-1.5 rounded-lg text-amber-500 border border-amber-500/20 font-black tracking-widest">
-                                INVOICE #{inv.invoiceId}
-                              </span>
-                              {inv.orderId && (
-                                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-                                  Order #{inv.orderId}
-                                </span>
+                      {/* Invoice sub-header */}
+                      <div className="bg-zinc-900/60 px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className="font-mono text-[10px] bg-amber-500/10 px-3 py-1.5 rounded-lg text-amber-500 border border-amber-500/20 font-black tracking-widest">
+                            INVOICE #{inv.invoiceId}
+                          </span>
+                          {inv.orderId && (
+                            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                              Order #{inv.orderId}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-6">
+                          {inv.issuedAt && (
+                            <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
+                              {new Date(inv.issuedAt).toLocaleDateString(
+                                "vi-VN",
                               )}
-                            </div>
-                            <div className="flex items-center gap-6">
-                              {inv.issuedAt && (
-                                <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
-                                  {new Date(inv.issuedAt).toLocaleDateString(
-                                    "vi-VN",
-                                  )}
-                                </span>
-                              )}
-                              <div className="text-right">
-                                {(inv.shippingFee ?? 0) > 0 && (
-                                  <div className="text-[9px] text-amber-500/70 font-black uppercase tracking-widest leading-none mb-1">
-                                    Gồm {inv.shippingFee?.toLocaleString("vi-VN")}₫ ship
-                                  </div>
-                                )}
-                                <span className="font-black text-lg text-white tracking-tighter italic">
-                                  {inv.amount?.toLocaleString("vi-VN")} <span className="text-xs not-italic text-zinc-500 font-bold ml-0.5">VND</span>
-                                </span>
+                            </span>
+                          )}
+                          <div className="text-right">
+                            {(inv.shippingFee ?? 0) > 0 && (
+                              <div className="text-[9px] text-amber-500/70 font-black uppercase tracking-widest leading-none mb-1">
+                                Gồm {inv.shippingFee?.toLocaleString("vi-VN")}₫
+                                ship
                               </div>
-                            </div>
+                            )}
+                            <span className="font-black text-lg text-white tracking-tighter italic">
+                              {inv.amount?.toLocaleString("vi-VN")}{" "}
+                              <span className="text-xs not-italic text-zinc-500 font-bold ml-0.5">
+                                VND
+                              </span>
+                            </span>
                           </div>
-    
-                          {/* Line Items Table */}
-                          <div className="bg-zinc-900/10">
-                            <table className="min-w-full divide-y divide-zinc-800/40">
-                              <thead>
-                                <tr className="bg-black/20">
-                                  <th className="px-6 py-3 text-left text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]" style={{ width: "60px" }}>No.</th>
-                                  <th className="px-6 py-3 text-left text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">Sản phẩm</th>
-                                  <th className="px-6 py-3 text-center text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]" style={{ width: "80px" }}>SL</th>
-                                  <th className="px-6 py-3 text-right text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]" style={{ width: "140px" }}>Đơn giá</th>
-                                  <th className="px-6 py-3 text-right text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]" style={{ width: "150px" }}>Thành tiền</th>
+                        </div>
+                      </div>
+
+                      {/* Line Items Table */}
+                      <div className="bg-zinc-900/10">
+                        <table className="min-w-full divide-y divide-zinc-800/40">
+                          <thead>
+                            <tr className="bg-black/20">
+                              <th
+                                className="px-6 py-3 text-left text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]"
+                                style={{ width: "60px" }}
+                              >
+                                No.
+                              </th>
+                              <th className="px-6 py-3 text-left text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">
+                                Sản phẩm
+                              </th>
+                              <th
+                                className="px-6 py-3 text-center text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]"
+                                style={{ width: "80px" }}
+                              >
+                                SL
+                              </th>
+                              <th
+                                className="px-6 py-3 text-right text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]"
+                                style={{ width: "140px" }}
+                              >
+                                Đơn giá
+                              </th>
+                              <th
+                                className="px-6 py-3 text-right text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]"
+                                style={{ width: "150px" }}
+                              >
+                                Thành tiền
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-800/20">
+                            {items.length > 0 ? (
+                              items.map((item, itemIdx) => (
+                                <tr
+                                  key={itemIdx}
+                                  className="hover:bg-amber-500/[0.02] transition-colors group/row"
+                                >
+                                  <td className="px-6 py-4 text-[10px] text-zinc-600 font-black font-mono">
+                                    {itemIdx + 1}
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-200 font-black tracking-tight">
+                                    {item.productName}
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-center text-amber-500 font-black font-mono">
+                                    {item.quantity}
+                                  </td>
+                                  <td className="px-6 py-4 text-xs text-right text-gray-400 font-bold">
+                                    {item.unitPrice?.toLocaleString("vi-VN")} ₫
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-right text-gray-200 font-black tracking-tighter font-mono">
+                                    {item.subTotal?.toLocaleString("vi-VN")} ₫
+                                  </td>
                                 </tr>
-                              </thead>
-                              <tbody className="divide-y divide-zinc-800/20">
-                                {items.length > 0 ? (
-                                  items.map((item, itemIdx) => (
-                                    <tr key={itemIdx} className="hover:bg-amber-500/[0.02] transition-colors group/row">
-                                      <td className="px-6 py-4 text-[10px] text-zinc-600 font-black font-mono">{itemIdx + 1}</td>
-                                      <td className="px-6 py-4 text-sm text-gray-200 font-black tracking-tight">{item.productName}</td>
-                                      <td className="px-6 py-4 text-sm text-center text-amber-500 font-black font-mono">
-                                        {item.quantity}
-                                      </td>
-                                      <td className="px-6 py-4 text-xs text-right text-gray-400 font-bold">
-                                        {item.unitPrice?.toLocaleString("vi-VN")} ₫
-                                      </td>
-                                      <td className="px-6 py-4 text-sm text-right text-gray-200 font-black tracking-tighter font-mono">
-                                        {item.subTotal?.toLocaleString("vi-VN")} ₫
-                                      </td>
-                                    </tr>
-                                  ))
-                                ) : (
-                                  <tr>
-                                    <td colSpan={5} className="px-6 py-10 text-center text-[10px] text-zinc-600 font-black uppercase tracking-widest italic animate-pulse">
-                                      Đang truy xuất chi tiết đơn hàng...
-                                    </td>
-                                  </tr>
-                                )}
-    
-                                {/* Shipping Fee Row - High Visibility */}
-                                {((inv.shippingFee ?? 0) > 0 || (inv.amount > items.reduce((sum, i) => sum + (i.subTotal || 0), 0) && items.length > 0)) && (
-                                  <tr className="bg-emerald-500/[0.03] border-t border-emerald-500/10">
-                                    <td className="px-6 py-4 text-[10px] text-emerald-500/50 font-black font-mono">
-                                      <Truck size={12} />
-                                    </td>
-                                    <td className="px-6 py-4">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">Phí vận chuyển (Shipment)</span>
-                                        <Badge variant="success" className="h-4 text-[8px] px-1 font-black bg-emerald-500/10 text-emerald-500 border-0">SYSTEM_FEE</Badge>
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-center text-zinc-600 font-black">—</td>
-                                    <td className="px-6 py-4 text-right text-zinc-600 font-black">—</td>
-                                    <td className="px-6 py-4 text-sm text-right text-emerald-500 font-black font-mono tracking-tighter">
-                                      {(inv.shippingFee || (inv.amount - items.reduce((sum, i) => sum + (i.subTotal || 0), 0))).toLocaleString("vi-VN")} ₫
-                                    </td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
+                              ))
+                            ) : (
+                              <tr>
+                                <td
+                                  colSpan={5}
+                                  className="px-6 py-10 text-center text-[10px] text-zinc-600 font-black uppercase tracking-widest italic animate-pulse"
+                                >
+                                  Đang truy xuất chi tiết đơn hàng...
+                                </td>
+                              </tr>
+                            )}
+
+                            {/* Shipping Fee Row - High Visibility */}
+                            {((inv.shippingFee ?? 0) > 0 ||
+                              (inv.amount >
+                                items.reduce(
+                                  (sum, i) => sum + (i.subTotal || 0),
+                                  0,
+                                ) &&
+                                items.length > 0)) && (
+                              <tr className="bg-emerald-500/[0.03] border-t border-emerald-500/10">
+                                <td className="px-6 py-4 text-[10px] text-emerald-500/50 font-black font-mono">
+                                  <Truck size={12} />
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">
+                                      Phí vận chuyển (Shipment)
+                                    </span>
+                                    <Badge
+                                      variant="success"
+                                      className="h-4 text-[8px] px-1 font-black bg-emerald-500/10 text-emerald-500 border-0"
+                                    >
+                                      SYSTEM_FEE
+                                    </Badge>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-center text-zinc-600 font-black">
+                                  —
+                                </td>
+                                <td className="px-6 py-4 text-right text-zinc-600 font-black">
+                                  —
+                                </td>
+                                <td className="px-6 py-4 text-sm text-right text-emerald-500 font-black font-mono tracking-tighter">
+                                  {(
+                                    inv.shippingFee ||
+                                    inv.amount -
+                                      items.reduce(
+                                        (sum, i) => sum + (i.subTotal || 0),
+                                        0,
+                                      )
+                                  ).toLocaleString("vi-VN")}{" "}
+                                  ₫
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
                     </Card>
                   );
                 })}
@@ -369,89 +468,8 @@ export const BillingDetailDrawer = ({
                       VND
                     </span>
                   </span>
-=======
-              <Card className="overflow-hidden border-zinc-700 shadow-sm">
-                <div className="bg-zinc-900/50">
-                  <table className="min-w-full divide-y divide-zinc-800">
-                    <thead>
-                      <tr className="bg-zinc-900/80">
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Mã hóa đơn
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Đơn hàng
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Trạng thái
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Số tiền
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800">
-                      {detail.invoices.map((inv, idx) => (
-                        <tr key={idx}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200">
-                            <span className="font-mono text-xs bg-zinc-800 px-2 py-1 rounded text-gray-300">
-                              #{inv.invoiceId}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {inv.orderId ? (
-                              <div>
-                                <span className="font-mono text-xs">
-                                  Đơn #{inv.orderId}
-                                </span>
-                                {inv.orderDate && (
-                                  <div className="text-xs text-gray-500 mt-0.5">
-                                    {new Date(inv.orderDate).toLocaleDateString(
-                                      "vi-VN",
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            {inv.status ? (
-                              <Badge
-                                variant={
-                                  inv.status === "PAID" ? "success" : "warning"
-                                }
-                                size="sm"
-                              >
-                                {inv.status}
-                              </Badge>
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-200 text-right">
-                            {inv.amount?.toLocaleString("vi-VN")} VND
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="bg-zinc-900/80">
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="px-6 py-4 text-right text-base font-bold text-gray-200"
-                        >
-                          Tổng cộng
-                        </td>
-                        <td className="px-6 py-4 text-right text-base font-bold text-amber-600">
-                          {detail.totalAmount?.toLocaleString("vi-VN")} VND
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
->>>>>>> 0d4ce73df23fbf9a9a565850c10379bfb83f9ec9
                 </div>
-              </Card>
+              </div>
             )}
           </div>
         ) : (

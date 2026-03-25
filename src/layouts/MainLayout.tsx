@@ -4,7 +4,6 @@ import type { User } from "../types/user";
 import { useAuth } from "../hooks/useAuth";
 import { cn } from "../utils/classNames";
 import {
-<<<<<<< HEAD
   PERMISSIONS,
   hasPermission,
   type Permission,
@@ -30,27 +29,6 @@ import {
   Wheat,
   Settings,
 } from "lucide-react";
-=======
-    LayoutDashboard,
-    Users,
-    Store,
-    ChefHat,
-    Package,
-    ShoppingCart,
-    FileText,
-    Truck,
-    BarChart,
-    LogOut,
-    ChevronLeft,
-    ChevronRight,
-    ClipboardList,
-    Shield,
-    Database,
-    Network,
-    LibraryBig,
-    Wheat,
-} from 'lucide-react';
->>>>>>> 0d4ce73df23fbf9a9a565850c10379bfb83f9ec9
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -153,7 +131,6 @@ export const navigation: NavigationItem[] = [
         name: "Lịch sản xuất",
         href: "/kitchen",
         icon: LayoutDashboard,
-<<<<<<< HEAD
         permission: PERMISSIONS.PRODUCTION_SCHEDULE,
         hidden: (user) =>
           user?.role?.toUpperCase().replace("ROLE_", "") === "MANAGER",
@@ -270,173 +247,6 @@ export const navigation: NavigationItem[] = [
       },
     ],
   },
-=======
-        // Dashboard is available to any authenticated user
-        permission: undefined,
-    },
-    // SECTION: FRANCHISE STORE
-    {
-        category: 'Cửa hàng',
-        headerPermission: [PERMISSIONS.CREATE_ORDER, PERMISSIONS.VIEW_MY_ORDERS, PERMISSIONS.RECEIVE_SHIPMENT],
-        items: [
-            {
-                name: 'Tạo đơn hàng',
-                href: '/orders/create',
-                icon: ShoppingCart,
-                permission: PERMISSIONS.CREATE_ORDER,
-            },
-            {
-                name: 'Đơn hàng của tôi',
-                href: '/orders',
-                icon: FileText,
-                permission: PERMISSIONS.VIEW_MY_ORDERS,
-                hidden: (user) => {
-                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
-                    return role === 'KITCHEN_STAFF' || role === 'COORDINATOR';
-                },
-            },
-            {
-                name: 'Nhận hàng',
-                href: '/shipment/receive',
-                icon: Package,
-                permission: PERMISSIONS.RECEIVE_SHIPMENT,
-                hidden: (user) => {
-                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
-                    return role === 'KITCHEN_STAFF' || role === 'COORDINATOR';
-                },
-            },
-        ]
-    },
-    // SECTION: COORDINATOR
-    {
-        category: 'Điều phối',
-        headerPermission: [PERMISSIONS.APPROVE_ORDERS, PERMISSIONS.PRODUCTION_PLANNING, PERMISSIONS.ALLOCATION_MANAGEMENT, PERMISSIONS.CREATE_SHIPMENT],
-        items: [
-            {
-                name: 'Duyệt đơn hàng',
-                href: '/orders/approvals',
-                icon: ClipboardList,
-                permission: PERMISSIONS.APPROVE_ORDERS,
-                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') === 'KITCHEN_STAFF',
-            },
-            {
-                name: 'Lập kế hoạch SX',
-                href: '/kitchen/create-plan',
-                icon: ChefHat,
-                permission: PERMISSIONS.PRODUCTION_PLANNING,
-                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') === 'KITCHEN_STAFF',
-            },
-            {
-                name: 'Lịch sản xuất',
-                href: '/kitchen',
-                icon: LayoutDashboard,
-                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
-                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') === 'MANAGER',
-            },
-            {
-                name: 'Phân bổ hàng',
-                href: '/warehouse/allocation',
-                icon: Network,
-                permission: PERMISSIONS.ALLOCATION_MANAGEMENT,
-                hidden: (user) => user?.role?.toUpperCase().replace('ROLE_', '') === 'KITCHEN_STAFF',
-            },
-            {
-                name: 'Vận chuyển',
-                href: '/shipment',
-                icon: Truck,
-                permission: PERMISSIONS.CREATE_SHIPMENT,
-            },
-        ]
-    },
-    // SECTION: MANAGER
-    {
-        category: 'Quản lý',
-        headerPermission: [PERMISSIONS.CATEGORY_MANAGEMENT, PERMISSIONS.BILLING_MANAGEMENT, PERMISSIONS.REVENUE_REPORTS, PERMISSIONS.PRODUCTION_SCHEDULE],
-        items: [
-            {
-                name: 'Kho nguyên liệu',
-                href: '/kitchen/inventory',
-                icon: Database,
-                permission: PERMISSIONS.MATERIAL_INVENTORY,
-            },
-            {
-                name: 'Bếp trung tâm',
-                href: '/kitchens',
-                icon: ChefHat,
-                permission: PERMISSIONS.MANAGE_KITCHEN_CONFIG,
-            },
-            {
-                name: 'Sản phẩm & Menu',
-                href: '/products',
-                icon: Package,
-                permission: PERMISSIONS.PRODUCT_MANAGEMENT,
-                hidden: (user) => {
-                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
-                    return role === 'KITCHEN_STAFF' || role === 'COORDINATOR';
-                },
-            },
-            {
-                name: 'Danh mục',
-                href: '/products/categories',
-                icon: LibraryBig,
-                permission: PERMISSIONS.CATEGORY_MANAGEMENT,
-            },
-            {
-                name: 'Nguyên liệu',
-                href: '/products/materials',
-                icon: Wheat,
-                permission: PERMISSIONS.INGREDIENT_MANAGEMENT,
-                hidden: (user) => {
-                    const role = user?.role?.toUpperCase().replace('ROLE_', '');
-                    return role === 'KITCHEN_STAFF' || role === 'COORDINATOR';
-                },
-            },
-            {
-                name: 'Hóa đơn & Billing',
-                href: '/billing',
-                icon: FileText,
-                permission: PERMISSIONS.BILLING_MANAGEMENT,
-            },
-            {
-                name: 'Báo cáo doanh thu',
-                href: '/reports',
-                icon: BarChart,
-                permission: PERMISSIONS.REVENUE_REPORTS,
-            },
-            {
-                name: 'Quản lý kho',
-                href: '/warehouse',
-                icon: Store,
-                permission: PERMISSIONS.PRODUCTION_SCHEDULE,
-                hidden: true,
-            },
-        ]
-    },
-    // SECTION: ADMIN
-    {
-        category: 'Hệ thống',
-        items: [
-            {
-                name: 'Người dùng',
-                href: '/users',
-                icon: Users,
-                permission: PERMISSIONS.USER_MANAGEMENT,
-            },
-            {
-                name: 'Vai trò & Quyền',
-                href: '/users/roles',
-                icon: Shield,
-                permission: PERMISSIONS.ROLE_PERMISSION_MANAGEMENT,
-            },
-            {
-                name: 'Cửa hàng',
-                href: '/stores',
-                icon: Store,
-                permission: PERMISSIONS.STORE_MANAGEMENT,
-            },
-        ]
-    }
->>>>>>> 0d4ce73df23fbf9a9a565850c10379bfb83f9ec9
 ];
 
 // ─── Main Layout ──────────────────────────────────────────────────────────────
