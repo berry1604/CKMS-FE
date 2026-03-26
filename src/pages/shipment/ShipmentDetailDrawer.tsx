@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   Truck,
   Package,
-  User,
   Phone,
   Calendar,
   Clock,
@@ -584,65 +583,7 @@ export const ShipmentDetailDrawer = ({
             </div>
           </div>
 
-          {/* Logistics Specs */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec transition-colors hover:border-[#DE802B]/30">
-              <div className="flex items-center gap-2">
-                <User
-                  size={14}
-                  className="text-zinc-600 group-hover/spec:text-[#DE802B] transition-colors"
-                />
-                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
-                  Tài xế
-                </span>
-              </div>
-              <span className="text-[13px] font-black text-zinc-300 uppercase truncate block min-h-[1.5rem]">
-                {shipment.driverName || "Đang tìm tài xế..."}
-              </span>
-              <div className="flex items-center gap-1.5 opacity-60">
-                <Phone size={10} className="text-zinc-500" />
-                <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter italic">
-                  {shipment.driverPhone || "N/A"}
-                </span>
-              </div>
-            </div>
-            <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec transition-colors hover:border-[#DE802B]/30">
-              <div className="flex items-center gap-2">
-                <Truck
-                  size={14}
-                  className="text-zinc-600 group-hover/spec:text-[#DE802B] transition-colors"
-                />
-                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
-                  Biển số xe
-                </span>
-              </div>
-              <span className="text-[13px] font-black text-zinc-300 uppercase truncate block min-h-[1.5rem]">
-                {shipment.vehicleInfo || "N/A"}
-              </span>
-              <div className="flex items-center gap-2">
-                <div className="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full transition-all duration-1000",
-                      shipment.driverName
-                        ? "w-[85%] bg-gradient-to-r from-[#DE802B] to-[#5C6F2B]"
-                        : "w-[30%] bg-zinc-700",
-                    )}
-                  ></div>
-                </div>
-                <span
-                  className={cn(
-                    "text-[9px] font-black",
-                    shipment.driverName
-                      ? "text-[#5C6F2B]"
-                      : "text-zinc-600 italic",
-                  )}
-                >
-                  {shipment.driverName ? "FOUND" : "SEARCHING"}
-                </span>
-              </div>
-            </div>
-          </div>
+          {/* Driver removed as requested */}
 
           {/* Store Contact (if available) */}
           {(shipment.storePhone ||
@@ -1042,75 +983,7 @@ export const ShipmentDetailDrawer = ({
             </div>
           </div>
 
-          {/* Item Details Panel (Aggregated) */}
-          <div className="space-y-6 pt-6 border-t border-zinc-800/30">
-            <div className="flex items-center justify-between ml-2">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
-                  <ClipboardList size={18} />
-                </div>
-                <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
-                  Tổng hợp mặt hàng
-                </h4>
-              </div>
-              <Badge
-                variant="orange"
-                className="text-[10px] font-black tracking-widest px-3 py-1 border-0 uppercase"
-              >
-                {aggregatedItems.length} Món
-              </Badge>
-            </div>
-
-            {isLoadingDetails ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="w-10 h-10 border-2 border-amber-500/10 border-t-amber-500 rounded-full animate-spin"></div>
-                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
-                  Đang tải danh sách mặt hàng...
-                </span>
-              </div>
-            ) : aggregatedItems.length === 0 ? (
-              <div className="py-20 text-center border-2 border-dashed border-zinc-800 rounded-[32px]">
-                <p className="text-[11px] text-zinc-600 font-bold uppercase tracking-widest">
-                  Trống danh sách hàng hóa
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {aggregatedItems.map((item) => (
-                  <div
-                    key={item.productId}
-                    className="group h-16 px-6 bg-zinc-950/40 border border-zinc-800/50 rounded-2xl flex items-center justify-between hover:border-amber-500/30 transition-all duration-300"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-2 h-2 rounded-full bg-amber-500/20 group-hover:bg-amber-500 transition-colors"></div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-black text-zinc-200 tracking-tight">
-                          {item.productName}
-                        </span>
-                        <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">
-                          ID: #{item.productId}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex flex-col items-end">
-                        <span className="text-sm font-black text-amber-500 font-mono tracking-tighter">
-                          {item.quantity}
-                        </span>
-                        <span className="text-[8px] text-zinc-600 font-black uppercase tracking-widest">
-                          Số lượng
-                        </span>
-                      </div>
-                      <ChevronRight
-                        size={14}
-                        className="text-zinc-800 group-hover:text-amber-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Item Details Panel (Aggregated) removed as requested */}
 
           {/* Action Panel */}
           <div className="relative group/panel overflow-hidden p-8 bg-zinc-950 border border-zinc-800 rounded-[36px] transition-all duration-500 hover:border-[#DE802B]/20 shadow-2xl">

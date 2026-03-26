@@ -12,7 +12,6 @@ import {
   Package,
   Store,
   Timer,
-  ClipboardList,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "../../components/ui/Button";
@@ -42,7 +41,6 @@ export const AllocationMatrix = () => {
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
 
   const [matrix, setMatrix] = useState<AllocationRow[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
   const [hasYield, setHasYield] = useState<boolean | null>(null);
   const [isLoadingMatrix, setIsLoadingMatrix] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +56,6 @@ export const AllocationMatrix = () => {
       setIsSuccess(false);
     } else {
       setMatrix([]);
-      setOrders([]);
       setHasYield(null);
     }
   }, [selectedPlanId]);
@@ -104,9 +101,8 @@ export const AllocationMatrix = () => {
       );
       const isFinishedPlan = selectedPlanData?.status === "FINISHED";
 
-      let previewRes: { rows: AllocationRow[]; rawOrders: any[] } = {
+      let previewRes: { rows: AllocationRow[] } = {
         rows: [],
-        rawOrders: [],
       };
       let planDetail: ProductionPlanDetailResponse | null = null;
 
@@ -123,7 +119,7 @@ export const AllocationMatrix = () => {
         throw apiError;
       }
 
-      const { rows, rawOrders } = previewRes;
+      const { rows } = previewRes;
 
       // Map production yield from plan detail into allocation rows
       const mergedRows = (rows || []).map((row) => {
@@ -189,17 +185,14 @@ export const AllocationMatrix = () => {
 
       if (!hasActualYield) {
         setMatrix([]);
-        setOrders([]);
         return;
       }
 
-      setOrders(rawOrders || []);
       setMatrix(mergedRows);
     } catch (error) {
       console.error("Critical Allocation preview error:", error);
       toast.error("Không thể phân bổ dữ liệu plan này");
       setMatrix([]);
-      setOrders([]);
     } finally {
       setIsLoadingMatrix(false);
     }
@@ -1108,244 +1101,7 @@ export const AllocationMatrix = () => {
         </div>
       </div>
 
-      {/* Allocation Summary Table (Order-based) - from develop */}
-      {matrix.length > 0 && orders.length > 0 && (
-        <div className="bg-zinc-950/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
-          <div className="p-10 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center text-amber-500 border border-zinc-800">
-                <ClipboardList size={24} />
-              </div>
-              <div>
-                <h2 className="text-xl font-black text-white uppercase tracking-tighter">
-                  Chi tiết Đơn hàng & Phân bổ
-                </h2>
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-1">
-                  Danh sách phân bổ cụ thể theo từng đơn hàng của chi nhánh
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="text-right">
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                  Tổng đơn nhượng quyền
-                </p>
-                <p className="text-xl font-black text-white">
-                  {orders.length}{" "}
-                  <span className="text-[10px] text-zinc-600">ĐƠN HÀNG</span>
-                </p>
-              </div>
-            </div>
-          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-zinc-900/80 text-[10px] uppercase font-black text-zinc-600 tracking-widest border-b border-zinc-800">
-                  <th className="px-10 py-5">Cửa hàng & Đơn hàng</th>
-                  <th className="px-8 py-5">Sản phẩm điều phối</th>
-                  <th className="px-8 py-5 text-center">Tỷ lệ đáp ứng</th>
-                  <th className="px-8 py-5 text-center w-[120px]">Tổng SL</th>
-                  <th className="px-10 py-5 text-right w-[150px]">
-                    Trạng thái
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/30">
-                {orders.map((order, idx) => {
-                  const items = order.items || [];
-                  const totalRequested = items.reduce(
-                    (sum: number, item: any) =>
-                      sum + (item.requestedQty ?? item.requestedQuantity ?? 0),
-                    0,
-                  );
-                  const totalAllocated = items.reduce(
-                    (sum: number, item: any) =>
-                      sum + (item.proposedQty ?? item.allocatedQuantity ?? 0),
-                    0,
-                  );
-
-                  const fulfillmentRate =
-                    totalRequested > 0
-                      ? Math.round((totalAllocated / totalRequested) * 100)
-                      : 0;
-                  const isFullyFulfilled = fulfillmentRate >= 100;
-                  const isPartiallyFulfilled =
-                    fulfillmentRate > 0 && fulfillmentRate < 100;
-
-                  return (
-                    <tr
-                      key={order.orderId || idx}
-                      className="hover:bg-zinc-800/20 transition-all group"
-                    >
-                      <td className="px-10 py-8">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-600 group-hover:text-amber-500 transition-all duration-300 shadow-inner group-hover:shadow-amber-500/10">
-                            <Store
-                              size={22}
-                              strokeWidth={isFullyFulfilled ? 2.5 : 2}
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-base font-black text-zinc-100 uppercase tracking-tight group-hover:text-white transition-colors">
-                              {order.storeName || `Cửa hàng #${order.storeId}`}
-                            </span>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge
-                                variant="secondary"
-                                className="text-[9px] font-mono font-black text-zinc-500 bg-zinc-950/50 border-zinc-800 px-2 rounded-md"
-                              >
-                                ID: #{order.orderId}
-                              </Badge>
-                              {order.deliveryDate && (
-                                <div className="flex items-center gap-1.5 ml-1">
-                                  <div className="w-1 h-1 rounded-full bg-zinc-700"></div>
-                                  <Timer
-                                    size={10}
-                                    className="text-amber-500/60"
-                                  />
-                                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-tighter">
-                                    Ngày nhận:{" "}
-                                    {new Date(
-                                      order.deliveryDate,
-                                    ).toLocaleDateString("vi-VN")}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-8">
-                        <div className="flex flex-wrap gap-2.5 max-w-lg">
-                          {items.map((item: any, i: number) => {
-                            const req =
-                              item.requestedQty ?? item.requestedQuantity ?? 0;
-                            const alc =
-                              item.proposedQty ?? item.allocatedQuantity ?? 0;
-                            if (req === 0) return null;
-
-                            const isItemShortage = alc < req;
-
-                            return (
-                              <div
-                                key={i}
-                                className={cn(
-                                  "px-3 py-1.5 rounded-xl flex items-center gap-3 border transition-all duration-300",
-                                  alc === 0
-                                    ? "bg-zinc-950/40 border-zinc-900/50 opacity-40"
-                                    : isItemShortage
-                                      ? "bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40"
-                                      : "bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40",
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    "text-[11px] font-black uppercase tracking-tight",
-                                    alc === 0
-                                      ? "text-zinc-600"
-                                      : isItemShortage
-                                        ? "text-amber-500/90"
-                                        : "text-emerald-500/90",
-                                  )}
-                                >
-                                  {item.productName}
-                                </span>
-                                <div
-                                  className={cn(
-                                    "flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black font-mono",
-                                    alc === 0
-                                      ? "bg-zinc-900 text-zinc-700"
-                                      : isItemShortage
-                                        ? "bg-amber-500/10 text-amber-500"
-                                        : "bg-emerald-500/10 text-emerald-500",
-                                  )}
-                                >
-                                  <span>{alc}</span>
-                                  <span className="opacity-30">/</span>
-                                  <span className="opacity-50">{req}</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </td>
-                      <td className="px-8 py-8">
-                        <div className="flex flex-col items-center gap-3 min-w-[140px]">
-                          <div className="flex items-center justify-between w-full px-1">
-                            <span
-                              className={cn(
-                                "text-[10px] font-black uppercase tracking-widest",
-                                isFullyFulfilled
-                                  ? "text-emerald-500"
-                                  : isPartiallyFulfilled
-                                    ? "text-amber-500"
-                                    : "text-zinc-600",
-                              )}
-                            >
-                              {fulfillmentRate}%
-                            </span>
-                            <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">
-                              ĐÁP ỨNG
-                            </span>
-                          </div>
-                          <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden p-[1px] border border-zinc-900">
-                            <div
-                              className={cn(
-                                "h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(0,0,0,0.5)]",
-                                isFullyFulfilled
-                                  ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
-                                  : isPartiallyFulfilled
-                                    ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]"
-                                    : "bg-zinc-800",
-                              )}
-                              style={{ width: `${fulfillmentRate}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-8 text-center">
-                        <div className="flex flex-col items-center">
-                          <span className="text-2xl font-black font-mono text-zinc-100 tracking-tighter leading-none">
-                            {totalAllocated}
-                          </span>
-                          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] mt-2">
-                            Tổng SP
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-10 py-8 text-right">
-                        {isFullyFulfilled ? (
-                          <Badge
-                            variant="success"
-                            className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black px-5 py-1.5 rounded-xl uppercase tracking-[0.15em] text-[10px]"
-                          >
-                            HOÀN TẤT
-                          </Badge>
-                        ) : isPartiallyFulfilled ? (
-                          <Badge
-                            variant="orange"
-                            className="bg-amber-500/10 text-amber-500 border-amber-500/20 font-black px-5 py-1.5 rounded-xl uppercase tracking-[0.15em] text-[10px]"
-                          >
-                            BỊ THIẾU
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="secondary"
-                            className="bg-zinc-900 text-zinc-500 border-zinc-800 font-black px-5 py-1.5 rounded-xl uppercase tracking-[0.15em] text-[10px]"
-                          >
-                            CHƯA CÓ
-                          </Badge>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

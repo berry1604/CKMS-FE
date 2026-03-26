@@ -402,12 +402,14 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                 {[
                   {
                     label: "Tổng tồn",
-                    value: selectedProduct.totalQuantity,
+                    value:
+                      selectedProduct.totalQuantity ??
+                      batches.reduce((sum, b) => sum + (b.quantity || 0), 0),
                     sub: translateUnit(selectedProduct.unit),
                   },
                   {
                     label: "Số lô hàng",
-                    value: selectedProduct.batchCount,
+                    value: selectedProduct.batchCount ?? batches.length,
                     sub: "Đã nhận",
                     color: "text-amber-500",
                   },
@@ -510,7 +512,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                           </Badge>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-6">
+                        <div className="grid grid-cols-2 gap-6">
                           <div>
                             <p className="text-[10px] font-black text-zinc-600 uppercase mb-1">
                               Số lượng
@@ -523,16 +525,6 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                                 {translateUnit(selectedProduct.unit)}
                               </span>
                             </div>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-black text-zinc-600 uppercase mb-1">
-                              Ngày SX
-                            </p>
-                            <p className="font-bold text-zinc-300 text-sm">
-                              {new Date(
-                                batch.manufacturingDate,
-                              ).toLocaleDateString("vi-VN")}
-                            </p>
                           </div>
                           <div>
                             <p className="text-[10px] font-black text-zinc-600 uppercase mb-1">

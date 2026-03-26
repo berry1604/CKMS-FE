@@ -226,7 +226,7 @@ export const OrderList = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#0a0a0a] backdrop-blur-[1px]" />
 
-                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
+                <div className="absolute inset-0 flex flex-col justify-end px-4 lg:px-6 pb-12 max-w-[1600px] mx-auto w-full">
                     <div className="flex items-center gap-4 mb-3">
                         <div className="h-px w-10 bg-amber-500/50" />
                         <span className="text-amber-500 font-medium tracking-[0.3em] text-[10px] uppercase">Quản lý chuỗi cung ứng</span>
@@ -258,13 +258,13 @@ export const OrderList = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-8 -mt-10 relative z-10 space-y-8">
+            <div className="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-10 relative z-10 space-y-8">
                 {/* Search & Filter Bar */}
                 <div className="backdrop-blur-3xl bg-white/[0.03] border border-white/10 rounded-[32px] p-4 shadow-2xl relative overflow-hidden group">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
                     
-                    <div className="flex flex-col md:flex-row gap-6 items-center justify-between relative z-10">
-                        <div className="relative w-full md:w-[400px] group/search">
+                    <div className="flex flex-col lg:flex-row gap-6 items-center justify-between relative z-10">
+                        <div className="relative w-full lg:w-[400px] group/search">
                             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within/search:scale-110">
                                 <Search size={18} className="text-gray-500 group-focus-within/search:text-amber-500 transition-colors" />
                             </div>
@@ -277,10 +277,10 @@ export const OrderList = () => {
                             />
                         </div>
 
-                        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-4 md:pb-0 no-scrollbar">
+                        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                             <div className="flex items-center gap-2 pr-4 border-r border-white/5 mr-2">
                                 <Filter size={16} className="text-amber-500" />
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Lọc theo</span>
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap hidden sm:inline">Lọc theo</span>
                             </div>
                             {['all', 'DRAFT', 'SUBMITTED', 'APPROVED', 'ALLOCATED', 'DELIVERED', 'REJECTED'].map(status => (
                                 <button

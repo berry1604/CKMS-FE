@@ -717,7 +717,6 @@ export const CreateShipment = () => {
                                             {(
                                               order.totalAmount || 0
                                             ).toLocaleString()}
-                                            đ
                                           </span>
                                         </div>
                                       </div>

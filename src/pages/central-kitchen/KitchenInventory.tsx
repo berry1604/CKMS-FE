@@ -109,7 +109,12 @@ export const KitchenInventory = () => {
         {
             header: 'Tên vật phẩm',
             accessorKey: 'itemName',
-            cell: (row) => (
+            cell: (row) => {
+                const diffDays = row.expiryDate ? Math.ceil((new Date(row.expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
+                const isExpired = diffDays !== null && diffDays < 0;
+                const isExpiringSoon = diffDays !== null && diffDays >= 0 && diffDays <= 7;
+                
+                return (
                 <div className="flex items-center gap-4 group/item transition-all duration-300">
                     <div className={`p-2 rounded-xl transition-all duration-300 ${row.itemType === 'MATERIAL' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
                         {row.itemType === 'MATERIAL' ? (
@@ -118,9 +123,29 @@ export const KitchenInventory = () => {
                             <Package size={18} />
                         )}
                     </div>
-                    <span className="font-bold text-zinc-100 group-hover/item:text-white transition-colors">{row.itemName}</span>
+                    <div>
+                        <span className={`font-bold transition-colors ${isExpired ? "text-red-400 group-hover/item:text-red-300" : isExpiringSoon ? "text-amber-400 group-hover/item:text-amber-300" : "text-zinc-100 group-hover/item:text-white"}`}>
+                            {row.itemName}
+                        </span>
+                        {(isExpired || isExpiringSoon) && (
+                            <div className="flex items-center gap-2 mt-1">
+                                {isExpired && (
+                                    <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[8px] font-black tracking-widest uppercase border border-red-500/20 flex items-center gap-1">
+                                        <AlertTriangle className="w-2.5 h-2.5" />
+                                        Đã hết hạn
+                                    </span>
+                                )}
+                                {isExpiringSoon && (
+                                    <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[8px] font-black tracking-widest uppercase border border-amber-500/20 flex items-center gap-1">
+                                        <AlertTriangle className="w-2.5 h-2.5" />
+                                        Sắp hết hạn
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            )
+            )}
         },
         {
             header: 'Phân loại',
@@ -169,22 +194,37 @@ export const KitchenInventory = () => {
         },
         {
             header: 'Ngày Hết hạn',
-            cell: (row) => (
-                <div className="flex flex-col">
-                    {row.expiryDate ? (
-                        <>
-                            <span className="text-xs font-bold text-zinc-300">
+            cell: (row) => {
+                if (row.expiryDate) {
+                    const diffDays = Math.ceil((new Date(row.expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+                    let statusColor = "text-zinc-300";
+                    let daysColor = "text-zinc-500";
+                    
+                    if (diffDays < 0) {
+                        statusColor = "text-red-500";
+                        daysColor = "text-red-400";
+                    } else if (diffDays <= 7) {
+                        statusColor = "text-amber-500";
+                        daysColor = "text-amber-400";
+                    }
+                    
+                    return (
+                        <div className="flex flex-col">
+                            <span className={`text-xs font-bold ${statusColor}`}>
                                 {new Date(row.expiryDate).toLocaleDateString('vi-VN')}
                             </span>
-                            <span className="text-[9px] font-medium text-zinc-500 uppercase tracking-tighter">
-                                {Math.ceil((new Date(row.expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} ngày còn lại
+                            <span className={`text-[9px] font-medium uppercase tracking-tighter ${daysColor}`}>
+                                {diffDays < 0 ? `${Math.abs(diffDays)} ngày quá hạn` : `${diffDays} ngày còn lại`}
                             </span>
-                        </>
-                    ) : (
+                        </div>
+                    );
+                }
+                return (
+                    <div className="flex flex-col">
                         <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Vĩnh viễn</span>
-                    )}
-                </div>
-            )
+                    </div>
+                );
+            }
         },
         ...(canManageInventory ? [{
             header: 'Thao tác',

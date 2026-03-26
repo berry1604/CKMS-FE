@@ -345,7 +345,7 @@ export const BillingList = () => {
             <DollarSign className="text-green-500/20" size={40} />
           </div>
           <div className="relative z-10">
-            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic mb-2 block">Thành công (Trang này)</span>
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic mb-2 block">Thành công</span>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-black text-green-500 italic tracking-tighter">{paidCount}</span>
               <span className="text-green-900/50 text-[10px] font-black uppercase italic">Hợp lệ</span>
@@ -362,7 +362,7 @@ export const BillingList = () => {
             <AlertCircle className="text-rose-500/20" size={40} />
           </div>
           <div className="relative z-10">
-            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic mb-2 block">Trễ hạn (Trang này)</span>
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic mb-2 block">Trễ hạn</span>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-black text-rose-500 italic tracking-tighter">{overdueCount}</span>
               <span className="text-rose-900/50 text-[10px] font-black uppercase italic">Rủi ro</span>
