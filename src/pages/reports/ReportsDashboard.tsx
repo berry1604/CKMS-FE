@@ -153,7 +153,7 @@ export const ReportsDashboard = () => {
                                 style={{ height: `${(item.revenue / maxVal) * 100}%` }}
                             >
                                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 text-white text-[10px] py-1.5 px-2.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 whitespace-nowrap z-20 shadow-xl">
-                                    <div className="text-amber-400 font-bold">DT: {item.revenue.toLocaleString()}đ</div>
+                                    <div className="text-amber-400 font-bold">DT: {item.revenue.toLocaleString()}</div>
                                 </div>
                             </div>
                         </div>

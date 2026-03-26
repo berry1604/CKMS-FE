@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
-    DollarSign, Users, Activity,
+    Users, Activity,
     Package, Truck, ChefHat,
     RefreshCw, Store, ExternalLink
 } from 'lucide-react';
@@ -103,6 +103,7 @@ export const Dashboard = () => {
                 productionPlans: 0,
             };
 
+            // 1. Stores - Admin and Coordinator can see store stats
             if (role === 'ADMIN' || role === 'COORDINATOR') {
                 try {
                     const storeRes = await storeApi.getAllStores({ size: 1 });
@@ -110,26 +111,31 @@ export const Dashboard = () => {
                 } catch { /* ignore */ }
             }
 
-            if (role !== 'KITCHEN_STAFF') {
+            // 2. Orders - Admin excluded from fetching orders on dashboard now
+            if (role !== 'KITCHEN_STAFF' && role !== 'ADMIN') {
                 try {
                     let orderRes;
-                    if (role === 'ADMIN' || role === 'COORDINATOR') {
+                    if (role === 'COORDINATOR') {
                         orderRes = await storeOrderApi.getAllOrders({ size: 5, page: 0 });
                     } else {
                         orderRes = await storeOrderApi.getMyOrders({ size: 5, page: 0 });
                     }
-                    newStats.pendingOrders = orderRes?.totalElements || 0;
-                    const items = (orderRes?.content || []).slice(0, 5).map((o: any) => ({
-                        id: o.orderId,
-                        storeName: o.storeName || `Cửa hàng #${o.storeId}`,
-                        status: o.status,
-                        totalAmount: o.totalAmount || 0,
-                        orderDate: o.orderDate,
-                    }));
-                    setRecentOrders(items);
+
+                    if (orderRes) {
+                        newStats.pendingOrders = orderRes.totalElements || 0;
+                        const items = (orderRes.content || []).slice(0, 5).map((o: any) => ({
+                            id: o.orderId,
+                            storeName: o.storeName || `Cửa hàng #${o.storeId}`,
+                            status: o.status,
+                            totalAmount: o.totalAmount || 0,
+                            orderDate: o.orderDate,
+                        }));
+                        setRecentOrders(items);
+                    }
                 } catch { /* ignore */ }
             }
 
+            // 3. Users - Admin only
             if (role === 'ADMIN') {
                 try {
                     const userRes = await userService.getUsers({ size: 1 });
@@ -137,7 +143,8 @@ export const Dashboard = () => {
                 } catch { /* ignore */ }
             }
 
-            if (role === 'ADMIN' || role === 'COORDINATOR' || role === 'KITCHEN_STAFF') {
+            // 4. Shipments - Coordinator, Kitchen, and Staff
+            if (role !== 'ADMIN' && role !== 'MANAGER') {
                 try {
                     const shipRes = await shipmentApi.getShipments({ size: 5, page: 0 });
                     newStats.pendingShipments = shipRes?.totalElements || 0;
@@ -151,14 +158,8 @@ export const Dashboard = () => {
                 } catch { /* ignore */ }
             }
 
-            if (role === 'ADMIN') {
-                try {
-                    const billRes = await billingApi.getStatements({ size: 1, page: 0 });
-                    newStats.totalRevenue = billRes?.totalElements || 0;
-                } catch { /* ignore */ }
-            }
-
-            if (role === 'KITCHEN_STAFF' || role === 'COORDINATOR' || role === 'ADMIN') {
+            // 5. Production Plans - Coordinator and Kitchen
+            if (role === 'KITCHEN_STAFF' || role === 'COORDINATOR') {
                 try {
                     const planRes = await productionPlanApi.getAllProductionPlans({ size: 1, page: 0 });
                     newStats.productionPlans = (planRes as any)?.totalElements || 0;
@@ -215,7 +216,7 @@ export const Dashboard = () => {
                 return indexA - indexB;
             });
         }
-        
+
         return flattened;
     }, [user]);
 
@@ -229,7 +230,7 @@ export const Dashboard = () => {
         index?: number;
         bgClass?: string;
     }) => (
-        <div 
+        <div
             className={`flex flex-col relative p-6 rounded-3xl ${bgClass} border border-white/[0.05] hover:bg-white/[0.04] transition-all duration-300 shadow-sm hover:shadow-lg animate-in fade-in slide-in-from-bottom-4`}
             style={{ animationDelay: `${index * 100}ms` }}
         >
@@ -264,12 +265,12 @@ export const Dashboard = () => {
 
     return (
         <div className="min-h-screen relative p-4 md:p-8 space-y-6">
-            
+
             {/* Hero Welcome Banner */}
             <div className="relative overflow-hidden rounded-[2rem] bg-zinc-900 border border-white/[0.05] p-8 md:p-10 shadow-xl">
                 {/* Decorative blob */}
                 <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-amber-500/20 rounded-full blur-[80px] pointer-events-none" />
-                
+
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.1] text-zinc-300 text-xs font-semibold mb-6">
@@ -302,7 +303,7 @@ export const Dashboard = () => {
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                
+
                 {/* Analytics Row - Spans based on role */}
                 <div className="col-span-12 space-y-4">
                     <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2 px-1">
@@ -311,9 +312,8 @@ export const Dashboard = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {role === 'ADMIN' && (
                             <>
-                                <StatCard title="Tổng Doanh Thu Hóa Đơn" value={stats.totalRevenue.toLocaleString() + ' đ'} icon={DollarSign} colorClass="text-emerald-400" index={1} />
-                                <StatCard title="Số Cửa Hàng" value={stats.activeStores} icon={Store} colorClass="text-amber-500" index={2} />
-                                <StatCard title="Tổng Người Dùng" value={stats.activeUsers} icon={Users} colorClass="text-blue-400" index={3} />
+                                <StatCard title="Số Cửa Hàng" value={stats.activeStores} icon={Store} colorClass="text-amber-500" index={1} />
+                                <StatCard title="Tổng Người Dùng" value={stats.activeUsers} icon={Users} colorClass="text-blue-400" index={2} />
                             </>
                         )}
                         {role === 'COORDINATOR' && (
@@ -372,11 +372,11 @@ export const Dashboard = () => {
                     <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2 px-1">
                         <RefreshCw size={16} className="text-amber-500" /> Hoạt Động Gần Đây
                     </h2>
-                    
+
                     <div className="flex flex-col gap-3">
                         {recentOrders.length > 0 ? (
                             recentOrders.map((order: RecentOrderItem) => (
-                                <div 
+                                <div
                                     key={order.id}
                                     onClick={() => navigate('/orders')}
                                     className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md group"
@@ -397,7 +397,7 @@ export const Dashboard = () => {
                             ))
                         ) : recentShipments.length > 0 ? (
                             recentShipments.map((ship: RecentShipmentItem) => (
-                                <div 
+                                <div
                                     key={ship.id}
                                     onClick={() => navigate('/shipment')}
                                     className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md group"
@@ -423,8 +423,8 @@ export const Dashboard = () => {
                             </div>
                         )}
 
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             onClick={() => navigate('/reports')}
                             className="w-full mt-2 py-5 rounded-xl border border-white/[0.05] text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-all bg-white/[0.01]"
                         >

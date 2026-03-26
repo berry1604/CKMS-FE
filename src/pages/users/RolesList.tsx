@@ -78,7 +78,7 @@ export const RolesList = () => {
                     {/* Background Decorative Elements */}
                     <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
                     <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-orange-600/5 rounded-full blur-[100px] pointer-events-none"></div>
-                    
+
                     <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
                         <div className="space-y-4">
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[10px] font-bold uppercase tracking-widest">
@@ -105,7 +105,7 @@ export const RolesList = () => {
                                     <div className="text-[10px] uppercase tracking-tighter text-zinc-500 font-bold">Quyền hạn</div>
                                 </div>
                             </div>
-                            
+
                             <Button
                                 onClick={handleCreate}
                                 className="group/btn relative overflow-hidden bg-amber-600 hover:bg-amber-500 text-white shadow-2xl shadow-amber-900/20 px-8 py-7 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
@@ -139,9 +139,9 @@ export const RolesList = () => {
                         </div>
                         <h3 className="text-2xl font-bold text-zinc-300">Nhân thức hệ rỗng</h3>
                         <p className="text-zinc-500 mt-2 max-w-sm mx-auto">Hệ thống chưa thiết lập vai trò vận hành. Hãy bắt đầu bằng cách khởi tạo vai trò quản trị đầu tiên.</p>
-                        <Button 
+                        <Button
                             onClick={handleCreate}
-                            variant="ghost" 
+                            variant="ghost"
                             className="mt-8 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 font-bold"
                         >
                             Thiết lập ngay
@@ -153,10 +153,10 @@ export const RolesList = () => {
                             <table className="w-full text-left whitespace-nowrap">
                                 <thead>
                                     <tr className="bg-zinc-950/40 border-b border-zinc-800/80">
-                                        <th className="px-8 py-6 font-black text-zinc-500 text-[11px] uppercase tracking-[0.2em] w-[40%]">Tên định danh</th>
-                                        <th className="px-8 py-6 font-black text-zinc-500 text-[11px] uppercase tracking-[0.2em] w-[20%]">Mã định tuý</th>
-                                        <th className="px-8 py-6 font-black text-zinc-500 text-[11px] uppercase tracking-[0.2em] text-center w-[15%]">Ma trận quyền</th>
-                                        <th className="px-8 py-6 font-black text-zinc-500 text-[11px] uppercase tracking-[0.2em] text-right w-[25%]">Vận hành</th>
+                                        <th className="px-8 py-6 font-black text-zinc-500 text-[11px] uppercase tracking-[0.2em] w-[40%]">Vai trò</th>
+                                        <th className="px-8 py-6 font-black text-zinc-500 text-[11px] uppercase tracking-[0.2em] w-[20%]">Mã ID</th>
+                                        <th className="px-8 py-6 font-black text-zinc-500 text-[11px] uppercase tracking-[0.2em] text-center w-[15%]">Phân quyền</th>
+                                        <th className="px-8 py-6 font-black text-zinc-500 text-[11px] uppercase tracking-[0.2em] text-right w-[25%]">Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-zinc-800/30">
@@ -189,8 +189,8 @@ export const RolesList = () => {
                                             <td className="px-8 py-7 text-center">
                                                 <div className="inline-flex items-center gap-3">
                                                     <div className="h-1 w-12 bg-zinc-800 rounded-full overflow-hidden">
-                                                        <div 
-                                                            className="h-full bg-gradient-to-r from-amber-600 to-orange-500 transition-all duration-1000 group-hover/row:scale-x-110" 
+                                                        <div
+                                                            className="h-full bg-gradient-to-r from-amber-600 to-orange-500 transition-all duration-1000 group-hover/row:scale-x-110"
                                                             style={{ width: `${Math.min(100, (role.privileges?.length || 0) * 10)}%` }}
                                                         ></div>
                                                     </div>

@@ -14,8 +14,8 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   DELIVERED: "Đã giao hàng",
   CONFIRMED: "Đã hoàn tất",
   REJECTED: "Bị từ chối",
-  CANCELLED: "Đã hủy",
   DRAFT: "Bản nháp",
+  CANCELLED: "Đã hủy",
   PREPARING: "Đang chuẩn bị",
   READY: "Sẵn sàng",
 };
@@ -31,10 +31,10 @@ export const PRODUCTION_PLAN_STATUS_LABELS: Record<
   PRODUCED: "Đã sản xuất",
   COMPLETED: "Hoàn thành",
   FINISHED: "Hoàn tất",
-  CANCELLED: "Đã hủy",
   APPROVED: "Đã duyệt",
-  READY: "Sẵn sàng (Đã phân bổ)",
+  CANCELLED: "Đã hủy",
   DRAFT: "Bản nháp",
+  READY: "Sẵn sàng",
 };
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {

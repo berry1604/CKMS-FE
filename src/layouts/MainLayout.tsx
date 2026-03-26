@@ -130,16 +130,20 @@ export const navigation: NavigationItem[] = [
         href: "/orders/approvals",
         icon: ClipboardList,
         permission: PERMISSIONS.APPROVE_ORDERS,
-        hidden: (user) =>
-          user?.role?.toUpperCase().replace("ROLE_", "") === "KITCHEN_STAFF",
+        hidden: (user) => {
+          const role = user?.role?.toUpperCase().replace("ROLE_", "");
+          return role === "KITCHEN_STAFF" || role === "ADMIN";
+        },
       },
       {
         name: "Lập kế hoạch SX",
         href: "/kitchen/create-plan",
         icon: ChefHat,
         permission: PERMISSIONS.PRODUCTION_PLANNING,
-        hidden: (user) =>
-          user?.role?.toUpperCase().replace("ROLE_", "") === "KITCHEN_STAFF",
+        hidden: (user) => {
+          const role = user?.role?.toUpperCase().replace("ROLE_", "");
+          return role === "KITCHEN_STAFF" || role === "ADMIN";
+        },
       },
       {
         name: "Lịch sản xuất",
@@ -232,6 +236,8 @@ export const navigation: NavigationItem[] = [
         href: "/reports",
         icon: BarChart,
         permission: PERMISSIONS.REVENUE_REPORTS,
+        hidden: (user) =>
+          user?.role?.toUpperCase().replace("ROLE_", "") === "ADMIN",
       },
       {
         name: "Quản lý kho bếp",

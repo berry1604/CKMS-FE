@@ -177,7 +177,7 @@ export const ReceiveShipmentForm = ({
                   Cước phí vận chuyển dự kiến:
                 </span>
                 <span className="text-sm font-black text-emerald-400 font-mono tracking-tighter">
-                  {shippingFee?.toLocaleString("vi-VN")} ₫
+                  {shippingFee?.toLocaleString("vi-VN")}
                 </span>
               </div>
             )}
@@ -284,7 +284,7 @@ export const ReceiveShipmentForm = ({
                                   {details?.category?.name || "Sản phẩm"}
                                 </Badge>
                                 <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter">
-                                  Đơn giá: {item.unitPrice.toLocaleString()}đ
+                                  Đơn giá: {item.unitPrice?.toLocaleString("vi-VN")}
                                 </span>
                               </div>
                             </div>

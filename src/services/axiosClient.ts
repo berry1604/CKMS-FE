@@ -122,8 +122,13 @@ axiosClient.interceptors.response.use(
         
         // Handle 403 Forbidden
         else if (error.response?.status === 403) {
-            // Skip showing toast if we are trying to fetch products/categories (we handle fallback in the component)
-            if (!url.includes('/products') && !url.includes('/categories')) {
+            // Skip showing toast for background dashboard calls or exploration calls (we handle fallback in components)
+            const isDashboardCall = url.includes('/orders') || url.includes('/shipments') || 
+                                   url.includes('/billing/statements') || url.includes('/production-plans') ||
+                                   url.includes('/users') || url.includes('/stores');
+            const isExplorationCall = url.includes('/products') || url.includes('/categories');
+
+            if (!isDashboardCall && !isExplorationCall) {
                 const now = Date.now();
                 if (now - last403Toast > 3000) {
                     last403Toast = now;
