@@ -98,6 +98,7 @@ export const navigation: NavigationItem[] = [
         href: "/stores/inventory",
         icon: Database,
         permission: PERMISSIONS.STORE_INVENTORY,
+        hidden: true,
       },
     ],
   },
