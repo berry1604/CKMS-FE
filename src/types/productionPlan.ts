@@ -28,6 +28,7 @@ export interface DispatchSuggestionResponse {
 export interface ProductionPlanRequest {
   kitchenId: number;
   plannedDate: string; // Changed from targetDate to plannedDate as per backend validation fix
+  expectedCompletedDate: string;
   storeOrderIds: number[];
 }
 
@@ -38,6 +39,7 @@ export interface ProductionPlanResponse {
   kitchenId: number;
   status: ProductionPlanStatus;
   createdAt: string;
+  expectedCompletedDate?: string;
   coordinatorUserId: number;
   version?: number;
 }
@@ -49,6 +51,7 @@ export interface ProductionPlanSummaryResponse {
   kitchenId: number;
   status: ProductionPlanStatus;
   createdAt: string;
+  expectedCompletedDate?: string;
   coordinatorUserId: number;
   version?: number;
 }

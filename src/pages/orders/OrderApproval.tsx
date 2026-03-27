@@ -11,6 +11,7 @@ import {
   Scissors,
   Sparkles,
   X,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -27,6 +28,8 @@ import { toast } from "react-hot-toast";
 import { OrderDetailDrawer } from "./OrderDetailDrawer";
 import { RescheduleModal } from "../../components/orders/RescheduleModal";
 import type { OrderDetailResponse } from "../../types/storeOrder";
+import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
+import type { KitchenStockItemResponse } from "../../types/kitchenInventory";
 
 export const OrderApproval = () => {
   const navigate = useNavigate();
@@ -38,6 +41,8 @@ export const OrderApproval = () => {
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [stockMap, setStockMap] = useState<Record<number, number>>({});
+  const [isFetchingStock, setIsFetchingStock] = useState(false);
 
   // Selection & Drawer state
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(
@@ -142,6 +147,34 @@ export const OrderApproval = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const fetchStockData = async (kitchenId: number) => {
+    setIsFetchingStock(true);
+    try {
+      const res = await kitchenInventoryApi.getWarehouseStock(kitchenId);
+      const stockItems = res.data || [];
+      
+      // Aggregate stock by productId for items of type "PRODUCT"
+      const newStockMap: Record<number, number> = {};
+      stockItems.forEach((item: KitchenStockItemResponse) => {
+        if (item.itemType === "PRODUCT") {
+          newStockMap[item.itemId] = (newStockMap[item.itemId] || 0) + item.quantity;
+        }
+      });
+      setStockMap(newStockMap);
+    } catch (error) {
+      console.error("Failed to fetch stock data:", error);
+    } finally {
+      setIsFetchingStock(false);
+    }
+  };
+
+  // Fetch stock when kitchens are loaded
+  useEffect(() => {
+    if (kitchens && kitchens.length > 0) {
+      fetchStockData(kitchens[0].kitchenId);
+    }
+  }, [kitchens]);
 
   useEffect(() => {
     // Only show orders that are in SUBMITTED state for approval
@@ -819,18 +852,31 @@ export const OrderApproval = () => {
                               }).format(product.price)}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-zinc-600 uppercase tracking-wider font-extrabold flex items-center gap-1.5 leading-none">
-                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
-                              {product.unit}
-                            </span>
-                            <Badge
-                              variant="secondary"
-                              className="bg-zinc-900 text-zinc-500 border-zinc-800 text-[8px] h-4 font-black"
-                            >
-                              HOẠT ĐỘNG
-                            </Badge>
-                          </div>
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[10px] text-zinc-600 uppercase tracking-wider font-extrabold flex items-center gap-1.5 leading-none">
+                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
+                                {product.unit}
+                              </span>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                                  Tồn kho:
+                                </span>
+                                <span className={cn(
+                                  "text-[10px] font-black tabular-nums",
+                                  (stockMap[product.id] || 0) > 0 ? "text-emerald-500" : "text-red-500"
+                                )}>
+                                  {stockMap[product.id] || 0}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <Badge
+                                variant="secondary"
+                                className="bg-zinc-900 text-zinc-500 border-zinc-800 text-[8px] h-4 font-black"
+                              >
+                                HOẠT ĐỘNG
+                              </Badge>
+                            </div>
                         </div>
                       ))}
                   </div>
@@ -841,8 +887,15 @@ export const OrderApproval = () => {
             <Button
               variant="ghost"
               className="w-full mt-6 h-12 text-[11px] font-black uppercase tracking-widest text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 border border-zinc-800 rounded-2xl shrink-0 transition-all"
-              onClick={() => fetchData()}
+              onClick={() => {
+                fetchData();
+                if (kitchens && kitchens.length > 0) {
+                  fetchStockData(kitchens[0].kitchenId);
+                }
+              }}
+              disabled={isLoading || isFetchingStock}
             >
+              <RefreshCw className={cn("w-3 h-3 mr-2", (isLoading || isFetchingStock) && "animate-spin")} />
               Làm mới Danh mục
             </Button>
           </div>

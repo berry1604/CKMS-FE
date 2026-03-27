@@ -40,6 +40,12 @@ export const CreateProductionPlan = () => {
     return d.toISOString().split("T")[0];
   });
 
+  const [expectedCompletedDate, setExpectedCompletedDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2); // Default to day after tomorrow
+    return d.toISOString().split("T")[0];
+  });
+
   const [kitchens, setKitchens] = useState<KitchenResponse[]>([]);
   const [selectedKitchenId, setSelectedKitchenId] = useState<number | null>(
     null,
@@ -199,6 +205,7 @@ export const CreateProductionPlan = () => {
       const plan = await productionPlanApi.createProductionPlan({
         kitchenId: selectedKitchenId!,
         plannedDate,
+        expectedCompletedDate,
         storeOrderIds: Array.from(selectedOrderIds),
       });
 
@@ -329,18 +336,36 @@ export const CreateProductionPlan = () => {
 
                     <div className="w-px h-8 bg-zinc-800/50 hidden md:block"></div>
 
-                    <div className="relative group min-w-[140px]">
-                      <CalendarIcon
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 transition-colors"
-                        size={14}
-                      />
-                      <input
-                        type="date"
-                        value={plannedDate}
-                        onChange={(e) => setPlannedDate(e.target.value)}
-                        className="w-full pl-9 pr-3 h-10 bg-zinc-900 border border-zinc-700/50 rounded-lg text-xs font-black text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer hover:bg-zinc-800 shadow-inner"
-                        required
-                      />
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="relative group min-w-[140px]">
+                        <span className="absolute -top-4 left-1 text-[7px] font-black text-zinc-600 uppercase tracking-widest">Ngày sản xuất</span>
+                        <CalendarIcon
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 transition-colors"
+                          size={14}
+                        />
+                        <input
+                          type="date"
+                          value={plannedDate}
+                          onChange={(e) => setPlannedDate(e.target.value)}
+                          className="w-full pl-9 pr-3 h-10 bg-zinc-900 border border-zinc-700/50 rounded-lg text-xs font-black text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all cursor-pointer hover:bg-zinc-800 shadow-inner"
+                          required
+                        />
+                      </div>
+
+                      <div className="relative group min-w-[140px]">
+                        <span className="absolute -top-4 left-1 text-[7px] font-black text-emerald-600 uppercase tracking-widest">Dự kiến hoàn thành</span>
+                        <CalendarIcon
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 transition-colors"
+                          size={14}
+                        />
+                        <input
+                          type="date"
+                          value={expectedCompletedDate}
+                          onChange={(e) => setExpectedCompletedDate(e.target.value)}
+                          className="w-full pl-9 pr-3 h-10 bg-zinc-900 border border-zinc-700/50 rounded-lg text-xs font-black text-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all cursor-pointer hover:bg-zinc-800 shadow-inner"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -620,15 +645,15 @@ export const CreateProductionPlan = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                             <CalendarIcon size={16} />
                           </div>
                           <div className="flex flex-col">
                             <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter">
-                              Ngày kế hoạch
+                              Dự kiến hoàn thành
                             </span>
                             <span className="text-xs font-black text-zinc-200">
-                              {new Date(plannedDate).toLocaleDateString(
+                              {new Date(expectedCompletedDate).toLocaleDateString(
                                 "vi-VN",
                               )}
                             </span>
@@ -728,18 +753,18 @@ export const CreateProductionPlan = () => {
                     </p>
                   </div>
                   <div className="space-y-0.5 border-l border-zinc-800/50 pl-4">
-                    <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest leading-none">
-                      Điều phối viên
+                    <span className="text-[7px] font-black text-emerald-600 uppercase tracking-widest leading-none">
+                      Dự kiến hoàn thành
                     </span>
-                    <p className="text-[10px] font-black text-zinc-100 uppercase truncate max-w-[90px]">
-                      {user?.name || "---"}
+                    <p className="text-[10px] font-black text-emerald-500 italic">
+                      {new Date(expectedCompletedDate).toLocaleDateString("vi-VN")}
                     </p>
                   </div>
                   <div className="space-y-0.5 border-l border-zinc-800/50 pl-4">
                     <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest leading-none">
                       Quy mô
                     </span>
-                    <p className="text-[10px] font-black text-emerald-500 uppercase">
+                    <p className="text-[10px] font-black text-white uppercase">
                       {selectedOrderIds.size} Đơn hàng
                     </p>
                   </div>
