@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Search, ChefHat, Edit2, Trash2, MapPin, Activity } from 'lucide-react';
+import { Search, ChefHat, Edit2, MapPin, Activity } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import type { KitchenResponse, KitchenCreateRequest } from '../../types/kitchen';
 import { kitchenApi } from '../../services/kitchen.api';
 import { KitchenModal } from './KitchenModal';
-import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
 import { cn } from '../../utils/classNames';
 
@@ -17,11 +16,6 @@ export const KitchensList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingKitchen, setEditingKitchen] = useState<KitchenResponse | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-
-    // Delete Modal State
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [deleteKitchenId, setDeleteKitchenId] = useState<number | null>(null);
-    const [isDeleting, setIsDeleting] = useState(false);
 
     const loadKitchens = useCallback(async () => {
         setIsLoading(true);
@@ -40,41 +34,16 @@ export const KitchensList = () => {
         loadKitchens();
     }, [loadKitchens]);
 
-    const filteredKitchens = kitchens.filter(k => 
+    const filteredKitchens = kitchens.slice(0, 1).filter(k => 
         k.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         k.address.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    const handleCreate = () => {
-        setEditingKitchen(null);
-        setIsModalOpen(true);
-    };
 
     const handleEdit = (kitchen: KitchenResponse) => {
         setEditingKitchen(kitchen);
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
-        setDeleteKitchenId(id);
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleDeleteConfirm = async () => {
-        if (!deleteKitchenId) return;
-        setIsDeleting(true);
-        try {
-            await kitchenApi.deleteKitchen(deleteKitchenId);
-            toast.success('Xóa bếp trung tâm thành công');
-            setIsDeleteModalOpen(false);
-            loadKitchens();
-        } catch (error: any) {
-            const msg = error.response?.data?.message || 'Lỗi khi xóa bếp trung tâm';
-            toast.error(msg);
-        } finally {
-            setIsDeleting(false);
-        }
-    };
 
     const handleSubmit = async (data: KitchenCreateRequest) => {
         setIsSaving(true);
@@ -126,12 +95,12 @@ export const KitchensList = () => {
                             <span className="text-[10px] font-black text-amber-500/80 uppercase tracking-widest mb-1.5">Số lượng bếp</span>
                             <span className="text-3xl font-black text-white italic tracking-tighter leading-none">{kitchens.length}</span>
                         </div>
-                        <Button
+                        {/* <Button
                             onClick={handleCreate}
                             className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase tracking-widest px-8 h-[72px] rounded-3xl shadow-[0_10px_25px_rgba(245,158,11,0.3)] hover:scale-105 active:scale-95 transition-all outline-none border-none"
                         >
                             <Plus className="mr-3 h-5 w-5" strokeWidth={3} /> Đăng ký Bếp mới
-                        </Button>
+                        </Button> */}
                     </div>
                 </div>
             </div>
@@ -232,13 +201,13 @@ export const KitchensList = () => {
                                 >
                                     <Edit2 size={14} className="mr-2" /> Chỉnh sửa
                                 </Button>
-                                <Button 
+                                {/* <Button 
                                     onClick={() => handleDeleteClick(kitchen.kitchenId)}
                                     variant="ghost" 
                                     className="flex-none px-4 bg-zinc-900 hover:bg-rose-500/10 hover:text-rose-500 text-zinc-500 h-12 rounded-xl transition-colors border-0"
                                 >
                                     <Trash2 size={16} />
-                                </Button>
+                                </Button> */}
                             </div>
                         </div>
                     ))}
@@ -253,17 +222,6 @@ export const KitchensList = () => {
                 isLoading={isSaving}
             />
 
-            <ConfirmationModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={handleDeleteConfirm}
-                title="Xóa Bếp trung tâm"
-                message="Bạn có chắc muốn xóa bếp trung tâm này? Hành động này không thể hoàn tác và có thể cản trở dữ liệu liên quan."
-                confirmText="Xóa Bếp"
-                cancelText="Hủy bỏ"
-                isLoading={isDeleting}
-                variant="danger"
-            />
         </div>
     );
 };

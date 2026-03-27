@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
     Pencil, 
-    Trash2, 
     PackageSearch,
     Store,
     MapPin,
@@ -14,7 +13,6 @@ import type { KitchenResponse } from '../../../types/kitchen';
 interface WarehouseTableProps {
     warehouses: KitchenResponse[];
     onEdit: (warehouse: KitchenResponse) => void;
-    onDelete: (warehouse: KitchenResponse) => void;
     onViewStock: (warehouse: KitchenResponse) => void;
     isLoading: boolean;
     canManage: boolean;
@@ -23,7 +21,6 @@ interface WarehouseTableProps {
 export const WarehouseTable: React.FC<WarehouseTableProps> = ({ 
     warehouses, 
     onEdit, 
-    onDelete, 
     onViewStock,
     isLoading,
     canManage
@@ -137,26 +134,15 @@ export const WarehouseTable: React.FC<WarehouseTableProps> = ({
                                     </Button>
                                     
                                     {canManage && (
-                                        <>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => onEdit(warehouse)}
-                                                className="h-9 w-9 p-0 bg-zinc-900 hover:bg-amber-500/10 text-zinc-400 hover:text-amber-500 border border-white/5 hover:border-amber-500/20 rounded-xl transition-all"
-                                                title="Sửa bếp"
-                                            >
-                                                <Pencil className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => onDelete(warehouse)}
-                                                className="h-9 w-9 p-0 bg-zinc-900 hover:bg-rose-500/10 text-zinc-400 hover:text-rose-500 border border-white/5 hover:border-rose-500/20 rounded-xl transition-all"
-                                                title="Xóa bếp"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => onEdit(warehouse)}
+                                            className="h-9 w-9 p-0 bg-zinc-900 hover:bg-amber-500/10 text-zinc-400 hover:text-amber-500 border border-white/5 hover:border-amber-500/20 rounded-xl transition-all"
+                                            title="Sửa bếp"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </Button>
                                     )}
                                 </div>
                             </td>

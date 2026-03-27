@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { Plus, Search, Store, Zap } from "lucide-react";
-import { Button } from "../../components/ui/Button";
+import { Search, Store, Zap } from "lucide-react";
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { kitchenApi } from "../../services/kitchen.api";
@@ -31,7 +30,7 @@ export const WarehousePage = () => {
         setIsLoading(true);
         try {
             const res = await kitchenApi.getAllKitchens();
-            setWarehouses(res.data || []);
+            setWarehouses(res.data?.slice(0, 1) || []);
         } catch (err) {
             console.error("Error loading warehouses:", err);
             toast.error("Không thể tải danh sách bếp trung tâm");
@@ -59,33 +58,9 @@ export const WarehousePage = () => {
         };
     }, [warehouses]);
 
-    const handleCreateNew = () => {
-        setEditingWarehouse(null);
-        setIsFormModalOpen(true);
-    };
-
     const handleEdit = (warehouse: KitchenResponse) => {
         setEditingWarehouse(warehouse);
         setIsFormModalOpen(true);
-    };
-
-    const handleDelete = async (warehouse: KitchenResponse) => {
-        if (!window.confirm(`Bạn có chắc muốn xóa bếp "${warehouse.name}"? Hành động này không thể hoàn tác.`)) {
-            return;
-        }
-
-        setIsActionLoading(true);
-        try {
-            await kitchenApi.deleteKitchen(warehouse.kitchenId);
-            toast.success("Xóa bếp thành công");
-            loadWarehouses();
-        } catch (error: any) {
-            console.error("Delete warehouse error:", error);
-            const msg = error.response?.data?.message || "Lỗi khi xóa bếp";
-            toast.error(msg);
-        } finally {
-            setIsActionLoading(false);
-        }
     };
 
     const handleViewStock = (warehouse: KitchenResponse) => {
@@ -99,15 +74,12 @@ export const WarehousePage = () => {
             if (editingWarehouse) {
                 await kitchenApi.updateKitchen(editingWarehouse.kitchenId, data);
                 toast.success("Cập nhật thông tin bếp thành công");
-            } else {
-                await kitchenApi.createKitchen(data);
-                toast.success("Tạo bếp mới thành công");
             }
             setIsFormModalOpen(false);
             loadWarehouses();
         } catch (error: any) {
             console.error("Submit warehouse error:", error);
-            const msg = error.response?.data?.message || (editingWarehouse ? "Lỗi khi cập nhật bếp" : "Lỗi khi tạo bếp mới");
+            const msg = error.response?.data?.message || "Lỗi khi cập nhật bếp";
             toast.error(msg);
         } finally {
             setIsActionLoading(false);
@@ -141,15 +113,15 @@ export const WarehousePage = () => {
                     </p>
                 </div>
 
-                {canManage && (
+                {/* {canManage && (
                     <Button
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase text-xs tracking-widest px-8 h-14 shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] border-0 flex items-center gap-2 rounded-2xl transition-all duration-300 transform hover:-translate-y-1"
+                        className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase text-xs tracking-widest px-8 h-14 shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] border-0 flex items-center gap-2 rounded-2xl transition-all duration-300 transform hover:-translate-y-1"
                         onClick={handleCreateNew}
                     >
                         <Plus size={18} />
                         Thêm Bếp Mới
                     </Button>
-                )}
+                )} */}
             </div>
 
             {/* Stats Overview */}
@@ -203,7 +175,6 @@ export const WarehousePage = () => {
                     warehouses={filteredWarehouses}
                     isLoading={isLoading}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
                     onViewStock={handleViewStock}
                     canManage={canManage}
                 />
