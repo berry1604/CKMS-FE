@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { kitchenApi } from "../../services/kitchen.api";
-import type { KitchenResponse, KitchenUpdateRequest } from "../../types/kitchen";
+import type { KitchenCreateRequest, KitchenResponse, KitchenUpdateRequest } from "../../types/kitchen";
 import toast from "react-hot-toast";
 import { WarehouseTable } from "./components/WarehouseTable";
 import { WarehouseModal } from "./components/WarehouseModal";
@@ -100,7 +100,15 @@ export const WarehousePage = () => {
                 await kitchenApi.updateKitchen(editingWarehouse.kitchenId, data);
                 toast.success("Cập nhật thông tin kho thành công");
             } else {
-                await kitchenApi.createKitchen(data);
+                const createPayload: KitchenCreateRequest = {
+                    name: data.name ?? '',
+                    address: data.address ?? '',
+                    maxDailyCapacity: data.maxDailyCapacity ?? 0,
+                    isActive: data.isActive ?? true,
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                };
+                await kitchenApi.createKitchen(createPayload);
                 toast.success("Tạo kho mới thành công");
             }
             setIsFormModalOpen(false);

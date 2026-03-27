@@ -117,7 +117,7 @@ export const CreateShipment = () => {
           (Array.isArray(resData?.data) ? resData.data : []) ||
           (Array.isArray(resData) ? resData : []);
 
-        const planOrders = rawOrders.filter((o: any) => {
+        const planOrders: StoreOrderResponse[] = rawOrders.filter((o: any) => {
           // Robust extraction of plan ID from object
           const orderPlanId = o.batchId || o.planId || o.productionPlanId;
           const isValidStatus = ["READY", "ALLOCATED", "APPROVED"].includes(
@@ -145,7 +145,7 @@ export const CreateShipment = () => {
 
         // Tự động map các cửa hàng và đơn hàng
         const storeMap = new Map<number, StoreOrderResponse[]>();
-        planOrders.forEach((o) => {
+        planOrders.forEach((o: StoreOrderResponse) => {
           if (!storeMap.has(o.storeId)) {
             storeMap.set(o.storeId, []);
           }
@@ -168,7 +168,7 @@ export const CreateShipment = () => {
         // Update available stores for this plan
         const stores = storeIds
           .map((id) => {
-            const o = planOrders.find((x) => x.storeId === id);
+            const o = planOrders.find((x: StoreOrderResponse) => x.storeId === id);
             return {
               id,
               name: o?.storeName || `Chi nhánh ${id}`,

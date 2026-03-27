@@ -84,10 +84,11 @@ export const CreateTaskPage = () => {
     }, [orders, selectedOrderIds]);
 
     const onSubmit = async () => {
-        if (selectedOrderIds.size === 0) return;
+        if (selectedOrderIds.size === 0 || !selectedKitchenId) return;
         setIsSubmitting(true);
         try {
             await productionPlanApi.createProductionPlan({
+                kitchenId: Number(selectedKitchenId),
                 plannedDate,
                 storeOrderIds: Array.from(selectedOrderIds)
             });

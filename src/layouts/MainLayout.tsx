@@ -27,7 +27,6 @@ import {
   Network,
   LibraryBig,
   Wheat,
-  Settings,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
