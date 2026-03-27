@@ -341,7 +341,7 @@ export const AllocationMatrix = () => {
         }, 2000);
       } else {
         toast.error(
-          error.response?.data?.message || "Có lỗi xảy ra khi phân bổ kho",
+          error.response?.data?.message || "Có lỗi xảy ra khi phân bổ bếp",
         );
       }
     } finally {
@@ -383,7 +383,7 @@ export const AllocationMatrix = () => {
               variant="orange"
               className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase"
             >
-              QUẢN LÝ KHO VẬN
+              QUẢN LÝ BẾP TRUNG TÂM
             </Badge>
           </div>
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter leading-none mb-2">

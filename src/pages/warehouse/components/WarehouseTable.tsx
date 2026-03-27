@@ -50,9 +50,9 @@ export const WarehouseTable: React.FC<WarehouseTableProps> = ({
                     </div>
                 </div>
                 <div>
-                    <h3 className="text-xl font-black text-white tracking-tight">Không tìm thấy kho</h3>
+                    <h3 className="text-xl font-black text-white tracking-tight">Không tìm thấy bếp</h3>
                     <p className="text-sm text-zinc-500 mt-2 max-w-sm mx-auto leading-relaxed">
-                        Hiện tại chưa có kho lưu trữ nào trên hệ thống hoặc không khớp với kết quả tìm kiếm.
+                        Hiện tại chưa có bếp trung tâm nào trên hệ thống hoặc không khớp với kết quả tìm kiếm.
                     </p>
                 </div>
             </div>
@@ -64,7 +64,7 @@ export const WarehouseTable: React.FC<WarehouseTableProps> = ({
             <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead>
                     <tr className="border-b border-white/5 bg-black/40 backdrop-blur-sm">
-                        <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest w-[30%]">Thông tin kho</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest w-[30%]">Thông tin bếp</th>
                         <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest w-[30%]">Vị trí địa lý</th>
                         <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">Công suất</th>
                         <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right">Thao tác</th>
@@ -130,10 +130,10 @@ export const WarehouseTable: React.FC<WarehouseTableProps> = ({
                                         size="sm"
                                         onClick={() => onViewStock(warehouse)}
                                         className="h-9 px-3 bg-zinc-900 hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-400 border border-white/5 hover:border-emerald-500/20 rounded-xl transition-all"
-                                        title="Xem Kho"
+                                        title="Xem Bếp"
                                     >
                                         <PackageSearch className="w-4 h-4 mr-2" />
-                                        <span className="text-xs font-bold">Xem kho</span>
+                                        <span className="text-xs font-bold">Xem bếp</span>
                                     </Button>
                                     
                                     {canManage && (
@@ -143,7 +143,7 @@ export const WarehouseTable: React.FC<WarehouseTableProps> = ({
                                                 size="sm"
                                                 onClick={() => onEdit(warehouse)}
                                                 className="h-9 w-9 p-0 bg-zinc-900 hover:bg-amber-500/10 text-zinc-400 hover:text-amber-500 border border-white/5 hover:border-amber-500/20 rounded-xl transition-all"
-                                                title="Sửa kho"
+                                                title="Sửa bếp"
                                             >
                                                 <Pencil className="w-4 h-4" />
                                             </Button>
@@ -152,7 +152,7 @@ export const WarehouseTable: React.FC<WarehouseTableProps> = ({
                                                 size="sm"
                                                 onClick={() => onDelete(warehouse)}
                                                 className="h-9 w-9 p-0 bg-zinc-900 hover:bg-rose-500/10 text-zinc-400 hover:text-rose-500 border border-white/5 hover:border-rose-500/20 rounded-xl transition-all"
-                                                title="Xóa kho"
+                                                title="Xóa bếp"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </Button>

@@ -34,7 +34,7 @@ export const WarehousePage = () => {
             setWarehouses(res.data || []);
         } catch (err) {
             console.error("Error loading warehouses:", err);
-            toast.error("Không thể tải danh sách kho");
+            toast.error("Không thể tải danh sách bếp trung tâm");
         } finally {
             setIsLoading(false);
         }
@@ -70,18 +70,18 @@ export const WarehousePage = () => {
     };
 
     const handleDelete = async (warehouse: KitchenResponse) => {
-        if (!window.confirm(`Bạn có chắc muốn xóa kho "${warehouse.name}"? Hành động này không thể hoàn tác.`)) {
+        if (!window.confirm(`Bạn có chắc muốn xóa bếp "${warehouse.name}"? Hành động này không thể hoàn tác.`)) {
             return;
         }
 
         setIsActionLoading(true);
         try {
             await kitchenApi.deleteKitchen(warehouse.kitchenId);
-            toast.success("Xóa kho thành công");
+            toast.success("Xóa bếp thành công");
             loadWarehouses();
         } catch (error: any) {
             console.error("Delete warehouse error:", error);
-            const msg = error.response?.data?.message || "Lỗi khi xóa kho";
+            const msg = error.response?.data?.message || "Lỗi khi xóa bếp";
             toast.error(msg);
         } finally {
             setIsActionLoading(false);
@@ -98,16 +98,16 @@ export const WarehousePage = () => {
         try {
             if (editingWarehouse) {
                 await kitchenApi.updateKitchen(editingWarehouse.kitchenId, data);
-                toast.success("Cập nhật thông tin kho thành công");
+                toast.success("Cập nhật thông tin bếp thành công");
             } else {
                 await kitchenApi.createKitchen(data);
-                toast.success("Tạo kho mới thành công");
+                toast.success("Tạo bếp mới thành công");
             }
             setIsFormModalOpen(false);
             loadWarehouses();
         } catch (error: any) {
             console.error("Submit warehouse error:", error);
-            const msg = error.response?.data?.message || (editingWarehouse ? "Lỗi khi cập nhật kho" : "Lỗi khi tạo kho mới");
+            const msg = error.response?.data?.message || (editingWarehouse ? "Lỗi khi cập nhật bếp" : "Lỗi khi tạo bếp mới");
             toast.error(msg);
         } finally {
             setIsActionLoading(false);
@@ -134,10 +134,10 @@ export const WarehousePage = () => {
                         </Badge>
                     </div>
                     <h1 className="text-4xl font-black text-white uppercase tracking-tighter drop-shadow-lg">
-                        Quản Lý Kho
+                        Quản lý Bếp trung tâm
                     </h1>
                     <p className="text-sm text-zinc-400 font-medium tracking-wide max-w-xl leading-relaxed">
-                        Cấu hình và theo dõi danh sách các kho lưu trữ, kiểm soát sức chứa và trạng thái hoạt động theo thời gian thực.
+                        Cấu hình và theo dõi danh sách các bếp trung tâm, kiểm soát sức chứa và trạng thái hoạt động theo thời gian thực.
                     </p>
                 </div>
 
@@ -147,7 +147,7 @@ export const WarehousePage = () => {
                         onClick={handleCreateNew}
                     >
                         <Plus size={18} />
-                        Thêm Kho Mới
+                        Thêm Bếp Mới
                     </Button>
                 )}
             </div>
@@ -161,7 +161,7 @@ export const WarehousePage = () => {
                         <Store className="w-8 h-8 text-blue-500" />
                     </div>
                     <div>
-                        <p className="text-[11px] font-black tracking-widest text-zinc-500 uppercase">Tổng số kho</p>
+                        <p className="text-[11px] font-black tracking-widest text-zinc-500 uppercase">Tổng số bếp</p>
                         <div className="text-4xl font-black text-white tracking-tighter mt-1">{stats.total}</div>
                     </div>
                 </div>
@@ -190,7 +190,7 @@ export const WarehousePage = () => {
                         <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-amber-500 transition-colors z-10" />
                         <Input
-                            placeholder="Tìm kiếm danh tính hoặc địa chỉ kho..."
+                            placeholder="Tìm kiếm danh tính hoặc địa chỉ bếp..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-12 h-14 bg-zinc-950/50 border-white/10 focus:border-amber-500/50 rounded-2xl shadow-inner text-white transition-all w-full relative z-10"
