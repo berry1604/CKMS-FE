@@ -21,8 +21,8 @@ export interface StoreCreateRequest {
     email?: string;
     isActive?: boolean;
     paymentCycle: 'MONTHLY' | 'WEEKLY' | 'QUARTERLY';
-    latitude: number;
-    longitude: number;
+    latitude?: number | null;
+    longitude?: number | null;
 }
 
 export interface StoreUpdateRequest {
@@ -32,8 +32,8 @@ export interface StoreUpdateRequest {
     email?: string;
     isActive?: boolean;
     paymentCycle?: 'MONTHLY' | 'WEEKLY' | 'QUARTERLY';
-    latitude?: number;
-    longitude?: number;
+    latitude?: number | null;
+    longitude?: number | null;
 }
 
 export interface GetStoresParams {

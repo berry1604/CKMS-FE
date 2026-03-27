@@ -3,17 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Store as StoreIcon, ArrowLeft, Save, CreditCard, Navigation } from 'lucide-react';
+import { Store as StoreIcon, MapPin, ArrowLeft, Save, CreditCard, Navigation } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { AddressInput } from '../../components/ui/AddressInput';
-import { useAddressAutocomplete } from '../../hooks/useAddressAutocomplete';
 import { storeApi } from '../../services/store.api';
+import { GoongMapPicker } from '../../components/map/GoongMapPicker';
 
 const createStoreSchema = z.object({
     name: z.string().min(1, 'Vui lòng nhập tên cửa hàng'),
-    address: z.string().min(1, 'Vui lòng nhập địa chỉ'),
+    location: z.string().min(1, 'Vui lòng nhập địa chỉ'),
     phone: z.string().regex(/^(84|0[3|5|7|8|9])+([0-9]{8})\b/, 'Số điện thoại không hợp lệ').min(1, 'Vui lòng nhập số điện thoại'),
     paymentCycle: z.enum(['MONTHLY', 'WEEKLY', 'QUARTERLY']),
     latitude: z.coerce.number().min(-90).max(90, 'Vĩ độ không hợp lệ'),
@@ -30,8 +29,8 @@ export default function CreateStorePage() {
     const {
         register,
         handleSubmit,
-        watch,
         setValue,
+        watch,
         formState: { errors },
     } = useForm<CreateStoreFormValues>({
         resolver: zodResolver(createStoreSchema) as any,
@@ -41,33 +40,13 @@ export default function CreateStorePage() {
         },
     });
 
-    const addressValue = watch('address');
-    const { 
-        suggestions, 
-        loading, 
-        error,
-        setQuery: setAddressQuery,
-        clearSuggestions 
-    } = useAddressAutocomplete(addressValue);
-
-    const handleAddressChange = (value: string) => {
-        setAddressQuery(value);
-        setValue('address', value);
-    };
-
-    const handleAddressSelect = (result: any) => {
-        setValue('address', result.formattedAddress);
-        setValue('latitude', result.latitude);
-        setValue('longitude', result.longitude);
-        clearSuggestions();
-    };
 
     const onSubmit = async (data: CreateStoreFormValues) => {
         setIsSubmitting(true);
         try {
             await storeApi.createStore({
                 name: data.name,
-                address: data.address,
+                address: data.location,
                 phone: data.phone,
                 paymentCycle: data.paymentCycle,
                 latitude: data.latitude,
@@ -84,6 +63,11 @@ export default function CreateStorePage() {
             setIsSubmitting(false);
         }
     };
+
+    const latitude = watch('latitude');
+    const longitude = watch('longitude');
+    const location = watch('location');
+    const hasValidCoords = Number.isFinite(latitude) && Number.isFinite(longitude);
 
     return (
         <div className="p-6 max-w-4xl mx-auto">
@@ -121,17 +105,39 @@ export default function CreateStorePage() {
 
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-gray-300 block mb-2">Địa chỉ *</label>
-                            <AddressInput
-                                value={addressValue}
-                                onChange={handleAddressChange}
-                                onSelectAddress={handleAddressSelect}
-                                suggestions={suggestions}
-                                loading={loading}
-                                error={error || errors.address?.message}
-                                placeholder="VD: 123 Nguyễn Huệ, TP.HCM"
-                                disabled={isSubmitting}
-                                className="border-zinc-700 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-md transition-all duration-300"
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <MapPin size={16} className="text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white ${errors.location ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
+                                    placeholder="VD: 123 Nguyễn Huệ, TP.HCM"
+                                    {...register('location')}
+                                />
+                            </div>
+                            {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location.message}</p>}
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-medium text-gray-300 block">Bản đồ Goong (MapLibre)</label>
+                            <GoongMapPicker
+                                initialAddress={location}
+                                initialLngLat={
+                                    hasValidCoords
+                                        ? [Number(longitude), Number(latitude)]
+                                        : undefined
+                                }
+                                enableDirections
+                                onLocationSelected={({ address, lngLat }) => {
+                                    setValue('location', address, { shouldDirty: true, shouldValidate: true });
+                                    setValue('longitude', lngLat[0], { shouldDirty: true, shouldValidate: true });
+                                    setValue('latitude', lngLat[1], { shouldDirty: true, shouldValidate: true });
+                                }}
                             />
+                            <p className="text-xs text-zinc-400">
+                                Chọn một địa điểm trên gợi ý để tự động điền địa chỉ, vĩ độ và kinh độ.
+                            </p>
                         </div>
 
                         <div className="space-y-1">
