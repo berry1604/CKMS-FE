@@ -75,10 +75,10 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                         </div>
                         <div>
                             <h2 className="text-2xl font-black text-white tracking-tight">
-                                {isEditMode ? 'Cập Nhật Kho' : 'Khởi Tạo Kho Mới'}
+                                {isEditMode ? 'Cập Nhật Bếp' : 'Khởi Tạo Bếp Mới'}
                             </h2>
                             <p className="text-sm text-zinc-400 mt-1 font-medium">
-                                {isEditMode ? `Đang chỉnh sửa dữ liệu kho #${warehouse.kitchenId.toString().padStart(4, '0')}` : 'Thiết lập thông tin hoạt động và cấu hình nền cho chi nhánh kho mới.'}
+                                {isEditMode ? `Đang chỉnh sửa dữ liệu bếp #${warehouse.kitchenId.toString().padStart(4, '0')}` : 'Thiết lập thông tin hoạt động và cấu hình nền cho chi nhánh bếp mới.'}
                             </p>
                         </div>
                     </div>
@@ -90,11 +90,11 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                         <div className="group">
                             <label className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
                                 <Store className="w-3.5 h-3.5" />
-                                Tên định danh kho *
+                                Tên định danh bếp *
                             </label>
                             <Input
-                                {...register('name', { required: 'Vui lòng nhập tên kho' })}
-                                placeholder="VD: Kho Nguyên Liệu Quận 1..."
+                                {...register('name', { required: 'Vui lòng nhập tên bếp' })}
+                                placeholder="VD: Bếp Trung Tâm Quận 1..."
                                 className="bg-zinc-900/50 border-white/5 focus:border-amber-500/50 hover:bg-zinc-900 focus:bg-zinc-900 transition-colors h-12 text-sm"
                                 error={errors.name?.message}
                             />
@@ -181,7 +181,7 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                             className="flex-1 h-12 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:-translate-y-0.5"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Hệ thống đang xử lý...' : (isEditMode ? 'Lưu Thiết Lập' : 'Xác Nhận Tạo Kho')}
+                            {isLoading ? 'Hệ thống đang xử lý...' : (isEditMode ? 'Lưu Thiết Lập' : 'Xác Nhận Tạo Bếp')}
                         </Button>
                     </div>
                 </form>
