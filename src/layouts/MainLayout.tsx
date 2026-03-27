@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import type { User } from "../types/user";
 import { useAuth } from "../hooks/useAuth";
 import { cn } from "../utils/classNames";
+import logo from "../assets/logo-in.png";
 import {
   PERMISSIONS,
   hasPermission,
@@ -337,45 +338,51 @@ export const MainLayout: React.FC = () => {
           isCollapsed ? "w-20" : "w-64",
         )}
       >
-        {/* Header */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-white/5 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-          {!isCollapsed && (
-            <div className="flex items-center gap-3 relative z-10">
+        {/* Header Branding */}
+        <div className={cn(
+          "h-24 flex items-center border-b border-white/5 relative overflow-hidden transition-all duration-500",
+          isCollapsed ? "justify-center px-0" : "justify-between px-6"
+        )}>
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-30"></div>
+
+          <div
+            className={cn(
+              "flex items-center gap-3 relative z-10 transition-all duration-500 cursor-pointer",
+              isCollapsed ? "flex-col gap-0" : "flex-row"
+            )}
+            onClick={() => isCollapsed && setIsCollapsed(false)}
+          >
+            {/* Bull Icon in Orange Rounded Box */}
+            <div className={cn(
+              "relative bg-amber-500 rounded-2xl overflow-hidden transition-all duration-500 group-hover:bg-amber-400 group-hover:scale-110 flex items-center justify-center",
+              isCollapsed ? "w-14 h-14 p-2.5" : "w-11 h-11 p-2"
+            )}>
               <img
-                src="/logo.svg"
-                alt="SteakChain Logo"
-                className="w-8 h-8 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                src={logo}
+                alt="Bull Icon"
+                className="w-full h-full object-contain brightness-0 invert"
               />
-              <span className="text-xl font-black bg-clip-text tracking-tighter uppercase italic flex flex-col justify-center leading-none">
-                <div>
-                  <span className="text-amber-500 drop-shadow-md">Steak</span>
-                  <span className="text-amber-500 drop-shadow-md">Chain</span>
-                </div>
-                <span className="text-stone-400 font-bold text-[9px] mt-0.5 tracking-[0.2em] not-italic">
-                  Franchise System
+            </div>
+
+            {/* Typography Branding (Hidden when collapsed) */}
+            {!isCollapsed && (
+              <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
+                <span className="text-xl font-black tracking-widest uppercase leading-none">
+                  <span className="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]">STEAK</span>
+                  <span className="text-white">CHAIN</span>
                 </span>
-              </span>
-            </div>
-          )}
-          {isCollapsed && (
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto hover:scale-110 transition-transform cursor-pointer"
-              onClick={() => setIsCollapsed(false)}
-            >
-              <img
-                src="/logo.svg"
-                alt="SteakChain Logo"
-                className="w-8 h-8 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"
-              />
-            </div>
-          )}
+                <span className="text-[8px] font-bold text-zinc-500 tracking-[0.4em] uppercase mt-1">
+                  Management Sys
+                </span>
+              </div>
+            )}
+          </div>
 
           {!isCollapsed && (
             <button
               id="collapse-sidebar-btn"
               onClick={() => setIsCollapsed(true)}
-              className="p-2 rounded-xl text-stone-500 hover:bg-white/5 hover:text-amber-500 transition-all active:scale-95"
+              className="p-2 rounded-xl text-stone-500 hover:bg-white/5 hover:text-amber-500 transition-all active:scale-95 relative z-20"
             >
               <ChevronLeft size={18} />
             </button>
@@ -504,14 +511,10 @@ export const MainLayout: React.FC = () => {
       >
         <header className="h-16 bg-zinc-900 shadow-sm flex items-center gap-2 px-4 md:px-8 border-b border-zinc-800 md:hidden z-10 sticky top-0">
           <img
-            src="/logo.svg"
+            src={logo}
             alt="Logo"
-            className="w-8 h-8 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+            className="h-9 w-auto [filter:drop-shadow(0_0_12px_rgba(245,158,11,0.4))_brightness(1.2)]"
           />
-          <span className="text-lg font-black tracking-tight uppercase italic">
-            <span className="text-amber-500">Steak</span>
-            <span className="text-amber-500">Chain</span>
-          </span>
         </header>
 
         <main className="flex-1 p-4 md:p-8 overflow-auto w-full max-w-[1600px] mx-auto">

@@ -47,7 +47,7 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
             setStocks(res.data || []);
         } catch (error) {
             console.error('Error loading stock:', error);
-            toast.error('Không thể truy xuất dữ liệu kho');
+            toast.error('Không thể truy xuất dữ liệu bếp trung tâm');
         } finally {
             setIsLoading(false);
         }
@@ -78,7 +78,7 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
                             </div>
                             <div>
                                 <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-                                    Thống Kê Tồn Kho
+                                    Thống Kê Tồn Bếp
                                 </h2>
                                 <div className="flex items-center gap-2 mt-2">
                                     <span className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Chi nhánh</span>
@@ -119,7 +119,7 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
                                 <div className="w-16 h-16 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
                                 <div className="absolute inset-0 bg-emerald-500/10 blur-xl rounded-full"></div>
                             </div>
-                            <p className="text-sm font-black text-emerald-500/70 uppercase tracking-widest animate-pulse">Truy xuất dữ liệu kho...</p>
+                            <p className="text-sm font-black text-emerald-500/70 uppercase tracking-widest animate-pulse">Truy xuất dữ liệu bếp trung tâm...</p>
                         </div>
                     ) : (
                         <div className="bg-zinc-900/50 rounded-[2rem] border border-white/5 overflow-hidden shadow-2xl">
@@ -128,7 +128,7 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
                                     <tr className="border-b border-white/5 bg-black/40 backdrop-blur-md">
                                         <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Định danh vật tư</th>
                                         <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest w-40 text-center">Phân loại</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest w-48 text-right">Khối lượng / Tồn kho</th>
+                                        <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest w-48 text-right">Khối lượng / Tồn bếp</th>
                                         <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest w-48 text-center">Hạn sử dụng</th>
                                     </tr>
                                 </thead>
@@ -210,7 +210,7 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
                                                         <PackageSearch className="w-6 h-6 text-zinc-600" />
                                                     </div>
                                                     <p className="text-zinc-500 text-sm font-medium">
-                                                        {searchQuery ? 'Không có vật tư nào khớp với từ khóa' : 'Kho lưu trữ hiện tại đang trống'}
+                                                        {searchQuery ? 'Không có vật tư nào khớp với từ khóa' : 'Bếp trung tâm hiện tại đang trống'}
                                                     </p>
                                                 </div>
                                             </td>

@@ -49,7 +49,7 @@ export const WarehouseFulfillment = () => {
             setWarehouseStock(res.data || []);
         } catch (error) {
             console.error('Failed to fetch warehouse stock:', error);
-            toast.error('Không thể tải dữ liệu kho');
+            toast.error('Không thể tải dữ liệu bếp trung tâm');
         } finally {
             setIsLoadingStock(false);
         }
@@ -90,7 +90,7 @@ export const WarehouseFulfillment = () => {
             });
 
             if (!isStockSufficient) {
-                toast.error('Không đủ tồn kho để xuất kho đơn hàng này!');
+                toast.error('Không đủ tồn tồn bếp để xuất đơn hàng này!');
                 setIsSubmitting(false);
                 return;
             }
@@ -101,7 +101,7 @@ export const WarehouseFulfillment = () => {
                 return;
             }
 
-            toast.success('Hàng trong kho đã đủ! Vui lòng sang tab "Vận chuyển" để tạo đơn giao hàng cho tài xế.');
+            toast.success('Hàng trong bếp đã đủ! Vui lòng sang tab "Vận chuyển" để tạo đơn giao hàng cho tài xế.');
             setSelectedOrder(null);
         } catch (error) {
             console.error('Failed to fulfill order:', error);
@@ -175,7 +175,7 @@ export const WarehouseFulfillment = () => {
                         onClick={() => setSelectedOrder(order)}
                         className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
                     >
-                        Xử lý xuất kho
+                        Xử lý xuất bếp
                     </Button>
                 </div>
             ),
@@ -209,7 +209,7 @@ export const WarehouseFulfillment = () => {
                     isLoading={isSubmitting}
                 >
                     <Truck size={16} className="mr-2" />
-                    Xuất kho & Giao hàng
+                    Xuất bếp & Giao hàng
                 </Button>
             </div>
         );
@@ -218,8 +218,8 @@ export const WarehouseFulfillment = () => {
             <Drawer
                 isOpen={!!selectedOrder}
                 onClose={() => setSelectedOrder(null)}
-                title={`Xử lý xuất kho - Đơn #${selectedOrder.orderId}`}
-                description={`Kiểm tra tồn kho và xuất xứ cho Cửa hàng ${selectedOrder.storeId}`}
+                title={`Xử lý xuất bếp - Đơn #${selectedOrder.orderId}`}
+                description={`Kiểm tra tồn bếp và xuất xứ cho Cửa hàng ${selectedOrder.storeId}`}
                 width="max-w-3xl"
                 footer={footer}
             >
@@ -230,9 +230,9 @@ export const WarehouseFulfillment = () => {
                                 <Warehouse size={24} />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-indigo-900">Thông tin xuất kho</h3>
+                                <h3 className="font-semibold text-indigo-900">Thông tin xuất bếp</h3>
                                 <p className="text-sm text-indigo-700/80 mt-1">
-                                    Hệ thống sẽ đối soát tồn kho hiện tại (Kho Tổng #{warehouseId}) với yêu cầu của đơn hàng.
+                                    Hệ thống sẽ đối soát tồn bếp hiện tại (Bếp Tổng #{warehouseId}) với yêu cầu của đơn hàng.
                                 </p>
                             </div>
                         </div>
@@ -244,7 +244,7 @@ export const WarehouseFulfillment = () => {
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sản phẩm</th>
                                     <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Yêu cầu</th>
-                                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Tồn kho</th>
+                                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Tồn bếp</th>
                                     <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
                                 </tr>
                             </thead>
@@ -252,7 +252,7 @@ export const WarehouseFulfillment = () => {
                                 {isLoadingStock ? (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                                            Đang kiểm tra tồn kho...
+                                            Đang kiểm tra tồn bếp...
                                         </td>
                                     </tr>
                                 ) : (
@@ -294,8 +294,8 @@ export const WarehouseFulfillment = () => {
                         <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                             <XCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
                             <div>
-                                <h4 className="font-semibold text-red-800 text-sm">Không đủ hàng trong kho</h4>
-                                <p className="text-red-600 text-sm mt-1">Một số sản phẩm không đủ tồn kho để đáp ứng đơn hàng này. Vui lòng sản xuất thêm hoặc nạp kho trước khi xuất.</p>
+                                <h4 className="font-semibold text-red-800 text-sm">Không đủ hàng trong bếp</h4>
+                                <p className="text-red-600 text-sm mt-1">Một số sản phẩm không đủ tồn bếp để đáp ứng đơn hàng này. Vui lòng sản xuất thêm hoặc nạp bếp trước khi xuất.</p>
                             </div>
                         </div>
                     )}
@@ -308,9 +308,9 @@ export const WarehouseFulfillment = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Hệ thống Kho xuất hàng</h1>
+                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Hệ thống Bếp xuất hàng</h1>
                     <p className="text-sm text-gray-400 mt-1">
-                        Kiểm tra tồn kho và xử lý giao hàng cho hệ thống cửa hàng.
+                        Kiểm tra tồn bếp và xử lý giao hàng cho hệ thống cửa hàng.
                     </p>
                 </div>
             </div>
