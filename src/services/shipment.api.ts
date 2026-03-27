@@ -69,5 +69,11 @@ export const shipmentApi = {
     getShipments: async (params?: ShipmentQueryParams): Promise<PageResponse<ShipmentResponse>> => {
         const response = await axiosClient.get<ApiResponse<PageResponse<ShipmentResponse>>>('/shipments', { params });
         return response.data.data;
+    },
+
+    /** PATCH /shipments/:shipmentId/stops/:stopId/confirm — Store staff xác nhận nhận hàng cho một điểm dừng */
+    confirmStopDelivery: async (shipmentId: number, stopId: number, data: ConfirmDeliveryRequest): Promise<ShipmentResponse> => {
+        const response = await axiosClient.patch<ApiResponse<ShipmentResponse>>(`/shipments/${shipmentId}/stops/${stopId}/confirm`, data);
+        return response.data.data;
     }
 };

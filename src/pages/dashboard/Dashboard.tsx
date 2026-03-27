@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
-    DollarSign, Users, Activity,
+    Users, Activity,
     Package, Truck, ChefHat,
-    RefreshCw, Store
+    RefreshCw, Store, ExternalLink
 } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -49,7 +49,7 @@ const statusColor: Record<string, string> = {
     ALLOCATED: 'info',
     DELIVERED: 'success',
     REJECTED: 'danger',
-    DRAFT: 'default',
+    DRAFT: 'secondary',
     PENDING: 'orange',
     PREPARED: 'info',
     IN_TRANSIT: 'primary',
@@ -103,14 +103,16 @@ export const Dashboard = () => {
                 productionPlans: 0,
             };
 
+            // 1. Stores - Admin and Coordinator can see store stats
             if (role === 'ADMIN' || role === 'COORDINATOR') {
                 try {
                     const storeRes = await storeApi.getAllStores({ size: 1 });
                     newStats.activeStores = storeRes?.data?.totalElements || 0;
-                } catch { }
+                } catch { /* ignore */ }
             }
 
-            if (role === 'COORDINATOR' || role === 'STORE_STAFF') {
+            // 2. Orders - Admin excluded from fetching orders on dashboard now
+            if (role !== 'KITCHEN_STAFF' && role !== 'ADMIN') {
                 try {
                     let orderRes;
                     if (role === 'COORDINATOR') {
@@ -118,26 +120,31 @@ export const Dashboard = () => {
                     } else {
                         orderRes = await storeOrderApi.getMyOrders({ size: 5, page: 0 });
                     }
-                    newStats.pendingOrders = orderRes?.totalElements || 0;
-                    const items = (orderRes?.content || []).slice(0, 5).map((o: any) => ({
-                        id: o.orderId,
-                        storeName: o.storeName || `Cửa hàng #${o.storeId}`,
-                        status: o.status,
-                        totalAmount: o.totalAmount || 0,
-                        orderDate: o.orderDate,
-                    }));
-                    setRecentOrders(items);
-                } catch { }
+
+                    if (orderRes) {
+                        newStats.pendingOrders = orderRes.totalElements || 0;
+                        const items = (orderRes.content || []).slice(0, 5).map((o: any) => ({
+                            id: o.orderId,
+                            storeName: o.storeName || `Cửa hàng #${o.storeId}`,
+                            status: o.status,
+                            totalAmount: o.totalAmount || 0,
+                            orderDate: o.orderDate,
+                        }));
+                        setRecentOrders(items);
+                    }
+                } catch { /* ignore */ }
             }
 
+            // 3. Users - Admin only
             if (role === 'ADMIN') {
                 try {
                     const userRes = await userService.getUsers({ size: 1 });
                     newStats.activeUsers = userRes?.data?.totalElements || 0;
-                } catch { }
+                } catch { /* ignore */ }
             }
 
-            if (role === 'COORDINATOR' || role === 'KITCHEN_STAFF') {
+            // 4. Shipments - Coordinator, Kitchen, and Staff
+            if (role !== 'ADMIN' && role !== 'MANAGER') {
                 try {
                     const shipRes = await shipmentApi.getShipments({ size: 5, page: 0 });
                     newStats.pendingShipments = shipRes?.totalElements || 0;
@@ -148,27 +155,21 @@ export const Dashboard = () => {
                         createdAt: s.createdAt,
                     }));
                     setRecentShipments(shipItems);
-                } catch { }
+                } catch { /* ignore */ }
             }
 
-            if (role === 'ADMIN') {
-                try {
-                    const billRes = await billingApi.getStatements({ size: 1, page: 0 });
-                    newStats.totalRevenue = billRes?.totalElements || 0;
-                } catch { }
-            }
-
+            // 5. Production Plans - Coordinator and Kitchen
             if (role === 'KITCHEN_STAFF' || role === 'COORDINATOR') {
                 try {
                     const planRes = await productionPlanApi.getAllProductionPlans({ size: 1, page: 0 });
                     newStats.productionPlans = (planRes as any)?.totalElements || 0;
-                } catch { }
+                } catch { /* ignore */ }
             }
 
             setStats(newStats);
             setLastUpdated(new Date());
         } catch (error) {
-            // Error handling
+            console.error('Failed to load dashboard data', error);
         } finally {
             setIsLoading(false);
         }
@@ -178,233 +179,260 @@ export const Dashboard = () => {
         if (user) loadDashboardData();
     }, [user]);
 
-    const permittedLinks = navigation.reduce<NavItem[]>((acc, nav: NavigationItem) => {
-        if ('category' in nav) {
-            const allowedItems = nav.items.filter((item: NavItem) => !item.permission || hasPermission(user, item.permission));
-            acc.push(...allowedItems);
-        } else {
-            if (!nav.permission || hasPermission(user, nav.permission)) {
-                if (nav.href !== '/') acc.push(nav);
+    const permittedLinks = useMemo(() => {
+        const flattened = navigation.reduce<NavItem[]>((acc, nav: NavigationItem) => {
+            if ('category' in nav) {
+                const allowedItems = nav.items.filter((item: NavItem) => {
+                    const hasPerm = !item.permission || hasPermission(user, item.permission);
+                    const isHidden = typeof item.hidden === 'function' ? item.hidden(user) : !!item.hidden;
+                    return hasPerm && !isHidden;
+                });
+                acc.push(...allowedItems);
+            } else {
+                const hasPerm = !nav.permission || hasPermission(user, nav.permission);
+                const isHidden = typeof nav.hidden === 'function' ? nav.hidden(user) : !!nav.hidden;
+                if (hasPerm && !isHidden) {
+                    if (nav.href !== '/') acc.push(nav);
+                }
             }
-        }
-        return acc;
-    }, []);
+            return acc;
+        }, []);
 
-    const Sparkline = ({ color }: { color: string }) => (
-        <svg className="w-16 h-8 opacity-50" viewBox="0 0 100 40">
-            <path
-                d="M0 35 Q 20 10, 40 25 T 80 5 T 100 20"
-                fill="none"
-                stroke={color}
-                strokeWidth="2"
-                strokeLinecap="round"
-            />
-        </svg>
-    );
+        if (user?.role?.toUpperCase().replace("ROLE_", "") === "ADMIN") {
+            const adminOrder = [
+                "Tổng quan",
+                "Người dùng",
+                "Cửa hàng",
+                "Bếp trung tâm",
+                "Vai trò & Quyền",
+                "Lịch sản xuất",
+                "Hóa đơn & Billing",
+            ];
+            flattened.sort((a, b) => {
+                let indexA = adminOrder.indexOf(a.name);
+                let indexB = adminOrder.indexOf(b.name);
+                if (indexA === -1) indexA = 999;
+                if (indexB === -1) indexB = 999;
+                return indexA - indexB;
+            });
+        }
+
+        return flattened;
+    }, [user]);
 
     const StatCard = ({
-        title, value, icon: Icon, colorHex, index = 1, trend
+        title, value, icon: Icon, colorClass, index = 1, bgClass = 'bg-white/[0.02]'
     }: {
         title: string;
         value: string | number;
         icon: any;
-        colorHex: string;
+        colorClass: string;
         index?: number;
-        trend?: string;
+        bgClass?: string;
     }) => (
-        <div 
-            className="relative p-6 rounded-3xl bg-[#0F0F0F]/40 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden group hover:border-amber-500/30 transition-all duration-700 animate-slide-up-fade"
-            style={{ animationDelay: `${index * 150}ms` }}
+        <div
+            className={`flex flex-col relative p-6 rounded-3xl ${bgClass} border border-white/[0.05] hover:bg-white/[0.04] transition-all duration-300 shadow-sm hover:shadow-lg animate-in fade-in slide-in-from-bottom-4`}
+            style={{ animationDelay: `${index * 100}ms` }}
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none"></div>
-            <div className="flex items-center justify-between mb-6">
-                <div className="p-3 rounded-2xl bg-zinc-900 border border-white/5 text-amber-500 group-hover:scale-110 transition-transform duration-500">
-                    <Icon size={20} />
+            <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-xl bg-white/[0.05] ${colorClass}`}>
+                    <Icon size={24} strokeWidth={1.5} />
                 </div>
-                {trend && (
-                    <span className="text-[10px] font-black text-amber-500/80 tracking-widest uppercase">{trend}</span>
-                )}
             </div>
-            <div>
-                <h3 className="text-3xl font-black text-amber-500 tracking-tighter mb-1">
-                    {isLoading ? <span className="block w-20 h-8 bg-white/5 animate-pulse rounded-lg" /> : value}
+            <div className="mt-auto">
+                <h3 className="text-3xl font-bold text-white tracking-tight mb-1">
+                    {isLoading ? <span className="block w-24 h-9 bg-white/10 animate-pulse rounded-lg" /> : value}
                 </h3>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">{title}</p>
+                <p className="text-sm font-medium text-zinc-400">{title}</p>
             </div>
-            <div className="mt-4 flex justify-end">
-                <Sparkline color={colorHex} />
-            </div>
+            {/* Subtle glow effect behind card */}
+            <div className="absolute inset-0 rounded-3xl opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-tr from-white/[0.02] to-transparent pointer-events-none" />
         </div>
     );
 
+    const getVietnameseRole = (currentRole?: string) => {
+        if (!currentRole) return 'Đang hoạt động';
+        const strippedRole = currentRole.replace('ROLE_', '');
+        switch (strippedRole) {
+            case 'ADMIN': return 'Quản trị viên';
+            case 'MANAGER': return 'Quản lý phân phối';
+            case 'STORE_STAFF': return 'Nhân viên cửa hàng';
+            case 'KITCHEN_STAFF': return 'Nhân viên bếp';
+            case 'COORDINATOR': return 'Điều phối viên';
+            default: return strippedRole;
+        }
+    };
+
     return (
-        <div className="min-h-screen relative py-8 px-4 md:px-0">
-            {/* 12-Column Industrial Layout */}
-            <div className="grid grid-cols-12 gap-8 items-start">
-                
-                {/* LEFT COLUMN: Stat Cards (3 Cols) */}
-                <div className="col-span-12 lg:col-span-3 space-y-6">
-                    <div className="px-2 mb-4">
-                        <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] italic flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-amber-500/20 animate-pulse"></span>
-                            Analytics Stream
-                        </h2>
+        <div className="min-h-screen relative p-4 md:p-8 space-y-6">
+
+            {/* Hero Welcome Banner */}
+            <div className="relative overflow-hidden rounded-[2rem] bg-zinc-900 border border-white/[0.05] p-8 md:p-10 shadow-xl">
+                {/* Decorative blob */}
+                <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-amber-500/20 rounded-full blur-[80px] pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.1] text-zinc-300 text-xs font-semibold mb-6">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                            Vai trò hoạt động: {getVietnameseRole(user?.role)}
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-3">
+                            Chào mừng trở lại, <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">{user?.name?.split(' ')[0] || 'Khách'}</span>
+                        </h1>
+                        <p className="text-zinc-400 text-sm md:text-base max-w-lg leading-relaxed">
+                            Theo dõi hoạt động, quản lý tài nguyên và các chỉ số quan trọng trên toàn hệ thống.
+                        </p>
                     </div>
-                    {role === 'ADMIN' && (
-                        <>
-                            <StatCard title="Tổng doanh thu" value={stats.totalRevenue.toLocaleString()} icon={DollarSign} colorHex="#F59E0B" trend="+12.5%" />
-                            <StatCard title="Cửa hàng" value={stats.activeStores} icon={Store} colorHex="#F59E0B" />
-                            <StatCard title="Người dùng" value={stats.activeUsers} icon={Users} colorHex="#F59E0B" />
-                        </>
-                    )}
-                    {role === 'COORDINATOR' && (
-                        <>
-                            <StatCard title="Đơn hàng chờ" value={stats.pendingOrders} icon={Activity} colorHex="#F59E0B" trend="Active" />
-                            <StatCard title="Vận chuyển" value={stats.pendingShipments} icon={Truck} colorHex="#F59E0B" />
-                            <StatCard title="Kho bãi" value={stats.activeStores} icon={Store} colorHex="#F59E0B" />
-                        </>
-                    )}
-                    {role === 'KITCHEN_STAFF' && (
-                        <>
-                            <StatCard title="Kế hoạch SX" value={stats.productionPlans} icon={ChefHat} colorHex="#F59E0B" trend="Priority" />
-                            <StatCard title="Vận chuyển" value={stats.pendingShipments} icon={Truck} colorHex="#F59E0B" />
-                        </>
-                    )}
-                    {(role === 'STORE_STAFF' || role === 'MANAGER') && (
-                        <StatCard title="Đơn hàng" value={stats.pendingOrders} icon={Activity} colorHex="#F59E0B" trend="Current" />
-                    )}
+                    <div className="flex flex-col items-start md:items-end justify-center">
+                        <Button onClick={loadDashboardData} disabled={isLoading} variant="outline" className="rounded-xl border-white/[0.1] bg-white/[0.02] text-zinc-300 hover:bg-white/[0.08] hover:text-white transition-all shadow-sm">
+                            <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                            Đồng bộ dữ liệu
+                        </Button>
+                        {lastUpdated && (
+                            <p className="text-xs text-zinc-500 font-medium mt-3">
+                                Cập nhật lần cuối: {lastUpdated.toLocaleDateString('vi-VN')} {lastUpdated.toLocaleTimeString('vi-VN')}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                {/* Analytics Row - Spans based on role */}
+                <div className="col-span-12 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2 px-1">
+                        <Activity size={16} className="text-amber-500" /> Chỉ Số Hoạt Động
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {role === 'ADMIN' && (
+                            <>
+                                <StatCard title="Số Cửa Hàng" value={stats.activeStores} icon={Store} colorClass="text-amber-500" index={1} />
+                                <StatCard title="Tổng Người Dùng" value={stats.activeUsers} icon={Users} colorClass="text-blue-400" index={2} />
+                            </>
+                        )}
+                        {role === 'COORDINATOR' && (
+                            <>
+                                <StatCard title="Đơn Hàng Chờ Xử Lý" value={stats.pendingOrders} icon={Package} colorClass="text-orange-400" index={1} />
+                                <StatCard title="Chuyến Xe Đang Giao" value={stats.pendingShipments} icon={Truck} colorClass="text-blue-400" index={2} />
+                                <StatCard title="Tổng Cửa Hàng" value={stats.activeStores} icon={Store} colorClass="text-amber-500" index={3} />
+                            </>
+                        )}
+                        {role === 'KITCHEN_STAFF' && (
+                            <>
+                                <StatCard title="Kế Hoạch Sản Xuất" value={stats.productionPlans} icon={ChefHat} colorClass="text-amber-500" index={1} />
+                                <StatCard title="Chuyến Xe Vận Chuyển" value={stats.pendingShipments} icon={Truck} colorClass="text-blue-400" index={2} />
+                            </>
+                        )}
+                        {(role === 'STORE_STAFF' || role === 'MANAGER') && (
+                            <StatCard title="Đơn Hàng Của Tôi" value={stats.pendingOrders} icon={Activity} colorClass="text-amber-500" index={1} />
+                        )}
+                    </div>
                 </div>
 
-                {/* MIDDLE AREA: Command Center (6 Cols) */}
-                <div className="col-span-12 lg:col-span-6 space-y-8">
-                    {/* Simplified Header */}
-                    <div className="relative p-10 rounded-[40px] bg-[#0A0A0A] border border-white/5 overflow-hidden shadow-2xl group">
-                        <div className="absolute top-0 right-0 p-8 opacity-[0.02] text-white">
-                            <Activity size={200} strokeWidth={0.5} />
-                        </div>
-                        <div className="relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[9px] font-black uppercase tracking-widest mb-6">
-                                <Activity size={12} className="animate-pulse" />
-                                Operational Node: {user?.role?.replace('ROLE_', '') || 'Active'}
-                            </div>
-                            <h1 className="text-5xl font-black text-white tracking-tighter mb-2 italic">
-                                Chào mừng, {user?.name?.split(' ')[0] || 'Director'}
-                            </h1>
-                            <p className="text-zinc-500 text-sm font-medium tracking-wide">
-                                System Status: Optimal • Last Sync: {lastUpdated?.toLocaleTimeString()}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Quick Access / Command Center Grid */}
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between px-2">
-                            <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] italic flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-amber-500/20"></span>
-                                Command Center
-                            </h2>
-                            <button onClick={loadDashboardData} className="text-zinc-600 hover:text-amber-500 transition-colors">
-                                <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            {permittedLinks.slice(0, 9).map((link, idx) => {
-                                const Icon = link.icon;
-                                return (
-                                    <button
-                                        key={link.href}
-                                        onClick={() => navigate(link.href)}
-                                        className="group relative flex flex-col items-center justify-center p-8 bg-[#0F0F0F]/60 rounded-3xl border border-white/5 hover:border-amber-500/30 transition-all duration-500 hover:-translate-y-1"
-                                        style={{ animationDelay: `${700 + (idx * 50)}ms` }}
-                                    >
-                                        <div className="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/[0.02] transition-colors rounded-3xl"></div>
-                                        <div className="p-4 rounded-full bg-zinc-900 border border-white/5 text-amber-500/40 group-hover:text-amber-500 group-hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all duration-500 mb-4">
-                                            <Icon size={22} strokeWidth={1.5} />
-                                        </div>
-                                        <span className="text-[10px] font-black text-zinc-500 group-hover:text-zinc-200 transition-colors uppercase tracking-[0.2em] text-center">
+                {/* Command Center (Navigation) */}
+                <div className="col-span-12 lg:col-span-8 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2 px-1">
+                        <Store size={16} className="text-amber-500" /> Trung Tâm Quản Lý
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {permittedLinks.slice(0, 9).map((link) => {
+                            const Icon = link.icon;
+                            return (
+                                <button
+                                    key={link.href}
+                                    onClick={() => navigate(link.href)}
+                                    className="group relative flex items-center p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05] hover:bg-white/[0.04] hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg text-left"
+                                >
+                                    <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/5 text-zinc-400 group-hover:text-amber-500 transition-colors mr-4 shadow-sm">
+                                        <Icon size={20} strokeWidth={1.5} />
+                                    </div>
+                                    <div className="flex flex-col pointer-events-none">
+                                        <span className="text-[13px] font-semibold text-zinc-200 group-hover:text-amber-500 transition-colors">
                                             {link.name}
                                         </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                                        <span className="text-[11px] text-zinc-500 leading-tight mt-0.5">
+                                            Truy cập quản lý
+                                        </span>
+                                    </div>
+                                    <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 absolute right-4 top-4 text-amber-500/50 transition-opacity" />
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: Recent Activity (3 Cols) */}
-                <div className="col-span-12 lg:col-span-3 space-y-6">
-                    <div className="px-2 mb-4">
-                        <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] italic flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-amber-500/20"></span>
-                            Recent Activity
-                        </h2>
-                    </div>
-                    
-                    <div className="space-y-3">
+                {/* Recent Activity */}
+                <div className="col-span-12 lg:col-span-4 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2 px-1">
+                        <RefreshCw size={16} className="text-amber-500" /> Hoạt Động Gần Đây
+                    </h2>
+
+                    <div className="flex flex-col gap-3">
                         {recentOrders.length > 0 ? (
                             recentOrders.map((order: RecentOrderItem) => (
-                                <div 
+                                <div
                                     key={order.id}
                                     onClick={() => navigate('/orders')}
-                                    className="p-5 rounded-[2rem] bg-[#0F0F0F]/40 border border-white/5 hover:border-amber-500/20 transition-all duration-500 cursor-pointer group flex items-center justify-between"
+                                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md group"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-600 group-hover:text-amber-500 transition-colors border border-white/5">
-                                            <Package size={18} />
+                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/[0.04] text-zinc-400 border border-white/5 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
+                                            <Package size={16} />
                                         </div>
                                         <div>
-                                            <p className="text-[11px] font-black text-zinc-100 group-hover:text-amber-500 transition-colors uppercase">#{order.id}</p>
-                                            <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-wider">{order.storeName}</p>
+                                            <p className="text-[13px] font-semibold text-zinc-200 group-hover:text-white transition-colors">Mã ĐH: #{order.id}</p>
+                                            <p className="text-[11px] text-zinc-500 font-medium">{order.storeName}</p>
                                         </div>
                                     </div>
-                                    <Badge variant={statusColor[order.status] as any || 'default'} className="bg-amber-500/10 text-amber-500 border-0 text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5">
+                                    <Badge variant={statusColor[order.status] as any || 'default'} className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-white/5 shadow-sm border border-white/5 text-amber-500">
                                         {statusLabel[order.status] || order.status}
                                     </Badge>
                                 </div>
                             ))
+                        ) : recentShipments.length > 0 ? (
+                            recentShipments.map((ship: RecentShipmentItem) => (
+                                <div
+                                    key={ship.id}
+                                    onClick={() => navigate('/shipment')}
+                                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md group"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/[0.04] text-zinc-400 border border-white/5 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
+                                            <Truck size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[13px] font-semibold text-zinc-200 group-hover:text-white transition-colors">Xe: TRK-{ship.id}</p>
+                                            <p className="text-[11px] text-zinc-500 font-medium">{ship.storeName}</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant={statusColor[ship.status] as any || 'default'} className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-white/5 shadow-sm border border-white/5">
+                                        {statusLabel[ship.status] || ship.status}
+                                    </Badge>
+                                </div>
+                            ))
                         ) : (
-                            <div className="py-20 text-center opacity-20">
-                                <Activity size={40} className="mx-auto mb-4" />
-                                <p className="text-[10px] font-black uppercase tracking-widest">No Recent Events</p>
+                            <div className="py-16 text-center rounded-3xl border border-dashed border-white/10 bg-white/[0.01]">
+                                <Activity size={32} className="mx-auto mb-3 text-zinc-600" />
+                                <p className="text-[11px] font-medium text-zinc-500">Không có hoạt động mới nào</p>
                             </div>
                         )}
 
-                        {recentShipments.length > 0 && recentShipments.map((ship: RecentShipmentItem) => (
-                            <div 
-                                key={ship.id}
-                                onClick={() => navigate('/shipment')}
-                                className="p-5 rounded-[2rem] bg-[#0F0F0F]/40 border border-white/5 hover:border-amber-500/20 transition-all duration-500 cursor-pointer group flex items-center justify-between"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-600 group-hover:text-amber-500 transition-colors border border-white/5">
-                                        <Truck size={18} />
-                                    </div>
-                                    <div>
-                                        <p className="text-[11px] font-black text-zinc-100 group-hover:text-amber-500 transition-colors uppercase">TRK-{ship.id}</p>
-                                        <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-wider">{ship.storeName}</p>
-                                    </div>
-                                </div>
-                                <Badge variant={statusColor[ship.status] as any || 'default'} className="bg-amber-500/10 text-amber-500 border-0 text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5">
-                                    {statusLabel[ship.status] || ship.status}
-                                </Badge>
-                            </div>
-                        ))}
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate('/reports')}
+                            className="w-full mt-2 py-5 rounded-xl border border-white/[0.05] text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-all bg-white/[0.01]"
+                        >
+                            Xem Cổng Báo Cáo
+                        </Button>
                     </div>
-
-                    <Button 
-                        variant="ghost" 
-                        onClick={() => navigate('/reports')}
-                        className="w-full mt-4 py-6 rounded-2xl border border-white/5 text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600 hover:text-amber-500 hover:bg-zinc-900 italic transition-all"
-                    >
-                        Access Archive System
-                    </Button>
                 </div>
-            </div>
-            
-            {/* Ambient Lighting Accents */}
-            <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
-                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-amber-500/5 blur-[120px]"></div>
-                <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-orange-600/5 blur-[120px]"></div>
+
             </div>
         </div>
     );

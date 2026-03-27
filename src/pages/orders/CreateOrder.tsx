@@ -329,7 +329,7 @@ export const CreateOrder = () => {
                                             </div>
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="text-[11px] text-zinc-500 font-medium">
-                                                    {item.price.toLocaleString()}đ <span className="opacity-30 mx-1">|</span> <span className="uppercase text-[9px] tracking-widest">{item.unit}</span>
+                                                    {item.price.toLocaleString()} <span className="opacity-30 mx-1">|</span> <span className="uppercase text-[9px] tracking-widest">{item.unit}</span>
                                                 </div>
                                                 <span className="font-black text-amber-500 text-sm tracking-tight drop-shadow-sm">{(item.quantity * item.price).toLocaleString()} <span className="text-[9px] font-medium text-amber-500/60 uppercase">VNĐ</span></span>
                                             </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Store as StoreIcon, Edit2, Trash2, ChevronRight, User, MapPin, Navigation } from 'lucide-react';
+import { Plus, Search, Store as StoreIcon, Edit2, Trash2, ChevronRight, User, MapPin, Navigation, PackageSearch } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import type { StoreResponse } from '../../types/store';
 import { storeApi } from '../../services/store.api';
@@ -70,7 +70,7 @@ export const StoreList = () => {
             setStaffNames(prev => ({ ...prev, ...names }));
         } catch (error) {
             console.error(error);
-            toast.error('Failed to load stores');
+            toast.error('Không thể tải danh sách cửa hàng');
         } finally {
             setIsLoading(false);
         }
@@ -111,7 +111,7 @@ export const StoreList = () => {
             setIsDeleteModalOpen(false);
             loadStores();
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'Failed to delete store';
+            const msg = error.response?.data?.message || 'Không thể xóa cửa hàng';
             toast.error(msg);
         } finally {
             setIsDeleting(false);
@@ -274,6 +274,14 @@ export const StoreList = () => {
 
 
                                             <div className="flex items-center gap-2 ml-auto lg:ml-0" onClick={(e) => e.stopPropagation()}>
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={(e) => { e.stopPropagation(); navigate(`/stores/inventory?storeId=${actualId}`); }}
+                                                    className="h-10 px-4 bg-zinc-900 hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-400 border border-white/5 hover:border-emerald-500/20 rounded-xl transition-all flex items-center mr-2 relative z-10"
+                                                >
+                                                    <PackageSearch className="w-4 h-4 mr-2" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Xem kho</span>
+                                                </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"

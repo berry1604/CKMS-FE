@@ -8,6 +8,7 @@ export type ProductionPlanStatus =
   | "IN_PRODUCTION"
   | "PRODUCED"
   | "FINISHED"
+  | "READY"
   | "APPROVED";
 
 export interface DispatchSuggestionItem {

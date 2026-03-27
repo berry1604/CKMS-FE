@@ -87,6 +87,15 @@
   @apply bg-amber-500/50;
 }
 
+/* Scrollbar hiding utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Make calendar icon white for all date inputs system-wide */
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);

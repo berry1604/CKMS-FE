@@ -1,6 +1,4 @@
-// Types matching backend ShipmentController DTOs — from Swagger
-
-export type ShipmentStatus = 'PENDING' | 'PREPARED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
+export type ShipmentStatus = 'PENDING' | 'PREPARED' | 'IN_TRANSIT' | 'ARRIVED' | 'DELIVERED' | 'CANCELLED';
 
 export type AhamoveServiceIdType = 'SGN-BIKE' | 'SGN-PREMIUM' | 'SGN-POOL' | 'SGN-TRUCK-500' | 'SGN-TRUCK-1000' | 'SGN-TRUCK-2000';
 
@@ -41,7 +39,8 @@ export interface ShipmentResponse {
     storeId?: number; // Might be null for multi-drop
     storeName?: string; // Might be null for multi-drop
     storePhone?: string;
-    productionPlanId: number;
+    productionPlanId?: number; // Legacy/Optional
+    planId?: number; // Primary Plan ID
     status: ShipmentStatus;
 
     // Ahamove specific fields

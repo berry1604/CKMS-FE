@@ -15,11 +15,8 @@ import {
   Database,
   Info,
   Timer,
-  ArrowRight,
   X,
-  Printer,
   ClipboardList,
-  MapPin,
   Package,
   AlertCircle,
   Eye,
@@ -1199,45 +1196,6 @@ export const ProductionSchedule = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Quick Specs */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
-                  <div className="flex items-center gap-2">
-                    <MapPin
-                      size={14}
-                      className="text-zinc-600 group-hover/spec:text-amber-500 transition-colors"
-                    />
-                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
-                      Trạm
-                    </span>
-                  </div>
-                  <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
-                    {selectedPlanDetail.kitchenId === 1
-                      ? "Alpha Kitchen"
-                      : `Kitchen #${selectedPlanDetail.kitchenId}`}
-                  </span>
-                </div>
-                <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
-                  <div className="flex items-center gap-2">
-                    <ArrowRight
-                      size={14}
-                      className="text-zinc-600 group-hover/spec:text-amber-500 transition-colors"
-                    />
-                    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
-                      Ưu tiên
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full w-[75%] bg-gradient-to-r from-amber-500 to-orange-500"></div>
-                    </div>
-                    <span className="text-[9px] font-black text-amber-500">
-                      ƯU TIÊN CAO
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Right Column: Inventory & Details */}
@@ -1476,41 +1434,6 @@ export const ProductionSchedule = () => {
                       </p>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Quick Print Section */}
-              <div className="relative group/print overflow-hidden p-8 bg-zinc-950 border border-zinc-800 rounded-[36px] transition-all duration-500 hover:border-amber-500/20">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl transform translate-x-10 -translate-y-10 group-hover/print:scale-150 transition-transform duration-1000"></div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
-                  <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/print:text-amber-500 group-hover/print:border-amber-500/30 group-hover/print:bg-amber-500/5 transition-all duration-500">
-                      <Printer size={24} />
-                    </div>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-black text-white uppercase tracking-tight">
-                          Lệnh sản xuất
-                        </span>
-                        <Badge
-                          variant="default"
-                          className="h-4 text-[7px] bg-zinc-900 border-zinc-800"
-                        >
-                          PDF-v1.0
-                        </Badge>
-                      </div>
-                      <span className="text-xs text-zinc-500 font-medium mt-1">
-                        Bản in nội bộ dành riêng cho Bếp trưởng (Hardcopy)
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    className="h-12 px-10 bg-zinc-900 border border-zinc-800 text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-amber-500 hover:text-black hover:border-transparent transition-all duration-500 shadow-lg hover:shadow-amber-500/20"
-                  >
-                    Trích xuất
-                  </Button>
                 </div>
               </div>
             </div>

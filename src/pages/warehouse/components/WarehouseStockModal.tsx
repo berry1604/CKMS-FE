@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { PackageSearch, Search, Layers, Calendar, ArrowRight } from 'lucide-react';
+import { PackageSearch, Search, Layers, Calendar, ArrowRight, AlertTriangle } from 'lucide-react';
 import { Input } from '../../../components/ui/Input';
 import { kitchenInventoryApi } from '../../../services/kitchenInventory.api';
 import type { KitchenStockItemResponse } from '../../../types/kitchenInventory';
 import type { KitchenResponse } from '../../../types/kitchen';
 import toast from 'react-hot-toast';
+
+const isExpiringSoon = (dateStr: string | null) => {
+    if (!dateStr) return false;
+    const expiryDate = new Date(dateStr);
+    const now = new Date();
+    const diffDays = (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays <= 7 && diffDays >= 0;
+};
+
+const isExpired = (dateStr: string | null) => {
+    if (!dateStr) return false;
+    return new Date(dateStr) < new Date();
+};
 
 interface WarehouseStockModalProps {
     warehouse: KitchenResponse | null;
@@ -121,14 +134,32 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
                                 </thead>
                                 <tbody className="divide-y divide-white/[0.02]">
                                     {filteredStocks.length > 0 ? (
-                                        filteredStocks.map((stock) => (
-                                            <tr key={stock.id} className="group hover:bg-white/[0.02] transition-colors duration-300">
+                                        filteredStocks.map((stock) => {
+                                            const expired = isExpired(stock.expiryDate);
+                                            const expiringSoon = isExpiringSoon(stock.expiryDate);
+
+                                            return (
+                                            <tr key={stock.id} className={`group transition-colors duration-300 ${expired ? "bg-red-500/5 hover:bg-red-500/10" : expiringSoon ? "bg-amber-500/5 hover:bg-amber-500/10" : "hover:bg-white/[0.02]"}`}>
                                                 <td className="px-8 py-5">
-                                                    <div className="font-bold text-zinc-200 text-base tracking-tight group-hover:text-white transition-colors">
+                                                    <div className={`font-bold text-base tracking-tight transition-colors ${expired ? "text-red-400 group-hover:text-red-300" : expiringSoon ? "text-amber-400 group-hover:text-amber-300" : "text-zinc-200 group-hover:text-white"}`}>
                                                         {stock.itemName}
                                                     </div>
-                                                    <div className="text-[10px] font-mono text-zinc-600 mt-1">
-                                                        ID: {stock.itemId.toString().padStart(6, '0')}
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className="text-[10px] font-mono text-zinc-600">
+                                                            ID: {stock.itemId.toString().padStart(6, '0')}
+                                                        </span>
+                                                        {expired && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[8px] font-black tracking-widest uppercase border border-red-500/20 flex items-center gap-1">
+                                                                <AlertTriangle className="w-2.5 h-2.5" />
+                                                                Đã hết hạn
+                                                            </span>
+                                                        )}
+                                                        {expiringSoon && (
+                                                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[8px] font-black tracking-widest uppercase border border-amber-500/20 flex items-center gap-1">
+                                                                <AlertTriangle className="w-2.5 h-2.5" />
+                                                                Sắp hết hạn
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-8 py-5 text-center">
@@ -155,8 +186,8 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
                                                 <td className="px-8 py-5">
                                                     <div className="flex flex-col items-center justify-center">
                                                         {stock.expiryDate ? (
-                                                            <div className="flex items-center gap-2 text-zinc-400 bg-zinc-950/50 px-3 py-1.5 rounded-xl border border-white/5">
-                                                                <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                                                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${expired ? "text-red-400 bg-red-500/10 border-red-500/20" : expiringSoon ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-zinc-400 bg-zinc-950/50 border-white/5"}`}>
+                                                                <Calendar className={`w-3.5 h-3.5 ${expired ? "text-red-500" : expiringSoon ? "text-amber-500" : "text-zinc-500"}`} />
                                                                 <span className="text-xs font-medium tracking-wide">
                                                                     {new Date(stock.expiryDate).toLocaleDateString('vi-VN')}
                                                                 </span>
@@ -169,7 +200,8 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))
+                                        );
+                                        })
                                     ) : (
                                         <tr>
                                             <td colSpan={4} className="px-8 py-20 text-center">

@@ -1,19 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, Building2, Calendar, X, Navigation, Truck } from "lucide-react";
+import { CreditCard, Building2, Calendar, X } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { Drawer } from "../../components/ui/Drawer";
 import { billingApi } from "../../services/billing.api";
-import { storeOrderApi } from "../../services/storeOrderApi";
 import { toast } from "react-hot-toast";
 import type {
   BillingStatementDetailResponse,
   PaymentStatementRequest,
 } from "../../types/billing";
+import { storeOrderApi } from "../../services/storeOrderApi";
 import type { OrderDetailResponse } from "../../types/storeOrder";
-import { useAuth } from "../../hooks/useAuth";
+import { Truck } from "lucide-react";
 
 interface BillingDetailDrawerProps {
   statementId: number | null;
@@ -31,8 +31,6 @@ export const BillingDetailDrawer = ({
   const [detail, setDetail] = useState<BillingStatementDetailResponse | null>(
     null,
   );
-  const { hasAuthority, user } = useAuth();
-  const isStaff = hasAuthority("STORE_STAFF");
   const [isLoading, setIsLoading] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [showPayForm, setShowPayForm] = useState(false);
@@ -41,7 +39,6 @@ export const BillingDetailDrawer = ({
     transactionReference: "",
     note: "",
   });
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [orderDetailsMap, setOrderDetailsMap] = useState<
     Record<number, OrderDetailResponse[]>
   >({});
@@ -51,117 +48,69 @@ export const BillingDetailDrawer = ({
     if (!statementId) return;
     setIsLoading(true);
     try {
-      const data = await billingApi.getStatementDetail(
-        statementId,
-        isStaff ? user?.storeId : undefined,
-      );
+      const data = await billingApi.getStatementDetail(statementId);
       setDetail(data);
     } catch (error) {
-      console.error("Failed to fetch statement detail:", error);
-      toast.error("Failed to load statement details");
+      console.error("Không thể tải chi tiết bảng kê:", error);
+      toast.error("Không thể tải chi tiết bảng kê");
     } finally {
       setIsLoading(false);
     }
   }, [statementId]);
 
-  // Fetch order details for all invoices once detail is loaded
-  const fetchOrderDetails = useCallback(
-    async (invoices: { orderId?: number }[]) => {
-      const uniqueOrderIds = [
-        ...new Set(
-          invoices
-            .map((inv) => inv.orderId)
-            .filter((id): id is number => id != null),
-        ),
-      ];
-      if (uniqueOrderIds.length === 0) return;
-
-      const results = await Promise.allSettled(
-        uniqueOrderIds.map((orderId) => storeOrderApi.getOrderById(orderId)),
-      );
-      const map: Record<number, OrderDetailResponse[]> = {};
-      results.forEach((result, idx) => {
-        if (result.status === "fulfilled" && result.value?.orderDetails) {
-          map[uniqueOrderIds[idx]] = result.value.orderDetails;
-        }
-      });
-      setOrderDetailsMap(map);
-    },
-    [],
-  );
-
   // Trigger fetch when drawer opens
   useEffect(() => {
     if (isOpen && statementId) {
       fetchDetail();
-      // Reset form
-      setPayForm({
-        paymentMethodId: 0,
-        transactionReference: "",
-        note: "",
-      });
-      setFormErrors({});
-      setShowPayForm(false);
-      setOrderDetailsMap({});
     }
   }, [isOpen, statementId, fetchDetail]);
 
-  // Fetch order details when detail is loaded
+  // Fetch order details for each invoice
   useEffect(() => {
-    if (detail?.invoices && detail.invoices.length > 0) {
-      fetchOrderDetails(detail.invoices);
-    }
-  }, [detail, fetchOrderDetails]);
+    if (detail?.invoices) {
+      const fetchAllOrderDetails = async () => {
+        const newMap: Record<number, OrderDetailResponse[]> = {
+          ...orderDetailsMap,
+        };
+        let changed = false;
 
-  const validateForm = () => {
-    const errors: { [key: string]: string } = {};
-    if (!payForm.paymentMethodId) {
-      errors.paymentMethodId = "Please select a payment method";
+        const promises = detail.invoices
+          .filter((inv) => inv.orderId && !orderDetailsMap[inv.orderId])
+          .map(async (inv) => {
+            try {
+              const order = await storeOrderApi.getOrderById(inv.orderId!);
+              if (order?.orderDetails) {
+                newMap[inv.orderId!] = order.orderDetails;
+                changed = true;
+              }
+            } catch (err) {
+              console.error(`Failed to fetch order ${inv.orderId}`, err);
+            }
+          });
+
+        await Promise.all(promises);
+        if (changed) {
+          setOrderDetailsMap(newMap);
+        }
+      };
+
+      fetchAllOrderDetails();
     }
-    if (payForm.paymentMethodId === 2 && !payForm.transactionReference) {
-      // Assuming ID 2 is Bank Transfer
-      errors.transactionReference = "Reference is required for Bank Transfer";
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  }, [detail?.invoices, orderDetailsMap]);
 
   const handlePay = async () => {
     if (!statementId) return;
-    if (!validateForm()) return;
-
     setIsPaying(true);
     try {
-      const response = await billingApi.payStatement(
-        statementId,
-        payForm,
-        isStaff ? user?.storeId : undefined,
-      );
-      toast.success("Payment processed successfully!");
-
-      // Update local state immediately
-      setDetail((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: "PAID",
-              paidAt: response.paidAt,
-              transactionReference: response.transactionReference,
-              paymentMethodId: payForm.paymentMethodId, // Optimistic update or derived
-            }
-          : null,
-      );
-
+      await billingApi.payStatement(statementId, payForm);
+      toast.success("Xử lý thanh toán thành công!");
       setShowPayForm(false);
       onPaid?.();
-      // Don't close immediately, let user see the update? Or close?
-      // User might want to see the status change.
-      // But usually "Mark as Paid" -> Close is fine.
-      // Let's keep it open to show the updated status.
+      onClose();
     } catch (error: unknown) {
-      let msg = "Payment failed";
+      let msg = "Thanh toán thất bại";
       if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as any;
+        const axiosError = error as { response?: { data?: { message?: string } } };
         msg = axiosError.response?.data?.message || msg;
       }
       toast.error(msg);
@@ -184,18 +133,17 @@ export const BillingDetailDrawer = ({
   const footer = (
     <div className="flex justify-between w-full">
       <Button variant="outline" onClick={onClose}>
-        Close
+        Đóng
       </Button>
       <div className="flex gap-2">
         {detail &&
           detail.status?.toUpperCase() !== "PAID" &&
-          detail.status?.toUpperCase() !== "CANCELLED" &&
-          isStaff && (
+          detail.status?.toUpperCase() !== "CANCELLED" && (
             <Button
               onClick={() => setShowPayForm(true)}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              <CreditCard size={16} className="mr-2" /> Mark as Paid
+              <CreditCard size={16} className="mr-2" /> Đánh dấu đã thanh toán
             </Button>
           )}
       </div>
@@ -207,8 +155,8 @@ export const BillingDetailDrawer = ({
       <Drawer
         isOpen={isOpen}
         onClose={onClose}
-        title="Statement Details"
-        description={statementId ? `Statement #${statementId}` : ""}
+        title="Chi tiết bảng kê"
+        description={statementId ? `Bảng kê #${statementId}` : ""}
         width="max-w-3xl"
         footer={footer}
       >
@@ -248,20 +196,8 @@ export const BillingDetailDrawer = ({
                     {detail.store?.name || `Store #${detail.store?.id}`}
                   </h3>
                   <p className="text-sm text-gray-400">
-                    {detail.cycleName || "Bill To"}
+                    {detail.cycleName || "Kỳ thanh toán"}
                   </p>
-                  {detail.store && (detail.store.latitude || detail.store.longitude) && (
-                    <div className="flex items-center gap-3 mt-1 opacity-60">
-                      <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
-                        <Navigation size={10} className="text-amber-500/50 rotate-45" />
-                        Vĩ độ: {detail.store.latitude}
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
-                         <Navigation size={10} className="text-amber-500/50 -rotate-45" />
-                         Kinh độ: {detail.store.longitude}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="flex flex-col items-end">
@@ -274,12 +210,12 @@ export const BillingDetailDrawer = ({
                 <div className="text-right">
                   {detail.orderTotal !== undefined && (
                     <p className="text-xs text-gray-500">
-                      Order: {detail.orderTotal.toLocaleString("vi-VN")} VND
+                      Tiền hàng: {detail.orderTotal.toLocaleString("vi-VN")} VND
                     </p>
                   )}
                   {detail.shippingTotal !== undefined && (
                     <p className="text-xs text-gray-500">
-                      Shipping: {detail.shippingTotal.toLocaleString("vi-VN")}{" "}
+                      Phí vận chuyển: {detail.shippingTotal.toLocaleString("vi-VN")}{" "}
                       VND
                     </p>
                   )}
@@ -299,7 +235,7 @@ export const BillingDetailDrawer = ({
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                      Period Start
+                      Kỳ bắt đầu
                     </p>
                     <p className="font-medium text-gray-200">
                       {detail.periodStart}
@@ -314,7 +250,7 @@ export const BillingDetailDrawer = ({
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                      Period End
+                      Kỳ kết thúc
                     </p>
                     <p className="font-medium text-gray-200">
                       {detail.periodEnd}
@@ -327,27 +263,27 @@ export const BillingDetailDrawer = ({
             {detail.paidAt && (
               <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20 space-y-1">
                 <p className="text-sm text-green-400 font-medium">
-                  Paid at: {new Date(detail.paidAt).toLocaleString("vi-VN")}
+                  Thanh toán lúc: {new Date(detail.paidAt).toLocaleString("vi-VN")}
                 </p>
                 {detail.paymentMethodName && (
                   <p className="text-sm text-green-400/80">
-                    Method: {detail.paymentMethodName}
+                    Phương thức: {detail.paymentMethodName}
                   </p>
                 )}
                 {detail.transactionReference && (
                   <p className="text-sm text-green-400/80">
-                    Ref: {detail.transactionReference}
+                    Mã tham chiếu: {detail.transactionReference}
                   </p>
                 )}
                 {detail.note && (
                   <p className="text-sm text-green-400/80 italic">
-                    Note: {detail.note}
+                    Ghi chú: {detail.note}
                   </p>
                 )}
               </div>
             )}
 
-            {/* Professional Invoice Line Items */}
+            {/* Invoices Table */}
             {detail.invoices && detail.invoices.length > 0 && (
               <div className="space-y-5">
                 {detail.invoices.map((inv, invIdx) => {
@@ -360,85 +296,96 @@ export const BillingDetailDrawer = ({
                       className="overflow-hidden border-zinc-700 shadow-sm"
                     >
                       {/* Invoice sub-header */}
-                      <div className="bg-zinc-900/60 px-6 py-3 border-b border-zinc-800 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs bg-zinc-800 px-2.5 py-1 rounded text-amber-400 border border-zinc-700">
-                            Invoice #{inv.invoiceId}
+                      <div className="bg-zinc-900/60 px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className="font-mono text-[10px] bg-amber-500/10 px-3 py-1.5 rounded-lg text-amber-500 border border-amber-500/20 font-black tracking-widest">
+                            INVOICE #{inv.invoiceId}
                           </span>
                           {inv.orderId && (
-                            <span className="text-xs text-zinc-500">
+                            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
                               Order #{inv.orderId}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-6">
                           {inv.issuedAt && (
-                            <span className="text-xs text-zinc-500">
+                            <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
                               {new Date(inv.issuedAt).toLocaleDateString(
                                 "vi-VN",
                               )}
                             </span>
                           )}
-                          <span className="font-semibold text-sm text-gray-200">
-                            {inv.amount?.toLocaleString("vi-VN")} VND
-                          </span>
+                          <div className="text-right">
+                            {(inv.shippingFee ?? 0) > 0 && (
+                              <div className="text-[9px] text-amber-500/70 font-black uppercase tracking-widest leading-none mb-1">
+                                Gồm {inv.shippingFee?.toLocaleString("vi-VN")}₫
+                                ship
+                              </div>
+                            )}
+                            <span className="font-black text-lg text-white tracking-tighter italic">
+                              {inv.amount?.toLocaleString("vi-VN")}{" "}
+                              <span className="text-xs not-italic text-zinc-500 font-bold ml-0.5">
+                                VND
+                              </span>
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       {/* Line Items Table */}
-                      <div className="bg-zinc-900/30">
-                        <table className="min-w-full divide-y divide-zinc-800/60">
+                      <div className="bg-zinc-900/10">
+                        <table className="min-w-full divide-y divide-zinc-800/40">
                           <thead>
-                            <tr className="bg-zinc-900/50">
+                            <tr className="bg-black/20">
                               <th
-                                className="px-6 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]"
+                                className="px-6 py-3 text-left text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]"
                                 style={{ width: "60px" }}
                               >
                                 No.
                               </th>
-                              <th className="px-6 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]">
-                                Item
+                              <th className="px-6 py-3 text-left text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">
+                                Sản phẩm
                               </th>
                               <th
-                                className="px-6 py-3 text-center text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]"
+                                className="px-6 py-3 text-center text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]"
                                 style={{ width: "80px" }}
                               >
-                                Qty
+                                SL
                               </th>
                               <th
-                                className="px-6 py-3 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]"
+                                className="px-6 py-3 text-right text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]"
                                 style={{ width: "140px" }}
                               >
-                                Price
+                                Đơn giá
                               </th>
                               <th
-                                className="px-6 py-3 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em]"
+                                className="px-6 py-3 text-right text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]"
                                 style={{ width: "150px" }}
                               >
-                                Total
+                                Thành tiền
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-800/40">
+                          <tbody className="divide-y divide-zinc-800/20">
                             {items.length > 0 ? (
                               items.map((item, itemIdx) => (
                                 <tr
                                   key={itemIdx}
-                                  className="hover:bg-zinc-800/30 transition-colors"
+                                  className="hover:bg-amber-500/[0.02] transition-colors group/row"
                                 >
-                                  <td className="px-6 py-3.5 text-sm text-zinc-500 font-mono">
+                                  <td className="px-6 py-4 text-[10px] text-zinc-600 font-black font-mono">
                                     {itemIdx + 1}
                                   </td>
-                                  <td className="px-6 py-3.5 text-sm text-gray-200 font-medium">
+                                  <td className="px-6 py-4 text-sm text-gray-200 font-black tracking-tight">
                                     {item.productName}
                                   </td>
-                                  <td className="px-6 py-3.5 text-sm text-center text-amber-400 font-semibold">
+                                  <td className="px-6 py-4 text-sm text-center text-amber-500 font-black font-mono">
                                     {item.quantity}
                                   </td>
-                                  <td className="px-6 py-3.5 text-sm text-right text-gray-300">
+                                  <td className="px-6 py-4 text-xs text-right text-gray-400 font-bold">
                                     {item.unitPrice?.toLocaleString("vi-VN")} ₫
                                   </td>
-                                  <td className="px-6 py-3.5 text-sm text-right text-gray-200 font-semibold">
+                                  <td className="px-6 py-4 text-sm text-right text-gray-200 font-black tracking-tighter font-mono">
                                     {item.subTotal?.toLocaleString("vi-VN")} ₫
                                   </td>
                                 </tr>
@@ -447,31 +394,54 @@ export const BillingDetailDrawer = ({
                               <tr>
                                 <td
                                   colSpan={5}
-                                  className="px-6 py-6 text-center text-sm text-zinc-600 italic"
+                                  className="px-6 py-10 text-center text-[10px] text-zinc-600 font-black uppercase tracking-widest italic animate-pulse"
                                 >
-                                  Đang tải chi tiết đơn hàng...
+                                  Đang truy xuất chi tiết đơn hàng...
                                 </td>
                               </tr>
                             )}
 
-                            {/* Hiển thị Phí vận chuyển như 1 dòng riêng trong bảng (nếu có) */}
-                            {(inv.shippingFee ?? 0) > 0 && (
-                              <tr className="bg-amber-500/5 hover:bg-amber-500/10 transition-colors border-t border-amber-500/20">
-                                <td className="px-6 py-3.5 text-sm text-amber-500/50 font-mono italic">
-                                  #
+                            {/* Shipping Fee Row - High Visibility */}
+                            {((inv.shippingFee ?? 0) > 0 ||
+                              (inv.amount >
+                                items.reduce(
+                                  (sum, i) => sum + (i.subTotal || 0),
+                                  0,
+                                ) &&
+                                items.length > 0)) && (
+                              <tr className="bg-emerald-500/[0.03] border-t border-emerald-500/10">
+                                <td className="px-6 py-4 text-[10px] text-emerald-500/50 font-black font-mono">
+                                  <Truck size={12} />
                                 </td>
-                                <td className="px-6 py-3.5 text-sm text-amber-400 font-bold flex items-center gap-2">
-                                  <Truck size={14} className="text-amber-500" />{" "}
-                                  Phí vận chuyển
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">
+                                      Phí vận chuyển (Shipment)
+                                    </span>
+                                    <Badge
+                                      variant="success"
+                                      className="h-4 text-[8px] px-1 font-black bg-emerald-500/10 text-emerald-500 border-0"
+                                    >
+                                      SYSTEM_FEE
+                                    </Badge>
+                                  </div>
                                 </td>
-                                <td className="px-6 py-3.5 text-sm text-center text-zinc-500 font-semibold italic">
+                                <td className="px-6 py-4 text-center text-zinc-600 font-black">
                                   —
                                 </td>
-                                <td className="px-6 py-3.5 text-sm text-right text-zinc-500 italic">
+                                <td className="px-6 py-4 text-right text-zinc-600 font-black">
                                   —
                                 </td>
-                                <td className="px-6 py-3.5 text-sm text-right text-amber-400 font-bold">
-                                  {inv.shippingFee?.toLocaleString("vi-VN")} ₫
+                                <td className="px-6 py-4 text-sm text-right text-emerald-500 font-black font-mono tracking-tighter">
+                                  {(
+                                    inv.shippingFee ||
+                                    inv.amount -
+                                      items.reduce(
+                                        (sum, i) => sum + (i.subTotal || 0),
+                                        0,
+                                      )
+                                  ).toLocaleString("vi-VN")}{" "}
+                                  ₫
                                 </td>
                               </tr>
                             )}
@@ -503,7 +473,7 @@ export const BillingDetailDrawer = ({
             )}
           </div>
         ) : (
-          <p className="text-gray-400 text-center py-8">No data found.</p>
+          <p className="text-gray-400 text-center py-8">Không tìm thấy dữ liệu.</p>
         )}
       </Drawer>
 
@@ -511,21 +481,21 @@ export const BillingDetailDrawer = ({
       {showPayForm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <Card className="w-full max-w-md p-6 bg-zinc-900 shadow-xl border border-zinc-700">
-            <div className="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
-              <h2 className="text-xl font-bold text-gray-200">
-                Confirm Payment
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-200">
+                Xác nhận thanh toán
               </h2>
               <button
                 onClick={() => setShowPayForm(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-gray-200"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Payment Method
+                  Phương thức thanh toán
                 </label>
                 <select
                   className="w-full flex h-10 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -537,32 +507,19 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 >
-                  <option
-                    value=""
-                    disabled
-                    className="bg-zinc-900 text-gray-500"
-                  >
-                    Select Method
+                  <option value="" disabled>
+                    Chọn phương thức
                   </option>
-                  <option value="1" className="bg-zinc-900">
-                    CASH
-                  </option>
-                  <option value="2" className="bg-zinc-900">
-                    BANK_TRANSFER
-                  </option>
+                  <option value="1">CASH</option>
+                  <option value="2">BANK_TRANSFER</option>
                 </select>
-                {formErrors.paymentMethodId && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.paymentMethodId}
-                  </p>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Transaction Reference
+                  Mã tham chiếu giao dịch
                 </label>
                 <Input
-                  placeholder="e.g. TXN-12345"
+                  placeholder="ví dụ: TXN-12345"
                   value={payForm.transactionReference || ""}
                   onChange={(e) =>
                     setPayForm({
@@ -571,18 +528,13 @@ export const BillingDetailDrawer = ({
                     })
                   }
                 />
-                {formErrors.transactionReference && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors.transactionReference}
-                  </p>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Note (optional)
+                  Ghi chú (không bắt buộc)
                 </label>
                 <Input
-                  placeholder="Add any notes here..."
+                  placeholder="Thêm ghi chú tại đây..."
                   value={payForm.note || ""}
                   onChange={(e) =>
                     setPayForm({ ...payForm, note: e.target.value })
@@ -595,17 +547,16 @@ export const BillingDetailDrawer = ({
                 variant="outline"
                 onClick={() => setShowPayForm(false)}
                 disabled={isPaying}
-                className="bg-zinc-800 border-zinc-700 text-gray-300 hover:text-white hover:bg-zinc-700"
               >
-                Cancel
+                Hủy
               </Button>
               <Button
-                className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
+                className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={handlePay}
                 isLoading={isPaying}
-                disabled={!payForm.paymentMethodId || isPaying}
+                disabled={!payForm.paymentMethodId}
               >
-                <CreditCard size={16} className="mr-2" /> Pay Now
+                <CreditCard size={16} className="mr-2" /> Thanh toán ngay
               </Button>
             </div>
           </Card>
