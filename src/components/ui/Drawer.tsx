@@ -53,17 +53,17 @@ export const Drawer = ({
             {/* Drawer Panel */}
             <div
                 ref={drawerRef}
-                className={`relative w-full ${width} h-full bg-zinc-950/80 backdrop-blur-2xl shadow-[-32px_0_64px_-16px_rgba(0,0,0,0.6)] border-l border-white/5 flex flex-col transform transition-transform duration-500 ease-out animate-in slide-in-from-right duration-500`}
+                className={`relative w-full ${width} h-full bg-[var(--bg-card)] backdrop-blur-2xl shadow-[-32px_0_64px_-16px_rgba(0,0,0,0.1)] dark:shadow-[-32px_0_64px_-16px_rgba(0,0,0,0.6)] border-l border-[var(--border-primary)] flex flex-col transform transition-transform duration-500 ease-out animate-in slide-in-from-right duration-500`}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between px-8 py-8 border-b border-white/5">
+                <div className="flex items-start justify-between px-8 py-8 border-b border-[var(--border-primary)]">
                     <div className="space-y-1">
-                        {title && <div className="text-2xl font-black text-white uppercase tracking-tighter">{title}</div>}
-                        {description && <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{description}</p>}
+                        {title && <div className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter">{title}</div>}
+                        {description && <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">{description}</p>}
                     </div>
                     <button
                         onClick={onClose}
-                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-[var(--text-primary)]/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/10 transition-all duration-200"
                     >
                         <X size={20} />
                     </button>
@@ -76,7 +76,7 @@ export const Drawer = ({
 
                 {/* Footer */}
                 {footer && (
-                    <div className="px-8 py-6 border-t border-white/5 bg-black/40 backdrop-blur-md">
+                    <div className="px-8 py-6 border-t border-[var(--border-primary)] bg-[var(--text-primary)]/[0.02] backdrop-blur-md">
                         {footer}
                     </div>
                 )}

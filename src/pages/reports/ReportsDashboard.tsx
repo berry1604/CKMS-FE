@@ -139,10 +139,10 @@ export const ReportsDashboard = () => {
         return (
             <div className="flex items-end justify-between h-64 gap-4 mt-8 px-4 relative">
                 {/* Background Grid Lines */}
-                <div className="absolute inset-x-0 top-0 h-px bg-white/5"></div>
-                <div className="absolute inset-x-0 top-1/4 h-px bg-white/5"></div>
-                <div className="absolute inset-x-0 top-2/4 h-px bg-white/5"></div>
-                <div className="absolute inset-x-0 top-3/4 h-px bg-white/5"></div>
+                <div className="absolute inset-x-0 top-0 h-px bg-[var(--text-primary)]/5"></div>
+                <div className="absolute inset-x-0 top-1/4 h-px bg-[var(--text-primary)]/5"></div>
+                <div className="absolute inset-x-0 top-2/4 h-px bg-[var(--text-primary)]/5"></div>
+                <div className="absolute inset-x-0 top-3/4 h-px bg-[var(--text-primary)]/5"></div>
 
                 {data.map((item) => (
                     <div key={item.month} className="flex flex-col items-center gap-4 group w-full relative z-10">
@@ -152,12 +152,12 @@ export const ReportsDashboard = () => {
                                 className="w-full max-w-[48px] bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-lg transition-all duration-500 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] relative"
                                 style={{ height: `${(item.revenue / maxVal) * 100}%` }}
                             >
-                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 text-white text-[10px] py-1.5 px-2.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 whitespace-nowrap z-20 shadow-xl">
-                                    <div className="text-amber-400 font-bold">DT: {item.revenue.toLocaleString()}</div>
+                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-primary)] text-[var(--text-primary)] text-[10px] py-1.5 px-2.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 whitespace-nowrap z-20 shadow-xl">
+                                    <div className="text-amber-500 font-bold">DT: {item.revenue.toLocaleString()}</div>
                                 </div>
                             </div>
                         </div>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter group-hover:text-amber-500 transition-colors">
+                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-tighter group-hover:text-amber-500 transition-colors">
                             {item.month}
                         </span>
                     </div>
@@ -170,8 +170,8 @@ export const ReportsDashboard = () => {
         return (
             <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
                 <AlertCircle size={48} className="text-red-500 mb-4 opacity-80" />
-                <h2 className="text-2xl font-black tracking-tighter text-white">CHỈ DÀNH CHO MANAGER</h2>
-                <div className="text-gray-500 text-sm italic">Báo cáo doanh thu là tính năng bảo mật cấp cao, chỉ Manager mới có quyền truy cập.</div>
+                <h2 className="text-2xl font-black tracking-tighter text-[var(--text-primary)]">CHỈ DÀNH CHO MANAGER</h2>
+                <div className="text-[var(--text-secondary)] text-sm italic">Báo cáo doanh thu là tính năng bảo mật cấp cao, chỉ Manager mới có quyền truy cập.</div>
             </div>
         );
     }
@@ -189,12 +189,12 @@ export const ReportsDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-gray-100 pb-20 -m-4 md:-m-8">
+        <div className="min-h-screen bg-[var(--bg-root)] text-[var(--text-primary)] pb-20 -m-4 md:-m-8">
             {/* Immersive Analytical Header */}
-            <div className="relative h-80 w-full overflow-hidden bg-zinc-900 border-b border-white/[0.02]">
+            <div className="relative h-80 w-full overflow-hidden bg-[var(--bg-card)] border-b border-[var(--border-primary)]">
                 <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-amber-500/10 blur-[120px]"></div>
                 
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0a0a]/70 to-[#0a0a0a]"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--bg-root)]/70 to-[var(--bg-root)]"></div>
 
                 <div className="absolute inset-0 flex flex-col justify-end px-8 pb-16 max-w-7xl mx-auto">
                     <div className="flex items-center justify-between gap-6">
@@ -204,12 +204,12 @@ export const ReportsDashboard = () => {
                                     <BarChart3 className="text-amber-500" size={28} />
                                 </div>
                                 <div>
-                                    <h1 className="text-5xl font-black tracking-tighter text-white italic uppercase leading-none">
+                                    <h1 className="text-5xl font-black tracking-tighter text-[var(--text-primary)] italic uppercase leading-none">
                                         REVENUE <span className="text-amber-500">COCKPIT</span>
                                     </h1>
                                     <div className="flex items-center gap-2 mt-2">
                                         <Activity size={14} className="text-amber-500/60" />
-                                        <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">SteakChain Manager Real-time Report</span>
+                                        <span className="text-xs font-bold text-[var(--text-secondary)] tracking-widest uppercase">SteakChain Manager Real-time Report</span>
                                     </div>
                                 </div>
                             </div>
@@ -240,7 +240,7 @@ export const ReportsDashboard = () => {
                                     kpi.color === 'red' ? 'from-red-500 to-rose-500' :
                                     'from-green-500 to-emerald-500'
                                 } rounded-2xl opacity-10 group-hover:opacity-25 transition duration-500 blur`}></div>
-                            <div className="relative backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-6 shadow-2xl h-full flex flex-col justify-between transition-transform duration-500 hover:-translate-y-1">
+                            <div className="relative backdrop-blur-xl bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-2xl p-6 shadow-2xl h-full flex flex-col justify-between transition-transform duration-500 hover:-translate-y-1">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className={`p-2 bg-${kpi.color}-500/20 rounded-lg border border-${kpi.color}-500/30`}>
                                         <kpi.icon className={`text-${kpi.color}-500`} size={20} />
@@ -250,8 +250,8 @@ export const ReportsDashboard = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{kpi.label}</p>
-                                    <h3 className="text-3xl font-black text-white mt-1 italic leading-none">{kpi.value}</h3>
+                                    <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">{kpi.label}</p>
+                                    <h3 className="text-3xl font-black text-[var(--text-primary)] mt-1 italic leading-none">{kpi.value}</h3>
                                 </div>
                             </div>
                         </div>
@@ -262,20 +262,20 @@ export const ReportsDashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Revenue Multi-Layer Chart */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group h-full flex flex-col">
+                        <div className="backdrop-blur-xl bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-2xl p-8 shadow-2xl relative overflow-hidden group h-full flex flex-col">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <TrendingUp size={120} className="text-amber-500" />
                             </div>
 
                             <div className="flex items-center justify-between mb-8">
                                 <div>
-                                    <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Doanh Thu Các Quý</h3>
-                                    <p className="text-xs text-gray-500 font-medium">Lưu lượng tiền thực tế (chỉ tính hóa đơn PAID)</p>
+                                    <h3 className="text-xl font-black text-[var(--text-primary)] italic uppercase tracking-tight">Doanh Thu Các Quý</h3>
+                                    <p className="text-xs text-[var(--text-secondary)] font-medium">Lưu lượng tiền thực tế (chỉ tính hóa đơn PAID)</p>
                                 </div>
                                 <div className="flex gap-4">
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">DT Thực thu</span>
+                                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">DT Thực thu</span>
                                     </div>
                                 </div>
                             </div>
@@ -288,15 +288,15 @@ export const ReportsDashboard = () => {
 
                     {/* Store Performance Cockpit */}
                     <div className="space-y-6">
-                        <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-8 shadow-2xl h-[450px] flex flex-col">
+                        <div className="backdrop-blur-xl bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-2xl p-8 shadow-2xl h-[450px] flex flex-col group relative overflow-hidden">
                             <div className="mb-6">
-                                <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Cửa Hàng Tích Cực</h3>
-                                <p className="text-xs text-gray-500 font-medium">Bảng xếp hạng đóng góp doanh thu</p>
+                                <h3 className="text-xl font-black text-[var(--text-primary)] italic uppercase tracking-tight">Cửa Hàng Tích Cực</h3>
+                                <p className="text-xs text-[var(--text-secondary)] font-medium">Bảng xếp hạng đóng góp doanh thu</p>
                             </div>
 
                             <div className="space-y-6 flex-1 overflow-y-auto no-scrollbar pr-2">
                                 {topStores.length === 0 && (
-                                    <div className="text-center text-sm text-gray-500 italic mt-10">
+                                    <div className="text-center text-sm text-[var(--text-secondary)] italic mt-10">
                                         Chưa có cửa hàng nào tạo lợi nhuận...
                                     </div>
                                 )}
@@ -305,19 +305,19 @@ export const ReportsDashboard = () => {
                                         <div className="flex justify-between items-end">
                                             <div>
                                                 <span className="text-[10px] font-black text-amber-500 block mb-0.5">TOP #{idx + 1}</span>
-                                                <h4 className="text-[13px] font-bold text-white uppercase tracking-tight truncate max-w-[120px]">{store.storeName}</h4>
+                                                <h4 className="text-[13px] font-bold text-[var(--text-primary)] uppercase tracking-tight truncate max-w-[120px]">{store.storeName}</h4>
                                             </div>
                                             <div className="text-right">
-                                                <div className="text-sm font-black text-white">{(store.revenue / 1000000).toFixed(2)}M</div>
+                                                <div className="text-sm font-black text-[var(--text-primary)]">{(store.revenue / 1000000).toFixed(2)}M</div>
                                             </div>
                                         </div>
-                                        <div className="relative w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="relative w-full h-1.5 bg-[var(--text-primary)]/5 rounded-full overflow-hidden">
                                             <div
                                                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-600/50 to-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.3)] transition-all duration-1000 delay-300"
                                                 style={{ width: `${(store.revenue / Math.max(...topStores.map(s=>s.revenue))) * 100}%` }}
                                             ></div>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px] font-bold text-gray-500">
+                                        <div className="flex justify-between items-center text-[10px] font-bold text-[var(--text-secondary)]">
                                             <div className="flex items-center gap-1">
                                                 <ShoppingBag size={12} className="text-amber-500/60" />
                                                 <span>{store.orders} Hóa Đơn (Phát sinh)</span>

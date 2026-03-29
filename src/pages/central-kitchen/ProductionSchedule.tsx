@@ -501,7 +501,7 @@ export const ProductionSchedule = () => {
     return (
       <Badge
         variant={item.variant}
-        className="px-3 py-1 font-black text-[10px] tracking-widest uppercase border-0 flex items-center gap-1.5 h-6"
+        className="px-3 py-1 font-black text-[10px] tracking-widest uppercase border-0 flex items-center gap-1.5 h-6 shadow-sm shadow-black/5"
       >
         <Icon size={10} strokeWidth={3} />
         {item.label}
@@ -517,7 +517,7 @@ export const ProductionSchedule = () => {
           <span className="font-mono text-xs font-black text-amber-500 tracking-tighter">
             #{row.planId}
           </span>
-          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1">
+          <span className="text-[10px] font-black text-[var(--text-secondary)]/50 uppercase tracking-widest mt-1">
             Ref: {row.batchCode}
           </span>
         </div>
@@ -527,14 +527,14 @@ export const ProductionSchedule = () => {
       header: "Tên Kế Hoạch",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400">
+          <div className="w-8 h-8 rounded-lg bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
             <ClipboardList size={14} />
           </div>
           <div className="flex flex-col">
-            <span className="text-[13px] font-black text-zinc-200 tracking-tight uppercase">
+            <span className="text-[13px] font-black text-[var(--text-primary)] tracking-tight uppercase">
               {row.planName || "N/A"}
             </span>
-            <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tighter">
+            <span className="text-[10px] font-black text-[var(--text-secondary)]/50 uppercase tracking-tighter">
               Kitchen: {row.kitchenId || "Central"}
             </span>
           </div>
@@ -550,14 +550,14 @@ export const ProductionSchedule = () => {
       cell: (row) => (
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <CalendarIcon size={12} className="text-zinc-500" />
-            <span className="text-[11px] font-bold text-zinc-400 tracking-tight">
+            <CalendarIcon size={12} className="text-amber-500/50" />
+            <span className="text-[11px] font-black text-[var(--text-secondary)] tracking-tight">
               {row.createdAt
                 ? new Date(row.createdAt).toLocaleDateString("vi-VN")
                 : "-"}
             </span>
           </div>
-          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] mt-1 italic">
+          <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] mt-1 italic">
             {row.createdAt
               ? new Date(row.createdAt).toLocaleTimeString("vi-VN", {
                   hour: "2-digit",
@@ -577,7 +577,7 @@ export const ProductionSchedule = () => {
             variant="ghost"
             size="sm"
             onClick={() => setSelectedPlanId(row.planId)}
-            className="h-10 w-10 p-0 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 transition-all group"
+            className="h-10 w-10 p-0 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5 transition-all group shadow-sm"
           >
             <Search
               size={18}
@@ -601,7 +601,7 @@ export const ProductionSchedule = () => {
       days.push(
         <div
           key={`empty-${i}`}
-          className="min-h-[140px] border-b border-r border-zinc-800/10 bg-transparent"
+          className="min-h-[140px] border-b border-r border-[var(--border-primary)]/10 bg-transparent"
         />,
       );
     }
@@ -615,8 +615,8 @@ export const ProductionSchedule = () => {
         <div
           key={day}
           className={cn(
-            "min-h-[140px] border-b border-r border-zinc-800/10 p-4 transition-all hover:bg-zinc-800/5 group relative",
-            isToday && "bg-amber-500/[0.02]",
+            "min-h-[140px] border-b border-r border-[var(--border-primary)]/10 p-4 transition-all hover:bg-[var(--text-primary)]/[0.03] group relative",
+            isToday && "bg-amber-500/[0.03]",
           )}
         >
           <div className="flex justify-between items-start mb-4">
@@ -625,7 +625,7 @@ export const ProductionSchedule = () => {
                 "text-xs font-black transition-all",
                 isToday
                   ? "text-amber-500"
-                  : "text-zinc-600 group-hover:text-zinc-400",
+                  : "text-[var(--text-secondary)]/40 group-hover:text-[var(--text-secondary)]/80",
               )}
             >
               {String(day).padStart(2, "0")}
@@ -633,7 +633,7 @@ export const ProductionSchedule = () => {
             {dayPlans.length > 0 && (
               <Badge
                 variant="default"
-                className="bg-zinc-900 border-zinc-800 text-zinc-500 text-[8px] h-4 px-1"
+                className="bg-[var(--bg-root)] border-[var(--border-primary)] text-[var(--text-secondary)]/60 text-[8px] h-4 px-1"
               >
                 {dayPlans.length}
               </Badge>
@@ -647,13 +647,13 @@ export const ProductionSchedule = () => {
                 onClick={() => setSelectedPlanId(plan.planId)}
                 className={cn(
                   "w-full text-left px-2 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter truncate transition-all border border-transparent shadow-sm",
-                  plan.status === "COMPLETED"
+                  plan.status === "COMPLETED" || plan.status === "FINISHED" || plan.status === "PRODUCED"
                     ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                    : plan.status === "IN_PRODUCTION"
+                    : plan.status === "IN_PRODUCTION" || plan.status === "PRODUCING"
                       ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
                       : plan.status === "CANCELLED"
                         ? "bg-red-500/10 text-red-500 border-red-500/20"
-                        : "bg-zinc-800 text-zinc-400",
+                        : "bg-[var(--bg-root)] text-[var(--text-secondary)]/60 border-[var(--border-primary)]",
                 )}
               >
                 {plan.planName}
@@ -665,19 +665,19 @@ export const ProductionSchedule = () => {
     }
 
     return (
-      <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
-        <div className="p-8 border-b border-zinc-800/50 flex flex-col md:flex-row justify-between items-center bg-zinc-900/20">
+      <div className="bg-[var(--bg-card)] rounded-[40px] border border-[var(--border-primary)] overflow-hidden shadow-sm animate-in zoom-in-95 duration-500">
+        <div className="p-8 border-b border-[var(--border-primary)] flex flex-col md:flex-row justify-between items-center bg-[var(--text-primary)]/[0.02]">
           <div className="flex items-center gap-6">
-            <h2 className="text-2xl font-black text-zinc-200 uppercase tracking-tighter">
+            <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter drop-shadow-sm">
               {currentDate.toLocaleString("vi-VN", { month: "long" })}{" "}
-              <span className="text-zinc-500 ml-1">{year}</span>
+              <span className="text-[var(--text-secondary)]/40 ml-1 italic">{year}</span>
             </h2>
-            <div className="flex items-center bg-zinc-950 p-1 rounded-2xl border border-zinc-800">
+            <div className="flex items-center bg-[var(--bg-root)] p-1 rounded-2xl border border-[var(--border-primary)] shadow-inner">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setCurrentDate(new Date(year, month - 1))}
-                className="h-10 w-10 p-0 rounded-xl text-zinc-500 hover:text-white"
+                className="h-10 w-10 p-0 rounded-xl text-[var(--text-secondary)] hover:text-amber-500"
               >
                 <ChevronLeft size={18} />
               </Button>
@@ -685,7 +685,7 @@ export const ProductionSchedule = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setCurrentDate(new Date())}
-                className="px-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500"
+                className="px-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-amber-500 italic"
               >
                 Hôm nay
               </Button>
@@ -693,19 +693,19 @@ export const ProductionSchedule = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setCurrentDate(new Date(year, month + 1))}
-                className="h-10 w-10 p-0 rounded-xl text-zinc-500 hover:text-white"
+                className="h-10 w-10 p-0 rounded-xl text-[var(--text-secondary)] hover:text-amber-500"
               >
                 <ChevronRight size={18} />
               </Button>
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-7 bg-zinc-900/10">
+        <div className="grid grid-cols-7 bg-[var(--text-primary)]/[0.01]">
           {["C.Nhật", "T.Hai", "T.Ba", "T.Tư", "T.Năm", "T.Sáu", "T.Bảy"].map(
             (day) => (
               <div
                 key={day}
-                className="py-4 text-center text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] border-b border-zinc-800/50"
+                className="py-4 text-center text-[10px] font-black text-[var(--text-secondary)]/50 uppercase tracking-[0.2em] border-b border-[var(--border-primary)]/40 italic"
               >
                 {day}
               </div>
@@ -729,8 +729,8 @@ export const ProductionSchedule = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between ml-2">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
-              <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em]">
+              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.3)]"></div>
+              <h3 className="text-xs font-black text-[var(--text-secondary)]/60 uppercase tracking-[0.2em] italic">
                 Sản xuất đang diễn ra
               </h3>
             </div>
@@ -744,29 +744,29 @@ export const ProductionSchedule = () => {
               {inProgressPlans.map((plan) => (
                 <div
                   key={plan.planId}
-                  className="bg-zinc-900/40 p-6 rounded-[32px] border border-amber-500/20 shadow-lg shadow-amber-900/5 hover:border-amber-500/40 transition-all group overflow-hidden relative"
+                  className="bg-[var(--bg-card)] p-6 rounded-[32px] border border-[var(--border-primary)] shadow-sm hover:shadow-xl transition-all group overflow-hidden relative shadow-sm"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl"></div>
                   <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="flex flex-col">
-                      <h4 className="font-black text-zinc-100 uppercase tracking-tight text-[15px]">
+                      <h4 className="font-black text-[var(--text-primary)] uppercase tracking-tight text-[15px]">
                         {plan.planName}
                       </h4>
-                      <p className="text-[10px] font-bold text-zinc-600 font-mono mt-0.5 tracking-tighter">
+                      <p className="text-[10px] font-black text-[var(--text-secondary)]/50 font-mono mt-0.5 tracking-tighter uppercase italic">
                         ID: #{plan.planId} | Batch: {plan.batchCode}
                       </p>
                     </div>
                     {getStatusBadge(plan.status)}
                   </div>
 
-                  <div className="bg-zinc-950/50 p-4 rounded-2xl mb-6 flex justify-between items-center relative z-10">
+                  <div className="bg-[var(--bg-root)] p-4 rounded-2xl mb-6 flex justify-between items-center relative z-10 border border-[var(--border-primary)] shadow-inner">
                     <div className="flex items-center gap-2">
-                      <Timer size={14} className="text-amber-500/50" />
-                      <span className="text-[10px] font-black text-zinc-500 uppercase">
+                      <Timer size={14} className="text-amber-500" />
+                      <span className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-widest italic">
                         Khởi động:
                       </span>
                     </div>
-                    <span className="text-[11px] font-black text-zinc-300 font-mono">
+                    <span className="text-[11px] font-black text-[var(--text-primary)] font-mono italic tabular-nums">
                       {plan.createdAt
                         ? new Date(plan.createdAt).toLocaleTimeString("vi-VN", {
                             hour: "2-digit",
@@ -781,12 +781,12 @@ export const ProductionSchedule = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedPlanId(plan.planId)}
-                      className="grow bg-zinc-950 border border-zinc-800 text-[10px] font-black uppercase tracking-widest h-12 rounded-xl text-zinc-500 hover:text-white"
+                      className="grow bg-[var(--bg-root)] border border-[var(--border-primary)] text-[10px] font-black uppercase tracking-widest h-12 rounded-xl text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5"
                     >
                       Chi tiết
                     </Button>
                     <Button
-                      className="grow bg-emerald-500 hover:bg-emerald-600 text-black text-[10px] font-black uppercase tracking-widest h-12 rounded-xl shadow-lg shadow-emerald-900/20 border-0"
+                      className="grow bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black text-[10px] font-black uppercase tracking-widest h-12 rounded-xl shadow-lg shadow-emerald-900/10 border-0"
                       onClick={() =>
                         handleStatusAction("finish", plan.planId, plan.version)
                       }
@@ -798,11 +798,11 @@ export const ProductionSchedule = () => {
               ))}
             </div>
           ) : (
-            <div className="p-20 text-center border-2 border-dashed border-zinc-900 rounded-[40px] bg-zinc-900/10 flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-700">
+            <div className="p-20 text-center border-2 border-dashed border-[var(--border-primary)] rounded-[40px] bg-[var(--bg-card)]/50 flex flex-col items-center gap-4 shadow-inner">
+              <div className="w-16 h-16 rounded-full bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]/30">
                 <PlayCircle size={32} />
               </div>
-              <p className="text-[11px] font-black text-zinc-600 uppercase tracking-widest">
+              <p className="text-[11px] font-black text-[var(--text-secondary)]/50 uppercase tracking-widest italic">
                 Không có mẻ nào đang nấu
               </p>
             </div>
@@ -810,20 +810,20 @@ export const ProductionSchedule = () => {
         </div>
 
         {/* History Section */}
-        <div className="space-y-6 pt-12 border-t border-zinc-900">
+        <div className="space-y-6 pt-12 border-t border-[var(--border-primary)]">
           <div className="flex items-center gap-3 ml-2">
-            <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
-            <h3 className="text-xs font-black text-zinc-500 uppercase tracking-[0.2em]">
+            <div className="w-2 h-2 rounded-full bg-amber-500/50"></div>
+            <h3 className="text-xs font-black text-[var(--text-secondary)]/50 uppercase tracking-[0.2em]">
               Lịch sử hoàn thiện
             </h3>
           </div>
 
-          <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+          <div className="bg-[var(--bg-card)] rounded-[40px] border border-[var(--border-primary)] overflow-hidden shadow-sm">
             <DataTable
               data={completedPlans}
               columns={columns.slice(0, 4).concat([
                 {
-                  header: "Action",
+                  header: "Thao tác",
                   className: "text-right",
                   cell: (row) => (
                     <div className="flex justify-end pr-4">
@@ -831,7 +831,7 @@ export const ProductionSchedule = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => setSelectedPlanId(row.planId)}
-                        className="h-10 w-10 p-0 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-500 hover:text-emerald-500 transition-all group"
+                        className="h-10 w-10 p-0 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-amber-500 transition-all group shadow-sm"
                       >
                         <Eye
                           size={18}
@@ -866,7 +866,7 @@ export const ProductionSchedule = () => {
           selectedPlanDetail.status,
         ) && (
           <div className="space-y-4">
-            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">
+            <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] ml-2 italic">
               Bảng điều khiển trạng thái
             </span>
             <div className="flex flex-wrap gap-3">
@@ -929,49 +929,52 @@ export const ProductionSchedule = () => {
             </div>
           </div>
         )}
-      <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800/50">
+      <div className="flex justify-end gap-3 pt-6 border-t border-[var(--border-primary)]/20">
         <Button
           variant="ghost"
-          className="text-zinc-500 hover:bg-zinc-800 rounded-2xl h-12 px-8 uppercase text-[10px] font-black tracking-widest"
+          className="text-[var(--text-secondary)]/60 hover:text-[var(--text-primary)] hover:bg-[var(--bg-root)] rounded-2xl h-14 px-10 uppercase text-[10px] font-black tracking-[0.2em] italic"
           onClick={() => setSelectedPlanId(null)}
         >
-          Đóng
+          Đóng chi tiết
         </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700 pb-20">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20 pt-8">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+        
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-amber-500/10 to-orange-600/10 rounded-2xl border border-amber-500/20 backdrop-blur-md shadow-sm">
+              <CalendarIcon size={22} className="text-amber-500" />
+            </div>
             <Badge
-              variant="orange"
-              className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase"
+              className="text-[10px] font-black tracking-[0.2em] px-3 py-1.5 border-0 uppercase bg-amber-500/10 text-amber-500 italic shadow-sm"
             >
-              SCHEDULING
+              SCHEDULING PROTOCOL
             </Badge>
-            <h1 className="text-3xl font-black text-zinc-100 uppercase tracking-tighter">
-              Tiến độ sản xuất
-            </h1>
           </div>
-          <p className="text-xs text-zinc-500 font-medium tracking-wide">
-            Tổng hợp & Điều phối các mẻ sản xuất từ{" "}
-            <span className="text-amber-500/80">Central Kitchen</span>.
+          <h1 className="text-4xl font-black text-[var(--text-primary)] uppercase tracking-tighter drop-shadow-lg">
+            Tiến độ <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">Sản xuất</span>
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)] font-medium tracking-wide max-w-xl leading-relaxed">
+            Tổng hợp & Điều phối các mẻ sản xuất từ <span className="text-amber-500 font-black italic">CENTRAL KITCHEN</span>.
           </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <div className="flex bg-zinc-950 p-1 rounded-2xl border border-zinc-800 shadow-xl overflow-hidden">
+          <div className="flex bg-[var(--bg-card)] p-1 rounded-[1.5rem] border border-[var(--border-primary)] shadow-sm overflow-hidden backdrop-blur-md">
             <button
               onClick={() => setViewMode("list")}
               className={cn(
-                "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic",
                 viewMode === "list"
-                  ? "bg-amber-500 text-black shadow-lg shadow-amber-900/20"
-                  : "text-zinc-500 hover:text-zinc-200",
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-900/10"
+                  : "text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5",
               )}
             >
               Danh sách
@@ -979,10 +982,10 @@ export const ProductionSchedule = () => {
             <button
               onClick={() => setViewMode("calendar")}
               className={cn(
-                "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic",
                 viewMode === "calendar"
-                  ? "bg-amber-500 text-black shadow-lg shadow-amber-900/20"
-                  : "text-zinc-500 hover:text-zinc-200",
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-900/10"
+                  : "text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5",
               )}
             >
               Lịch
@@ -990,10 +993,10 @@ export const ProductionSchedule = () => {
             <button
               onClick={() => setViewMode("completed")}
               className={cn(
-                "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic",
                 viewMode === "completed"
-                  ? "bg-amber-500 text-black shadow-lg shadow-amber-900/20"
-                  : "text-zinc-500 hover:text-zinc-200",
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-900/10"
+                  : "text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5",
               )}
             >
               Trạng thái
@@ -1007,9 +1010,9 @@ export const ProductionSchedule = () => {
         {viewMode === "list" && (
           <div className="space-y-6">
             {/* List Filters Bar */}
-            <div className="bg-zinc-900/40 p-1.5 rounded-[28px] border border-zinc-800/50 flex flex-col xl:flex-row gap-4 items-center shadow-xl">
+            <div className="bg-[var(--bg-card)] p-1.5 rounded-[28px] border border-[var(--border-primary)] flex flex-col xl:flex-row gap-4 items-center shadow-sm backdrop-blur-md">
               <div className="flex items-center gap-1.5 flex-1 w-full overflow-x-auto p-1 no-scrollbar">
-                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-3 mr-2 shrink-0">
+                <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest ml-3 mr-2 shrink-0 italic">
                   Lọc theo:
                 </span>
                 {[
@@ -1026,10 +1029,10 @@ export const ProductionSchedule = () => {
                       key={status}
                       onClick={() => setStatusFilter(status)}
                       className={cn(
-                        "px-4 py-2.5 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest shrink-0 whitespace-nowrap border border-transparent",
+                        "px-4 py-2.5 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest shrink-0 whitespace-nowrap border border-transparent italic",
                         isActive
-                          ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                          : "bg-transparent text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50",
+                          ? "bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-sm"
+                          : "bg-transparent text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5",
                       )}
                     >
                       {status === "all"
@@ -1050,16 +1053,16 @@ export const ProductionSchedule = () => {
                 })}
               </div>
 
-              <div className="h-10 w-[1px] bg-zinc-800 hidden xl:block"></div>
+              <div className="h-10 w-[1px] bg-[var(--border-primary)] hidden xl:block opacity-50"></div>
 
-              <div className="relative w-full xl:w-96 p-1">
+              <div className="relative w-full xl:w-96 p-1 group">
                 <Search
-                  className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600"
+                  className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-amber-500 transition-colors"
                   size={18}
                 />
                 <Input
                   placeholder="Tìm tên mẻ, mã lô hoặc ID..."
-                  className="pl-14 pr-6 h-12 bg-zinc-950/50 border-zinc-800/50 rounded-[22px] font-black text-[10px] tracking-[0.2em] placeholder:text-zinc-700 focus:border-amber-500/30 transition-all uppercase"
+                  className="pl-14 pr-6 h-12 bg-[var(--bg-root)]/50 border-[var(--border-primary)] rounded-[22px] font-black text-[10px] tracking-[0.2em] placeholder:text-[var(--text-secondary)]/30 focus:border-amber-500/50 transition-all uppercase"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -1067,7 +1070,7 @@ export const ProductionSchedule = () => {
             </div>
 
             {/* List Table Container */}
-            <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+            <div className="bg-[var(--bg-card)] rounded-[40px] border border-[var(--border-primary)] overflow-hidden shadow-sm">
               <DataTable
                 data={filteredPlans}
                 columns={columns}
@@ -1105,15 +1108,15 @@ export const ProductionSchedule = () => {
               <ClipboardList size={24} />
             </div>
             <div className="flex flex-col">
-              <h2 className="text-xl font-black text-zinc-100 uppercase tracking-tight leading-none">
+              <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight leading-none italic">
                 {selectedPlanDetail?.planName || "Chi tiết"}
               </h2>
               <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-[10px] font-mono font-black text-amber-500/50 uppercase tracking-widest">
+                <span className="text-[10px] font-mono font-black text-amber-500/50 uppercase tracking-widest italic">
                   #{selectedPlanDetail?.planId}
                 </span>
-                <div className="h-1 w-1 rounded-full bg-zinc-700"></div>
-                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                <div className="h-1 w-1 rounded-full bg-[var(--border-primary)]"></div>
+                <span className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-widest italic">
                   Lô: {selectedPlanDetail?.batchCode || "N/A"}
                 </span>
               </div>
@@ -1125,8 +1128,8 @@ export const ProductionSchedule = () => {
       >
         {isDetailLoading ? (
           <div className="h-96 flex flex-col items-center justify-center gap-4 opacity-30">
-            <div className="w-10 h-10 border-2 border-zinc-700 border-t-amber-500 rounded-full animate-spin"></div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+            <div className="w-10 h-10 border-2 border-[var(--border-primary)] border-t-amber-500 rounded-full animate-spin"></div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
               Đang đối soát...
             </span>
           </div>
@@ -1134,10 +1137,10 @@ export const ProductionSchedule = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 py-2 animate-in slide-in-from-right duration-500">
             {/* Left Column: Visual & Status */}
             <div className="lg:col-span-5 space-y-8">
-              <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar">
+              <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-primary)] rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar shadow-sm">
                 {/* Luxury Visual Element */}
                 <div className="relative -mx-8 -mt-8 mb-8 group/img h-64 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950/90 z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg-root)]/90 z-10"></div>
                   <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full scale-150 group-hover/img:bg-amber-500/20 transition-all duration-700"></div>
                   <img
                     src="/src/assets/kitchen_production.png"
@@ -1145,7 +1148,7 @@ export const ProductionSchedule = () => {
                     className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 group-hover/img:scale-110 transition-all duration-1000"
                   />
                   <div className="absolute bottom-6 left-8 z-20">
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-zinc-950/80 backdrop-blur-md border border-amber-500/30">
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-[var(--bg-root)]/80 backdrop-blur-md border border-amber-500/30">
                       <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
                       <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
                         Sản xuất trực tiếp
@@ -1160,34 +1163,34 @@ export const ProductionSchedule = () => {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="orange"
-                        className="h-5 text-[9px] font-black border-0 tracking-widest"
+                        className="h-5 text-[9px] font-black border-0 tracking-[0.2em] italic uppercase"
                       >
                         TRẠNG THÁI HIỆN TẠI
                       </Badge>
                     </div>
-                    <div>{getStatusBadge(selectedPlanDetail.status)}</div>
-                    <p className="text-xs text-zinc-500 font-medium italic leading-relaxed">
+                    <div className="scale-110 origin-left">{getStatusBadge(selectedPlanDetail.status)}</div>
+                    <p className="text-[11px] text-[var(--text-secondary)]/60 font-black italic tracking-tight leading-relaxed uppercase">
                       Tiến trình hiện tại của kế hoạch nhằm đáp ứng nhu cầu sản
                       xuất đã được phê duyệt.
                     </p>
                   </div>
 
-                  <div className="h-px bg-zinc-800/50"></div>
+                  <div className="h-px bg-[var(--border-primary)]/40"></div>
 
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon size={16} className="text-zinc-600" />
-                      <span className="text-[11px] font-black text-zinc-600 uppercase tracking-widest">
+                      <CalendarIcon size={16} className="text-[var(--text-secondary)]/40" />
+                      <span className="text-[11px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic">
                         Thời điểm tạo
                       </span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-lg font-black text-zinc-200 tracking-tight">
+                      <span className="text-lg font-black text-[var(--text-primary)] tracking-tight">
                         {new Date(
                           selectedPlanDetail.createdAt,
                         ).toLocaleDateString("vi-VN")}
                       </span>
-                      <span className="text-xs font-black text-zinc-500 font-mono mt-1 tracking-tighter uppercase blur-[0.2px]">
+                      <span className="text-xs font-black text-[var(--text-secondary)]/60 font-mono mt-1 tracking-tighter uppercase blur-[0.2px] italic">
                         {new Date(
                           selectedPlanDetail.createdAt,
                         ).toLocaleTimeString("vi-VN")}
@@ -1205,7 +1208,7 @@ export const ProductionSchedule = () => {
                 <div className="flex items-center justify-between ml-2">
                   <div className="flex items-center gap-2">
                     <Package size={18} className="text-amber-500" />
-                    <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                    <h4 className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em] italic">
                       Danh sách món sản xuất
                     </h4>
                   </div>
@@ -1217,23 +1220,23 @@ export const ProductionSchedule = () => {
                   </Badge>
                 </div>
 
-                <div className="bg-zinc-900/40 backdrop-blur-md rounded-[36px] border border-zinc-800/50 overflow-hidden shadow-2xl space-y-px divide-y divide-zinc-800/30">
+                <div className="bg-[var(--bg-root)]/40 backdrop-blur-md rounded-[36px] border border-[var(--border-primary)]/40 overflow-hidden shadow-sm space-y-px divide-y divide-[var(--border-primary)]/10">
                   {selectedPlanDetail.items &&
                   selectedPlanDetail.items.length > 0 ? (
                     selectedPlanDetail.items.map((item, idx) => (
                       <div
                         key={idx}
-                        className="p-6 flex items-center justify-between hover:bg-zinc-800/30 transition-all group/item"
+                        className="p-6 flex items-center justify-between hover:bg-[var(--bg-root)] transition-all group/item"
                       >
                         <div className="flex items-center gap-5">
-                          <div className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/item:border-amber-500/30 group-hover/item:text-amber-500 group-hover/item:bg-amber-500/5 transition-all duration-500">
+                          <div className="w-12 h-12 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)]/40 flex items-center justify-center text-[var(--text-secondary)]/40 group-hover/item:border-amber-500/30 group-hover/item:text-amber-500 group-hover/item:bg-amber-500/5 transition-all duration-500 shadow-inner">
                             <Package size={22} />
                           </div>
                           <div>
-                            <h5 className="text-sm font-black text-zinc-100 uppercase tracking-tight group-hover/item:text-white transition-colors">
+                            <h5 className="text-sm font-black text-[var(--text-primary)]/80 uppercase tracking-tight group-hover/item:text-amber-500 transition-colors italic">
                               {item.productName}
                             </h5>
-                            <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mt-1 block">
+                            <span className="text-[10px] text-[var(--text-secondary)]/30 font-black uppercase tracking-widest mt-1 block italic">
                               ID: #{item.productId}
                             </span>
                           </div>
@@ -1280,8 +1283,8 @@ export const ProductionSchedule = () => {
                                 selectedPlanDetail.status === "FINISHED" ||
                                 selectedPlanDetail.status === "PRODUCED") && (
                                 <>
-                                  <div className="w-1 h-1 rounded-full bg-zinc-800"></div>
-                                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                                  <div className="w-1 h-1 rounded-full bg-[var(--border-primary)]"></div>
+                                  <span className="text-[9px] font-black text-[var(--text-secondary)]/30 uppercase tracking-widest italic">
                                     Kế hoạch
                                   </span>
                                 </>
@@ -1306,7 +1309,7 @@ export const ProductionSchedule = () => {
                 <div className="flex items-center justify-between ml-2">
                   <div className="flex items-center gap-2">
                     <Database size={18} className="text-amber-500/50" />
-                    <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                    <h4 className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em] italic">
                       Đối chiếu nguyên liệu
                     </h4>
                   </div>
@@ -1320,28 +1323,28 @@ export const ProductionSchedule = () => {
                   )}
                 </div>
 
-                <div className="bg-zinc-900/20 backdrop-blur-sm rounded-[36px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+                <div className="bg-[var(--bg-root)]/20 backdrop-blur-sm rounded-[36px] border border-[var(--border-primary)]/40 overflow-hidden shadow-sm">
                   {selectedPlanDetail.materials &&
                   selectedPlanDetail.materials.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left">
                         <thead>
-                          <tr className="bg-zinc-800/20">
-                            <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                          <tr className="bg-[var(--bg-root)]/50">
+                            <th className="px-8 py-5 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic">
                               Nguyên liệu
                             </th>
-                            <th className="px-4 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">
+                            <th className="px-4 py-5 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-center">
                               Yêu cầu
                             </th>
-                            <th className="px-4 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-center">
+                            <th className="px-4 py-5 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-center">
                               Khả dụng
                             </th>
-                            <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest text-right">
+                            <th className="px-8 py-5 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-right">
                               Trạng thái
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-800/30">
+                        <tbody className="divide-y divide-[var(--border-primary)]/10">
                           {selectedPlanDetail.materials.map((mat, idx) => {
                             const idKey = `id-${mat.materialId}`;
                             const available = materialStockMap.get(idKey) || 0;
@@ -1351,20 +1354,20 @@ export const ProductionSchedule = () => {
                               <tr
                                 key={idx}
                                 className={cn(
-                                  "hover:bg-zinc-800/40 transition-all duration-300 group/row",
+                                  "hover:bg-[var(--bg-root)] transition-all duration-300 group/row",
                                   !sufficient && "bg-red-500/[0.03]",
                                 )}
                               >
                                 <td className="px-8 py-4">
                                   <div className="flex items-center gap-4">
-                                    <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[11px] font-black text-zinc-600 group-hover/row:border-amber-500/30 group-hover/row:text-amber-500 transition-all">
+                                    <div className="w-8 h-8 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[11px] font-black text-[var(--text-secondary)]/40 group-hover/row:border-amber-500/30 group-hover/row:text-amber-500 transition-all shadow-sm italic">
                                       {mat.materialName?.charAt(0)}
                                     </div>
                                     <div className="flex flex-col">
-                                      <span className="text-sm font-black text-zinc-200 tracking-tight group-hover/row:text-white transition-colors">
+                                      <span className="text-sm font-black text-[var(--text-primary)] tracking-tight group-hover/row:text-amber-500 transition-colors uppercase italic">
                                         {mat.materialName}
                                       </span>
-                                      <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                                      <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">
                                         {materialUnitsMap.get(mat.materialId) ||
                                           mat.unit ||
                                           ""}
@@ -1373,7 +1376,7 @@ export const ProductionSchedule = () => {
                                   </div>
                                 </td>
                                 <td className="px-4 py-4 text-center">
-                                  <span className="text-sm font-black text-zinc-400 font-mono tracking-tighter italic">
+                                  <span className="text-sm font-black text-[var(--text-secondary)]/60 font-mono tracking-tighter italic">
                                     {mat.requiredQuantity}{" "}
                                     {materialUnitsMap.get(mat.materialId) ||
                                       mat.unit ||
@@ -1383,10 +1386,10 @@ export const ProductionSchedule = () => {
                                 <td className="px-4 py-4 text-center">
                                   <span
                                     className={cn(
-                                      "text-sm font-black font-mono tracking-tighter px-3 py-1 rounded-xl",
+                                      "text-sm font-black font-mono tracking-tighter px-3 py-1 rounded-xl shadow-inner",
                                       sufficient
-                                        ? "text-emerald-500 bg-emerald-500/5 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]"
-                                        : "text-red-500 bg-red-500/5 shadow-[inset_0_0_10px_rgba(239,68,68,0.05)]",
+                                        ? "text-emerald-500 bg-emerald-500/10 border border-emerald-500/20"
+                                        : "text-red-500 bg-red-500/10 border border-red-500/20",
                                     )}
                                   >
                                     {available}{" "}
@@ -1398,8 +1401,8 @@ export const ProductionSchedule = () => {
                                 <td className="px-8 py-4 text-right">
                                   {sufficient ? (
                                     <div className="flex items-center justify-end gap-2 text-emerald-500">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                                      <span className="text-[10px] font-black uppercase tracking-widest">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>
+                                      <span className="text-[10px] font-black uppercase tracking-widest italic">
                                         Sẵn sàng
                                       </span>
                                     </div>
@@ -1409,7 +1412,7 @@ export const ProductionSchedule = () => {
                                         size={14}
                                         strokeWidth={3}
                                       />
-                                      <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                                      <span className="text-[10px] font-black uppercase tracking-widest italic whitespace-nowrap">
                                         -{mat.requiredQuantity - available}{" "}
                                         {materialUnitsMap.get(mat.materialId) ||
                                           mat.unit ||
@@ -1425,11 +1428,11 @@ export const ProductionSchedule = () => {
                       </table>
                     </div>
                   ) : (
-                    <div className="p-16 text-center flex flex-col items-center gap-4 opacity-20">
-                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
-                        <Ban size={32} />
+                    <div className="p-16 text-center flex flex-col items-center gap-4 opacity-30 italic">
+                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-[var(--border-primary)]/40 flex items-center justify-center">
+                        <Ban size={28} className="text-[var(--text-secondary)]/20" />
                       </div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.3em]">
+                      <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-[0.3em]">
                         Chưa có định mức vật tư
                       </p>
                     </div>
@@ -1439,7 +1442,7 @@ export const ProductionSchedule = () => {
             </div>
           </div>
         ) : (
-          <div className="p-20 text-center text-zinc-600 uppercase font-black tracking-widest text-[10px]">
+          <div className="p-20 text-center text-[var(--text-secondary)]/40 uppercase font-black tracking-[0.3em] text-[10px] italic">
             Lỗi truy xuất cấu trúc dữ liệu!
           </div>
         )}
@@ -1447,28 +1450,28 @@ export const ProductionSchedule = () => {
 
       {/* Premium Yield Reporting Modal */}
       {showYieldModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-          <div className="w-full max-w-xl bg-zinc-950 rounded-[40px] border border-zinc-800 shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-5 duration-500">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-xl bg-[var(--bg-card)] rounded-[40px] border border-[var(--border-primary)] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-5 duration-500">
             {/* Modal Header */}
-            <div className="p-8 bg-gradient-to-br from-zinc-900 to-zinc-950 border-b border-zinc-800 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.03] blur-3xl"></div>
+            <div className="p-8 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-root)] border-b border-[var(--border-primary)]/40 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.03] blur-3xl rounded-full"></div>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-lg shadow-amber-900/10">
                   <ClipboardList size={28} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="orange"
-                      className="text-[8px] font-black tracking-[0.2em] h-4 py-0 border-0"
+                      className="text-[8px] font-black tracking-[0.2em] h-4 py-0 border-0 italic uppercase"
                     >
                       BÁO CÁO SẢN LƯỢNG
                     </Badge>
-                    <span className="text-[10px] font-mono font-black text-zinc-600">
+                    <span className="text-[10px] font-mono font-black text-[var(--text-secondary)]/40 italic uppercase">
                       ID: #{finishingPlanId}
                     </span>
                   </div>
-                  <h3 className="text-xl font-black text-zinc-100 uppercase tracking-tight mt-1">
+                  <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight mt-1 italic">
                     Nghiệm thu mẻ nấu
                   </h3>
                 </div>
@@ -1480,10 +1483,10 @@ export const ProductionSchedule = () => {
               <div className="space-y-6 animate-in fade-in duration-500">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center ml-1">
-                    <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                    <h4 className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic">
                       Sản lượng thực tế
                     </h4>
-                    <Badge variant="info" className="text-[8px]">
+                    <Badge variant="info" className="text-[8px] font-black italic border-0 px-2 uppercase tracking-widest">
                       Thủ công
                     </Badge>
                   </div>
@@ -1493,20 +1496,21 @@ export const ProductionSchedule = () => {
                       selectedPlanDetail.items.map((item) => (
                         <div
                           key={item.productId}
-                          className="group p-5 rounded-[24px] bg-zinc-900/50 border border-zinc-800/50 hover:border-amber-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/5"
+                          className="group p-5 rounded-[24px] bg-[var(--bg-root)] border border-[var(--border-primary)] hover:border-amber-500/30 transition-all duration-500 hover:shadow-xl hover:shadow-amber-500/5 relative overflow-hidden"
                         >
-                          <div className="flex items-center justify-between mb-4">
+                          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/10 to-transparent"></div>
+                          <div className="flex items-center justify-between mb-4 relative z-10">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                              <div className="w-12 h-12 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-primary)] flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-sm">
                                 <Package size={22} className="text-amber-500" />
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[15px] font-black text-zinc-100 tracking-tight flex items-center gap-2">
+                                <span className="text-[15px] font-black text-[var(--text-primary)] tracking-tight flex items-center gap-2 uppercase italic">
                                   {item.productName}
                                 </span>
-                                <span className="text-[10px] text-zinc-500 font-medium tracking-wider uppercase">
-                                  ID: #{item.productId} | SL Yêu cầu:{" "}
-                                  <span className="text-amber-500 font-bold">
+                                <span className="text-[10px] text-[var(--text-secondary)]/40 font-black tracking-widest uppercase italic mt-0.5">
+                                  ID: #{item.productId} | Yêu cầu:{" "}
+                                  <span className="text-amber-500 underline decoration-amber-500/30 underline-offset-4">
                                     {item.plannedQuantity} {item.unit || ""}
                                   </span>
                                 </span>
@@ -1514,14 +1518,14 @@ export const ProductionSchedule = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between bg-zinc-950/50 p-4 rounded-2xl border border-zinc-800/30">
-                            <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                              Sản lượng thực tế
+                          <div className="flex items-center justify-between bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-primary)] shadow-inner relative z-10">
+                            <span className="text-[11px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] flex items-center gap-2 italic">
+                              Đã thực thi
                             </span>
                             <div className="flex items-center gap-3">
                               <input
                                 type="number"
-                                className="w-28 h-12 bg-zinc-900 border border-zinc-800 rounded-xl text-center text-lg font-black text-amber-500 focus:ring-2 focus:ring-amber-500/50 outline-none transition-all duration-300 shadow-inner"
+                                className="w-28 h-12 bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-xl text-center text-lg font-black text-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all duration-300 shadow-sm tabular-nums italic"
                                 value={actualQuantities[item.productId] ?? ""}
                                 onChange={(e) =>
                                   setActualQuantities((prev) => ({
@@ -1532,7 +1536,7 @@ export const ProductionSchedule = () => {
                                 min={0}
                                 placeholder="0"
                               />
-                              <span className="text-[11px] font-black text-zinc-600 uppercase tracking-tighter w-8">
+                              <span className="text-[10px] font-black text-[var(--text-secondary)]/20 uppercase tracking-tighter w-8 italic">
                                 {item.unit || "Món"}
                               </span>
                             </div>
@@ -1541,10 +1545,10 @@ export const ProductionSchedule = () => {
                       ))
                     ) : (
                       <div className="py-12 text-center">
-                        <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
-                          <AlertTriangle size={24} className="text-zinc-700" />
+                        <div className="w-16 h-16 rounded-full bg-[var(--bg-root)] border border-[var(--border-primary)]/40 flex items-center justify-center mx-auto mb-6 shadow-inner italic">
+                          <AlertTriangle size={24} className="text-[var(--text-secondary)]/20" />
                         </div>
-                        <div className="text-[11px] text-zinc-500 font-bold tracking-[0.2em] uppercase">
+                        <div className="text-[10px] text-[var(--text-secondary)]/40 font-black tracking-[0.2em] uppercase italic">
                           Không có dữ liệu món yêu cầu
                         </div>
                       </div>
@@ -1552,32 +1556,31 @@ export const ProductionSchedule = () => {
                   </div>
                 </div>
 
-                <div className="p-5 rounded-[20px] bg-amber-500/5 border border-amber-500/10 flex gap-4">
+                <div className="p-5 rounded-[24px] bg-amber-500/5 border border-amber-500/10 flex gap-4 shadow-sm">
                   <AlertCircle size={20} className="text-amber-500 shrink-0" />
-                  <p className="text-[11px] text-zinc-500 font-medium italic leading-relaxed">
+                  <p className="text-[10px] text-[var(--text-secondary)]/60 font-black uppercase tracking-widest italic leading-relaxed">
                     Lưu ý: Sau khi xác nhận hoàn thành, mẻ sản xuất sẽ chuyển
-                    trạng thái "PRODUCED" và sẵn sàng để quản trị kho điều hành
-                    phân phối (Allocation).
+                    trạng thái "PRODUCED" và sẵn sàng để điều phối (Allocation).
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="p-8 bg-zinc-900/50 border-t border-zinc-800 mt-auto flex gap-4">
+            <div className="p-8 bg-[var(--bg-root)] border-t border-[var(--border-primary)]/20 mt-auto flex gap-6">
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={() => setShowYieldModal(false)}
-                className="border-zinc-800 text-zinc-500 hover:text-white h-14 px-8 rounded-2xl flex-1 uppercase text-[10px] font-black tracking-widest"
+                className="text-[var(--text-secondary)]/40 hover:text-[var(--text-primary)] h-16 px-8 rounded-2xl flex-1 uppercase text-[10px] font-black tracking-widest italic"
               >
-                Quay lại
+                Quay lại trạm
               </Button>
               <Button
-                className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-[10px] tracking-widest h-14 px-10 rounded-2xl flex-1 shadow-lg shadow-emerald-900/20 border-0"
+                className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-black font-black uppercase text-[10px] tracking-[0.3em] h-16 px-10 rounded-2xl flex-1 shadow-xl shadow-emerald-500/10 border-0 italic transition-all active:scale-95"
                 onClick={handleConfirmFinish}
                 disabled={isDetailLoading}
               >
-                Hoàn tất & Báo cáo
+                Ký duyệt & Nghiệm thu
               </Button>
             </div>
           </div>

@@ -36,7 +36,6 @@ export const DispatchDashboard = () => {
     const fetchSuggestions = async () => {
         setIsLoading(true);
         try {
-            // Since /dispatch/suggest is unavailable, we calculate on Frontend
             const [ordersRes, stockRes] = await Promise.all([
                 storeOrderApi.getAllOrders({ status: 'APPROVED', size: 1000 }),
                 kitchenInventoryApi.getWarehouseStock(1)
@@ -45,7 +44,6 @@ export const DispatchDashboard = () => {
             const approvedOrders: StoreOrderResponse[] = ordersRes.content || [];
             const stock: KitchenStockItemResponse[] = stockRes.data || [];
             
-            // 1. Aggregate Demand from all APPROVED orders without a planId
             const demandMap = new Map<string, { productId: number, demandQty: number, unit: string }>();
             approvedOrders.filter((o: StoreOrderResponse) => !o.planId).forEach((order: StoreOrderResponse) => {
                 (order.orderDetails || []).forEach((item: any) => {
@@ -62,7 +60,6 @@ export const DispatchDashboard = () => {
                 });
             });
 
-            // 2. Map to Suggestion Items based on Rule: Suggested = Min(Demand, Kitchen Capacity, Stock)
             const KITCHEN_CAPACITY_LIMIT = 500; 
 
             const calculatedSuggestions: DispatchSuggestionItem[] = Array.from(demandMap.entries()).map(([name, data]) => {
@@ -93,8 +90,6 @@ export const DispatchDashboard = () => {
         }
     };
 
-
-
     useEffect(() => {
         fetchSuggestions();
     }, [plannedDate]);
@@ -107,19 +102,10 @@ export const DispatchDashboard = () => {
 
         setIsCreating(true);
         try {
-            // As per spec, Auto Create bundles all suggestions
-            // The API for creating plan takes storeOrderIds. 
-            // The /suggest API in BE might return allocations or orderIds linked to suggestions.
-            // Based on Screen 1 description, we "Gom toàn bộ đơn gợi ý vào 1 Plan".
-            // However, the /suggest API only returns product quantities according to the spec provided.
-            // Wait, Screen 1 B says "GET /api/v1/dispatch/suggest...".
-            // Screen 3 says POST /api/v1/production-plans Body (Auto): { "targetDate": "...", "storeOrderIds": [] }
-            // Empty array means auto-calculate on backend.
-            
             await productionPlanApi.createProductionPlan({
                 kitchenId: 1,
                 plannedDate,
-                storeOrderIds: [] // Backend handles auto logic when empty
+                storeOrderIds: [] 
             });
             toast.success("Kế hoạch sản xuất tự động đã được tạo thành công.");
             navigate('/kitchen/production-plans');
@@ -135,81 +121,90 @@ export const DispatchDashboard = () => {
     };
 
     return (
-        <div className="space-y-8 max-w-7xl mx-auto pb-12 animate-in fade-in duration-700">
+        <div className="space-y-8 max-w-[1400px] mx-auto pb-20 animate-in fade-in duration-700 pt-8">
             {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center text-black shadow-lg shadow-amber-500/20">
-                        <LayoutDashboard size={24} />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                <div className="flex items-center gap-6">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-500 shadow-xl shadow-amber-500/10 flex items-center justify-center text-black rotate-2">
+                        <LayoutDashboard size={28} />
                     </div>
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="orange" className="text-[10px] font-black px-2 h-4 border-0">DISPATCH V3.0</Badge>
-                            <h1 className="text-2xl font-black text-zinc-100 uppercase tracking-tight">Bảng điều phối thông minh</h1>
+                        <div className="flex items-center gap-3 mb-2">
+                            <Badge variant="orange" className="text-[10px] font-black px-3 h-5 border-0 uppercase italic tracking-widest">DISPATCH V3.0-ELITE</Badge>
+                            <h1 className="text-3xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Điều phối thông minh</h1>
                         </div>
-                        <p className="text-xs text-zinc-500 font-medium tracking-wide">Xem trước dự báo sản xuất và tình trạng năng lực bếp/kho.</p>
+                        <p className="text-xs text-[var(--text-secondary)]/60 font-black uppercase tracking-[0.2em] italic">Dự báo sản xuất tối ưu & Phân tích ma trận năng lực vận hành.</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 bg-zinc-900/40 p-2 pl-4 rounded-2xl border border-zinc-800/50">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Ngày mục tiêu</span>
-                    <div className="relative">
-                        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
+                <div className="flex items-center gap-4 bg-[var(--bg-card)] p-3 pl-6 rounded-full border border-[var(--border-primary)] shadow-sm">
+                    <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic">Ngày mục tiêu</span>
+                    <div className="relative group/date">
+                        <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500" size={14} />
                         <input
                             type="date"
                             value={plannedDate}
                             onChange={(e) => setPlannedDate(e.target.value)}
-                            className="bg-zinc-950 border border-zinc-800 rounded-xl px-9 py-2 text-xs font-bold text-zinc-200 focus:outline-none focus:border-amber-500/50 transition-all cursor-pointer"
+                            className="bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-full px-10 py-2.5 text-xs font-black text-[var(--text-primary)] focus:outline-none focus:border-amber-500/50 transition-all cursor-pointer shadow-inner italic"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Main Content Card */}
-            <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-[32px] overflow-hidden shadow-2xl backdrop-blur-md">
-                <div className="p-8 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900/20">
-                    <div className="flex items-center gap-3">
-                        <ChefHat className="text-amber-500" size={20} />
-                        <h2 className="text-lg font-black text-zinc-100 uppercase tracking-tight">Gợi ý sản xuất tối ưu</h2>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-sm relative group">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+                
+                <div className="p-8 md:p-10 border-b border-[var(--border-primary)]/10 flex flex-col md:flex-row justify-between items-center gap-6 bg-[var(--text-primary)]/[0.01]">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm">
+                            <ChefHat size={22} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight italic">Gợi ý sản xuất tối ưu</h2>
+                            <p className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic mt-1">Hệ thống phân tích nhu cầu vĩnh cửu</p>
+                        </div>
                     </div>
                     {suggestions.length > 0 && (
                          <Button 
                             onClick={handleAutoCreate}
                             disabled={isCreating}
-                            className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest h-10 px-6 rounded-xl border-0 shadow-lg shadow-amber-900/20"
+                            className="w-full md:w-auto bg-gradient-to-br from-amber-400 to-orange-600 text-black font-black uppercase text-[10px] tracking-[0.2em] h-14 px-10 rounded-full border-0 shadow-lg shadow-amber-500/20 hover:scale-[1.02] active:scale-95 transition-all italic"
                         >
-                            {isCreating ? 'Đang xử lý...' : <><Boxes size={14} className="mr-2" /> Tạo Kế hoạch Tự động</>}
+                            {isCreating ? 'Đang truy lục kho...' : <><Boxes size={18} className="mr-3" /> Khởi tạo Kế hoạch Tự động</>}
                         </Button>
                     )}
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-zinc-900/50 text-[10px] uppercase font-black text-zinc-600 tracking-widest border-b border-zinc-800">
-                                <th className="px-8 py-5">Tên sản phẩm</th>
-                                <th className="px-6 py-5">Nhu cầu thực tế (Store)</th>
-                                <th className="px-6 py-5">Sức chứa bếp</th>
-                                <th className="px-6 py-5">Tồn kho nguyên liệu</th>
-                                <th className="px-8 py-5 text-right">Đề xuất sản xuất</th>
+                            <tr className="bg-[var(--bg-root)] text-[10px] uppercase font-black text-[var(--text-secondary)]/40 tracking-[0.3em] border-b border-[var(--border-primary)]/10 italic">
+                                <th className="px-10 py-6">Sản phẩm định danh</th>
+                                <th className="px-8 py-6">Nhu cầu thực tế</th>
+                                <th className="px-8 py-6">Công suất bếp</th>
+                                <th className="px-8 py-6">Tồn kho nguyên liệu</th>
+                                <th className="px-10 py-6 text-right">Đề xuất vận hành</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-800/30">
+                        <tbody className="divide-y divide-[var(--border-primary)]/30">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-8 py-32 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500"></div>
-                                            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Đang tính toán ma trận ràng buộc...</span>
+                                    <td colSpan={5} className="px-10 py-40 text-center">
+                                        <div className="flex flex-col items-center gap-6">
+                                            <RefreshCw className="w-12 h-12 text-amber-500 animate-spin" />
+                                            <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.4em] italic animate-pulse">Đang giải mã ma trận ràng buộc chuỗi cung ứng...</span>
                                         </div>
                                     </td>
                                 </tr>
                             ) : suggestions.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-8 py-32 text-center">
-                                        <div className="opacity-20 flex flex-col items-center gap-4">
-                                            <LayoutDashboard size={48} />
-                                            <span className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Không có nhu cầu sản xuất cho ngày này</span>
+                                    <td colSpan={5} className="px-10 py-40 text-center">
+                                        <div className="opacity-20 flex flex-col items-center gap-6">
+                                            <div className="w-20 h-20 rounded-[2rem] bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
+                                                <LayoutDashboard size={40} />
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--text-secondary)]/60 italic">Không có nhu cầu điều phối phát sinh</span>
                                         </div>
                                     </td>
                                 </tr>
@@ -217,46 +212,47 @@ export const DispatchDashboard = () => {
                                 suggestions.map((item, idx) => {
                                     const isShortage = item.suggestedQty < item.demandQty;
                                     return (
-                                        <tr key={idx} className="hover:bg-zinc-800/20 transition-all group">
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors">
-                                                        <ChefHat size={14} />
+                                        <tr key={idx} className="hover:bg-[var(--text-primary)]/[0.02] transition-colors group">
+                                            <td className="px-10 py-7">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]/40 group-hover:text-amber-500 group-hover:border-amber-500/30 transition-all shadow-sm">
+                                                        <ChefHat size={18} />
                                                     </div>
-                                                    <span className="text-sm font-black text-zinc-200 tracking-tight">{item.productName}</span>
+                                                    <span className="text-sm font-black text-[var(--text-primary)] tracking-tight uppercase italic">{item.productName}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-6">
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-sm font-bold text-zinc-400">{item.demandQty}</span>
-                                                    <span className="text-[9px] font-black text-zinc-600 uppercase">Demand Hub</span>
+                                            <td className="px-8 py-7">
+                                                <div className="flex flex-col">
+                                                    <span className="text-base font-black text-[var(--text-primary)] italic">{item.demandQty}</span>
+                                                    <span className="text-[8px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">Request Hub</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-6">
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-sm font-bold text-zinc-400">{item.kitchenCapacity}</span>
-                                                    <span className="text-[9px] font-black text-zinc-600 uppercase">Capacity Check</span>
+                                            <td className="px-8 py-7">
+                                                <div className="flex flex-col">
+                                                    <span className="text-base font-black text-[var(--text-primary)] italic">{item.kitchenCapacity}</span>
+                                                    <span className="text-[8px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">Load Limit</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-6">
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-sm font-bold text-zinc-400">{item.ingredientCapacity}</span>
-                                                    <span className="text-[9px] font-black text-zinc-600 uppercase">Stock Check</span>
+                                            <td className="px-8 py-7">
+                                                <div className="flex flex-col">
+                                                    <span className="text-base font-black text-[var(--text-primary)] italic">{item.ingredientCapacity}</span>
+                                                    <span className="text-[8px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">Stock Log</span>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <div className="flex items-center justify-end gap-3">
+                                            <td className="px-10 py-7 text-right">
+                                                <div className="flex items-center justify-end gap-4">
                                                     {isShortage && (
-                                                        <div className="group/tip relative">
-                                                            <AlertTriangle className="text-amber-500 animate-pulse" size={16} />
-                                                            <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-20">
-                                                                <h4 className="text-[10px] font-black text-amber-500 uppercase mb-1">Cảnh báo thiếu hụt</h4>
-                                                                <p className="text-[10px] text-zinc-400 leading-relaxed italic">{item.shortageDetails || `Thiếu sản lượng: ${item.demandQty - item.suggestedQty} phần.`}</p>
+                                                        <div className="group/tip relative flex items-center justify-center">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping absolute" />
+                                                            <AlertTriangle className="text-amber-500 relative z-10" size={18} />
+                                                            <div className="absolute bottom-full right-0 mb-4 w-60 p-5 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] shadow-2xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-20 scale-90 group-hover/tip:scale-100 origin-bottom-right">
+                                                                <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 italic">Cảnh báo thiếu hụt</h4>
+                                                                <p className="text-[11px] text-[var(--text-secondary)] font-medium leading-relaxed italic uppercase">{item.shortageDetails || `Thâm hụt tồn kho/công suất: ${item.demandQty - item.suggestedQty} đơn vị.`}</p>
                                                             </div>
                                                         </div>
                                                     )}
                                                     <span className={cn(
-                                                        "text-xl font-black tabular-nums tracking-tighter",
+                                                        "text-3xl font-black tabular-nums tracking-tighter italic",
                                                         isShortage ? "text-amber-500" : "text-emerald-500"
                                                     )}>
                                                         {item.suggestedQty}
@@ -272,50 +268,66 @@ export const DispatchDashboard = () => {
                 </div>
 
                 {/* Footer Insight */}
-                <div className="p-6 bg-zinc-950/50 border-t border-zinc-800/50 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Info size={16} className="text-zinc-600" />
-                        <p className="text-[10px] text-zinc-500 font-medium italic">
-                            Thuật toán gợi ý dựa trên quy tắc 3-Constraints: Min(Tổng Đơn, Sức Chứa Bếp, Tồn Kho Kho).
+                <div className="p-8 bg-[var(--bg-root)] border-t border-[var(--border-primary)]/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-[var(--text-primary)]/5 flex items-center justify-center text-amber-500 shadow-inner">
+                            <Info size={18} />
+                        </div>
+                        <p className="text-[10px] text-[var(--text-secondary)]/60 font-black italic uppercase tracking-wider max-w-2xl leading-relaxed">
+                            Thuật toán gợi ý dựa trên giao thức <span className="text-amber-500">3-Constraints</span>: Min(Nhu cầu vĩnh cửu, Sức chứa thực tế, Tồn kho hữu hạn).
                         </p>
                     </div>
-                    <div className="flex gap-6">
-                         <div className="flex items-center gap-2">
-                             <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                             <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Đủ điều kiện</span>
+                    <div className="flex gap-8">
+                         <div className="flex items-center gap-3">
+                             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                             <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic">Đạt tiêu chuẩn</span>
                          </div>
-                         <div className="flex items-center gap-2">
-                             <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                             <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Thiếu hụt</span>
+                         <div className="flex items-center gap-3">
+                             <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                             <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic">Cảnh báo thâm hụt</span>
                          </div>
                     </div>
                 </div>
             </div>
 
             {/* Bottom Navigation Shortcut */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div 
                     onClick={() => navigate('/kitchen/order-pool')}
-                    className="p-6 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl hover:border-amber-500/30 transition-all cursor-pointer group"
+                    className="p-8 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] hover:border-amber-500/30 transition-all cursor-pointer group shadow-sm hover:shadow-xl relative overflow-hidden"
                 >
-                    <div className="flex items-center justify-between mb-2">
-                        <Boxes className="text-zinc-600 group-hover:text-amber-500 transition-colors" size={20} />
-                        <ArrowRight className="text-zinc-800 group-hover:text-zinc-500 transition-all group-hover:translate-x-1" size={16} />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/5 transition-all duration-700" />
+                    <div className="relative flex flex-col h-full gap-6">
+                        <div className="flex items-center justify-between">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 transition-colors group-hover:rotate-6">
+                                <Boxes size={24} />
+                            </div>
+                            <ArrowRight size={20} className="text-[var(--text-secondary)]/20 group-hover:text-amber-500 transition-all group-hover:translate-x-2" />
+                        </div>
+                        <div>
+                            <h4 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tight italic">Manual Order Pool</h4>
+                            <p className="text-[11px] text-[var(--text-secondary)]/60 font-medium italic uppercase tracking-wider mt-2 leading-relaxed">Tự thân tuyển chọn các đơn hàng chi nhánh để kiến tạo kế hoạch sản xuất thủ công.</p>
+                        </div>
                     </div>
-                    <h4 className="text-sm font-black text-zinc-200 uppercase tracking-tight">Manual Order Pool</h4>
-                    <p className="text-[10px] text-zinc-600 font-medium">Tự tay chọn các đơn hàng lẻ để lập kế hoạch sản xuất thủ công.</p>
                 </div>
                 
                 <div 
                     onClick={() => navigate('/kitchen/production-plans')}
-                    className="p-6 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl hover:border-emerald-500/30 transition-all cursor-pointer group"
+                    className="p-8 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] hover:border-emerald-500/30 transition-all cursor-pointer group shadow-sm hover:shadow-xl relative overflow-hidden"
                 >
-                    <div className="flex items-center justify-between mb-2">
-                        <CheckCircle2 className="text-zinc-600 group-hover:text-emerald-500 transition-colors" size={20} />
-                        <ArrowRight className="text-zinc-800 group-hover:text-zinc-500 transition-all group-hover:translate-x-1" size={16} />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.02] blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/5 transition-all duration-700" />
+                    <div className="relative flex flex-col h-full gap-6">
+                        <div className="flex items-center justify-between">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 transition-colors group-hover:rotate-6">
+                                <CheckCircle2 size={24} />
+                            </div>
+                            <ArrowRight size={20} className="text-[var(--text-secondary)]/20 group-hover:text-emerald-500 transition-all group-hover:translate-x-2" />
+                        </div>
+                        <div>
+                            <h4 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tight italic">Hệ thống Kế hoạch</h4>
+                            <p className="text-[11px] text-[var(--text-secondary)]/60 font-medium italic uppercase tracking-wider mt-2 leading-relaxed">Giám sát toàn bộ chu kỳ sống của sản xuất từ READY đến COMPLETED tinh hoa.</p>
+                        </div>
                     </div>
-                    <h4 className="text-sm font-black text-zinc-200 uppercase tracking-tight">Quản lý Kế hoạch</h4>
-                    <p className="text-[10px] text-zinc-600 font-medium">Theo dõi vòng đời sản xuất từ READY đến COMPLETED.</p>
                 </div>
             </div>
         </div>

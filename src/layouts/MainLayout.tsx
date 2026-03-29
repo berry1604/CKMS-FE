@@ -28,7 +28,10 @@ import {
   Network,
   LibraryBig,
   Wheat,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -282,6 +285,7 @@ export const navigation: NavigationItem[] = [
 
 export const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -329,18 +333,18 @@ export const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex">
+    <div className="min-h-screen bg-[var(--bg-root)] flex transition-colors duration-300">
       {/* Sidebar */}
       <div
         id="sidebar"
         className={cn(
-          "bg-[#080808]/80 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] fixed h-full z-20 hidden md:flex flex-col transition-all duration-500 ease-in-out border-r border-white/5",
+          "bg-[var(--bg-card)] backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.2)] dark:shadow-[0_0_50px_rgba(0,0,0,0.5)] fixed h-full z-20 hidden md:flex flex-col transition-all duration-500 ease-in-out border-r border-[var(--border-primary)]",
           isCollapsed ? "w-20" : "w-64",
         )}
       >
         {/* Header Branding */}
         <div className={cn(
-          "h-24 flex items-center border-b border-white/5 relative overflow-hidden transition-all duration-500",
+          "h-24 flex items-center border-b border-[var(--border-primary)] relative overflow-hidden transition-all duration-500",
           isCollapsed ? "justify-center px-0" : "justify-between px-6"
         )}>
           <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent opacity-30"></div>
@@ -369,7 +373,7 @@ export const MainLayout: React.FC = () => {
               <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
                 <span className="text-xl font-black tracking-widest uppercase leading-none">
                   <span className="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]">STEAK</span>
-                  <span className="text-white">CHAIN</span>
+                  <span className="text-[var(--text-primary)]">CHAIN</span>
                 </span>
                 <span className="text-[8px] font-bold text-zinc-500 tracking-[0.4em] uppercase mt-1">
                   Management Sys
@@ -379,13 +383,15 @@ export const MainLayout: React.FC = () => {
           </div>
 
           {!isCollapsed && (
-            <button
-              id="collapse-sidebar-btn"
-              onClick={() => setIsCollapsed(true)}
-              className="p-2 rounded-xl text-stone-500 hover:bg-white/5 hover:text-amber-500 transition-all active:scale-95 relative z-20"
-            >
-              <ChevronLeft size={18} />
-            </button>
+            <div className="flex items-center gap-1 relative z-20">
+              <button
+                id="collapse-sidebar-btn"
+                onClick={() => setIsCollapsed(true)}
+                className="p-2 rounded-xl text-stone-500 hover:bg-white/5 hover:text-amber-500 transition-all active:scale-95"
+              >
+                <ChevronLeft size={18} />
+              </button>
+            </div>
           )}
         </div>
 
@@ -415,8 +421,8 @@ export const MainLayout: React.FC = () => {
                     "flex items-center px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300 group relative overflow-hidden",
                     isCollapsed ? "justify-center mx-1" : "",
                     isActive
-                      ? "bg-gradient-to-r from-amber-500/10 to-transparent text-amber-500 shadow-[inset_1px_1px_1px_rgba(255,255,255,0.02)]"
-                      : "text-stone-500 hover:text-stone-200 hover:bg-white/[0.03]",
+                      ? "bg-gradient-to-r from-amber-500/10 to-transparent text-[var(--accent-amber)] shadow-[inset_1px_1px_1px_rgba(255,255,255,0.02)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/5",
                   )
                 }
               >
@@ -452,7 +458,7 @@ export const MainLayout: React.FC = () => {
                   className={({ isActive }) =>
                     isActive
                       ? cn(
-                        "absolute h-6 w-1 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.8)] transition-all duration-500",
+                        "absolute h-6 w-1 bg-[var(--accent-amber)] rounded-full shadow-[0_0_10px_rgba(245,158,11,0.4)] transition-all duration-500",
                         isCollapsed ? "left-0" : "left-0",
                       )
                       : "hidden"
@@ -464,7 +470,7 @@ export const MainLayout: React.FC = () => {
         </nav>
 
         {/* Footer / User Profile */}
-        <div className="p-4 border-t border-white/5 bg-white/[0.01] backdrop-blur-md">
+        <div className="p-4 border-t border-[var(--border-primary)] bg-white/[0.01] dark:bg-black/20 backdrop-blur-md">
           <div
             id="user-profile-trigger"
             className={cn(
@@ -479,10 +485,10 @@ export const MainLayout: React.FC = () => {
             </div>
             {!isCollapsed && (
               <div className="ml-4 overflow-hidden">
-                <p className="text-sm font-black text-stone-100 truncate italic uppercase tracking-tighter">
+                <p className="text-sm font-black text-[var(--text-primary)] truncate italic uppercase tracking-tighter">
                   {user?.name || "Người dùng"}
                 </p>
-                <p className="text-[10px] text-stone-500 truncate font-black uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] text-[var(--text-secondary)] truncate font-black uppercase tracking-widest mt-0.5">
                   {user?.role?.replace("ROLE_", "").replace("_", " ") || ""}
                 </p>
               </div>
@@ -509,17 +515,44 @@ export const MainLayout: React.FC = () => {
           isCollapsed && "md:ml-20",
         )}
       >
-        <header className="h-16 bg-zinc-900 shadow-sm flex items-center gap-2 px-4 md:px-8 border-b border-zinc-800 md:hidden z-10 sticky top-0">
+        <header className="h-16 bg-[var(--bg-card)] shadow-sm flex items-center justify-between px-4 md:px-8 border-b border-[var(--border-primary)] md:hidden z-10 sticky top-0 backdrop-blur-md">
           <img
             src={logo}
             alt="Logo"
             className="h-9 w-auto [filter:drop-shadow(0_0_12px_rgba(245,158,11,0.4))_brightness(1.2)]"
           />
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl text-zinc-500 hover:bg-zinc-500/10 hover:text-[var(--accent-amber)] transition-all active:scale-95"
+          >
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
         </header>
 
         <main className="flex-1 p-4 md:p-8 overflow-auto w-full max-w-[1600px] mx-auto">
           <Outlet />
         </main>
+      </div>
+
+      {/* Premium Floating Theme Toggle */}
+      <div className="fixed top-8 right-8 z-50 hidden md:block animate-in fade-in slide-in-from-top-4 duration-1000">
+        <button
+          onClick={toggleTheme}
+          className="group relative flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--bg-card)]/80 backdrop-blur-2xl border border-[var(--border-primary)] shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:border-amber-500/50 transition-all duration-500 hover:scale-110 active:scale-95 overflow-hidden"
+          title={theme === 'light' ? "Chuyển sang chế độ tối" : "Chuyển sang chế độ sáng"}
+        >
+          {/* Animated glow background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          
+          {/* Icon with rotation animation */}
+          <div className="relative z-10 transition-transform duration-700 ease-out group-hover:rotate-[135deg]">
+            {theme === 'light' ? (
+              <Moon size={24} className="text-slate-600 group-hover:text-amber-600 drop-shadow-sm transition-colors duration-500" strokeWidth={1.5} />
+            ) : (
+              <Sun size={24} className="text-amber-100 group-hover:text-amber-400 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)] transition-colors duration-500" strokeWidth={1.5} />
+            )}
+          </div>
+        </button>
       </div>
     </div>
   );

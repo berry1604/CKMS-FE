@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Plus, Edit2, Trash2, Search, Filter, Mail, Store, Warehouse } from 'lucide-react';
+import { cn } from '../../utils/classNames';
 import { Button } from '../../components/ui/Button';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { UserModal } from './UserModal';
@@ -8,8 +9,9 @@ import { userService } from '../../services/user.service';
 import { roleApi } from '../../services/role.api';
 import type { RoleResponse } from '../../types/role';
 import { toast } from 'react-hot-toast';
-
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '../../components/ui/Badge';
+import { Input } from '../../components/ui/Input';
 
 export const UsersList = () => {
     const navigate = useNavigate();
@@ -122,106 +124,111 @@ export const UsersList = () => {
     const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pb-20">
-            {/* Cinematic Header */}
-            <div className="relative h-[300px] w-full overflow-hidden">
-                <img
-                    src="/Users/phunghuyphuoc/.gemini/antigravity/brain/5ad3745d-382e-481d-8167-b732c447a69b/systems_management_bg_1773028301109.png"
-                    className="w-full h-full object-cover scale-105"
-                    alt="Systems Management Background"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-[#0a0a0a] backdrop-blur-[2px]" />
-
-                <div className="absolute inset-0 flex flex-col justify-end px-4 lg:px-6 pb-12 max-w-[1600px] mx-auto w-full">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="h-px w-12 bg-amber-500/50" />
-                        <span className="text-amber-500 font-medium tracking-widest text-xs uppercase">Quản trị hệ thống</span>
-                    </div>
-
-                    <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-                        <div>
-                            <h1 className="text-5xl font-bold text-white tracking-tighter mb-2">
-                                THÀNH VIÊN <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">HỆ THỐNG</span>
-                            </h1>
-                            <p className="text-gray-400 max-w-xl text-lg font-light leading-relaxed">
-                                Quản lý nhân sự, phân quyền và giám sát hoạt động truy cập của toàn bộ đội ngũ vận hành.
-                            </p>
+        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative pt-12 pb-4">
+                {/* Decorative background glow */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" />
+                
+                <div className="space-y-4 max-w-2xl">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-br from-amber-500/20 to-orange-600/10 rounded-2xl border border-amber-500/20 backdrop-blur-xl shadow-inner">
+                            <Plus className="w-6 h-6 text-amber-500" />
                         </div>
-                        <div className="flex items-center gap-4">
-                            <div className="px-6 py-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
-                                <span className="text-gray-500 text-xs uppercase tracking-widest block mb-1">Tổng cộng</span>
-                                <span className="text-2xl font-bold text-white leading-none">{totalElements}</span>
-                            </div>
-                            <Button onClick={handleCreate} className="h-14 px-8 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-bold rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]">
-                                <Plus className="mr-2 h-5 w-5" /> Thêm thành viên
-                            </Button>
+                        <Badge
+                            className="text-[10px] font-black tracking-[0.3em] px-4 py-1.5 border-amber-500/20 uppercase bg-amber-500/5 text-amber-600 italic"
+                        >
+                            Quản trị Hệ thống
+                        </Badge>
+                    </div>
+                    <div className="space-y-1">
+                        <h1 className="text-5xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
+                            Thành viên <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Hệ thống</span>
+                        </h1>
+                        <p className="text-[var(--text-secondary)]/60 text-sm font-medium tracking-wide leading-relaxed italic uppercase max-w-lg">
+                            Quản lý nhân sự, phân quyền truy cập và giám sát toàn bộ đội ngũ vận hành chuỗi Steakhouse.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                    <div className="px-8 py-5 bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-primary)] rounded-[2rem] shadow-xl group/stat hover:border-amber-500/30 transition-all duration-500">
+                        <span className="text-[var(--text-secondary)]/40 text-[9px] font-black uppercase tracking-[0.3em] block mb-1 italic">Tổ chức nhân sự</span>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-black text-[var(--text-primary)] group-hover:text-amber-500 transition-colors leading-none">{totalElements}</span>
+                            <span className="text-[10px] font-black text-[var(--text-secondary)]/30 uppercase italic">Thành viên</span>
                         </div>
                     </div>
+                    <Button 
+                        onClick={handleCreate} 
+                        className="h-16 px-10 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-2xl shadow-amber-500/10 transition-all hover:-translate-y-1 active:scale-95 italic"
+                    >
+                        <Plus size={18} className="mr-3" /> Chiêu mộ thành viên
+                    </Button>
                 </div>
             </div>
 
-            <div className="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-8 relative z-10 space-y-6">
-                {/* Toolbar */}
-                <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-3xl p-4 shadow-2xl overflow-hidden relative">
-                    <div className="flex flex-col lg:flex-row gap-6 items-center justify-between relative z-10">
-                        <div className="relative w-full lg:w-[450px] group">
-                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                <Search size={18} className="text-gray-400 group-focus-within:text-amber-400" />
+                {/* Main Content Area */}
+                <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-[3rem] border border-[var(--border-primary)] overflow-hidden shadow-2xl relative">
+                    {/* Toolbar */}
+                    <div className="p-10 border-b border-[var(--border-primary)] bg-[var(--text-primary)]/[0.02]">
+                        <div className="flex flex-col xl:flex-row gap-10 items-center justify-between">
+                            <div className="relative w-full xl:w-[500px] group">
+                                <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]/30 group-focus-within:text-amber-500 transition-colors z-10" />
+                                <Input
+                                    type="text"
+                                    placeholder="Tìm kiếm danh tính hoặc địa chỉ thư điện tử..."
+                                    className="pl-16 h-16 w-full bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 rounded-2xl font-bold text-sm tracking-tight italic"
+                                    value={searchTerm}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                                />
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Tìm kiếm theo tên hoặc email..."
-                                className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all placeholder:text-gray-600 hover:bg-white/[0.07]"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
 
-                        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                            <div className="p-2 bg-white/5 rounded-xl text-gray-400 mr-2 hidden sm:block">
-                                <Filter size={18} />
+                            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                                <div className="p-3 bg-amber-500/5 rounded-xl text-amber-500/50 mr-2 hidden sm:block border border-amber-500/10">
+                                    <Filter size={18} />
+                                </div>
+                                {['ALL', ...roles.map(r => r.roleName).filter(Boolean)].map((role) => (
+                                    <button
+                                        key={role}
+                                        onClick={() => setRoleFilter(role)}
+                                        className={cn(
+                                            "px-6 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap border uppercase italic",
+                                            roleFilter === role
+                                                ? "bg-amber-500 border-amber-500 text-black shadow-[0_10px_30px_rgba(245,158,11,0.3)]"
+                                                : "bg-[var(--bg-root)]/40 border-[var(--border-primary)] text-[var(--text-secondary)]/60 hover:text-[var(--text-primary)] hover:border-amber-500/30"
+                                        )}
+                                    >
+                                        {role === 'ALL' ? 'Tất cả vai trò' : role?.replace(/_/g, ' ') || 'Chưa xác định'}
+                                    </button>
+                                ))}
                             </div>
-                            {['ALL', ...roles.map(r => r.roleName).filter(Boolean)].map((role) => (
-                                <button
-                                    key={role}
-                                    onClick={() => setRoleFilter(role)}
-                                    className={`px-6 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all whitespace-nowrap border ${roleFilter === role
-                                        ? 'bg-amber-600 border-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                                        : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:border-white/10'
-                                        }`}
-                                >
-                                    {role === 'ALL' ? 'Tất cả vai trò' : role?.replace(/_/g, ' ') || 'Chưa xác định'}
-                                </button>
-                            ))}
                         </div>
                     </div>
-                </div>
 
-                {/* Table Section */}
-                <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-white/[0.02] border-b border-white/10 text-[10px] uppercase text-gray-500 font-bold tracking-[0.2em]">
-                                    <th className="px-8 py-6">Thành viên</th>
-                                    <th className="px-8 py-6">Vai trò OS</th>
-                                    <th className="px-8 py-6">Trạng thái</th>
-                                    <th className="px-8 py-6 text-right">Điều khiển</th>
+                                <tr className="bg-[var(--text-primary)]/[0.03] border-b border-[var(--border-primary)] text-[9px] uppercase text-[var(--text-secondary)]/40 font-black tracking-[0.4em] italic">
+                                    <th className="px-10 py-7">Thực thể thành viên</th>
+                                    <th className="px-10 py-7">Giao thức truy cập</th>
+                                    <th className="px-10 py-7">Trạng thái vận hành</th>
+                                    <th className="px-10 py-7 text-right">Trung tâm điều khiển</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody className="divide-y divide-[var(--border-primary)]/20">
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan={5} className="px-8 py-24 text-center">
+                                        <td colSpan={4} className="px-8 py-24 text-center">
                                             <div className="flex flex-col items-center justify-center">
                                                 <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
-                                                <span className="text-gray-400 text-sm font-light tracking-widest uppercase">Đang khởi tạo...</span>
+                                                <span className="text-[var(--text-secondary)] text-[10px] font-black tracking-widest uppercase">Đang khởi tạo...</span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : users.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-8 py-24 text-center text-gray-500 font-light italic">
+                                        <td colSpan={4} className="px-8 py-24 text-center text-[var(--text-secondary)]/60 font-medium italic">
                                             Không tìm thấy thành viên nào phù hợp với yêu cầu.
                                         </td>
                                     </tr>
@@ -229,46 +236,44 @@ export const UsersList = () => {
                                     users.map((user, idx) => (
                                         <tr
                                             key={user.userId}
-                                            className="hover:bg-white/[0.04] transition-all group animate-in fade-in slide-in-from-left-4 duration-500 ease-out"
+                                            className="hover:bg-[var(--text-primary)]/[0.02] transition-all group animate-in fade-in slide-in-from-left-4 duration-500 ease-out"
                                             style={{ animationDelay: `${idx * 50}ms` }}
                                         >
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="relative">
-                                                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                            <td className="px-10 py-8">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="relative group/avatar">
+                                                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-black font-black text-xl shadow-lg transition-transform duration-500 group-hover/avatar:scale-110 italic border border-amber-400/20">
                                                             {(user.fullName || user.username || '?').charAt(0).toUpperCase()}
                                                         </div>
-                                                        <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-4 border-[#0a0a0a] ${user.status === 'ACTIVE' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' :
-                                                            user.status === 'PENDING_VERIFICATION' ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' :
-                                                                'bg-gray-600'
+                                                        <div className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-[var(--bg-card)] ${user.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' :
+                                                            user.status === 'PENDING_VERIFICATION' ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)]' :
+                                                                'bg-[var(--text-secondary)]/20'
                                                             }`} />
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold text-white text-base tracking-tight">{user.fullName || user.username}</div>
-                                                        <div className="text-gray-500 text-xs flex items-center mt-0.5">
-                                                            <Mail size={12} className="mr-1.5 text-amber-500/50" />
+                                                        <div className="font-black text-[var(--text-primary)] text-lg tracking-tight italic uppercase group-hover:text-amber-500 transition-colors leading-tight">{user.fullName || user.username || 'N/A'}</div>
+                                                        <div className="text-[var(--text-secondary)]/50 text-[10px] flex items-center mt-1 font-black uppercase tracking-widest italic leading-none">
+                                                            <Mail size={12} className="mr-2 text-amber-500/40" />
                                                             {user.email}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-6">
-                                                <div className="space-y-1.5">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`h-1.5 w-1.5 rounded-full ${user.roleName === 'ADMIN' ? 'bg-amber-500' :
+                                            <td className="px-10 py-8">
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className={`h-1.5 w-1.5 rounded-full ${user.roleName === 'ADMIN' ? 'bg-amber-500' :
                                                             user.roleName === 'MANAGER' ? 'bg-orange-500' :
-                                                                user.roleName === 'STORE_STAFF' ? 'bg-green-500' :
+                                                                user.roleName === 'STORE_STAFF' ? 'bg-emerald-500' :
                                                                     'bg-amber-500'
                                                             }`} />
-                                                        <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">
+                                                        <span className="text-[10px] font-black text-[var(--text-primary)]/80 uppercase tracking-widest italic group-hover:text-amber-500 transition-colors">
                                                             {(() => {
                                                                 const rName = user.roleName || (user as any).role || 'N/A';
                                                                 if (rName === 'N/A') return 'N/A';
-                                                                
-                                                                // Find translation or format
                                                                 const formatted = rName.replace('ROLE_', '').replace(/_/g, ' ');
-                                                                if (formatted === 'ADMIN') return 'Quản trị viên';
-                                                                if (formatted === 'MANAGER') return 'Quản lý';
+                                                                if (formatted === 'ADMIN') return 'Tổng Quản trị';
+                                                                if (formatted === 'MANAGER') return 'Quản lý vận hành';
                                                                 if (formatted === 'STORE STAFF') return 'Nhân viên cửa hàng';
                                                                 if (formatted === 'KITCHEN STAFF') return 'Nhân viên bếp';
                                                                 if (formatted === 'COORDINATOR') return 'Điều phối viên';
@@ -277,28 +282,28 @@ export const UsersList = () => {
                                                         </span>
                                                     </div>
                                                     {(user.storeName || user.kitchenName) && (
-                                                        <div className="text-[10px] text-gray-500 flex items-center gap-1.5 ml-3">
-                                                            {user.storeName ? <Store size={10} className="text-amber-400" /> : <Warehouse size={10} className="text-orange-400" />}
+                                                        <div className="text-[9px] text-[var(--text-secondary)]/40 font-black flex items-center gap-2 ml-4 italic uppercase tracking-tighter">
+                                                            {user.storeName ? <Store size={10} className="text-amber-500/50" /> : <Warehouse size={10} className="text-orange-500/50" />}
                                                             {user.storeName || user.kitchenName}
                                                         </div>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-6">
+                                            <td className="px-10 py-8">
                                                 {user.status === 'ACTIVE' ? (
-                                                    <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-green-400 bg-green-500/5 border border-green-500/20 px-3 py-1.5 rounded-lg w-fit">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 animate-pulse" />
+                                                    <div className="flex items-center text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 bg-emerald-500/5 border border-emerald-500/10 px-4 py-2 rounded-xl w-fit italic">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-3 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                                         Hoạt động
                                                     </div>
                                                 ) : user.status === 'PENDING_VERIFICATION' ? (
-                                                    <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-amber-400 bg-amber-500/5 border border-amber-500/20 px-3 py-1.5 rounded-lg w-fit">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />
+                                                    <div className="flex items-center text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 bg-amber-500/5 border border-amber-500/10 px-4 py-2 rounded-xl w-fit italic">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-3 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                                                         Chờ xác minh
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-red-400 bg-red-500/5 border border-red-500/20 px-3 py-1.5 rounded-lg w-fit">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2" />
-                                                        Không hoạt động
+                                                    <div className="flex items-center text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]/40 bg-[var(--bg-root)] border border-[var(--border-primary)] px-4 py-2 rounded-xl w-fit italic">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]/30 mr-3" />
+                                                        Vô hiệu hóa
                                                     </div>
                                                 )}
                                             </td>
@@ -308,7 +313,7 @@ export const UsersList = () => {
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleEdit(user)}
-                                                        className="h-9 w-9 p-0 bg-white/5 border border-white/10 hover:bg-amber-600 hover:border-amber-500 hover:text-white rounded-xl transition-all"
+                                                        className="h-9 w-9 p-0 bg-[var(--bg-root)] border border-[var(--border-primary)] hover:bg-amber-600 hover:border-amber-500 hover:text-white rounded-xl transition-all"
                                                     >
                                                         <Edit2 size={14} />
                                                     </Button>
@@ -316,7 +321,7 @@ export const UsersList = () => {
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleDelete(user.userId)}
-                                                        className="h-9 w-9 p-0 bg-white/5 border border-white/10 hover:bg-red-600 hover:border-red-500 hover:text-white rounded-xl transition-all"
+                                                        className="h-9 w-9 p-0 bg-[var(--bg-root)] border border-[var(--border-primary)] hover:bg-red-600 hover:border-red-500 hover:text-white rounded-xl transition-all"
                                                     >
                                                         <Trash2 size={14} />
                                                     </Button>
@@ -329,60 +334,58 @@ export const UsersList = () => {
                         </table>
                     </div>
 
-                    {/* Pagination OS */}
-                    <div className="bg-white/[0.02] px-8 py-6 border-t border-white/10 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <span className="text-xs text-gray-500 font-light tracking-wide italic">
+                    {/* Pagination */}
+                    <div className="bg-[var(--text-primary)]/[0.02] px-10 py-8 border-t border-[var(--border-primary)] flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-4 order-2 md:order-1">
+                            <span className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-[0.3em] italic leading-none">
                                 {totalElements > 0 ? (
-                                    <>Hiển thị <span className="text-amber-400 font-bold">{startItem}-{endItem}</span> / <span className="text-white font-bold">{totalElements}</span> bản ghi</>
-
+                                    <>Hiển thị <span className="text-amber-500 font-black">{startItem}-{endItem}</span> trên tổng số <span className="text-[var(--text-primary)] font-black">{totalElements}</span> thực thể</>
                                 ) : (
-                                    'Không có dữ liệu'
+                                    'Dữ liệu nhân sự rỗng'
                                 )}
                             </span>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-4 order-1 md:order-2">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 disabled={currentPage === 0}
                                 onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                                className="border-white/10 bg-white/5 text-gray-400 hover:text-white rounded-xl px-6 h-10"
+                                className="border-[var(--border-primary)] bg-[var(--bg-root)]/50 text-[var(--text-secondary)] hover:text-amber-500 hover:border-amber-500/30 rounded-2xl px-8 h-12 font-black uppercase text-[10px] tracking-widest transition-all italic disabled:opacity-20"
                             >
-                                Trước
+                                Trang trước
                             </Button>
                             <Button
                                 variant="outline"
                                 size="sm"
                                 disabled={currentPage >= totalPages - 1}
                                 onClick={() => setCurrentPage((p) => p + 1)}
-                                className="border-white/10 bg-white/5 text-gray-400 hover:text-white rounded-xl px-6 h-10"
+                                className="border-[var(--border-primary)] bg-[var(--bg-root)]/50 text-[var(--text-secondary)] hover:text-amber-500 hover:border-amber-500/30 rounded-2xl px-8 h-12 font-black uppercase text-[10px] tracking-widest transition-all italic disabled:opacity-20"
                             >
-                                Tiếp
+                                Trang tiếp theo
                             </Button>
                         </div>
                     </div>
-                </div>
+
+                <UserModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSubmit={handleSubmit}
+                    user={selectedUser}
+                />
+
+                <ConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={confirmDelete}
+                    title="Xóa Quyền Truy Cập"
+                    message="Bạn có chắc chắn muốn thu hồi toàn bộ quyền truy cập của thành viên này? Hành động này không thể hoàn tác."
+                    confirmText="Xác nhận Thu hồi"
+                    cancelText="Giữ lại"
+                    isLoading={isDeleting}
+                    variant="danger"
+                />
             </div>
-
-            <UserModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handleSubmit}
-                user={selectedUser}
-            />
-
-            <ConfirmationModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={confirmDelete}
-                title="Xóa Quyền Truy Cập"
-                message="Bạn có chắc chắn muốn thu hồi toàn bộ quyền truy cập của thành viên này? Hành động này không thể hoàn tác."
-                confirmText="Xác nhận Thu hồi"
-                cancelText="Giữ lại"
-                isLoading={isDeleting}
-                variant="danger"
-            />
         </div>
     );
 };

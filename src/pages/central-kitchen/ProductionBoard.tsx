@@ -89,18 +89,13 @@ export const ProductionBoard = () => {
     setPlannedProducts([]);
     setYieldInputs([]);
     try {
-      // 1. Fetch details for metadata (name, batchCode)
       const detail = await productionPlanApi.getProductionPlanDetail(id);
       setPlanDetailForYield(detail);
-
-      // 2. Fetch preview allocation to get the ACTUAL products required for this plan
-      // since the backend's getProductionPlanDetail does not return items or outputs.
       const preview = await allocationApi.previewAllocation(id);
 
       const products = preview.rows.map((r) => ({
         productId: r.productId,
         productName: r.productName,
-        // Extract the total requested quantity from the nested allocations
         plannedQuantity:
           r.allocations?.reduce(
             (sum, a) => sum + (a.requestedQuantity || 0),
@@ -159,7 +154,6 @@ export const ProductionBoard = () => {
     }
   };
 
-  // Filter statuses for the board
   const readyPlans = plans.filter(
     (p) =>
       p.status === "READY_TO_PRODUCE" ||
@@ -182,24 +176,24 @@ export const ProductionBoard = () => {
   ) => {
     const statusConfig = {
       READY: {
-        border: "border-indigo-500/20 hover:border-indigo-500/60",
-        bg: "bg-gradient-to-br from-indigo-500/[0.08] to-transparent",
-        glow: "group-hover:shadow-[0_0_40px_rgba(99,102,241,0.08)]",
-        accent: "text-indigo-400",
+        border: "border-indigo-500/20 hover:border-indigo-500/50",
+        bg: "bg-[var(--bg-card)]",
+        glow: "hover:shadow-indigo-500/5 hover:shadow-xl",
+        accent: "text-indigo-600",
         dot: "bg-indigo-500",
       },
       IN_PROD: {
         border: "border-amber-500/30 hover:border-amber-500/60",
-        bg: "bg-gradient-to-br from-amber-500/[0.08] to-transparent",
-        glow: "ring-1 ring-amber-500/10 shadow-[0_8px_32px_rgba(245,158,11,0.08)] group-hover:shadow-[0_12px_48px_rgba(245,158,11,0.12)]",
-        accent: "text-amber-400",
+        bg: "bg-[var(--bg-card)]",
+        glow: "ring-1 ring-amber-500/10 shadow-sm hover:shadow-amber-500/10 hover:shadow-2xl",
+        accent: "text-amber-600",
         dot: "bg-amber-500",
       },
       DONE: {
         border: "border-emerald-500/20 hover:border-emerald-500/40",
-        bg: "bg-gradient-to-br from-emerald-500/[0.05] to-transparent",
-        glow: "group-hover:shadow-[0_0_40px_rgba(16,185,129,0.06)]",
-        accent: "text-emerald-400",
+        bg: "bg-[var(--bg-card)]",
+        glow: "hover:shadow-emerald-500/5 hover:shadow-xl",
+        accent: "text-emerald-600",
         dot: "bg-emerald-500",
       },
     };
@@ -210,127 +204,104 @@ export const ProductionBoard = () => {
       <div
         key={plan.planId}
         className={cn(
-          "group relative p-6 rounded-3xl border backdrop-blur-md transition-all duration-500 animate-in fade-in slide-in-from-bottom-2",
+          "group relative p-6 rounded-[2rem] border transition-all duration-500 animate-in fade-in slide-in-from-bottom-4 shadow-sm",
           config.border,
           config.bg,
           config.glow,
         )}
       >
-        {/* Top accent line */}
-        <div
-          className={cn(
-            "absolute inset-x-6 top-0 h-px opacity-30",
-            columnType === "IN_PROD"
-              ? "bg-gradient-to-r from-transparent via-amber-500 to-transparent"
-              : columnType === "READY"
-                ? "bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
-                : "bg-gradient-to-r from-transparent via-emerald-500 to-transparent",
-          )}
-        />
-
         <div className="flex justify-between items-start mb-5">
           <div className="flex flex-col gap-2">
-            <span className="font-mono text-[10px] font-bold text-gray-600 bg-black/40 px-2.5 py-1 rounded-lg border border-white/5 w-fit">
+            <span className="font-mono text-[10px] font-black text-[var(--text-secondary)]/40 bg-[var(--bg-root)] px-3 py-1.5 rounded-xl border border-[var(--border-primary)] w-fit uppercase italic tracking-widest">
               #{plan.planId}
             </span>
-            <h4
-              className={cn(
-                "font-bold text-white leading-snug text-sm group-hover:text-amber-400 transition-colors duration-300",
-              )}
-            >
+            <h4 className="font-black text-[var(--text-primary)] leading-tight text-base group-hover:text-amber-500 transition-colors duration-300 uppercase italic tracking-tighter">
               {plan.planName}
             </h4>
           </div>
           {columnType === "IN_PROD" && (
-            <div className="flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">
+            <div className="flex items-center gap-2 bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+              <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest italic">
                 Trực tiếp
               </span>
             </div>
           )}
           {columnType === "DONE" && (
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-              <CheckCircle size={14} className="text-emerald-400" />
+            <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-sm">
+              <CheckCircle size={16} className="text-emerald-500" />
             </div>
           )}
         </div>
 
-        <div className="space-y-3 pb-5 border-b border-white/5">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-gray-600 font-medium">Lô sản xuất</span>
-            <span className="text-gray-400 font-mono text-[10px] bg-black/30 px-2 py-0.5 rounded-md">
+        <div className="space-y-4 pb-6 border-b border-[var(--border-primary)]/10">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic">Lô sản xuất</span>
+            <span className="text-[var(--text-primary)] font-black font-mono bg-[var(--bg-root)] px-2.5 py-1 rounded-lg border border-[var(--border-primary)] shadow-inner">
               {plan.batchCode || "N/A"}
             </span>
           </div>
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-gray-600 font-medium">Ngày tạo</span>
-            <span className="text-gray-400 text-[10px]">
-              {new Date(plan.createdAt).toLocaleDateString("vi-VN")}
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic">Ngày tạo lập</span>
+            <span className="text-[var(--text-secondary)] font-bold italic">
+              {new Date(plan.createdAt).toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </span>
           </div>
         </div>
 
-        {/* Shortage Warning for PLANNED status */}
         {columnType === "READY" && plan.status === "PLANNED" && (
-          <div className="mt-4 p-3 rounded-2xl bg-red-500/5 border border-red-500/10 flex items-center gap-3 animate-pulse">
-            <AlertCircle size={16} className="text-red-500 shrink-0" />
+          <div className="mt-5 p-4 rounded-3xl bg-red-500/5 border border-red-500/10 flex items-center gap-4 shadow-inner">
+            <AlertCircle size={20} className="text-red-500 shrink-0" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black text-red-500 uppercase tracking-tight">
+              <span className="text-[10px] font-black text-red-600 uppercase tracking-tighter italic">
                 Kho đang thiếu nguyên liệu
               </span>
-              <span className="text-[9px] text-zinc-500 font-medium leading-none mt-0.5 italic">
+              <span className="text-[9px] text-[var(--text-secondary)]/40 font-black leading-none mt-1 italic uppercase tracking-widest">
                 Cần bổ sung kho để sẵn sàng nấu
               </span>
             </div>
           </div>
         )}
 
-        <div className="pt-5 flex flex-col gap-2">
+        <div className="pt-6 flex flex-col gap-3">
           {columnType === "READY" && (
             <>
               {plan.status === "PLANNED" ? (
                 <Button
-                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold uppercase text-[10px] tracking-widest h-11 rounded-xl border border-zinc-700 transition-all"
+                  className="w-full bg-[var(--bg-root)] hover:bg-[var(--text-primary)]/5 text-[var(--text-secondary)] font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl border border-[var(--border-primary)] transition-all italic"
                   onClick={async () => {
                     try {
                       await productionPlanApi.readyProductionPlan(plan.planId);
                       toast.success("Kế hoạch đã sẵn sàng sản xuất!");
                       loadPlans();
                     } catch (err: any) {
-                      const msg =
-                        err.response?.data?.message ||
-                        "Kho vẫn chưa đủ nguyên liệu";
-                      toast.error(msg);
-                      // If it's 409, we could show more details, but the backend's message usually contains enough info or we can rely on the alert badge.
+                      toast.error(err.response?.data?.message || "Kho vẫn chưa đủ nguyên liệu");
                     }
                   }}
                 >
-                  <RefreshCw size={14} className="mr-2" /> Kiểm tra & Kích hoạt
+                  <RefreshCw size={14} className="mr-3 text-amber-500" /> Kiểm tra & Kích hoạt
                 </Button>
               ) : (
                 <Button
-                  className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold uppercase text-[10px] tracking-widest h-11 shadow-[0_8px_24px_-6px_rgba(99,102,241,0.4)] rounded-xl border-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                  className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-black uppercase text-[10px] tracking-widest h-14 shadow-lg shadow-indigo-500/20 rounded-2xl border-0 transition-all hover:-translate-y-1 active:scale-95 italic"
                   onClick={() => handleStart(plan.planId, plan.version)}
                 >
-                  <PlayCircle size={14} className="mr-2" strokeWidth={2.5} />{" "}
-                  Bắt đầu nấu
+                  <PlayCircle size={16} className="mr-3" /> Bắt đầu nấu
                 </Button>
               )}
             </>
           )}
           {columnType === "IN_PROD" && (
             <Button
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold uppercase text-[10px] tracking-widest h-11 shadow-[0_8px_24px_-6px_rgba(245,158,11,0.4)] rounded-xl border-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase text-[10px] tracking-widest h-14 shadow-lg shadow-amber-500/20 rounded-2xl border-0 transition-all hover:-translate-y-1 active:scale-95 italic"
               onClick={() => openYieldModal(plan.planId, plan.version)}
             >
-              <CheckCircle2 size={14} className="mr-2" strokeWidth={2.5} /> Hoàn
-              tất mẻ
+              <CheckCircle2 size={16} className="mr-3" /> Hoàn tất mẻ nấu
             </Button>
           )}
           {columnType === "DONE" && (
-            <div className="flex items-center justify-center gap-2 w-full text-emerald-400 font-bold uppercase text-[10px] tracking-widest bg-emerald-500/10 h-11 rounded-xl border border-emerald-500/20">
-              <Sparkles size={14} /> Đã hoàn thành
+            <div className="flex items-center justify-center gap-3 w-full text-emerald-600 font-black uppercase text-[10px] tracking-widest bg-emerald-500/10 h-14 rounded-2xl border border-emerald-500/20 italic">
+              <Sparkles size={16} /> Đã hoàn thiện
             </div>
           )}
         </div>
@@ -338,8 +309,7 @@ export const ProductionBoard = () => {
     );
   };
 
-  // Column config
-  const columns = [
+  const columnsCol = [
     {
       key: "READY" as const,
       title: "Sẵn sàng sản xuất",
@@ -347,104 +317,95 @@ export const ProductionBoard = () => {
       dotColor: "bg-indigo-500",
       ringColor: "ring-indigo-500/20",
       badgeVariant: "info" as const,
-      emptyIcon: <Database size={40} className="text-indigo-500/30" />,
-      emptyText: "Trống dữ liệu",
-      columnBg: "bg-white/[0.015]",
-      columnBorder: "border-white/[0.06]",
-      headerBg: "bg-white/[0.03]",
+      emptyIcon: <Database size={48} className="text-indigo-500/20" />,
+      emptyText: "Trống dữ liệu mẻ nấu",
+      columnBg: "bg-[var(--bg-card)]",
+      columnBorder: "border-[var(--border-primary)]",
+      headerBg: "bg-[var(--bg-root)]/50",
     },
     {
       key: "IN_PROD" as const,
-      title: "Đang nấu",
+      title: "Đang trung lòng nấu",
       plans: inProdPlans,
       dotColor: "bg-amber-500",
       ringColor: "ring-amber-500/20",
       badgeVariant: "orange" as const,
-      emptyIcon: <Flame size={40} className="text-amber-500/30" />,
+      emptyIcon: <Flame size={48} className="text-amber-500/20" />,
       emptyText: "Chưa bắt đầu mẻ nào",
-      columnBg: "bg-amber-500/[0.015]",
-      columnBorder: "border-amber-500/10",
+      columnBg: "bg-amber-500/[0.01]",
+      columnBorder: "border-amber-500/20",
       headerBg: "bg-amber-500/[0.03]",
     },
     {
       key: "DONE" as const,
-      title: "Hoàn thành",
+      title: "Hoàn tất bàn giao",
       plans: donePlans,
       dotColor: "bg-emerald-500",
       ringColor: "ring-emerald-500/20",
       badgeVariant: "success" as const,
-      emptyIcon: <CheckCircle2 size={40} className="text-emerald-500/30" />,
-      emptyText: "Trống",
-      columnBg: "bg-white/[0.01]",
-      columnBorder: "border-white/[0.04]",
-      headerBg: "bg-white/[0.02]",
+      emptyIcon: <CheckCircle2 size={48} className="text-emerald-500/20" />,
+      emptyText: "Chưa có mẻ hoàn tất",
+      columnBg: "bg-[var(--bg-card)]",
+      columnBorder: "border-[var(--border-primary)]",
+      headerBg: "bg-[var(--bg-root)]/50",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pb-16">
+    <div className="min-h-screen bg-[var(--bg-root)] pb-20 animate-in fade-in duration-700">
       {/* Cinematic Header */}
-      <div className="relative h-[280px] w-full overflow-hidden">
-        {/* Background gradient instead of image */}
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-950/40 via-[#0a0a0a] to-indigo-950/30" />
+      <div className="relative h-[300px] w-full overflow-hidden rounded-b-[4rem] border-b border-[var(--border-primary)] shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.05] via-[var(--bg-root)] to-indigo-500/[0.05]" />
         <div className="absolute inset-0">
-          <div className="absolute top-10 left-1/4 w-96 h-96 bg-amber-500/[0.06] rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/[0.05] rounded-full blur-[100px]" />
+          <div className="absolute top-10 left-1/4 w-96 h-96 bg-amber-500/[0.03] rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/[0.03] rounded-full blur-[100px]" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0a]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[var(--bg-root)] to-transparent" />
 
-        <div className="absolute inset-0 flex flex-col justify-end px-8 pb-10 max-w-[1600px] mx-auto w-full">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-px w-8 bg-amber-500/50" />
-            <span className="text-amber-500 font-medium tracking-[0.3em] text-[10px] uppercase">
-              SẢN XUẤT BẾP TRUNG TÂM
+        <div className="absolute inset-0 flex flex-col justify-end px-10 pb-12 max-w-[1600px] mx-auto w-full">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px w-10 bg-amber-500/50" />
+            <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase italic">
+              Production Command Center ELITE
             </span>
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tighter mb-2">
-                <ChefHat
-                  className="inline-block mr-3 mb-1 text-amber-500"
-                  size={36}
-                />
-                TIẾN ĐỘ{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
-                  SẢN XUẤT
-                </span>
+          <div className="flex flex-col md:flex-row justify-between items-end gap-8">
+            <div className="space-y-4">
+              <h1 className="text-5xl md:text-6xl font-black text-[var(--text-primary)] tracking-tighter italic uppercase leading-none">
+                <ChefHat className="inline-block mr-4 mb-2 text-amber-500 drop-shadow-lg" size={48} />
+                TIẾN ĐỘ <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">SẢN XUẤT</span>
               </h1>
-              <p className="text-gray-500 max-w-xl text-base font-light leading-relaxed">
-                Linh hồn của bếp trung tâm — Theo dõi trạng thái nấu và báo cáo
-                năng suất thực tế.
+              <p className="text-[var(--text-secondary)]/60 max-w-2xl text-base font-medium italic leading-relaxed uppercase tracking-wider">
+                Linh hồn của bếp trung tâm — Theo dõi trạng thái nấu và báo cáo năng suất thực tế theo thời chuẩn thời gian thực.
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
-              {/* Stats Pill */}
-              <div className="flex items-center gap-6 px-6 py-3 bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl">
-                <div className="text-center">
-                  <span className="text-2xl font-bold text-indigo-400 leading-none">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-10 px-10 py-5 bg-[var(--bg-card)] backdrop-blur-3xl border border-[var(--border-primary)] rounded-[2.5rem] shadow-xl">
+                <div className="text-center group">
+                  <span className="text-3xl font-black text-indigo-500 leading-none group-hover:scale-110 transition-transform block">
                     {readyPlans.length}
                   </span>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">
-                    Chờ
+                  <span className="text-[8px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest block mt-2 italic">
+                    Chờ nấu
                   </span>
                 </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div className="text-center">
-                  <span className="text-2xl font-bold text-amber-400 leading-none">
+                <div className="w-px h-10 bg-[var(--border-primary)]/20" />
+                <div className="text-center group">
+                  <span className="text-3xl font-black text-amber-500 leading-none group-hover:scale-110 transition-transform block">
                     {inProdPlans.length}
                   </span>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">
+                  <span className="text-[8px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest block mt-2 italic">
                     Đang nấu
                   </span>
                 </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div className="text-center">
-                  <span className="text-2xl font-bold text-emerald-400 leading-none">
+                <div className="w-px h-10 bg-[var(--border-primary)]/20" />
+                <div className="text-center group">
+                  <span className="text-3xl font-black text-emerald-500 leading-none group-hover:scale-110 transition-transform block">
                     {donePlans.length}
                   </span>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block mt-0.5">
+                  <span className="text-[8px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest block mt-2 italic">
                     Xong
                   </span>
                 </div>
@@ -453,12 +414,9 @@ export const ProductionBoard = () => {
               <Button
                 onClick={loadPlans}
                 disabled={isLoading}
-                className="h-14 w-14 p-0 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all"
+                className="h-20 w-20 p-0 rounded-[2.5rem] bg-[var(--bg-card)] backdrop-blur-3xl border border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-amber-500 hover:border-amber-500 transition-all shadow-xl group"
               >
-                <RefreshCw
-                  size={20}
-                  className={isLoading ? "animate-spin" : ""}
-                />
+                <RefreshCw size={24} className={cn("text-amber-500", isLoading && "animate-spin")} />
               </Button>
             </div>
           </div>
@@ -466,53 +424,51 @@ export const ProductionBoard = () => {
       </div>
 
       {/* Kanban Board */}
-      <div className="max-w-[1600px] mx-auto px-8 -mt-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-h-[calc(100vh-360px)]">
-          {columns.map((col) => (
+      <div className="max-w-[1700px] mx-auto px-10 -mt-10 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 min-h-[calc(100vh-400px)]">
+          {columnsCol.map((col) => (
             <div
               key={col.key}
               className={cn(
-                "flex flex-col rounded-[28px] border backdrop-blur-xl overflow-hidden transition-all",
+                "flex flex-col rounded-[3.5rem] border backdrop-blur-3xl overflow-hidden transition-all shadow-sm",
                 col.columnBg,
                 col.columnBorder,
               )}
             >
-              {/* Column Header */}
               <div
                 className={cn(
-                  "px-6 py-5 border-b border-white/[0.05] flex justify-between items-center shrink-0",
+                  "px-10 py-8 border-b border-[var(--border-primary)]/20 flex justify-between items-center shrink-0",
                   col.headerBg,
                 )}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div
                     className={cn(
-                      "w-2.5 h-2.5 rounded-full ring-4",
+                      "w-3 h-3 rounded-full ring-4 shadow-[0_0_15px_rgba(var(--accent-rgb),0.5)]",
                       col.dotColor,
                       col.ringColor,
                       col.key === "IN_PROD" && "animate-pulse",
                     )}
                   />
-                  <h3 className="font-bold text-gray-300 uppercase tracking-widest text-[11px]">
+                  <h3 className="font-black text-[var(--text-primary)] uppercase tracking-[0.3em] text-xs italic">
                     {col.title}
                   </h3>
                 </div>
                 <Badge
                   variant={col.badgeVariant}
-                  className="text-[10px] font-bold border-0 min-w-[28px] justify-center"
+                  className="text-[10px] font-black border-0 min-w-[32px] h-8 justify-center rounded-xl shadow-inner"
                 >
                   {col.plans.length}
                 </Badge>
               </div>
 
-              {/* Column Body */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
                 {col.plans.length > 0 ? (
                   col.plans.map((p) => renderCard(p, col.key))
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center gap-4 py-20">
+                  <div className="h-full flex flex-col items-center justify-center gap-6 py-32 opacity-20">
                     {col.emptyIcon}
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-700">
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--text-secondary)] italic">
                       {col.emptyText}
                     </span>
                   </div>
@@ -525,117 +481,88 @@ export const ProductionBoard = () => {
 
       {/* Premium Yield Reporting Modal */}
       {showYieldModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-in fade-in duration-300">
-          <div className="w-full max-w-xl bg-[#0f0f0f] rounded-[32px] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.8),0_0_120px_rgba(245,158,11,0.05)] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
-            {/* Modal Header */}
-            <div className="p-8 bg-gradient-to-br from-white/[0.04] to-transparent border-b border-white/[0.06] relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/[0.04] blur-[80px]" />
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center text-amber-400 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
-                  <ClipboardList size={26} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-root)]/80 backdrop-blur-3xl p-6 animate-in fade-in duration-500">
+          <div className="w-full max-w-2xl bg-[var(--bg-card)] rounded-[4rem] border border-[var(--border-primary)] shadow-[0_40px_100px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-12 duration-700">
+            <div className="p-10 bg-gradient-to-br from-amber-500/[0.02] to-transparent border-b border-[var(--border-primary)]/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/[0.03] blur-[100px]" />
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-xl shadow-amber-500/5 rotate-3">
+                  <ClipboardList size={32} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-3 mb-2">
                     <Badge
                       variant="orange"
-                      className="text-[8px] font-bold tracking-[0.2em] h-4 py-0 border-0"
+                      className="text-[9px] font-black tracking-[0.3em] px-3 py-1 border-0 italic"
                     >
-                      YIELD REPORT
+                      YIELD REPORT ELITE
                     </Badge>
-                    <span className="text-[10px] font-mono font-bold text-gray-600">
-                      ID: #{finishingPlanId}
+                    <span className="text-[10px] font-mono font-black text-[var(--text-secondary)]/40 italic">
+                      IDENTIFIER: #{finishingPlanId}
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold text-white tracking-tight">
+                  <h3 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic">
                     Nghiệm thu mẻ nấu
                   </h3>
                 </div>
               </div>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-8 space-y-6">
+            <div className="p-10 space-y-8 overflow-y-auto no-scrollbar">
               {isDetailLoading ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-4">
-                  <LoaderIcon
-                    className="animate-spin text-amber-500"
-                    size={32}
-                  />
-                  <span className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">
-                    Đang đối soát dữ liệu...
+                <div className="flex flex-col items-center justify-center py-20 gap-6">
+                  <LoaderIcon className="animate-spin text-amber-500" size={40} />
+                  <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.4em] italic animate-pulse">
+                    Đang đối soát dữ liệu chuỗi cung ứng...
                   </span>
                 </div>
               ) : planDetailForYield ? (
-                <div className="space-y-6 animate-in fade-in duration-500">
-                  <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/[0.06] space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-gray-500 font-medium">
-                        Tên mẻ
-                      </span>
-                      <span className="text-sm font-bold text-amber-400">
-                        {planDetailForYield.planName}
-                      </span>
+                <div className="space-y-8 animate-in fade-in duration-700">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="bg-[var(--bg-root)] p-6 rounded-[2rem] border border-[var(--border-primary)] space-y-2 shadow-inner">
+                        <span className="text-[9px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic">Tên mẻ nấu</span>
+                        <p className="text-sm font-black text-amber-500 uppercase tracking-tighter truncate">{planDetailForYield.planName}</p>
                     </div>
-                    <div className="h-px bg-white/[0.04]" />
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-gray-500 font-medium">
-                        Mã lô
-                      </span>
-                      <span className="text-sm font-bold text-gray-300 font-mono">
-                        {planDetailForYield.batchCode}
-                      </span>
+                    <div className="bg-[var(--bg-root)] p-6 rounded-[2rem] border border-[var(--border-primary)] space-y-2 shadow-inner">
+                        <span className="text-[9px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic">Mã lô định danh</span>
+                        <p className="text-sm font-black text-[var(--text-primary)] font-mono tracking-widest">{planDetailForYield.batchCode}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                    <div className="flex justify-between items-center px-1 sticky top-0 bg-[#0f0f0f] z-10 py-1">
-                      <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
-                        Sản lượng thực tế
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center px-4">
+                      <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] italic">
+                        Thẩm định sản lượng thực tế
                       </h4>
-                      <Badge variant="info" className="text-[8px] border-0">
-                        Hệ thống đề xuất
-                      </Badge>
+                      <Badge variant="info" className="text-[8px] border-0 rounded-lg px-2 italic uppercase">Auto-Suggested Yield</Badge>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                       {plannedProducts.map((item) => (
                         <div
                           key={item.productId}
-                          className="border border-white/[0.06] rounded-2xl bg-black/40 p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                          className="group/item border border-[var(--border-primary)] rounded-[2.5rem] bg-[var(--bg-root)]/50 p-6 flex items-center justify-between hover:border-amber-500/40 transition-all shadow-sm"
                         >
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[13px] font-bold text-gray-300">
+                          <div className="flex flex-col gap-2">
+                            <span className="text-base font-black text-[var(--text-primary)] uppercase italic tracking-tight">
                               {item.productName}
                             </span>
-                            <span className="text-[10px] font-medium text-gray-500">
-                              Mục tiêu ban đầu:{" "}
-                              <strong className="text-gray-400">
-                                {item.plannedQuantity} {item.unit || "SL"}
-                              </strong>
+                            <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase italic">
+                              Mục tiêu kế hoạch: <strong className="text-amber-500 ml-1">{item.plannedQuantity} {item.unit || "SL"}</strong>
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-4">
                             <input
                               type="number"
-                              className="w-20 h-10 bg-white/[0.04] border border-white/[0.08] rounded-xl text-center text-[13px] font-bold text-amber-400 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40 outline-none transition-all hover:bg-white/[0.06]"
-                              value={
-                                yieldInputs.find(
-                                  (y) => y.productId === item.productId,
-                                )?.actualProducedQty ?? 0
-                              }
+                              className="w-24 h-14 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[1.2rem] text-center text-lg font-black text-amber-500 focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/40 outline-none transition-all hover:bg-white shadow-inner font-mono"
+                              value={yieldInputs.find((y) => y.productId === item.productId)?.actualProducedQty ?? 0}
                               onChange={(e) => {
                                 const val = Number(e.target.value);
-                                setYieldInputs((prev) =>
-                                  prev.map((y) =>
-                                    y.productId === item.productId
-                                      ? { ...y, actualProducedQty: val }
-                                      : y,
-                                  ),
-                                );
+                                setYieldInputs((prev) => prev.map((y) => y.productId === item.productId ? { ...y, actualProducedQty: val } : y));
                               }}
                               min={0}
                             />
-                            <span className="text-[10px] font-bold text-gray-600 uppercase">
+                            <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase italic tracking-widest">
                               {item.unit || "SL"}
                             </span>
                           </div>
@@ -644,40 +571,34 @@ export const ProductionBoard = () => {
                     </div>
                   </div>
 
-                  <div className="p-5 rounded-2xl bg-amber-500/[0.04] border border-amber-500/10 flex gap-4">
-                    <AlertCircle
-                      size={18}
-                      className="text-amber-500 shrink-0 mt-0.5"
-                    />
-                    <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
-                      Lưu ý: Sau khi xác nhận hoàn thành, mẻ sản xuất sẽ chuyển
-                      trạng thái "PRODUCED" và sẵn sàng để quản trị kho điều
-                      hành phân phối (Allocation).
+                  <div className="p-8 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 flex gap-6 italic">
+                    <AlertCircle size={24} className="text-amber-500 shrink-0 mt-1" />
+                    <p className="text-[11px] text-[var(--text-secondary)]/60 font-medium leading-relaxed uppercase tracking-wider">
+                      Lưu ý: Sau khi xác nhận hoàn thành, mẻ sản xuất sẽ được niêm phong trạng thái <span className="text-amber-500 font-black">"PRODUCED"</span> và sẵn sàng để quản trị kho điều hành chuỗi cung ứng phân phối (Allocation).
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-600 uppercase font-bold tracking-widest text-[10px]">
-                  Lỗi kết nối dữ liệu!
+                <div className="text-center py-20 text-[var(--text-secondary)]/20 uppercase font-black tracking-[0.5em] text-xs italic">
+                  Giao thức kết nối bị gián đoạn...
                 </div>
               )}
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-8 bg-white/[0.02] border-t border-white/[0.05] mt-auto flex gap-4">
+            <div className="p-10 bg-[var(--bg-root)]/50 border-t border-[var(--border-primary)]/20 mt-auto flex gap-6">
               <Button
                 variant="outline"
                 onClick={() => setShowYieldModal(false)}
-                className="border-white/10 text-gray-500 hover:text-white hover:bg-white/[0.04] h-14 px-8 rounded-2xl flex-1 uppercase text-[10px] font-bold tracking-widest transition-all"
+                className="border-[var(--border-primary)] text-[var(--text-secondary)]/60 hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/5 h-20 px-12 rounded-[2rem] flex-1 uppercase text-[10px] font-black tracking-[0.3em] transition-all italic"
               >
-                Quay lại
+                Hủy bỏ
               </Button>
               <Button
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-black font-bold uppercase text-[10px] tracking-widest h-14 px-10 rounded-2xl flex-1 shadow-[0_12px_32px_-6px_rgba(16,185,129,0.3)] border-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-black font-black uppercase text-[10px] tracking-[0.3em] h-20 px-14 rounded-[2rem] flex-1 shadow-[0_20px_50px_rgba(16,185,129,0.2)] border-0 transition-all hover:scale-[1.02] active:scale-95 italic"
                 onClick={handleConfirmFinish}
                 disabled={isDetailLoading || !planDetailForYield}
               >
-                Hoàn tất & Báo cáo
+                {isDetailLoading ? 'Đang truy xuất...' : 'Xác nhận & Niêm phong'}
               </Button>
             </div>
           </div>

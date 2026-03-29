@@ -1,14 +1,29 @@
 @import "tailwindcss";
 
 @keyframes slow-zoom {
-  from { transform: scale(1.0); }
-  to { transform: scale(1.15); }
+  from {
+    transform: scale(1.0);
+  }
+
+  to {
+    transform: scale(1.15);
+  }
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-4px);
+  }
+
+  75% {
+    transform: translateX(4px);
+  }
 }
 
 .animate-slow-zoom {
@@ -20,16 +35,27 @@
 }
 
 @keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(5deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
 }
 
 @keyframes gradient-xy {
-  0%, 100% {
+
+  0%,
+  100% {
     background-size: 400% 400%;
     background-position: left center;
   }
+
   50% {
     background-size: 200% 200%;
     background-position: right center;
@@ -49,6 +75,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -60,15 +87,48 @@
 }
 
 @layer base {
+  :root {
+    --bg-root: theme('colors.slate.50');
+    --bg-card: theme('colors.white');
+    --text-primary: theme('colors.zinc.900');
+    --text-secondary: theme('colors.zinc.600');
+    --border-primary: rgba(228, 228, 231, 0.6);
+    /* zinc-200/60 */
+    --accent-amber: theme('colors.amber.600');
+    --glass-bg: rgba(255, 255, 255, 0.7);
+  }
+
+  .dark {
+    --bg-root: theme('colors.zinc.950');
+    --bg-card: rgba(24, 24, 27, 0.4);
+    /* zinc-900/40 */
+    --text-primary: theme('colors.white');
+    --text-secondary: theme('colors.zinc.400');
+    --border-primary: rgba(255, 255, 255, 0.05);
+    /* white/5 */
+    --accent-amber: theme('colors.amber.500');
+    --glass-bg: rgba(24, 24, 27, 0.6);
+  }
+
   body {
-    @apply antialiased text-gray-200 bg-zinc-950;
+    @apply antialiased transition-colors duration-300;
+    background-color: var(--bg-root);
+    color: var(--text-primary);
   }
 }
 
 @keyframes loading {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -91,12 +151,17 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-/* Make calendar icon white for all date inputs system-wide */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+/* Make calendar icon theme-aware for all date inputs system-wide */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+.light input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0);
 }

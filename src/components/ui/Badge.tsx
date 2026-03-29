@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface BadgeProps {
     children: ReactNode;
@@ -19,8 +20,8 @@ export const Badge = ({ children, variant = 'default', className = '', size = 'm
         teal: 'bg-teal-100 text-teal-800',
         orange: 'bg-orange-100 text-orange-800',
         emerald: 'bg-emerald-100 text-emerald-800',
-        amber: 'bg-amber-100 text-amber-800',
-        indigo: 'bg-indigo-100 text-indigo-800',
+        amber: 'bg-amber-100 text-amber-900 dark:bg-amber-500/10 dark:text-amber-400',
+        indigo: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-400',
     };
 
     const sizes = {
@@ -29,7 +30,12 @@ export const Badge = ({ children, variant = 'default', className = '', size = 'm
     };
 
     return (
-        <span className={`inline-flex items-center rounded-full font-medium ${variants[variant]} ${sizes[size]} ${className}`}>
+        <span className={cn(
+            "inline-flex items-center rounded-full font-bold uppercase tracking-tight transition-colors duration-300",
+            variants[variant],
+            sizes[size],
+            className
+        )}>
             {children}
         </span>
     );
