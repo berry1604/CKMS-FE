@@ -39,6 +39,7 @@ export interface ProductionPlanResponse {
   kitchenId: number;
   status: ProductionPlanStatus;
   createdAt: string;
+  expectedCompletedDate?: string;
   coordinatorUserId: number;
   version?: number;
 }
@@ -50,6 +51,7 @@ export interface ProductionPlanSummaryResponse {
   kitchenId: number;
   status: ProductionPlanStatus;
   createdAt: string;
+  expectedCompletedDate?: string;
   coordinatorUserId: number;
   version?: number;
 }

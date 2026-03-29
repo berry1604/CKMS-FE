@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
     Pencil, 
-    Trash2, 
     PackageSearch,
     Store,
     MapPin,
@@ -14,7 +13,6 @@ import type { KitchenResponse } from '../../../types/kitchen';
 interface WarehouseTableProps {
     warehouses: KitchenResponse[];
     onEdit: (warehouse: KitchenResponse) => void;
-    onDelete: (warehouse: KitchenResponse) => void;
     onViewStock: (warehouse: KitchenResponse) => void;
     isLoading: boolean;
     canManage: boolean;
@@ -23,7 +21,6 @@ interface WarehouseTableProps {
 export const WarehouseTable: React.FC<WarehouseTableProps> = ({ 
     warehouses, 
     onEdit, 
-    onDelete, 
     onViewStock,
     isLoading,
     canManage

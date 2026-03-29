@@ -161,6 +161,34 @@ export const OrderApproval = () => {
     fetchData();
   }, [user?.kitchenId, kitchens.length]);
 
+  const fetchStockData = async (kitchenId: number) => {
+    setIsFetchingStock(true);
+    try {
+      const res = await kitchenInventoryApi.getWarehouseStock(kitchenId);
+      const stockItems = res.data || [];
+      
+      // Aggregate stock by productId for items of type "PRODUCT"
+      const newStockMap: Record<number, number> = {};
+      stockItems.forEach((item: KitchenStockItemResponse) => {
+        if (item.itemType === "PRODUCT") {
+          newStockMap[item.itemId] = (newStockMap[item.itemId] || 0) + item.quantity;
+        }
+      });
+      setStockMap(newStockMap);
+    } catch (error) {
+      console.error("Failed to fetch stock data:", error);
+    } finally {
+      setIsFetchingStock(false);
+    }
+  };
+
+  // Fetch stock when kitchens are loaded
+  useEffect(() => {
+    if (kitchens && kitchens.length > 0) {
+      fetchStockData(kitchens[0].kitchenId);
+    }
+  }, [kitchens]);
+
   useEffect(() => {
     let result = orders.filter((o) => o.status === "SUBMITTED");
 

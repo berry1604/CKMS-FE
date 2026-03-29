@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { Plus, Search, Store, Zap } from "lucide-react";
-import { Button } from "../../components/ui/Button";
+import { Search, Store, Zap } from "lucide-react";
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { kitchenApi } from "../../services/kitchen.api";
@@ -31,7 +30,7 @@ export const WarehousePage = () => {
         setIsLoading(true);
         try {
             const res = await kitchenApi.getAllKitchens();
-            setWarehouses(res.data || []);
+            setWarehouses(res.data?.slice(0, 1) || []);
         } catch (err) {
             console.error("Error loading warehouses:", err);
             toast.error("Không thể tải danh sách bếp trung tâm");
@@ -59,33 +58,9 @@ export const WarehousePage = () => {
         };
     }, [warehouses]);
 
-    const handleCreateNew = () => {
-        setEditingWarehouse(null);
-        setIsFormModalOpen(true);
-    };
-
     const handleEdit = (warehouse: KitchenResponse) => {
         setEditingWarehouse(warehouse);
         setIsFormModalOpen(true);
-    };
-
-    const handleDelete = async (warehouse: KitchenResponse) => {
-        if (!window.confirm(`Bạn có chắc muốn xóa bếp "${warehouse.name}"? Hành động này không thể hoàn tác.`)) {
-            return;
-        }
-
-        setIsActionLoading(true);
-        try {
-            await kitchenApi.deleteKitchen(warehouse.kitchenId);
-            toast.success("Xóa bếp thành công");
-            loadWarehouses();
-        } catch (error: any) {
-            console.error("Delete warehouse error:", error);
-            const msg = error.response?.data?.message || "Lỗi khi xóa bếp";
-            toast.error(msg);
-        } finally {
-            setIsActionLoading(false);
-        }
     };
 
     const handleViewStock = (warehouse: KitchenResponse) => {
@@ -107,7 +82,7 @@ export const WarehousePage = () => {
             loadWarehouses();
         } catch (error: any) {
             console.error("Submit warehouse error:", error);
-            const msg = error.response?.data?.message || (editingWarehouse ? "Lỗi khi cập nhật bếp" : "Lỗi khi tạo bếp mới");
+            const msg = error.response?.data?.message || "Lỗi khi cập nhật bếp";
             toast.error(msg);
         } finally {
             setIsActionLoading(false);
