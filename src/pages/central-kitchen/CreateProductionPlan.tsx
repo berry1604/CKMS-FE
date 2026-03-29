@@ -41,6 +41,12 @@ export const CreateProductionPlan = () => {
     return d.toISOString().split("T")[0];
   });
 
+  const [expectedCompletedDate, setExpectedCompletedDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2); // Default to day after tomorrow
+    return d.toISOString().split("T")[0];
+  });
+
   const [kitchens, setKitchens] = useState<KitchenResponse[]>([]);
   const [selectedKitchenId, setSelectedKitchenId] = useState<number | null>(
     null,
@@ -200,6 +206,7 @@ export const CreateProductionPlan = () => {
       await productionPlanApi.createProductionPlan({
         kitchenId: selectedKitchenId!,
         plannedDate,
+        expectedCompletedDate,
         storeOrderIds: Array.from(selectedOrderIds),
       });
 
@@ -214,43 +221,61 @@ export const CreateProductionPlan = () => {
   };
 
   return (
-    <div className="space-y-10 max-w-[1500px] mx-auto pb-20 animate-in fade-in duration-700 pt-8 px-4">
-      {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-        <div className="flex items-center gap-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/kitchen/order-pool")}
-            className="h-14 w-14 flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-amber-500 rounded-[1.5rem] transition-all shadow-sm group/back"
-          >
-            <ArrowLeft size={24} className="group-hover/back:-translate-x-1 transition-transform" />
-          </Button>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[var(--bg-root)] pb-20">
+      {/* Cinematic Header Area */}
+      <div className="relative h-[250px] -mx-4 -mt-8 mb-12 overflow-hidden group/header">
+        <div className="absolute inset-0 bg-[var(--bg-root)]">
+          <img
+            src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=2070&auto=format&fit=crop"
+            className="w-full h-full object-cover opacity-80 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
+            alt="Central Kitchen Production"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-root)] via-[var(--bg-root)]/60 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-root)] via-transparent to-[var(--bg-root)]"></div>
+        </div>
+
+        <div className="absolute inset-0 flex flex-col justify-end px-8 pb-10 max-w-[1500px] mx-auto w-full">
+            <div className="flex items-center gap-3 mb-4">
               <Badge
                 variant="orange"
-                className="text-[10px] font-black tracking-[0.2em] px-3 h-5 border-0 shadow-sm italic uppercase"
+                className="text-[10px] font-black tracking-[0.3em] px-3 h-5 border-0 bg-amber-500/10 text-amber-500 uppercase italic"
               >
                 COORDINATOR ELITE
               </Badge>
-              <div className="w-1 h-1 rounded-full bg-amber-500" />
-              <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic">Planning Hub</span>
+              <div className="h-px w-12 bg-amber-500/30" />
+              <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Planning Hub</span>
             </div>
-            <h1 className="text-4xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
-              Khởi tạo <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Kế hoạch sản xuất</span>
-            </h1>
-            <p className="text-xs text-[var(--text-secondary)]/60 font-black uppercase tracking-[0.2em] italic">Giao thức gom đơn hàng chi nhánh và phân bổ năng lực bếp trung tâm chuyên sâu.</p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-6 animate-in slide-in-from-right-8 duration-1000">
-          <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] px-8 py-5 flex flex-col items-end shadow-sm relative group">
-             <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 blur-2xl rounded-full" />
-             <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic relative z-10">Batch Selection</span>
-             <span className="text-2xl font-black text-amber-500 italic mt-1 relative z-10">{selectedOrderIds.size} <span className="text-[10px] text-[var(--text-secondary)] ml-1">Đơn hàng</span></span>
-          </div>
+            <div className="flex flex-col md:flex-row justify-between items-end gap-8">
+                <div>
+                    <h1 className="text-5xl lg:text-6xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic leading-[0.85] mb-3">
+                      Khởi tạo <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Kế hoạch sản xuất</span>
+                    </h1>
+                    <p className="text-[var(--text-secondary)] max-w-2xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
+                      Giao thức gom đơn hàng chi nhánh và phân bổ năng lực <span className="text-amber-500">bếp trung tâm</span> chuyên sâu.
+                    </p>
+                </div>
+
+                <div className="bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-primary)] rounded-full px-10 h-20 flex items-center justify-center gap-6 shadow-2xl relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-transparent rounded-full" />
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic">Batch Selection</span>
+                    <span className="text-2xl font-black text-amber-500 italic tabular-nums leading-none mt-1">{selectedOrderIds.size} <span className="text-[10px] text-[var(--text-secondary)] ml-1">Đơn hàng</span></span>
+                  </div>
+                  <div className="w-px h-8 bg-[var(--border-primary)]"></div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/kitchen/order-pool")}
+                    className="h-12 w-12 flex items-center justify-center bg-[var(--bg-root)]/50 border border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-amber-500 rounded-full transition-all group/back shadow-sm"
+                  >
+                    <ArrowLeft size={18} />
+                  </Button>
+                </div>
+            </div>
         </div>
       </div>
+
+      <div className="max-w-[1500px] mx-auto px-4">
 
       {/* Wizard Content */}
       <div className="relative min-h-[500px]">
@@ -300,18 +325,36 @@ export const CreateProductionPlan = () => {
 
                     <div className="w-px h-10 bg-[var(--border-primary)]/20 hidden md:block"></div>
 
-                    <div className="relative group/date min-w-[200px]">
-                      <CalendarIcon
-                        className="absolute left-5 top-1/2 -translate-y-1/2 text-amber-500 group-focus-within/date:scale-110 transition-transform"
-                        size={16}
-                      />
-                      <input
-                        type="date"
-                        value={plannedDate}
-                        onChange={(e) => setPlannedDate(e.target.value)}
-                        className="w-full pl-12 pr-6 h-14 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-full text-sm font-black text-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all cursor-pointer hover:bg-[var(--bg-root)] shadow-sm italic uppercase"
-                        required
-                      />
+                    <div className="flex flex-col sm:flex-row gap-4 relative group/date min-w-[200px]">
+                      <div className="relative flex-1">
+                        <span className="absolute -top-4 left-4 text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">Ngày sản xuất</span>
+                        <CalendarIcon
+                          className="absolute left-5 top-1/2 -translate-y-1/2 text-amber-500 transition-colors"
+                          size={16}
+                        />
+                        <input
+                          type="date"
+                          value={plannedDate}
+                          onChange={(e) => setPlannedDate(e.target.value)}
+                          className="w-full pl-12 pr-6 h-14 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-full text-sm font-black text-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all cursor-pointer hover:bg-[var(--bg-root)] shadow-sm italic uppercase"
+                          required
+                        />
+                      </div>
+
+                      <div className="relative flex-1">
+                        <span className="absolute -top-4 left-4 text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic text-emerald-500">Dự kiến hoàn thiện</span>
+                        <CalendarIcon
+                          className="absolute left-5 top-1/2 -translate-y-1/2 text-emerald-500 transition-colors"
+                          size={16}
+                        />
+                        <input
+                          type="date"
+                          value={expectedCompletedDate}
+                          onChange={(e) => setExpectedCompletedDate(e.target.value)}
+                          className="w-full pl-12 pr-6 h-14 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-full text-sm font-black text-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all cursor-pointer hover:bg-[var(--bg-root)] shadow-sm italic uppercase"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -556,15 +599,29 @@ export const CreateProductionPlan = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-500/20">
-                            <CalendarIcon size={20} />
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/20">
+                              <CalendarIcon size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic leading-none mb-1.5">Ngày sản xuất</span>
+                              <span className="text-xs font-black text-[var(--text-primary)] italic">
+                                {new Date(plannedDate).toLocaleDateString("vi-VN", { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic leading-none mb-1.5">Thời gian thực thi</span>
-                            <span className="text-xs font-black text-[var(--text-primary)] italic">
-                              {new Date(plannedDate).toLocaleDateString("vi-VN", { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
-                            </span>
+                          
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-500/20">
+                              <CalendarIcon size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic leading-none mb-1.5 text-emerald-500">Dự kiến hoàn thành</span>
+                              <span className="text-xs font-black text-[var(--text-primary)] italic">
+                                {new Date(expectedCompletedDate).toLocaleDateString("vi-VN", { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -643,6 +700,12 @@ export const CreateProductionPlan = () => {
                   <div className="space-y-1.5 border-l border-[var(--border-primary)]/10 pl-6 italic">
                     <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest leading-none block">Phụ trách</span>
                     <p className="text-[11px] font-black text-[var(--text-primary)] uppercase truncate">{user?.name || "Matrix Admin"}</p>
+                  </div>
+                  <div className="space-y-1.5 border-l border-[var(--border-primary)]/10 pl-6 italic">
+                    <span className="text-[9px] font-black text-amber-600/60 uppercase tracking-widest leading-none block">Dự kiến</span>
+                    <p className="text-[11px] font-black text-amber-500 italic">
+                      {new Date(expectedCompletedDate).toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit' })}
+                    </p>
                   </div>
                   <div className="space-y-1.5 border-l border-[var(--border-primary)]/10 pl-6 italic">
                     <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest leading-none block">Quy mô</span>
@@ -775,6 +838,7 @@ export const CreateProductionPlan = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };
