@@ -134,26 +134,15 @@ export const WarehouseTable: React.FC<WarehouseTableProps> = ({
                                     </Button>
                                     
                                     {canManage && (
-                                        <>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => onEdit(warehouse)}
-                                                className="h-9 w-9 p-0 bg-[var(--bg-root)] hover:bg-amber-500/10 text-[var(--text-secondary)] hover:text-amber-600 dark:hover:text-amber-500 border border-[var(--border-primary)] hover:border-amber-500/20 rounded-xl transition-all shadow-sm"
-                                                title="Sửa bếp"
-                                            >
-                                                <Pencil className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => onDelete(warehouse)}
-                                                className="h-9 w-9 p-0 bg-[var(--bg-root)] hover:bg-rose-500/10 text-[var(--text-secondary)] hover:text-rose-600 dark:hover:text-rose-500 border border-[var(--border-primary)] hover:border-rose-500/20 rounded-xl transition-all shadow-sm"
-                                                title="Xóa bếp"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => onEdit(warehouse)}
+                                            className="h-9 w-9 p-0 bg-[var(--bg-root)] hover:bg-amber-500/10 text-[var(--text-secondary)] hover:text-amber-600 dark:hover:text-amber-500 border border-[var(--border-primary)] hover:border-amber-500/20 rounded-xl transition-all shadow-sm"
+                                            title="Sửa bếp"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </Button>
                                     )}
                                 </div>
                             </td>

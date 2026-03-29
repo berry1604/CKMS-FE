@@ -144,8 +144,7 @@ export const CreateProductionPlan = () => {
         status: "APPROVED",
         size: 100,
       });
-      const unassignedOrders = (ordersRes.content || []).filter(o => !o.planId);
-      setOrders(unassignedOrders);
+      setOrders(ordersRes.content || []);
     } catch {
       toast.error("Không thể tải danh sách đơn hàng.");
     } finally {
@@ -203,15 +202,17 @@ export const CreateProductionPlan = () => {
     if (selectedOrderIds.size === 0) return;
     setIsSubmitting(true);
     try {
-      await productionPlanApi.createProductionPlan({
+      const plan = await productionPlanApi.createProductionPlan({
         kitchenId: selectedKitchenId!,
         plannedDate,
         expectedCompletedDate,
         storeOrderIds: Array.from(selectedOrderIds),
       });
 
-      toast.success("Kế hoạch sản xuất đã được tạo thành công.");
-      navigate("/kitchen/production-plans");
+      if (plan && plan.planId) {
+        toast.success("Kế hoạch sản xuất đã được tạo thành công.");
+        navigate("/kitchen/production-plans");
+      }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Tạo kế hoạch thất bại.");

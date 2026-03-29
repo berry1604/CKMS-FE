@@ -121,16 +121,6 @@ export const WarehousePage = () => {
                                 Cấu hình và theo dõi danh sách bếp trung tâm, kiểm soát <span className="text-amber-500">sức chứa</span> và trạng thái hoạt động theo thời gian thực.
                             </p>
                         </div>
-
-                        {canManage && (
-                            <Button
-                                className="h-16 px-10 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-[0_20px_50px_-10px_rgba(245,158,11,0.4)] border-0 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3"
-                                onClick={handleCreateNew}
-                            >
-                                <Plus size={20} strokeWidth={3} />
-                                Thêm Bếp Mới
-                            </Button>
-                        )}
                     </div>
                 </div>
             </div>
@@ -188,7 +178,6 @@ export const WarehousePage = () => {
                         warehouses={filteredWarehouses}
                         isLoading={isLoading}
                         onEdit={handleEdit}
-                        onDelete={handleDelete}
                         onViewStock={handleViewStock}
                         canManage={canManage}
                     />
