@@ -61,55 +61,55 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity" onClick={onClose} />
+            <div className="absolute inset-0 bg-[var(--bg-root)]/60 dark:bg-black/80 backdrop-blur-md transition-opacity" onClick={onClose} />
             
-            <div className="relative bg-zinc-950 border border-white/10 rounded-[2rem] w-full max-w-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in slide-in-from-bottom-8 fade-in zoom-in-95 duration-500">
+            <div className="relative bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] w-full max-w-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 fade-in zoom-in-95 duration-500">
                 {/* Decorative glow */}
                 <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500/0 via-amber-500 to-amber-500/0"></div>
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/20 rounded-full blur-[60px] pointer-events-none"></div>
 
-                <div className="p-8 border-b border-white/5 relative z-10">
+                <div className="p-8 border-b border-[var(--border-primary)] relative z-10">
                     <div className="flex items-center gap-5">
                         <div className="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-amber-500/10 to-orange-500/5 flex items-center justify-center border border-amber-500/20 shadow-inner">
                             <Store className="w-7 h-7 text-amber-500" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-white tracking-tight">
+                            <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">
                                 {isEditMode ? 'Cập Nhật Bếp' : 'Khởi Tạo Bếp Mới'}
                             </h2>
-                            <p className="text-sm text-zinc-400 mt-1 font-medium">
+                            <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium">
                                 {isEditMode ? `Đang chỉnh sửa dữ liệu bếp #${warehouse.kitchenId.toString().padStart(4, '0')}` : 'Thiết lập thông tin hoạt động và cấu hình nền cho chi nhánh bếp mới.'}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-8 relative z-10 bg-gradient-to-b from-transparent to-black/20">
+                <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-8 relative z-10 bg-gradient-to-b from-transparent to-[var(--text-primary)]/[0.02]">
                     <div className="space-y-6">
                         {/* Name */}
                         <div className="group">
-                            <label className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
+                            <label className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-[var(--accent-amber)] transition-colors">
                                 <Store className="w-3.5 h-3.5" />
                                 Tên định danh bếp *
                             </label>
                             <Input
                                 {...register('name', { required: 'Vui lòng nhập tên bếp' })}
                                 placeholder="VD: Bếp Trung Tâm Quận 1..."
-                                className="bg-zinc-900/50 border-white/5 focus:border-amber-500/50 hover:bg-zinc-900 focus:bg-zinc-900 transition-colors h-12 text-sm"
+                                className="h-12 text-sm shadow-sm"
                                 error={errors.name?.message}
                             />
                         </div>
 
                         {/* Address */}
                         <div className="group">
-                            <label className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
+                            <label className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
                                 <MapPin className="w-3.5 h-3.5" />
                                 Địa chỉ cụ thể *
                             </label>
                             <Input
                                 {...register('address', { required: 'Vui lòng nhập địa chỉ' })}
                                 placeholder="Chỉ định địa chỉ giao nhận hàng hóa..."
-                                className="bg-zinc-900/50 border-white/5 focus:border-amber-500/50 hover:bg-zinc-900 focus:bg-zinc-900 transition-colors h-12 text-sm"
+                                className="bg-[var(--bg-root)] border-[var(--border-primary)] focus:border-amber-500/50 hover:bg-[var(--bg-root)] focus:bg-[var(--bg-root)] transition-colors h-12 text-sm"
                                 error={errors.address?.message}
                             />
                         </div>
@@ -117,7 +117,7 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                         {/* Coordinates */}
                         <div className="grid grid-cols-2 gap-6">
                             <div className="group">
-                                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
+                                <label className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
                                     <MapPin className="w-3.5 h-3.5" />
                                     Vĩ độ
                                 </label>
@@ -126,12 +126,12 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                                     step="any"
                                     {...register('latitude')}
                                     placeholder="10.762..."
-                                    className="bg-zinc-900/50 border-white/5 focus:border-amber-500/50 hover:bg-zinc-900 focus:bg-zinc-900 transition-colors h-12 text-sm"
+                                    className="h-12 text-sm shadow-sm bg-[var(--bg-root)] border-[var(--border-primary)]"
                                     error={errors.latitude?.message}
                                 />
                             </div>
                             <div className="group">
-                                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
+                                <label className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2 mb-2 group-focus-within:text-amber-500 transition-colors">
                                     <MapPin className="w-3.5 h-3.5" />
                                     Kinh độ
                                 </label>
@@ -140,16 +140,16 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                                     step="any"
                                     {...register('longitude')}
                                     placeholder="106.66..."
-                                    className="bg-zinc-900/50 border-white/5 focus:border-amber-500/50 hover:bg-zinc-900 focus:bg-zinc-900 transition-colors h-12 text-sm"
+                                    className="h-12 text-sm shadow-sm bg-[var(--bg-root)] border-[var(--border-primary)]"
                                     error={errors.longitude?.message}
                                 />
                             </div>
                         </div>
 
                         {/* Capacity */}
-                        <div className="border border-amber-500/10 bg-amber-500/[0.02] p-6 rounded-3xl relative overflow-hidden group">
+                        <div className="border border-amber-500/20 bg-amber-500/[0.04] p-6 rounded-3xl relative overflow-hidden group shadow-inner">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-[40px] pointer-events-none transition-transform group-focus-within:scale-150 duration-700"></div>
-                            <label className="text-xs font-black text-amber-500/80 uppercase tracking-widest flex items-center gap-2 mb-3">
+                            <label className="text-xs font-black text-amber-600 dark:text-amber-500/80 uppercase tracking-widest flex items-center gap-2 mb-3 italic">
                                 <Hash className="w-4 h-4" />
                                 Năng lực điều phối / Công suất (Units/Min)
                             </label>
@@ -160,17 +160,17 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
                                     min: { value: 0, message: 'Công suất phải lớn hơn hoặc bằng 0' }
                                 })}
                                 placeholder="Thực tế vận hành: 300..."
-                                className="bg-black/40 border-amber-500/20 focus:border-amber-500 text-amber-400 font-mono text-lg h-14 pl-4"
+                                className="bg-[var(--bg-root)] border-amber-500/20 focus:border-amber-500 text-amber-600 dark:text-[var(--accent-amber)] font-mono text-lg h-14 pl-4"
                                 error={errors.maxDailyCapacity?.message}
                             />
                         </div>
                     </div>
-
-                    <div className="flex items-center gap-4 pt-4 border-t border-white/5">
+ 
+                    <div className="flex items-center gap-4 pt-4 border-t border-[var(--border-primary)]">
                         <Button 
                             type="button" 
                             variant="ghost" 
-                            className="flex-1 h-12 text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                            className="flex-1 h-12 text-sm font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/5 rounded-xl transition-all"
                             onClick={onClose}
                             disabled={isLoading}
                         >

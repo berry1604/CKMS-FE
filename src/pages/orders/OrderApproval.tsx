@@ -255,7 +255,7 @@ export const OrderApproval = () => {
         <div className="pl-1">
           <input
             type="checkbox"
-            className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500 focus:ring-offset-zinc-900"
+            className="w-4 h-4 rounded border-[var(--border-primary)] bg-[var(--bg-root)] text-amber-500 focus:ring-amber-500 focus:ring-offset-[var(--bg-root)]"
             checked={
               filteredOrders.length > 0 &&
               selectedOrderIds.size === filteredOrders.length
@@ -271,7 +271,7 @@ export const OrderApproval = () => {
         <div className="pl-1" onClick={(e) => e.stopPropagation()}>
           <input
             type="checkbox"
-            className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500 focus:ring-offset-zinc-900"
+            className="w-4 h-4 rounded border-[var(--border-primary)] bg-[var(--bg-root)] text-amber-500 focus:ring-amber-500 focus:ring-offset-[var(--bg-root)]"
             checked={selectedOrderIds.has(order.orderId)}
             onChange={(e) => handleSelectOne(order.orderId, e.target.checked)}
           />
@@ -281,12 +281,12 @@ export const OrderApproval = () => {
     {
       header: <div className="w-full text-center">ĐƠN HÀNG</div>,
       accessorKey: "orderId",
-      className: "font-bold text-zinc-100 min-w-[70px]",
+      className: "font-bold text-[var(--text-primary)] min-w-[70px]",
       headerClassName: "px-2 py-3",
       cellClassName: "px-2 py-4",
       cell: (order) => (
         <div className="flex justify-center w-full">
-          <span className="font-black text-[11px] text-zinc-100 tabular-nums tracking-tighter bg-zinc-800/50 px-2 py-1 rounded-lg">
+          <span className="font-black text-[11px] text-[var(--text-primary)] tabular-nums tracking-tighter bg-[var(--bg-card)]/50 px-2 py-1 rounded-lg">
             #{order.orderId}
           </span>
         </div>
@@ -299,10 +299,10 @@ export const OrderApproval = () => {
       cellClassName: "px-2 py-4",
       cell: (order) => (
         <div className="flex flex-col leading-tight">
-          <span className="text-[11px] text-zinc-200 font-bold tracking-tight">
+          <span className="text-[11px] text-[var(--text-primary)] font-bold tracking-tight">
             {new Date(order.orderDate).toLocaleDateString("vi-VN")}
           </span>
-          <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase mt-0.5">
+          <span className="text-[10px] text-[var(--text-secondary)] font-black tracking-widest uppercase mt-0.5">
             {new Date(order.orderDate).toLocaleTimeString("vi-VN", {
               hour: "2-digit",
               minute: "2-digit",
@@ -318,14 +318,14 @@ export const OrderApproval = () => {
       cellClassName: "px-2 py-4",
       cell: (order) => (
         <div className="flex flex-col leading-tight">
-          <span className="font-bold text-zinc-200 text-[12px] truncate max-w-[140px]">
+          <span className="font-bold text-[var(--text-primary)] text-[12px] truncate max-w-[140px]">
             {order.storeName || `Cửa hàng #${order.storeId}`}
           </span>
-          <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest mt-0.5">
+          <span className="text-[9px] text-[var(--text-secondary)] font-black uppercase tracking-widest mt-0.5">
             ID: {order.storeId}
           </span>
           {order.storePhone && (
-            <span className="text-[9px] text-zinc-500 font-medium mt-0.5 tracking-tight">
+            <span className="text-[9px] text-[var(--text-secondary)] font-medium mt-0.5 tracking-tight">
               📞 {order.storePhone}
             </span>
           )}
@@ -344,7 +344,7 @@ export const OrderApproval = () => {
             .map((item: OrderDetailResponse, idx: number) => (
               <div key={idx} className="flex items-center gap-2 group/prod">
                 <div className="w-1 h-1 rounded-full bg-amber-500/30 shrink-0 group-hover/prod:bg-amber-500 transition-colors" />
-                <span className="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-200 transition-colors truncate">
+                <span className="text-[11px] font-bold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors truncate">
                   {item.productName}
                 </span>
               </div>
@@ -369,10 +369,10 @@ export const OrderApproval = () => {
         );
         return (
           <div className="flex items-baseline justify-center gap-1 w-full">
-            <span className="text-zinc-100 font-black text-sm tabular-nums leading-none">
+            <span className="text-[var(--text-primary)] font-black text-sm tabular-nums leading-none">
               {total}
             </span>
-            <span className="text-[8px] text-zinc-600 font-black uppercase tracking-widest leading-none">
+            <span className="text-[8px] text-[var(--text-secondary)] font-black uppercase tracking-widest leading-none">
               PHẦN
             </span>
           </div>
@@ -391,7 +391,7 @@ export const OrderApproval = () => {
               "font-bold text-[11px] tracking-tight whitespace-nowrap px-2 py-1 rounded-lg transition-all",
               rescheduledId === order.orderId
                 ? "animate-pulse-once bg-amber-500/20 text-amber-500"
-                : "text-zinc-300",
+                : "text-[var(--text-primary)]",
             )}
           >
             {order.deliveryDate
@@ -411,13 +411,13 @@ export const OrderApproval = () => {
           className="flex justify-center w-full"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center bg-zinc-950/40 p-0.5 rounded-lg border border-zinc-800/50 shadow-inner">
-            <div className="flex items-center gap-0.5 px-0.5 border-r border-zinc-800/50">
+          <div className="flex items-center bg-[var(--bg-root)]/40 p-0.5 rounded-lg border border-[var(--border-primary)] shadow-inner">
+            <div className="flex items-center gap-0.5 px-0.5 border-r border-[var(--border-primary)]">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedOrder(order)}
-                className="h-7 w-7 p-0 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-all"
+                className="h-7 w-7 p-0 text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-all"
                 title="Xem chi tiết"
               >
                 <Eye size={14} />
@@ -435,7 +435,7 @@ export const OrderApproval = () => {
                     ),
                   })
                 }
-                className="h-7 w-7 p-0 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-all"
+                className="h-7 w-7 p-0 text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-all"
                 title="Đổi ngày"
               >
                 <Calendar size={14} />
@@ -444,7 +444,7 @@ export const OrderApproval = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(`/orders/${order.orderId}/split`)}
-                className="h-7 w-7 p-0 text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all"
+                className="h-7 w-7 p-0 text-[var(--text-secondary)] hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all"
                 title="Tách đơn"
               >
                 <Scissors size={14} />
@@ -457,7 +457,7 @@ export const OrderApproval = () => {
                 size="sm"
                 onClick={() => openRejectModal(order.orderId)}
                 disabled={isProcessing}
-                className="h-7 w-7 p-0 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                className="h-7 w-7 p-0 text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
                 title="Từ chối"
               >
                 <X size={14} />
@@ -470,26 +470,26 @@ export const OrderApproval = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-black text-white p-6 gap-6">
+    <div className="flex flex-col h-screen overflow-hidden bg-[var(--bg-root)] text-[var(--text-primary)] p-6 gap-6">
       {/* 1. High-Density Coordination Status Bar (Hub) */}
-      <div className="flex-shrink-0 bg-zinc-900/60 border border-zinc-800 rounded-[32px] p-4 shadow-2xl backdrop-blur-sm relative overflow-hidden group/hub transition-all hover:bg-zinc-900/80">
+      <div className="flex-shrink-0 backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[32px] p-4 shadow-2xl relative overflow-hidden group/hub transition-all hover:bg-[var(--bg-card)]/60">
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[100px] -mr-32 -mt-32 rounded-full" />
 
         <div className="relative z-10 flex flex-col gap-4">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-800/50">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-primary)]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-black shadow-[0_0_20px_rgba(245,158,11,0.15)]">
                 <AlertCircle size={22} />
               </div>
               <div>
-                <h2 className="text-lg font-black text-zinc-100 uppercase tracking-tight">
+                <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tight">
                   Hub Điều phối & Phê duyệt
                 </h2>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                  <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
                     Trung tâm Điều phối Thông minh
                   </span>
-                  <div className="w-1 h-1 rounded-full bg-zinc-700" />
+                  <div className="w-1 h-1 rounded-full bg-[var(--text-secondary)]/30" />
                   <div
                     className="flex items-center gap-1.5"
                     title="Hệ thống vận hành ổn định"
@@ -505,23 +505,23 @@ export const OrderApproval = () => {
 
             <div className="flex items-center gap-8">
               <div className="text-right">
-                <span className="block text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-0.5">
+                <span className="block text-[9px] text-[var(--text-secondary)] font-black uppercase tracking-widest mb-0.5">
                   Tổng Công suất Hệ thống
                 </span>
                 <span className="text-2xl font-black text-amber-500 tabular-nums tracking-tighter">
                   {(kitchens || [])
                     .reduce((sum, k) => sum + (k.todayUsedCapacity ?? 0), 0)
                     .toLocaleString()}
-                  <span className="text-[10px] text-zinc-600 mx-1 font-black">
+                  <span className="text-[10px] text-[var(--text-secondary)] mx-1 font-black">
                     /
                   </span>
                   {totalMaxCapacity.toLocaleString()}
-                  <span className="text-[10px] text-zinc-600 ml-2 font-black uppercase">
+                  <span className="text-[10px] text-[var(--text-secondary)] ml-2 font-black uppercase">
                     Đơn vị
                   </span>
                 </span>
               </div>
-              <div className="w-px h-10 bg-zinc-800" />
+              <div className="w-px h-10 bg-[var(--border-primary)]" />
               <Button
                 variant="ghost"
                 size="sm"
@@ -563,14 +563,14 @@ export const OrderApproval = () => {
               return (
                 <div
                   key={kitchen.kitchenId}
-                  className="flex-shrink-0 w-72 snap-center bg-zinc-950/40 border border-zinc-800/80 hover:border-amber-500/30 rounded-2xl p-3 transition-all group/card relative overflow-hidden"
+                  className="flex-shrink-0 w-72 snap-center bg-[var(--bg-root)]/40 border border-[var(--border-primary)] hover:border-amber-500/30 rounded-2xl p-3 transition-all group/card relative overflow-hidden"
                 >
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500 group-hover/card:text-amber-500 transition-colors">
+                      <div className="p-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-primary)] text-[var(--text-secondary)] group-hover/card:text-amber-500 transition-colors">
                         <Package size={12} />
                       </div>
-                      <span className="text-[11px] font-black text-zinc-100 uppercase tracking-tight truncate">
+                      <span className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-tight truncate">
                         {kitchen.name}
                       </span>
                     </div>
@@ -591,18 +591,18 @@ export const OrderApproval = () => {
                   {/* Capacity Progress */}
                   <div className="mb-2">
                     <div className="flex justify-between items-baseline mb-1">
-                      <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">
+                      <span className="text-[9px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
                         Năng lực
                       </span>
-                      <span className="text-sm font-black text-zinc-100 tabular-nums">
+                      <span className="text-sm font-black text-[var(--text-primary)] tabular-nums">
                         {usedCapacity.toLocaleString()}
-                        <span className="text-[9px] text-zinc-600 font-bold mx-0.5">
+                        <span className="text-[9px] text-[var(--text-secondary)] font-bold mx-0.5">
                           /
                         </span>
                         {kitchen.maxDailyCapacity.toLocaleString()}
                       </span>
                     </div>
-                    <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[var(--border-primary)] rounded-full overflow-hidden">
                       <div
                         className={cn(
                           "h-full rounded-full transition-all duration-700 shadow-sm",
@@ -613,7 +613,7 @@ export const OrderApproval = () => {
                       />
                     </div>
                     <div className="flex justify-between items-center mt-1">
-                      <span className="text-[8px] font-black text-zinc-700 uppercase tracking-widest">
+                      <span className="text-[8px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                         {usagePercent}% đã dùng
                       </span>
                       {planCount > 0 && (
@@ -635,50 +635,50 @@ export const OrderApproval = () => {
         {/* Left Column: Order Table & Filters (75%) */}
         <div className="flex-[3] flex flex-col gap-6 min-w-0">
           {/* Table Controls Row */}
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-[28px] p-4 flex items-center justify-between gap-6 shadow-xl backdrop-blur-sm">
+          <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[28px] p-4 flex items-center justify-between gap-6 shadow-xl">
             <div className="flex items-center gap-4 flex-1">
               <div className="relative flex-1 max-w-md group">
                 <Search
                   size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-amber-500 transition-colors"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] group-focus-within:text-amber-500 transition-colors"
                 />
                 <Input
                   placeholder="Tìm theo Mã đơn, Cửa hàng..."
-                  className="pl-12 h-11 bg-zinc-950/50 border-zinc-800 focus:border-amber-500/40 focus:ring-amber-500/5 rounded-xl transition-all text-xs font-bold"
+                  className="pl-12 h-11 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/40 focus:ring-amber-500/5 rounded-xl transition-all text-xs font-bold"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <div className="bg-zinc-950/60 border border-zinc-800 rounded-xl px-3 py-2 flex items-center gap-2">
+                <div className="bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-xl px-3 py-2 flex items-center gap-2">
                   <Package size={12} className="text-amber-500" />
                   <select
-                    className="bg-transparent text-[10px] font-black text-zinc-400 focus:outline-none cursor-pointer uppercase tracking-widest"
+                    className="bg-transparent text-[10px] font-black text-[var(--text-secondary)] focus:outline-none cursor-pointer uppercase tracking-widest"
                     value={selectedProduct}
                     onChange={(e) => setSelectedProduct(e.target.value)}
                   >
-                    <option value="all" className="bg-zinc-900">
+                    <option value="all" className="bg-[var(--bg-card)]">
                       Sản phẩm
                     </option>
                     {productOptions.map((p) => (
-                      <option key={p} value={p} className="bg-zinc-900">
+                      <option key={p} value={p} className="bg-[var(--bg-card)]">
                         {p}
                       </option>
                     ))}
                   </select>
                 </div>
-                <div className="bg-zinc-950/60 border border-zinc-800 rounded-xl px-3 py-2 flex items-center gap-2">
+                <div className="bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-xl px-3 py-2 flex items-center gap-2">
                   <Calendar size={12} className="text-amber-500" />
                   <select
-                    className="bg-transparent text-[10px] font-black text-zinc-400 focus:outline-none cursor-pointer uppercase tracking-widest"
+                    className="bg-transparent text-[10px] font-black text-[var(--text-secondary)] focus:outline-none cursor-pointer uppercase tracking-widest"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                   >
-                    <option value="all" className="bg-zinc-900">
+                    <option value="all" className="bg-[var(--bg-card)]">
                       Ngày giao
                     </option>
                     {dateOptions.map((d) => (
-                      <option key={d} value={d} className="bg-zinc-900">
+                      <option key={d} value={d} className="bg-[var(--bg-card)]">
                         {d}
                       </option>
                     ))}
@@ -704,13 +704,13 @@ export const OrderApproval = () => {
                   : ""}{" "}
                 Đơn
               </Button>
-              <div className="w-px h-8 bg-zinc-800" />
+              <div className="w-px h-8 bg-[var(--border-primary)]" />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => openRejectModal()}
                 disabled={selectedOrderIds.size === 0 || isProcessing}
-                className="h-10 px-4 text-zinc-500 hover:text-red-500 hover:bg-red-500/5 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shrink-0"
+                className="h-10 px-4 text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-500/5 font-black uppercase text-[10px] tracking-widest rounded-xl transition-all shrink-0"
               >
                 Từ chối hàng loạt
               </Button>
@@ -718,7 +718,7 @@ export const OrderApproval = () => {
           </div>
 
           {/* Dominant Order Table Container */}
-          <div className="flex-1 bg-zinc-900/20 border border-zinc-800 rounded-[32px] shadow-2xl overflow-hidden flex flex-col relative group/table">
+          <div className="flex-1 backdrop-blur-3xl bg-[var(--bg-card)]/20 border border-[var(--border-primary)] rounded-[32px] shadow-2xl overflow-hidden flex flex-col relative group/table">
             <div className="absolute inset-0 bg-amber-500/0 group-hover/table:bg-amber-500/2 pointer-events-none transition-all duration-700" />
             <div className="overflow-auto flex-1 custom-scrollbar relative z-10">
               <DataTable
@@ -729,17 +729,17 @@ export const OrderApproval = () => {
                   String(order.orderId)
                 }
                 isLoading={isLoading}
-                className="[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-zinc-900/95 [&_thead]:backdrop-blur-md"
+                className="[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-[var(--bg-card)]/95 [&_thead]:backdrop-blur-md"
                 emptyMessage={
                   <div className="flex flex-col items-center gap-3 py-20">
-                    <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center text-zinc-600">
+                    <div className="w-16 h-16 rounded-full bg-[var(--bg-card)]/50 flex items-center justify-center text-[var(--text-secondary)]">
                       <CheckCircle2 size={32} />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest">
+                      <p className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                         Tất cả đã hoàn tất
                       </p>
-                      <p className="text-[11px] text-zinc-600 font-medium mt-1">
+                      <p className="text-[11px] text-[var(--text-secondary)]/60 font-medium mt-1">
                         Hiện không có đơn hàng nào cần xét duyệt.
                       </p>
                     </div>
@@ -752,16 +752,16 @@ export const OrderApproval = () => {
 
         {/* Right Column: Product Catalog Sidebar (25%) */}
         <div className="w-[340px] flex-shrink-0 flex flex-col overflow-hidden">
-          <div className="flex-1 bg-zinc-900/40 border border-zinc-800 rounded-[32px] p-5 shadow-2xl backdrop-blur-sm flex flex-col overflow-hidden group/catalog hover:bg-zinc-900/50 transition-all">
+          <div className="flex-1 backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[32px] p-5 shadow-2xl flex flex-col overflow-hidden group/catalog hover:bg-[var(--bg-card)]/60 transition-all">
             <div className="flex items-center gap-3 mb-5 shrink-0">
               <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-lg group-hover/catalog:scale-105 transition-transform">
                 <Package size={20} />
               </div>
               <div>
-                <h3 className="text-[13px] font-black text-zinc-100 uppercase tracking-tight leading-none mb-1">
+                <h3 className="text-[13px] font-black text-[var(--text-primary)] uppercase tracking-tight leading-none mb-1">
                   Danh mục Sản phẩm
                 </h3>
-                <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
+                <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
                   Kho vận hành
                 </p>
               </div>
@@ -769,13 +769,13 @@ export const OrderApproval = () => {
 
             <div className="relative mb-6 shrink-0">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-700"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"
                 size={14}
               />
               <input
                 type="text"
                 placeholder="Tìm sản phẩm nhanh..."
-                className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl py-2.5 pl-10 pr-3 text-[11px] text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/40 transition-all font-bold"
+                className="w-full bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-xl py-2.5 pl-10 pr-3 text-[11px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 focus:outline-none focus:border-amber-500/40 transition-all font-bold"
                 value={productSearchTerm}
                 onChange={(e) => setProductSearchTerm(e.target.value)}
               />
@@ -788,10 +788,10 @@ export const OrderApproval = () => {
                 <div key={idx} className="space-y-4">
                   <div className="flex items-center gap-2 px-1">
                     <Leaf size={12} className="text-amber-500" />
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none">
+                    <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest leading-none">
                       {catName}
                     </span>
-                    <div className="flex-1 h-px bg-zinc-800/50" />
+                    <div className="flex-1 h-px bg-[var(--border-primary)]" />
                   </div>
                   <div className="space-y-3">
                     {products
@@ -806,10 +806,10 @@ export const OrderApproval = () => {
                       .map((product, pIdx) => (
                         <div
                           key={pIdx}
-                          className="group p-4 rounded-[22px] bg-zinc-950/60 border border-zinc-800 hover:border-amber-500/20 transition-all duration-300"
+                          className="group p-4 rounded-[22px] bg-[var(--bg-root)]/60 border border-[var(--border-primary)] hover:border-amber-500/20 transition-all duration-300"
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <span className="text-[12px] font-bold text-zinc-300 group-hover:text-amber-500 transition-colors line-clamp-2">
+                            <span className="text-[12px] font-bold text-[var(--text-primary)] group-hover:text-amber-500 transition-colors line-clamp-2">
                               {product.name}
                             </span>
                             <span className="text-[11px] font-black text-amber-500 tabular-nums shrink-0">
@@ -820,13 +820,13 @@ export const OrderApproval = () => {
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-zinc-600 uppercase tracking-wider font-extrabold flex items-center gap-1.5 leading-none">
-                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
+                            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider font-extrabold flex items-center gap-1.5 leading-none">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--border-primary)]" />
                               {product.unit}
                             </span>
                             <Badge
                               variant="secondary"
-                              className="bg-zinc-900 text-zinc-500 border-zinc-800 text-[8px] h-4 font-black"
+                              className="bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-primary)] text-[8px] h-4 font-black"
                             >
                               HOẠT ĐỘNG
                             </Badge>
@@ -840,7 +840,7 @@ export const OrderApproval = () => {
 
             <Button
               variant="ghost"
-              className="w-full mt-6 h-12 text-[11px] font-black uppercase tracking-widest text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 border border-zinc-800 rounded-2xl shrink-0 transition-all"
+              className="w-full mt-6 h-12 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5 border border-[var(--border-primary)] rounded-2xl shrink-0 transition-all"
               onClick={() => fetchData()}
             >
               Làm mới Danh mục
@@ -868,7 +868,7 @@ export const OrderApproval = () => {
                 <h3 className="text-lg font-black text-emerald-500 uppercase tracking-tight">
                   Cơ hội Duyệt ngay
                 </h3>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
                   Đơn hàng an toàn, đủ công suất
                 </p>
               </div>
@@ -885,13 +885,13 @@ export const OrderApproval = () => {
                 .map((o) => (
                   <div
                     key={o.orderId}
-                    className="flex justify-between items-center p-4 bg-zinc-950/60 border border-emerald-500/10 rounded-2xl hover:border-emerald-500/30 transition-all duration-300"
+                    className="flex justify-between items-center p-4 bg-[var(--bg-root)]/60 border border-emerald-500/10 rounded-2xl hover:border-emerald-500/30 transition-all duration-300"
                   >
                     <div className="flex flex-col">
-                      <span className="text-sm font-black text-white">
+                      <span className="text-sm font-black text-[var(--text-primary)]">
                         ORD-{o.orderId}
                       </span>
-                      <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5 truncate max-w-[140px]">
+                      <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-0.5 truncate max-w-[140px]">
                         {o.storeName}
                       </span>
                     </div>
@@ -903,8 +903,8 @@ export const OrderApproval = () => {
               {filteredOrders.filter(
                 (o) => validationResults[o.orderId]?.isFeasible,
               ).length === 0 && (
-                <div className="py-12 text-center bg-zinc-950/40 rounded-[28px] border border-dashed border-zinc-800">
-                  <span className="text-zinc-600 font-black uppercase text-[10px] tracking-widest italic">
+                <div className="py-12 text-center bg-[var(--bg-root)]/40 rounded-[28px] border border-dashed border-[var(--border-primary)]">
+                  <span className="text-[var(--text-secondary)] font-black uppercase text-[10px] tracking-widest italic">
                     Không có gợi ý ưu tiên
                   </span>
                 </div>
@@ -923,7 +923,7 @@ export const OrderApproval = () => {
                 <h3 className="text-lg font-black text-red-500 uppercase tracking-tight">
                   Rủi ro Quá tải
                 </h3>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
                   Phát hiện thiếu hụt công suất
                 </p>
               </div>
@@ -939,13 +939,13 @@ export const OrderApproval = () => {
                 .map((o) => (
                   <div
                     key={o.orderId}
-                    className="flex justify-between items-center p-4 bg-zinc-950/60 border border-red-500/10 rounded-2xl hover:border-red-500/30 transition-all hover:translate-x-1 duration-300"
+                    className="flex justify-between items-center p-4 bg-[var(--bg-root)]/60 border border-red-500/10 rounded-2xl hover:border-red-500/30 transition-all hover:translate-x-1 duration-300"
                   >
                     <div className="flex flex-col">
-                      <span className="text-sm font-black text-white">
+                      <span className="text-sm font-black text-[var(--text-primary)]">
                         ORD-{o.orderId}
                       </span>
-                      <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5 truncate max-w-[140px]">
+                      <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-0.5 truncate max-w-[140px]">
                         {o.storeName}
                       </span>
                     </div>
@@ -970,7 +970,7 @@ export const OrderApproval = () => {
                   validationResults[o.orderId] &&
                   !validationResults[o.orderId].isFeasible,
               ).length === 0 && (
-                <div className="py-12 text-center bg-zinc-950/40 rounded-[28px] border border-dashed border-zinc-800">
+                <div className="py-12 text-center bg-[var(--bg-root)]/40 rounded-[28px] border border-dashed border-[var(--border-primary)]">
                   <span className="text-emerald-500 font-black uppercase text-[10px] tracking-widest italic">
                     Hệ thống Ổn định
                   </span>
@@ -1015,18 +1015,18 @@ export const OrderApproval = () => {
       />
 
       {showRejectModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 dark:bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-red-600/50"></div>
             <div className="flex items-center gap-4 mb-8">
               <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 shadow-lg border border-red-500/20">
                 <AlertCircle size={28} />
               </div>
               <div>
-                <h3 className="text-xl font-black text-zinc-100 uppercase tracking-tight leading-none mb-1">
+                <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight leading-none mb-1">
                   Từ chối Đơn hàng
                 </h3>
-                <p className="text-[11px] text-zinc-500 font-black uppercase tracking-widest underline decoration-red-500/30 underline-offset-4">
+                <p className="text-[11px] text-[var(--text-secondary)] font-black uppercase tracking-widest underline decoration-red-500/30 underline-offset-4">
                   {rejectingOrderId
                     ? `Mã đơn: #ORD-${rejectingOrderId}`
                     : `${selectedOrderIds.size} Đơn hàng đang chọn`}
@@ -1034,11 +1034,11 @@ export const OrderApproval = () => {
               </div>
             </div>
             <div className="space-y-2 mb-8">
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">
+              <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest ml-1">
                 Lý do từ chối (Bắt buộc)
               </label>
               <textarea
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-[22px] p-5 text-sm text-zinc-200 placeholder:text-zinc-800 focus:outline-none focus:border-red-500/40 focus:ring-red-500/5 transition-all min-h-[140px] resize-none font-medium custom-scrollbar"
+                className="w-full bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-[22px] p-5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 focus:outline-none focus:border-red-500/40 focus:ring-red-500/5 transition-all min-h-[140px] resize-none font-medium custom-scrollbar"
                 placeholder="Ví dụ: Sản phẩm tạm hết hàng..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
@@ -1057,7 +1057,7 @@ export const OrderApproval = () => {
                 variant="ghost"
                 onClick={() => setShowRejectModal(false)}
                 disabled={isProcessing}
-                className="h-10 text-zinc-600 hover:text-zinc-300 font-black uppercase text-[10px] tracking-widest transition-colors"
+                className="h-10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-black uppercase text-[10px] tracking-widest transition-colors"
               >
                 Quay lại
               </Button>

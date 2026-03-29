@@ -145,7 +145,7 @@ export const CreateShipment = () => {
 
         // Tự động map các cửa hàng và đơn hàng
         const storeMap = new Map<number, StoreOrderResponse[]>();
-        planOrders.forEach((o) => {
+        planOrders.forEach((o: StoreOrderResponse) => {
           if (!storeMap.has(o.storeId)) {
             storeMap.set(o.storeId, []);
           }
@@ -168,7 +168,7 @@ export const CreateShipment = () => {
         // Update available stores for this plan
         const stores = storeIds
           .map((id) => {
-            const o = planOrders.find((x) => x.storeId === id);
+            const o = planOrders.find((x: StoreOrderResponse) => x.storeId === id);
             return {
               id,
               name: o?.storeName || `Chi nhánh ${id}`,
@@ -370,540 +370,481 @@ export const CreateShipment = () => {
     );
   };
 
-  return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-20 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/shipment")}
-            className="h-10 w-10 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl"
-          >
-            <ArrowLeft size={18} />
-          </Button>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Badge
-                variant="orange"
-                className="text-[9px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase bg-[#DE802B]/20 text-[#DE802B]"
-              >
-                Bếp trung tâm
-              </Badge>
-              <h1 className="text-2xl font-black text-zinc-100 uppercase tracking-tight">
-                Tạo đơn vận chuyển
-              </h1>
-            </div>
-            <p className="text-xs text-zinc-500 font-medium tracking-wide">
-              Tạo lệnh xuất kho cho bộ phận Bếp chuẩn bị hàng.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate("/shipment")}
-            className="border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800/50 uppercase text-[10px] font-black tracking-widest h-12 px-6 rounded-2xl"
-          >
-            Hủy bỏ
-          </Button>
-          <Button
-            onClick={handleCreate}
-            disabled={isSubmitting || isLoading}
-            className="bg-[#DE802B] hover:bg-[#c97327] text-black font-black uppercase text-xs tracking-widest px-8 h-12 shadow-xl shadow-[#DE802B]/20 border-0 flex items-center gap-2"
-          >
-            {isSubmitting ? (
-              "Đang gửi..."
-            ) : (
-              <>
-                <Save size={18} /> Gửi đến bếp
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Form Details */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Primary Info Card */}
-          <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 p-8 space-y-8">
-            <div>
-              <h2 className="text-sm font-black text-zinc-100 uppercase tracking-widest flex items-center gap-2">
-                <ClipboardList size={16} className="text-[#5C6F2B]" /> Cấu hình
-                cốt lõi
-              </h2>
-              <p className="text-[11px] text-zinc-600 font-medium mt-1 uppercase tracking-tighter">
-                Bắt buộc để hệ thống đối soát sản lượng
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">
-                  Kế hoạch sản xuất (Cần giao)
-                </label>
-                <div className="relative">
-                  <select
-                    className="w-full appearance-none pl-11 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#5C6F2B]/20 focus:border-[#5C6F2B]/50 transition-all cursor-pointer"
-                    value={
-                      availablePlans.some(
-                        (p: ProductionPlanSummaryResponse) =>
-                          p.planId.toString() === form.productionPlanId,
-                      )
-                        ? form.productionPlanId
-                        : ""
-                    }
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        productionPlanId: e.target.value,
-                      }))
-                    }
-                  >
-                    <option value="">-- Chọn Kế hoạch --</option>
-                    {[...availablePlans]
-                      .sort(
-                        (
-                          a: ProductionPlanSummaryResponse,
-                          b: ProductionPlanSummaryResponse,
-                        ) => Number(b.planId) - Number(a.planId),
-                      )
-                      .map((p: ProductionPlanSummaryResponse) => (
-                        <option key={p.planId} value={p.planId}>
-                          #{p.planId} - {p.planName}
-                        </option>
-                      ))}
-                  </select>
-                  <Calendar
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600"
-                    size={16}
-                  />
+    return (
+        <div className="min-h-screen bg-[var(--bg-root)] pb-20">
+            {/* Cinematic Header */}
+            <div className="relative h-[380px] w-full overflow-hidden group/header">
+                <div className="absolute inset-0 bg-[var(--bg-root)]">
+                    <img
+                        src="https://images.unsplash.com/photo-1549194380-f30671841d6c?q=80&w=2070&auto=format&fit=crop"
+                        className="w-full h-full object-cover opacity-40 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
+                        alt="Industrial Logistics"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-root)] via-[var(--bg-root)]/60 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-root)] via-transparent to-[var(--bg-root)]"></div>
                 </div>
-              </div>
 
-              {/* Plan selection logic is now consolidated in the first dropdown above */}
-
-              <div className="space-y-3 md:col-span-2 pt-2 border-t border-zinc-800/50">
-                <label className="text-[10px] font-black text-[#DE802B] uppercase tracking-widest ml-1">
-                  Loại xe vận chuyển (AhaMove)
-                </label>
-                <div className="relative">
-                  <select
-                    className="w-full appearance-none pl-12 pr-4 h-14 bg-[#DE802B]/5 border border-[#DE802B]/30 rounded-2xl text-sm font-bold text-[#DE802B] focus:outline-none focus:ring-2 focus:ring-[#DE802B]/50 transition-all cursor-pointer"
-                    value={form.ahamoveServiceId}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        ahamoveServiceId: e.target
-                          .value as AhamoveServiceIdType,
-                      }))
-                    }
-                  >
-                    <option value="SGN-BIKE">Bike (Xe máy)</option>
-                    <option value="SGN-TRUCK-500">Truck (Xe tải 500kg)</option>
-                    <option value="SGN-TRUCK-1000">
-                      Truck (Xe tải 1000kg)
-                    </option>
-                    <option value="SGN-PREMIUM">Premium (Giao Siêu Tốc)</option>
-                  </select>
-                  <Truck
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#DE802B]"
-                    size={18}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Routing / Drop Points */}
-          <div className="bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 p-8 space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-black text-zinc-100 uppercase tracking-widest flex items-center gap-2">
-                  <MapPin size={16} className="text-[#DE802B]" /> Lộ trình & Các
-                  điểm giao
-                </h2>
-                <p className="text-[11px] text-zinc-600 font-medium mt-1 uppercase tracking-tighter">
-                  Thêm các chi nhánh cần giao trên cùng chuyến xe.
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-[#5C6F2B]/50 text-[#5C6F2B] hover:bg-[#5C6F2B]/10 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2"
-                onClick={addDropPoint}
-              >
-                <PlusCircle size={14} /> Thêm điểm giao
-              </Button>
-            </div>
-
-            <div className="space-y-6">
-              {form.dropPoints.map((dp, idx) => {
-                const branchOrders = dp.storeId
-                  ? allOrders.filter(
-                      (o: any) => String(o.storeId) === String(dp.storeId),
-                    )
-                  : [];
-
-                const unshippedOrders = branchOrders.filter((o: any) =>
-                  ["ALLOCATED", "APPROVED", "READY"].includes(o.status),
-                );
-                const shippedOrders = branchOrders.filter(
-                  (o) =>
-                    [
-                      "IN_TRANSIT",
-                      "DELIVERED",
-                      "CONFIRMED",
-                      "SHIPPING",
-                      "SHIPPED",
-                    ].includes(o.status) &&
-                    (!form.productionPlanId ||
-                      o.planId === Number(form.productionPlanId)),
-                );
-
-                return (
-                  <div
-                    key={dp.id}
-                    className="p-6 bg-zinc-950/50 border border-zinc-800 rounded-3xl space-y-5 relative group"
-                  >
-                    <div className="absolute -left-3 -top-3 w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center font-black text-zinc-500 text-xs shadow-lg">
-                      {idx + 1}
-                    </div>
-                    {form.dropPoints.length > 1 && (
-                      <button
-                        onClick={() => removeDropPoint(dp.id)}
-                        className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors p-2"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-
-                    <div className="space-y-3 pt-2 w-full md:w-3/4">
-                      <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">
-                        Cửa hàng đích (Stop #{idx + 1})
-                      </label>
-                      <div className="relative">
-                        <select
-                          className="w-full appearance-none pl-12 pr-4 h-12 bg-zinc-900 border border-zinc-800 rounded-xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#5C6F2B]/20 focus:border-[#5C6F2B]/50 transition-all cursor-pointer"
-                          value={dp.storeId}
-                          onChange={(e) =>
-                            updateDropPoint(dp.id, "storeId", e.target.value)
-                          }
-                        >
-                          <option value="">-- Chọn Cửa hàng --</option>
-                          {availableStores.map((s) => {
-                            const sId = (s as any).id || (s as any).storeId;
-                            const isSelectedByOther = form.dropPoints.some(
-                              (otherDp) =>
-                                otherDp.id !== dp.id &&
-                                otherDp.storeId === sId.toString(),
-                            );
-                            return (
-                              <option
-                                key={sId}
-                                value={sId}
-                                disabled={isSelectedByOther}
-                              >
-                                {s.name} (CN #{sId}){" "}
-                                {isSelectedByOther ? "- Đã chọn" : ""}
-                              </option>
-                            );
-                          })}
-                        </select>
-                        <MapPin
-                          className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600"
-                          size={16}
-                        />
-                      </div>
+                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Badge variant="orange" className="text-[10px] font-black tracking-[0.3em] px-3 py-1 border-0 uppercase bg-amber-500/10 text-amber-500">
+                           FLEET DISPATCH
+                        </Badge>
+                        <div className="h-px w-12 bg-amber-500/30" />
+                        <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Logistics Command</span>
                     </div>
 
-                    {/* Orders Selection for this drop point */}
-                    {dp.storeId && (
-                      <div className="space-y-5 pt-2">
-                        {/* Chưa vận chuyển Section */}
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">
-                              Đơn hàng chưa vận chuyển
-                            </label>
-                            {unshippedOrders.length > 0 && (
-                              <button
-                                onClick={() =>
-                                  toggleAllOrdersForDropPoint(dp.id, dp.storeId)
-                                }
-                                className="text-[10px] font-black text-[#5C6F2B] uppercase tracking-widest hover:text-[#7a913e] transition-colors"
-                              >
-                                {dp.storeOrderIds.length ===
-                                unshippedOrders.length
-                                  ? "Bỏ chọn tất cả"
-                                  : "Chọn tất cả đơn"}
-                              </button>
-                            )}
-                          </div>
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-8">
+                        <div>
+                            <div className="flex items-center gap-4 mb-4">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => navigate("/shipment")}
+                                    className="h-12 w-12 flex items-center justify-center bg-white/5 border border-white/10 text-white hover:bg-amber-500 hover:text-black rounded-2xl transition-all shadow-2xl"
+                                >
+                                    <ArrowLeft size={20} strokeWidth={3} />
+                                </Button>
+                                <h1 className="text-6xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic leading-[0.85]">
+                                    Create <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Shipment</span>
+                                </h1>
+                            </div>
+                            <p className="text-zinc-400 max-w-xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
+                                Tạo lệnh xuất kho cho bộ phận <span className="text-amber-500">Bếp trung tâm</span>. Khởi tạo quy trình vận chuyển đa điểm.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => navigate("/shipment")}
+                                className="h-16 px-10 border-[var(--border-primary)] text-zinc-500 hover:text-white hover:bg-[var(--bg-card)] uppercase text-[11px] font-black tracking-[0.2em] rounded-2xl transition-all"
+                            >
+                                Hủy bỏ
+                            </Button>
+                            <Button
+                                onClick={handleCreate}
+                                disabled={isSubmitting || isLoading}
+                                className="h-16 px-10 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-[0_20px_50px_-10px_rgba(245,158,11,0.4)] border-0 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3"
+                            >
+                                {isSubmitting ? (
+                                    "Đang gửi..."
+                                ) : (
+                                    <>
+                                        <Save size={20} strokeWidth={3} /> Gửi đến bếp
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                          <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/30">
-                            {unshippedOrders.length > 0 ? (
-                              <div className="divide-y divide-zinc-800/50 max-h-60 overflow-y-auto custom-scrollbar">
-                                {unshippedOrders.map((order) => (
-                                  <div
-                                    key={order.orderId}
-                                    onClick={() =>
-                                      toggleOrderForDropPoint(
-                                        dp.id,
-                                        order.orderId,
-                                      )
-                                    }
-                                    className={cn(
-                                      "flex items-center gap-4 p-3 cursor-pointer transition-colors group",
-                                      dp.storeOrderIds.includes(order.orderId)
-                                        ? "bg-[#5C6F2B]/10"
-                                        : "hover:bg-zinc-800/30",
-                                    )}
-                                  >
-                                    <div
-                                      className={cn(
-                                        "w-4 h-4 rounded border flex items-center justify-center transition-all",
-                                        dp.storeOrderIds.includes(order.orderId)
-                                          ? "bg-[#5C6F2B] border-[#5C6F2B] text-black"
-                                          : "border-zinc-700 bg-zinc-800 group-hover:border-zinc-600",
-                                      )}
-                                    >
-                                      {dp.storeOrderIds.includes(
-                                        order.orderId,
-                                      ) && (
-                                        <CheckCircle2
-                                          size={10}
-                                          strokeWidth={4}
-                                        />
-                                      )}
+            <div className="max-w-7xl mx-auto px-8 -mt-10 relative z-10 space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Form Details */}
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Primary Info Card */}
+                        <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] p-10 space-y-10 shadow-2xl relative overflow-hidden group">
+                            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+                            
+                            <div>
+                                <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                                        <ClipboardList size={18} strokeWidth={2.5} />
                                     </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs font-black text-zinc-200 uppercase tracking-tighter">
-                                          Đơn #{order.orderId}
-                                        </span>
-                                        <Badge
-                                          variant="secondary"
-                                          className="text-[8px] px-1 py-0.5 border-0 uppercase"
+                                    Cấu hình cốt lõi
+                                </h2>
+                                <p className="text-[10px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
+                                    Thiết lập kế hoạch và phương thức vận tải cho luồng đối soát
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+                                        Kế hoạch sản xuất (Core Plan)
+                                    </label>
+                                    <div className="relative group/input">
+                                        <select
+                                            className="w-full appearance-none pl-12 pr-6 h-16 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl text-[11px] font-black tracking-widest uppercase text-zinc-200 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all cursor-pointer hover:bg-[var(--bg-root)]"
+                                            value={
+                                                availablePlans.some(
+                                                    (p: ProductionPlanSummaryResponse) =>
+                                                        p.planId.toString() === form.productionPlanId,
+                                                )
+                                                    ? form.productionPlanId
+                                                    : ""
+                                            }
+                                            onChange={(e) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    productionPlanId: e.target.value,
+                                                }))
+                                            }
                                         >
-                                          {order.status}
-                                        </Badge>
-                                      </div>
-                                      <div className="mt-2 space-y-1.5">
-                                        <div className="flex flex-wrap gap-1">
-                                          {order.orderDetails?.map(
-                                            (item, idx) => (
-                                              <div
-                                                key={idx}
-                                                className="text-[9px] font-bold bg-zinc-800/80 text-zinc-400 px-2 py-0.5 rounded-lg border border-zinc-700/30 flex items-center gap-1.5"
-                                              >
-                                                <span className="text-[#DE802B]">
-                                                  {item.quantity}x
-                                                </span>
-                                                <span className="truncate max-w-[150px]">
-                                                  {item.productName}
-                                                </span>
-                                              </div>
-                                            ),
-                                          )}
-                                        </div>
-                                        <div className="flex items-center justify-between pt-1 border-t border-zinc-800/30">
-                                          <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">
-                                            Tổng thanh toán:
-                                          </span>
-                                          <span className="text-[10px] text-[#DE802B] font-black italic">
-                                            {(
-                                              order.totalAmount || 0
-                                            ).toLocaleString()}
-                                          </span>
-                                        </div>
-                                      </div>
+                                            <option value="" className="bg-[var(--bg-card)] text-zinc-500 whitespace-pre">-- CHỌN KẾ HOẠCH --</option>
+                                            {[...availablePlans]
+                                                .sort(
+                                                    (
+                                                        a: ProductionPlanSummaryResponse,
+                                                        b: ProductionPlanSummaryResponse,
+                                                    ) => Number(b.planId) - Number(a.planId),
+                                                )
+                                                .map((p: ProductionPlanSummaryResponse) => (
+                                                    <option key={p.planId} value={p.planId} className="bg-[var(--bg-card)]">
+                                                        PLAN #{p.planId} - {p.planName}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                        <Calendar
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within/input:text-amber-500 transition-colors"
+                                            size={20}
+                                        />
                                     </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="p-6 text-center flex flex-col items-center gap-2 opacity-30">
-                                <Package size={32} className="text-zinc-600" />
-                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">
-                                  Không có đơn hàng sẵn sàng
-                                </span>
-                              </div>
-                            )}
-                          </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-widest ml-1">
+                                        Loại xe vận chuyển (AhaMove)
+                                    </label>
+                                    <div className="relative group/input">
+                                        <select
+                                            className="w-full appearance-none pl-12 pr-6 h-16 bg-amber-500/5 border border-amber-500/30 rounded-2xl text-[11px] font-black tracking-widest uppercase text-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all cursor-pointer hover:bg-amber-500/10 shadow-lg shadow-amber-900/10"
+                                            value={form.ahamoveServiceId}
+                                            onChange={(e) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    ahamoveServiceId: e.target
+                                                        .value as AhamoveServiceIdType,
+                                                }))
+                                            }
+                                        >
+                                            <option value="SGN-BIKE" className="bg-[var(--bg-card)] text-amber-500">BIKE (XE MÁY)</option>
+                                            <option value="SGN-TRUCK-500" className="bg-[var(--bg-card)] text-amber-500">TRUCK (XE TẢI 500KG)</option>
+                                            <option value="SGN-TRUCK-1000" className="bg-[var(--bg-card)] text-amber-500">TRUCK (XE TẢI 1000KG)</option>
+                                            <option value="SGN-PREMIUM" className="bg-[var(--bg-card)] text-amber-500">PREMIUM (GIAO SIÊU TỐC)</option>
+                                        </select>
+                                        <Truck
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500"
+                                            size={20}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Đã vận chuyển Section */}
-                        {shippedOrders.length > 0 && (
-                          <div className="space-y-3 pt-2 opacity-50">
-                            <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">
-                              Đơn hàng đã vận chuyển
-                            </label>
-                            <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/30">
-                              <div className="divide-y divide-zinc-800/50 max-h-60 overflow-y-auto custom-scrollbar">
-                                {shippedOrders.map((order) => (
-                                  <div
-                                    key={order.orderId}
-                                    className="flex items-center gap-4 p-3 opacity-70"
-                                  >
-                                    <div className="w-4 h-4 rounded border border-zinc-700/50 bg-zinc-800/50 flex items-center justify-center">
-                                      <CheckCircle2
-                                        size={10}
-                                        className="text-zinc-600"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs font-black text-zinc-400 uppercase tracking-tighter">
-                                          Đơn #{order.orderId}
-                                        </span>
-                                        <Badge
-                                          variant="secondary"
-                                          className="text-[8px] px-1 py-0.5 border-0 uppercase opacity-50"
-                                        >
-                                          {order.status}
-                                        </Badge>
-                                      </div>
-                                      <div className="mt-2 space-y-1.5">
-                                        <div className="flex flex-wrap gap-1">
-                                          {order.orderDetails?.map(
-                                            (item, idx) => (
-                                              <div
-                                                key={idx}
-                                                className="text-[9px] font-bold bg-zinc-800/30 text-zinc-500 px-2 py-0.5 rounded-lg border border-zinc-700/20 flex items-center gap-1.5"
-                                              >
-                                                <span className="text-zinc-600">
-                                                  {item.quantity}x
-                                                </span>
-                                                <span className="truncate max-w-[150px]">
-                                                  {item.productName}
-                                                </span>
-                                              </div>
-                                            ),
-                                          )}
+                        {/* Drop Points Card */}
+                        <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] p-10 space-y-10 shadow-2xl relative">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                                            <MapPin size={18} strokeWidth={2.5} />
                                         </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+                                        Lộ trình & Các điểm giao
+                                    </h2>
+                                    <p className="text-[10px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
+                                        Tổ chức thứ tự điểm đến cho đội ngũ vận tải
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-black rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 h-10 px-5 transition-all shadow-lg shadow-amber-900/10"
+                                    onClick={addDropPoint}
+                                >
+                                    <PlusCircle size={14} strokeWidth={3} /> Thêm điểm giao
+                                </Button>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
 
-            <div className="space-y-3 md:col-span-2">
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">
-                Phí vận chuyển (VNĐ) — Bỏ trống nếu qua AhaMove
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min="0"
-                  step="1000"
-                  placeholder="Ví dụ: 50000"
-                  className="w-full pl-12 pr-4 h-14 bg-zinc-950 border border-zinc-800 rounded-2xl text-sm font-bold text-zinc-200 focus:outline-none focus:ring-2 focus:ring-[#DE802B]/20 focus:border-[#DE802B]/50 transition-all placeholder:text-zinc-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  value={form.shippingFee}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      shippingFee: e.target.value,
-                    }))
-                  }
-                />
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm font-black">
-                  ₫
-                </span>
-              </div>
+                            <div className="space-y-8">
+                                {form.dropPoints.map((dp, idx) => {
+                                    const branchOrders = dp.storeId
+                                        ? allOrders.filter(
+                                            (o: any) => String(o.storeId) === String(dp.storeId),
+                                        )
+                                        : [];
+
+                                    const unshippedOrders = branchOrders.filter((o: any) =>
+                                        ["ALLOCATED", "APPROVED", "READY"].includes(o.status),
+                                    );
+
+                                    return (
+                                        <div
+                                            key={dp.id}
+                                            className="p-8 bg-[var(--bg-root)]/40 border border-[var(--border-primary)] rounded-[2rem] space-y-6 relative group/row transition-all hover:bg-[var(--bg-root)]/60"
+                                        >
+                                            <div className="absolute -left-4 -top-4 w-12 h-12 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-primary)] flex items-center justify-center font-black text-amber-500 text-lg shadow-xl shadow-black/50 tracking-tighter italic">
+                                                {String(idx + 1).padStart(2, '0')}
+                                            </div>
+                                            {form.dropPoints.length > 1 && (
+                                                <button
+                                                    onClick={() => removeDropPoint(dp.id)}
+                                                    className="absolute top-6 right-6 text-zinc-600 hover:text-red-500 transition-colors p-2"
+                                                >
+                                                    <Trash2 size={20} />
+                                                </button>
+                                            )}
+
+                                            <div className="space-y-4 pt-2 w-full md:w-3/4">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+                                                    Cửa hàng đích (STOP UNIT)
+                                                </label>
+                                                <div className="relative group/input">
+                                                    <select
+                                                        className="w-full appearance-none pl-12 pr-6 h-14 bg-zinc-950/80 border border-[var(--border-primary)] rounded-2xl text-[11px] font-black tracking-widest uppercase text-zinc-200 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all cursor-pointer hover:bg-zinc-950"
+                                                        value={dp.storeId}
+                                                        onChange={(e) =>
+                                                            updateDropPoint(dp.id, "storeId", e.target.value)
+                                                        }
+                                                    >
+                                                        <option value="" className="bg-[var(--bg-card)] text-zinc-500 whitespace-pre">-- CHỌN CHI NHÁNH --</option>
+                                                        {availableStores.map((s) => {
+                                                            const sId = (s as any).id || (s as any).storeId;
+                                                            const isSelectedByOther = form.dropPoints.some(
+                                                                (otherDp) =>
+                                                                    otherDp.id !== dp.id &&
+                                                                    otherDp.storeId === sId.toString(),
+                                                            );
+                                                            return (
+                                                                <option
+                                                                    key={sId}
+                                                                    value={sId}
+                                                                    disabled={isSelectedByOther}
+                                                                    className="bg-[var(--bg-card)]"
+                                                                >
+                                                                    {s.name} (CN #{sId}){" "}
+                                                                    {isSelectedByOther ? "- ĐÃ ĐỊNH TUYẾN" : ""}
+                                                                </option>
+                                                            );
+                                                        })}
+                                                    </select>
+                                                    <MapPin
+                                                        className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within/input:text-amber-500 transition-colors"
+                                                        size={18}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Orders Selection for this drop point */}
+                                            {dp.storeId && (
+                                                <div className="space-y-6 pt-4 border-t border-[var(--border-primary)]/50">
+                                                    {/* Chưa vận chuyển Section */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+                                                                Đơn hàng khả dụng (READY)
+                                                            </label>
+                                                            {unshippedOrders.length > 0 && (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        toggleAllOrdersForDropPoint(dp.id, dp.storeId)
+                                                                    }
+                                                                    className="text-[10px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest transition-colors px-3 py-1 bg-amber-500/10 rounded-lg border border-amber-500/20 shadow-inner italic"
+                                                                >
+                                                                    {dp.storeOrderIds.length ===
+                                                                    unshippedOrders.length
+                                                                        ? "Deselect All"
+                                                                        : "Select All Units"}
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="border border-[var(--border-primary)] rounded-2xl overflow-hidden bg-zinc-950/20 backdrop-blur-sm">
+                                                            {unshippedOrders.length > 0 ? (
+                                                                <div className="divide-y divide-[var(--border-primary)]/30 max-h-72 overflow-y-auto custom-scrollbar">
+                                                                    {unshippedOrders.map((order) => (
+                                                                        <div
+                                                                            key={order.orderId}
+                                                                            onClick={() =>
+                                                                                toggleOrderForDropPoint(
+                                                                                    dp.id,
+                                                                                    order.orderId,
+                                                                                )
+                                                                            }
+                                                                            className={cn(
+                                                                                "flex items-center gap-5 p-5 cursor-pointer transition-all group/item",
+                                                                                dp.storeOrderIds.includes(order.orderId)
+                                                                                    ? "bg-amber-500/5 shadow-inner"
+                                                                                    : "hover:bg-zinc-800/20",
+                                                                            )}
+                                                                        >
+                                                                            <div
+                                                                                className={cn(
+                                                                                    "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shadow-lg shrink-0",
+                                                                                    dp.storeOrderIds.includes(order.orderId)
+                                                                                        ? "bg-amber-500 border-amber-500 text-black shadow-amber-900/20"
+                                                                                        : "border-zinc-800 bg-zinc-900 group-hover/item:border-zinc-600",
+                                                                                )}
+                                                                            >
+                                                                                {dp.storeOrderIds.includes(
+                                                                                    order.orderId,
+                                                                                ) && (
+                                                                                    <CheckCircle2
+                                                                                        size={12}
+                                                                                        strokeWidth={4}
+                                                                                    />
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="flex-1">
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <span className="text-[13px] font-black text-zinc-100 uppercase tracking-tighter">
+                                                                                        Order #{order.orderId}
+                                                                                    </span>
+                                                                                    <Badge
+                                                                                        variant="orange"
+                                                                                        className="text-[9px] px-2 py-0 h-4 border-0 uppercase bg-emerald-500/10 text-emerald-500 font-black tracking-widest"
+                                                                                    >
+                                                                                        {order.status}
+                                                                                    </Badge>
+                                                                                </div>
+                                                                                <div className="mt-3 space-y-2">
+                                                                                    <div className="flex flex-wrap gap-1.5">
+                                                                                        {order.orderDetails?.map(
+                                                                                            (item, idx) => (
+                                                                                                <div
+                                                                                                    key={idx}
+                                                                                                    className="text-[9px] font-black bg-[var(--bg-root)]/80 text-zinc-400 px-2.5 py-1 rounded-lg border border-[var(--border-primary)] flex items-center gap-2 uppercase tracking-tight"
+                                                                                                >
+                                                                                                    <span className="text-amber-500 italic">
+                                                                                                        {item.quantity}×
+                                                                                                    </span>
+                                                                                                    <span className="truncate max-w-[150px]">
+                                                                                                        {item.productName}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                            ),
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="p-10 text-center flex flex-col items-center gap-4 opacity-30 grayscale">
+                                                                    <div className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
+                                                                         <Package size={32} className="text-zinc-600" />
+                                                                    </div>
+                                                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] italic">
+                                                                        NO READY UNITS FOUND
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Shipping Fee Card */}
+                        <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] p-10 space-y-8 shadow-2xl">
+                             <div className="space-y-4">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+                                    Phí vận chuyển (VNĐ) — Bỏ trống nếu qua AhaMove
+                                </label>
+                                <div className="relative group/input">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="1000"
+                                        placeholder="Ví dụ: 50000"
+                                        className="w-full pl-12 pr-6 h-16 bg-zinc-950 border border-[var(--border-primary)] rounded-2xl text-[13px] font-black text-zinc-200 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all placeholder:text-zinc-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none uppercase tracking-widest"
+                                        value={form.shippingFee}
+                                        onChange={(e) =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                shippingFee: e.target.value,
+                                            }))
+                                        }
+                                    />
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 text-lg font-black italic">
+                                        ₫
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Order Summary (Sidebar) */}
+                    <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8 self-start">
+                        {/* Summary Widget */}
+                        <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[2.5rem] p-8 space-y-8 shadow-2xl relative overflow-hidden group">
+                            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
+                            
+                            <div>
+                                <h2 className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                                        <Truck size={18} strokeWidth={2.5} />
+                                    </div>
+                                    Dispatch Summary
+                                </h2>
+                                <p className="text-[9px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
+                                    Tổng hợp thông tin mẻ vận chuyển
+                                </p>
+                            </div>
+
+                            <div className="space-y-5">
+                                <div className="p-6 bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-2xl flex items-center justify-between group/stat hover:bg-[var(--bg-root)] transition-colors">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">Route Stops</span>
+                                        <span className="text-2xl font-black text-white tracking-tighter leading-none italic">
+                                            {form.dropPoints.filter(dp => dp.storeId).length.toString().padStart(2, '0')}
+                                        </span>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20 group-hover/stat:text-amber-500 group-hover/stat:border-amber-500/20 transition-all">
+                                        <MapPin size={24} strokeWidth={2.5}/>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-2xl flex items-center justify-between group/stat hover:bg-[var(--bg-root)] transition-colors">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">Selected Units</span>
+                                        <span className="text-2xl font-black text-white tracking-tighter leading-none italic">
+                                            {getTotalOrdersSelected().toString().padStart(2, '0')}
+                                        </span>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20 group-hover/stat:text-amber-500 group-hover/stat:border-amber-500/20 transition-all">
+                                        <Package size={24} strokeWidth={2.5}/>
+                                    </div>
+                                </div>
+
+                                <div className="relative pt-4 border-t border-[var(--border-primary)]/50 group/input">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 mb-3 block">
+                                        Ghi chú vận hành (Optional)
+                                    </label>
+                                    <textarea
+                                        rows={4}
+                                        className="w-full bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl p-4 text-[11px] font-bold text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/30 transition-all uppercase tracking-widest"
+                                        placeholder="NHẬP GHI CHÚ BỔ SUNG..."
+                                        value={form.remarks}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, remarks: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5 flex items-start gap-4">
+                                <div className="p-1.5 bg-amber-500 rounded-lg text-black mt-1 shadow-lg shadow-amber-500/30">
+                                    <InfoIcon size={14} strokeWidth={3} />
+                                </div>
+                                <p className="text-[10px] font-black text-amber-500/90 leading-relaxed uppercase tracking-widest italic">
+                                    Vui lòng kiểm tra kỹ danh sách ĐƠN HÀNG và KẾ HOẠCH đồng bộ trước khi gửi yêu cầu đến bếp.
+                                </p>
+                            </div>
+
+                            <Button
+                                onClick={handleCreate}
+                                disabled={isSubmitting || isLoading || getTotalOrdersSelected() === 0}
+                                className="w-full h-16 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-amber-900/20 border-0 transition-all hover:-translate-y-1 active:scale-95"
+                            >
+                                {isSubmitting ? "Đang gửi..." : "Gửi đến bếp"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-
-        {/* Right Column: Summary & Guidance */}
-        <div className="space-y-6">
-          <div className="bg-zinc-900/40 p-8 rounded-[32px] border border-zinc-800/50 sticky top-8 space-y-8">
-            <div>
-              <h2 className="text-xs font-black text-zinc-500 uppercase tracking-[0.2em] mb-4">
-                Chi tiết kiện hàng
-              </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-zinc-800/50">
-                  <span className="text-[11px] font-bold text-zinc-600 uppercase">
-                    Tổng số điểm giao
-                  </span>
-                  <span className="text-sm font-black text-zinc-200">
-                    {form.dropPoints.filter((dp) => dp.storeId).length}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-3 border-b border-zinc-800/50">
-                  <span className="text-[11px] font-bold text-zinc-600 uppercase">
-                    Tổng số đơn hàng
-                  </span>
-                  <span className="text-sm font-black text-zinc-200">
-                    {getTotalOrdersSelected()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-3 border-b border-zinc-800/50">
-                  <span className="text-[11px] font-bold text-zinc-600 uppercase">
-                    Phí vận chuyển
-                  </span>
-                  <span
-                    className={cn(
-                      "text-[11px] font-black",
-                      form.shippingFee
-                        ? "text-[#DE802B]"
-                        : "text-zinc-400 italic",
-                    )}
-                  >
-                    {form.shippingFee
-                      ? `${Number(form.shippingFee).toLocaleString()}đ`
-                      : "AhaMove tự tính"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-3">
-                  <span className="text-[11px] font-bold text-zinc-600 uppercase">
-                    Đối tác VC
-                  </span>
-                  <span className="text-sm font-black text-[#DE802B]">
-                    AhaMove
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-3xl bg-[#DE802B]/[0.03] border border-[#DE802B]/10 space-y-3 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-[#DE802B]/[0.05] blur-2xl"></div>
-              <div className="flex items-center gap-2 text-[#DE802B] relative z-10">
-                <InfoIcon size={14} strokeWidth={3} />
-                <span className="text-[10px] font-black uppercase tracking-widest">
-                  AhaMove Webhook
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-500 font-medium leading-relaxed tracking-tight relative z-10 italic">
-                Sau khi gửi đơn, hệ thống sẽ tự động gọi sang AhaMove để tìm tài
-                xế. Bạn có thể theo dõi tiến trình trực tiếp qua Link Tracking.
-              </p>
-            </div>
-
-            <Button
-              onClick={handleCreate}
-              disabled={
-                isSubmitting || isLoading || getTotalOrdersSelected() === 0
-              }
-              className="w-full h-16 bg-[#DE802B] hover:bg-[#c97327] text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-[#DE802B]/20 border-0"
-            >
-              {isSubmitting ? "Đang gửi..." : "Gửi đến bếp"}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };

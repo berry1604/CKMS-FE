@@ -116,9 +116,9 @@ export const WarehouseFulfillment = () => {
         {
             header: 'Mã đơn',
             accessorKey: 'orderId',
-            className: 'font-medium text-gray-200',
+            className: 'font-medium text-[var(--text-primary)]',
             cell: (order) => (
-                <span className="font-mono text-xs bg-amber-500/10 text-amber-500 px-2 py-1 rounded">
+                <span className="font-mono text-xs bg-[var(--accent-amber)]/10 text-[var(--accent-amber)] px-2 py-1 rounded">
                     #{order.orderId}
                 </span>
             ),
@@ -126,13 +126,13 @@ export const WarehouseFulfillment = () => {
         {
             header: 'Cửa hàng',
             accessorKey: 'storeId',
-            cell: (order) => <span className="font-medium text-gray-300">Cửa hàng {order.storeId}</span>,
+            cell: (order) => <span className="font-medium text-[var(--text-primary)]">Cửa hàng {order.storeId}</span>,
         },
         {
             header: 'Ngày đặt',
             accessorKey: 'orderDate',
             cell: (order) => (
-                <span className="text-gray-500 text-sm">
+                <span className="text-[var(--text-secondary)] text-sm">
                     {new Date(order.orderDate).toLocaleDateString('vi-VN')}
                 </span>
             ),
@@ -173,7 +173,7 @@ export const WarehouseFulfillment = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => setSelectedOrder(order)}
-                        className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                        className="text-amber-600 hover:text-amber-700 hover:bg-amber-500/10 dark:text-amber-500 dark:hover:text-amber-400 dark:hover:bg-amber-500/10 font-bold"
                     >
                         Xử lý xuất bếp
                     </Button>
@@ -224,34 +224,34 @@ export const WarehouseFulfillment = () => {
                 footer={footer}
             >
                 <div className="space-y-6">
-                    <Card className="p-4 border-indigo-100 bg-indigo-50/30">
+                    <Card className="p-4 border-[var(--border-primary)] bg-[var(--text-primary)]/[0.02]">
                         <div className="flex items-start gap-4">
-                            <div className="p-3 bg-indigo-100 text-indigo-600 rounded-lg">
+                            <div className="p-3 bg-[var(--accent-amber)]/10 text-[var(--accent-amber)] rounded-lg">
                                 <Warehouse size={24} />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-indigo-900">Thông tin xuất bếp</h3>
-                                <p className="text-sm text-indigo-700/80 mt-1">
+                                <h3 className="font-semibold text-[var(--text-primary)]">Thông tin xuất bếp</h3>
+                                <p className="text-sm text-[var(--text-secondary)] mt-1">
                                     Hệ thống sẽ đối soát tồn bếp hiện tại (Bếp Tổng #{warehouseId}) với yêu cầu của đơn hàng.
                                 </p>
                             </div>
                         </div>
                     </Card>
 
-                    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sản phẩm</th>
-                                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Yêu cầu</th>
-                                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Tồn bếp</th>
-                                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Trạng thái</th>
+                    <div className="border border-[var(--border-primary)] rounded-xl overflow-hidden shadow-sm">
+                        <table className="min-w-full divide-y divide-[var(--border-primary)]">
+                            <thead className="bg-[var(--text-primary)]/5">
+                                <tr className="bg-[var(--text-primary)]/[0.03] uppercase tracking-widest text-[10px] font-black italic">
+                                    <th className="px-6 py-4 text-left text-[var(--text-secondary)]">Sản phẩm</th>
+                                    <th className="px-6 py-4 text-right text-[var(--text-secondary)]">Yêu cầu</th>
+                                    <th className="px-6 py-4 text-right text-[var(--text-secondary)]">Tồn bếp</th>
+                                    <th className="px-6 py-4 text-center text-[var(--text-secondary)]">Trạng thái</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-100">
+                            <tbody className="divide-y divide-[var(--border-primary)]">
                                 {isLoadingStock ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan={4} className="px-6 py-8 text-center text-[var(--text-secondary)]">
                                             Đang kiểm tra tồn bếp...
                                         </td>
                                     </tr>
@@ -259,26 +259,26 @@ export const WarehouseFulfillment = () => {
                                     selectedOrder.orderDetails?.map((item, idx) => {
                                         const stockInfo = checkStock(item.productId, item.quantity);
                                         return (
-                                            <tr key={idx} className={stockInfo.isSufficient ? 'bg-white' : 'bg-red-50/50'}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <tr key={idx} className={`transition-colors border-b border-[var(--border-primary)]/5 ${stockInfo.isSufficient ? 'bg-transparent' : 'bg-red-500/5'}`}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-black italic uppercase text-[var(--text-primary)]">
                                                     {item.productName || `Product #${item.productId}`}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)] text-right font-black italic">
                                                     {item.quantity}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                                                    <span className={stockInfo.isSufficient ? 'text-green-600 font-medium' : 'text-red-600 font-bold'}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)] text-right font-mono font-black italic">
+                                                    <span className={stockInfo.isSufficient ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
                                                         {stockInfo.currentStock}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center flex justify-center">
                                                     {stockInfo.isSufficient ? (
-                                                        <div className="flex items-center text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs font-medium">
-                                                            <CheckCircle size={14} className="mr-1" /> Đủ hàng
+                                                        <div className="flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+                                                            <CheckCircle size={12} className="mr-1" /> Đủ hàng
                                                         </div>
                                                     ) : (
-                                                        <div className="flex items-center text-red-600 bg-red-50 px-2 py-1 rounded-full text-xs font-medium">
-                                                            <XCircle size={14} className="mr-1" /> Thiếu hàng
+                                                        <div className="flex items-center text-red-600 dark:text-red-400 bg-red-500/10 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-500/20">
+                                                            <XCircle size={12} className="mr-1" /> Thiếu hàng
                                                         </div>
                                                     )}
                                                 </td>
@@ -291,11 +291,11 @@ export const WarehouseFulfillment = () => {
                     </div>
 
                     {!isLoadingStock && !allSufficient && (
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
                             <XCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
                             <div>
-                                <h4 className="font-semibold text-red-800 text-sm">Không đủ hàng trong bếp</h4>
-                                <p className="text-red-600 text-sm mt-1">Một số sản phẩm không đủ tồn bếp để đáp ứng đơn hàng này. Vui lòng sản xuất thêm hoặc nạp bếp trước khi xuất.</p>
+                                <h4 className="font-semibold text-red-500 text-sm uppercase">Không đủ hàng trong bếp</h4>
+                                <p className="text-[var(--text-secondary)] text-sm mt-1">Một số sản phẩm không đủ tồn bếp để đáp ứng đơn hàng này. Vui lòng sản xuất thêm hoặc nạp bếp trước khi xuất.</p>
                             </div>
                         </div>
                     )}
@@ -308,25 +308,25 @@ export const WarehouseFulfillment = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-200 tracking-tight">Hệ thống Bếp xuất hàng</h1>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Hệ thống Bếp xuất hàng</h1>
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">
                         Kiểm tra tồn bếp và xử lý giao hàng cho hệ thống cửa hàng.
                     </p>
                 </div>
             </div>
 
-            <Card className="border-0 shadow-sm ring-1 ring-zinc-800 bg-zinc-900/50">
-                <div className="p-4 border-b border-zinc-800 flex flex-col md:flex-row gap-4 justify-between items-center bg-zinc-900/50">
+            <Card className="border-0 shadow-sm ring-1 ring-[var(--border-primary)] bg-[var(--bg-card)]">
+                <div className="p-4 border-b border-[var(--border-primary)] flex flex-col md:flex-row gap-4 justify-between items-center bg-[var(--text-primary)]/[0.01]">
                     <div className="relative w-full md:w-80">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
                         <Input
                             placeholder="Tìm kiếm mã đơn, cửa hàng..."
-                            className="pl-10 bg-zinc-900/50 border-zinc-800 text-gray-200"
+                            className="pl-10 h-10"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-400 font-medium">
+                    <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)] font-medium">
                         <Package size={16} />
                         Có {filteredOrders.length} đơn hàng chờ xử lý
                     </div>

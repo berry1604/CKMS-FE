@@ -113,51 +113,59 @@ export const KitchenInventory = () => {
                 const diffDays = row.expiryDate ? Math.ceil((new Date(row.expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
                 const isExpired = diffDays !== null && diffDays < 0;
                 const isExpiringSoon = diffDays !== null && diffDays >= 0 && diffDays <= 7;
-                
+
                 return (
-                <div className="flex items-center gap-4 group/item transition-all duration-300">
-                    <div className={`p-2 rounded-xl transition-all duration-300 ${row.itemType === 'MATERIAL' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                        {row.itemType === 'MATERIAL' ? (
-                            <Leaf size={18} />
-                        ) : (
-                            <Package size={18} />
-                        )}
+                    <div className="flex items-center gap-4 group/item transition-all duration-300">
+                        <div className={cn(
+                            "p-2 rounded-xl transition-all duration-300 border",
+                            row.itemType === 'MATERIAL'
+                                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                        )}>
+                            {row.itemType === 'MATERIAL' ? (
+                                <Leaf size={18} />
+                            ) : (
+                                <Package size={18} />
+                            )}
+                        </div>
+                        <div>
+                            <span className={cn(
+                                "font-bold transition-colors uppercase italic",
+                                isExpired ? "text-red-500" : isExpiringSoon ? "text-amber-500" : "text-[var(--text-primary)]"
+                            )}>
+                                {row.itemName}
+                            </span>
+                            {(isExpired || isExpiringSoon) && (
+                                <div className="flex items-center gap-2 mt-1">
+                                    {isExpired && (
+                                        <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[8px] font-black tracking-widest uppercase border border-red-500/20 flex items-center gap-1">
+                                            <AlertTriangle className="w-2.5 h-2.5" />
+                                            Đã hết hạn
+                                        </span>
+                                    )}
+                                    {isExpiringSoon && (
+                                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[8px] font-black tracking-widest uppercase border border-amber-500/20 flex items-center gap-1">
+                                            <AlertTriangle className="w-2.5 h-2.5" />
+                                            Sắp hết hạn
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div>
-                        <span className={`font-bold transition-colors ${isExpired ? "text-red-400 group-hover/item:text-red-300" : isExpiringSoon ? "text-amber-400 group-hover/item:text-amber-300" : "text-zinc-100 group-hover/item:text-white"}`}>
-                            {row.itemName}
-                        </span>
-                        {(isExpired || isExpiringSoon) && (
-                            <div className="flex items-center gap-2 mt-1">
-                                {isExpired && (
-                                    <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[8px] font-black tracking-widest uppercase border border-red-500/20 flex items-center gap-1">
-                                        <AlertTriangle className="w-2.5 h-2.5" />
-                                        Đã hết hạn
-                                    </span>
-                                )}
-                                {isExpiringSoon && (
-                                    <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[8px] font-black tracking-widest uppercase border border-amber-500/20 flex items-center gap-1">
-                                        <AlertTriangle className="w-2.5 h-2.5" />
-                                        Sắp hết hạn
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+                )
+            }
         },
         {
             header: 'Phân loại',
             cell: (row) => (
                 <div className="flex">
-                    <span className={`
-                        px-3 py-1 text-[9px] rounded-full uppercase font-black tracking-widest border
-                        ${row.itemType === 'MATERIAL'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
-                        }
-                    `}>
+                    <span className={cn(
+                        "px-3 py-1 text-[9px] rounded-full uppercase font-black tracking-widest border",
+                        row.itemType === 'MATERIAL'
+                            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-sm'
+                            : 'bg-amber-500/10 text-amber-600 border-amber-500/20 shadow-sm'
+                    )}>
                         {row.itemType === 'MATERIAL' ? 'Nguyên liệu' : 'Thành phẩm'}
                     </span>
                 </div>
@@ -169,13 +177,12 @@ export const KitchenInventory = () => {
                 const isLowStock = row.quantity <= 5;
                 return (
                     <div className="flex items-center gap-3">
-                        <div className={`
-                            flex items-center px-3 py-1.5 rounded-xl border transition-all duration-300
-                            ${isLowStock
-                                ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.1)]'
-                                : 'bg-white/5 border-white/5 text-zinc-100'
-                            }
-                        `}>
+                        <div className={cn(
+                            "flex items-center px-3 py-1.5 rounded-xl border transition-all duration-300",
+                            isLowStock
+                                ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-sm'
+                                : 'bg-[var(--bg-root)] border-[var(--border-primary)] text-[var(--text-primary)]'
+                        )}>
                             <span className="text-sm font-black mono tracking-tighter">
                                 {row.quantity.toLocaleString()}
                             </span>
@@ -185,7 +192,7 @@ export const KitchenInventory = () => {
                         </div>
                         {isLowStock && (
                             <div className="animate-pulse">
-                                <AlertTriangle size={16} className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                                <AlertTriangle size={16} className="text-red-500" />
                             </div>
                         )}
                     </div>
@@ -197,9 +204,9 @@ export const KitchenInventory = () => {
             cell: (row) => {
                 if (row.expiryDate) {
                     const diffDays = Math.ceil((new Date(row.expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-                    let statusColor = "text-zinc-300";
-                    let daysColor = "text-zinc-500";
-                    
+                    let statusColor = "text-[var(--text-secondary)]";
+                    let daysColor = "text-[var(--text-secondary)]/60";
+
                     if (diffDays < 0) {
                         statusColor = "text-red-500";
                         daysColor = "text-red-400";
@@ -207,7 +214,7 @@ export const KitchenInventory = () => {
                         statusColor = "text-amber-500";
                         daysColor = "text-amber-400";
                     }
-                    
+
                     return (
                         <div className="flex flex-col">
                             <span className={`text-xs font-bold ${statusColor}`}>
@@ -221,7 +228,7 @@ export const KitchenInventory = () => {
                 }
                 return (
                     <div className="flex flex-col">
-                        <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Vĩnh viễn</span>
+                        <span className="text-[var(--text-secondary)]/40 text-[10px] font-black uppercase tracking-widest italic font-mono">Vĩnh viễn</span>
                     </div>
                 );
             }
@@ -232,14 +239,14 @@ export const KitchenInventory = () => {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => handleEditClick(row)}
-                        className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:bg-amber-500/10 hover:text-amber-500 border border-transparent hover:border-amber-500/20 transition-all"
+                        className="p-2 rounded-xl bg-[var(--bg-root)] text-[var(--text-secondary)] hover:bg-amber-500/10 hover:text-amber-500 border border-[var(--border-primary)] hover:border-amber-500/20 transition-all shadow-sm"
                         title="Chỉnh sửa"
                     >
                         <Edit size={16} />
                     </button>
                     <button
                         onClick={() => handleDeleteClick(row)}
-                        className="p-2 rounded-xl bg-white/5 text-zinc-400 hover:bg-red-500/10 hover:text-red-500 border border-transparent hover:border-red-500/20 transition-all"
+                        className="p-2 rounded-xl bg-[var(--bg-root)] text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-500 border border-[var(--border-primary)] hover:border-red-500/20 transition-all shadow-sm"
                         title="Xóa"
                     >
                         <Trash2 size={16} />
@@ -263,40 +270,41 @@ export const KitchenInventory = () => {
             {/* Cinematic Header Section */}
             <div className="relative h-[280px] -mx-4 -mt-8 mb-12 overflow-hidden group/header">
                 {/* Background Image with Parallax-like effect */}
-                <div className="absolute inset-0 bg-zinc-950">
+                <div className="absolute inset-0 bg-[var(--bg-root)]">
                     <img
                         src="/src/assets/kitchen_inventory.png"
                         alt="Inventory Hero"
-                        className="w-full h-full object-cover opacity-40 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
+                        className="w-full h-full object-cover opacity-80 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-transparent to-zinc-950"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-root)] via-[var(--bg-root)]/60 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-root)] via-transparent to-[var(--bg-root)]"></div>
                 </div>
 
                 {/* Content Overlay */}
-                <div className="absolute inset-0 flex flex-col justify-end p-10 pb-12 max-w-[1600px] mx-auto w-full">
+                <div className="absolute inset-0 flex flex-col justify-end p-10 pb-14 max-w-[1600px] mx-auto w-full">
                     <div className="flex flex-col md:flex-row justify-between items-end gap-8">
                         <div className="space-y-4 animate-in slide-in-from-left-8 duration-1000 delay-100">
                             <div className="flex items-center gap-3">
                                 <div className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 backdrop-blur-md">
-                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Inventory Command Center</span>
+                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] italic">Inventory Command Center</span>
                                 </div>
                             </div>
                             <div className="flex flex-col md:flex-row md:items-end gap-6">
                                 <div>
-                                    <h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2">
+                                    <h1 className="text-5xl font-black text-[var(--text-primary)] uppercase tracking-tighter leading-none mb-2 italic">
                                         Kho Bếp <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Trung Tâm</span>
                                     </h1>
-                                    <p className="text-zinc-400 text-sm font-medium uppercase tracking-widest max-w-xl leading-relaxed opacity-80">
+                                    <p className="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-widest max-w-xl leading-relaxed opacity-80 italic">
                                         Quản lý tồn kho nguyên liệu và thành phẩm toàn hệ thống với độ chính xác thời gian thực.
                                     </p>
                                 </div>
-                                
-                                <KitchenSelector 
-                                    selectedKitchenId={selectedKitchenId}
-                                    onKitchenChange={setSelectedKitchenId}
-                                    className="md:mb-1"
-                                />
+
+                                <div className="md:mb-1">
+                                    <KitchenSelector
+                                        selectedKitchenId={selectedKitchenId}
+                                        onKitchenChange={setSelectedKitchenId}
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -304,7 +312,7 @@ export const KitchenInventory = () => {
                             <div className="flex items-center gap-4 animate-in slide-in-from-right-8 duration-1000 delay-200">
                                 <button
                                     onClick={() => navigate('/kitchen/inventory/import', { state: { kitchenId: selectedKitchenId } })}
-                                    className="group relative flex items-center h-14 px-10 rounded-[24px] bg-white text-black font-black uppercase text-[11px] tracking-widest transition-all duration-500 hover:bg-amber-500 hover:scale-[1.05] active:scale-95 shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+                                    className="group relative flex items-center h-14 px-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-black font-black uppercase text-[11px] tracking-widest transition-all duration-500 hover:scale-[1.05] active:scale-95 shadow-[0_20px_40px_rgba(245,158,11,0.2)]"
                                 >
                                     <TrendingUp size={18} className="mr-3 transition-transform group-hover:translate-y-[-2px]" />
                                     Nhập kho hệ thống
@@ -316,48 +324,45 @@ export const KitchenInventory = () => {
             </div>
 
             {/* Stats Overview Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 -mt-20 relative z-20">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 -mt-20 relative z-20 px-4">
                 {[
-                    { label: 'Tổng số vật phẩm', value: totalItems, icon: Package, color: 'blue', desc: 'Các loại vật phẩm hiện có' },
-                    { label: 'Cảnh báo tồn kho', value: lowStockItems, icon: AlertTriangle, color: 'red', desc: 'Mặt hàng dưới mức an toàn', highlight: lowStockItems > 0 },
-                    { label: 'Sắp hết hạn', value: expiringSoonItems, icon: Clock, color: 'amber', desc: 'Vật phẩm hết hạn trong 7 ngày', highlight: expiringSoonItems > 0 }
+                    { label: 'Tổng số vật phẩm', value: totalItems, icon: Package, color: 'text-blue-500', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20', desc: 'Các loại vật phẩm hiện có' },
+                    { label: 'Cảnh báo tồn kho', value: lowStockItems, icon: AlertTriangle, color: 'text-red-500', bgColor: 'bg-red-500/10', borderColor: 'border-red-500/20', desc: 'Mặt hàng dưới mức an toàn', highlight: lowStockItems > 0 },
+                    { label: 'Sắp hết hạn', value: expiringSoonItems, icon: Clock, color: 'text-amber-500', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20', desc: 'Vật phẩm hết hạn trong 7 ngày', highlight: expiringSoonItems > 0 }
                 ].map((stat, i) => (
                     <div
                         key={i}
                         className={cn(
-                            "p-8 rounded-[32px] border transition-all duration-500 group/card relative overflow-hidden",
-                            "bg-zinc-900/60 backdrop-blur-xl border-zinc-800/50 hover:border-zinc-700/80 shadow-2xl",
-                            stat.highlight && `ring-1 ring-${stat.color}-500/30`
+                            "p-8 rounded-[3rem] border transition-all duration-500 group/card relative overflow-hidden",
+                            "bg-[var(--bg-card)] border-[var(--border-primary)] hover:border-amber-500/20 shadow-sm hover:shadow-xl",
+                            stat.highlight && `ring-1 ring-amber-500/10`
                         )}
                     >
                         <div className={cn(
-                            "absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full opacity-10 group-hover/card:opacity-20 transition-opacity",
-                            `bg-${stat.color}-500`
+                            "absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full opacity-5 group-hover/card:opacity-10 transition-opacity bg-amber-500"
                         )}></div>
 
                         <div className="flex items-start justify-between relative z-10">
                             <div className="space-y-4">
                                 <div className={cn(
                                     "w-12 h-12 rounded-2xl flex items-center justify-center border transition-transform duration-500 group-hover/card:scale-110",
-                                    stat.color === 'blue' ? "bg-blue-500/10 border-blue-500/20 text-blue-500" :
-                                        stat.color === 'red' ? "bg-red-500/10 border-red-500/20 text-red-500" :
-                                            "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                                    stat.bgColor, stat.borderColor, stat.color
                                 )}>
                                     <stat.icon size={22} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
-                                    <h3 className="text-3xl font-black text-white tracking-tighter">
+                                    <p className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] mb-1 italic">{stat.label}</p>
+                                    <h3 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter italic">
                                         {isLoading ? '---' : stat.value.toLocaleString()}
                                     </h3>
                                 </div>
-                                <p className="text-[11px] text-zinc-500 font-medium italic opacity-60">{stat.desc}</p>
+                                <p className="text-[11px] text-[var(--text-secondary)]/60 font-black italic opacity-60 uppercase tracking-widest">{stat.desc}</p>
                             </div>
 
                             {stat.highlight && (
                                 <div className={cn(
                                     "px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest animate-pulse",
-                                    stat.color === 'red' ? "bg-red-500/20 text-red-500" : "bg-amber-500/20 text-amber-500"
+                                    stat.color === 'text-red-500' ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"
                                 )}>
                                     Action Required
                                 </div>
@@ -368,27 +373,27 @@ export const KitchenInventory = () => {
             </div>
 
             {/* Inventory List Section */}
-            <div className="space-y-6 pt-4 animate-in fade-in duration-1000 delay-300">
+            <div className="space-y-6 pt-4 animate-in fade-in duration-1000 delay-300 px-4">
                 <div className="flex items-center justify-between ml-2">
                     <div className="flex items-center gap-3">
-                        <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
-                        <h4 className="text-[12px] font-black text-zinc-400 uppercase tracking-[0.3em]">
+                        <div className="w-1 h-8 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                        <h4 className="text-[12px] font-black text-[var(--text-secondary)] uppercase tracking-[0.3em] italic">
                             Chi tiết danh mục tồn kho
                         </h4>
                     </div>
                     <button
                         onClick={() => selectedWarehouseId && loadInventory(selectedWarehouseId)}
                         disabled={isLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-amber-500/10 text-zinc-300 hover:text-amber-500 rounded-xl font-bold text-xs uppercase tracking-widest transition-all border border-white/10 hover:border-amber-500/30"
+                        className="flex items-center gap-2 px-6 py-3 bg-[var(--bg-card)] hover:bg-amber-500/10 text-[var(--text-secondary)] hover:text-amber-500 rounded-full font-black text-[10px] uppercase tracking-widest transition-all border border-[var(--border-primary)] hover:border-amber-500/30 shadow-sm"
                     >
-                        <RefreshCw size={14} className={isLoading ? "animate-spin text-amber-500" : "text-amber-500"} />
-                        {isLoading ? 'Đang làm mới...' : 'Làm mới'}
+                        <RefreshCw size={14} className={cn("text-amber-500", isLoading && "animate-spin")} />
+                        {isLoading ? 'Đang làm mới...' : 'Làm mới hệ thống'}
                     </button>
                 </div>
 
-                <div className="bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/50 rounded-[40px] overflow-hidden shadow-2xl relative group/table">
+                <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-sm relative group/table">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent opacity-50"></div>
-                    <div className="p-4">
+                    <div className="p-6">
                         <DataTable
                             data={inventory}
                             columns={columns}
@@ -406,53 +411,52 @@ export const KitchenInventory = () => {
                 onClose={() => setIsEditModalOpen(false)}
                 title="Cập nhật tồn kho"
             >
-                <div className="space-y-6">
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                        <p className="text-xs text-zinc-500 uppercase font-bold mb-1">Vật phẩm</p>
-                        <p className="text-lg font-black text-white italic">{selectedItem?.itemName}</p>
+                <div className="space-y-6 p-2">
+                    <div className="p-6 rounded-[2rem] bg-[var(--bg-root)] border border-[var(--border-primary)] shadow-inner">
+                        <p className="text-[10px] text-[var(--text-secondary)]/40 uppercase font-black tracking-widest mb-2 italic">Vật phẩm định danh</p>
+                        <p className="text-2xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter">{selectedItem?.itemName}</p>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-amber-500 uppercase tracking-widest ml-1">Số lượng tồn</label>
-                        <div className="relative">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Số lượng tồn kho</label>
+                        <div className="relative group">
                             <input
                                 type="number"
                                 value={editQuantity}
                                 onChange={(e) => setEditQuantity(Number(e.target.value))}
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                                className="w-full bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-[1.5rem] py-5 px-8 text-[var(--text-primary)] font-bold text-lg focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all group-hover:border-amber-500/30"
                             />
-                            <span className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-500 font-bold uppercase text-xs">
+                            <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]/40 font-black uppercase text-[10px] tracking-widest italic">
                                 {selectedItem?.unit}
                             </span>
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-amber-500 uppercase tracking-widest ml-1">Ngày hết hạn</label>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Ngày hết hạn hiệu dụng</label>
                         <input
                             type="date"
                             value={editExpiryDate}
                             onChange={(e) => setEditExpiryDate(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
-                            style={{ colorScheme: 'dark' }}
+                            className="w-full bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-[1.5rem] py-5 px-8 text-[var(--text-primary)] font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all group-hover:border-amber-500/30"
                         />
                     </div>
 
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex gap-4 pt-6">
                         <Button
                             variant="outline"
                             onClick={() => setIsEditModalOpen(false)}
-                            className="flex-1 border-white/10 text-zinc-400 hover:text-white rounded-xl"
+                            className="flex-1 border-[var(--border-primary)] text-[var(--text-secondary)] hover:bg-[var(--text-primary)]/5 rounded-[1.5rem] h-16 uppercase text-[10px] font-black tracking-widest"
                         >
                             Hủy bỏ
                         </Button>
                         <Button
                             onClick={handleUpdate}
                             disabled={isUpdating}
-                            className="flex-1 bg-amber-500 text-black font-black rounded-xl shadow-lg shadow-amber-500/20"
+                            className="flex-1 bg-gradient-to-br from-amber-400 to-orange-600 text-black font-black rounded-[1.5rem] h-16 shadow-lg shadow-amber-500/20 uppercase text-[10px] font-black tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
                         >
                             {isUpdating ? 'Đang lưu...' : (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center gap-3">
                                     <Save size={18} />
                                     Lưu thay đổi
                                 </div>
@@ -468,29 +472,30 @@ export const KitchenInventory = () => {
                 onClose={() => setIsDeleteModalOpen(false)}
                 title="Xác nhận xóa"
             >
-                <div className="space-y-6">
-                    <div className="flex flex-col items-center text-center space-y-4">
-                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
-                            <AlertTriangle size={32} />
+                <div className="space-y-8 p-4">
+                    <div className="flex flex-col items-center text-center space-y-6">
+                        <div className="w-24 h-24 rounded-[2rem] bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 shadow-xl shadow-red-500/5 rotate-3">
+                            <AlertTriangle size={48} />
                         </div>
                         <div>
-                            <p className="text-zinc-300">Bạn có chắc chắn muốn xóa vật phẩm <span className="text-white font-bold italic">"{selectedItem?.itemName}"</span> khỏi kho không?</p>
-                            <p className="text-xs text-zinc-500 mt-2 uppercase font-bold tracking-tighter">Hành động này không thể hoàn tác.</p>
+                            <p className="text-[var(--text-primary)] text-lg font-bold italic uppercase tracking-tight">Bạn có chắc chắn muốn xóa vật phẩm</p>
+                            <p className="text-2xl font-black text-red-500 italic uppercase tracking-tighter mt-1">"{selectedItem?.itemName}"</p>
+                            <p className="text-[var(--text-secondary)]/60 text-xs mt-6 uppercase font-black tracking-[0.2em] italic">Hành động này không thể hoàn tác trong hệ thống.</p>
                         </div>
                     </div>
 
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex gap-4 pt-4">
                         <Button
                             variant="outline"
                             onClick={() => setIsDeleteModalOpen(false)}
-                            className="flex-1 border-white/10 text-zinc-400 hover:text-white rounded-xl"
+                            className="flex-1 border-[var(--border-primary)] text-[var(--text-secondary)] hover:bg-red-500/5 hover:text-red-500 rounded-[1.5rem] h-16 uppercase text-[10px] font-black tracking-widest transition-all"
                         >
                             Hủy bỏ
                         </Button>
                         <Button
                             onClick={handleDelete}
                             disabled={isDeleting}
-                            className="flex-1 bg-red-500 hover:bg-red-600 text-white font-black rounded-xl shadow-lg shadow-red-500/20"
+                            className="flex-1 bg-red-500 hover:bg-red-600 text-white font-black rounded-[1.5rem] h-16 shadow-xl shadow-red-500/20 uppercase text-[10px] font-black tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
                         >
                             {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
                         </Button>
@@ -500,4 +505,3 @@ export const KitchenInventory = () => {
         </div>
     );
 };
-

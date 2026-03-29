@@ -373,154 +373,152 @@ export const AllocationMatrix = () => {
   });
 
   return (
-    <div className="space-y-6 pb-20 animate-in fade-in duration-700 p-8">
-      {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-900 pb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-6 bg-amber-500 rounded-full"></div>
-            <Badge
-              variant="orange"
-              className="text-[10px] font-black tracking-widest px-2 py-0 border-0 h-4 uppercase"
-            >
-              QUẢN LÝ BẾP TRUNG TÂM
-            </Badge>
-          </div>
-          <h1 className="text-4xl font-black text-white uppercase tracking-tighter leading-none mb-2">
-            Ma Trận Điều Phối
-          </h1>
-          <p className="text-sm text-zinc-500 font-medium max-w-xl">
-            Tối ưu hóa việc phân bổ thành phẩm từ{" "}
-            <span className="text-amber-500 font-bold">Bếp Trung Tâm</span> tới
-            các{" "}
-            <span className="text-amber-400 font-bold">
-              Cửa hàng nhượng quyền
-            </span>{" "}
-            dựa trên nhu cầu thực tế từ đơn hàng.
-          </p>
-          {matrix.length > 0 && selectedPlan?.status === "PRODUCED" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setMatrix((prev) =>
-                  prev.map((row) => ({
-                    ...row,
-                    allocations: (row.allocations || []).map((a) => ({
-                      ...a,
-                      allocatedQuantity: 0,
-                    })),
-                  })),
-                );
-                toast.success("Đã đặt lại tất cả số lượng về 0");
-              }}
-              className="mt-4 border-zinc-800 text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-red-500 hover:bg-red-500/5 transition-all"
-            >
-              Đặt lại về 0
-            </Button>
-          )}
+    <div className="min-h-screen bg-[var(--bg-root)] pb-20">
+      {/* Cinematic Header */}
+      <div className="relative h-[340px] w-full overflow-hidden group/header">
+        <div className="absolute inset-0 bg-[var(--bg-root)]">
+          <img
+            src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop"
+            className="w-full h-full object-cover opacity-40 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
+            alt="Supply Chain Matrix"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-root)] via-[var(--bg-root)]/60 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-root)] via-transparent to-[var(--bg-root)]"></div>
         </div>
 
-        <div className="flex items-center gap-4 bg-zinc-900/30 p-2 rounded-2xl border border-zinc-800/50">
-          <div className="px-4 py-2">
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-              Trạng thái mẻ
-            </p>
-            {selectedPlan?.status === "FINISHED" ? (
-              <Badge
-                variant="success"
-                className="font-black px-4 py-1 uppercase tracking-widest text-[10px] bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-              >
-                ĐÃ ĐIỀU PHỐI
-              </Badge>
-            ) : (
-              <Badge
-                variant="info"
-                className="font-black px-3 py-0.5 uppercase tracking-widest text-[10px]"
-              >
-                ĐANG ĐIỀU PHỐI
-              </Badge>
-            )}
+        <div className="absolute inset-0 flex flex-col justify-end px-8 pb-10 max-w-[1600px] mx-auto w-full">
+          <div className="flex items-center gap-3 mb-4">
+            <Badge variant="orange" className="text-[10px] font-black tracking-[0.3em] px-3 py-1 border-0 uppercase bg-amber-500/10 text-amber-500">
+              ALLOCATION GRID
+            </Badge>
+            <div className="h-px w-12 bg-amber-500/30" />
+            <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Central Kitchen Command</span>
           </div>
-          <div className="w-[1px] h-10 bg-zinc-800"></div>
-          {selectedPlan?.status === "PRODUCED" && (
-            <Button
-              onClick={handleSaveAllocation}
-              disabled={
-                matrix.length === 0 ||
-                isSaving ||
-                isSuccess ||
-                hasYield === false ||
-                matrix.some((row) => {
-                  const totalAllocated = (row.allocations || []).reduce(
-                    (s, a) => s + a.allocatedQuantity,
-                    0,
-                  );
-                  const totalRequested = (row.allocations || []).reduce(
-                    (s, a) => s + a.requestedQuantity,
-                    0,
-                  );
-                  // Bắt buộc phân bổ đủ hàng (đủ yêu cầu)
-                  // Hoặc nếu không đủ stock thì phải phân bổ tối đa lượng stock hiện có
-                  const requiredToAllocate = Math.min(
-                    totalRequested,
-                    row.totalAvailable || 0,
-                  );
 
-                  return (
-                    totalAllocated > (row.totalAvailable || 0) || // Phân bổ vượt quá stock
-                    totalAllocated < requiredToAllocate // Chưa phân bổ đủ
-                  );
-                })
-              }
-              className={cn(
-                "font-black uppercase text-xs tracking-widest px-8 h-12 rounded-xl shadow-xl border-0 flex items-center gap-2 transition-all active:scale-95",
-                isSuccess
-                  ? "bg-emerald-600/20 text-emerald-500 border border-emerald-500/30 cursor-default"
-                  : "bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/20",
-                matrix.some((row) => {
-                  const totalAllocated = (row.allocations || []).reduce(
-                    (s, a) => s + a.allocatedQuantity,
-                    0,
-                  );
-                  const totalRequested = (row.allocations || []).reduce(
-                    (s, a) => s + a.requestedQuantity,
-                    0,
-                  );
-                  const requiredToAllocate = Math.min(
-                    totalRequested,
-                    row.totalAvailable || 0,
-                  );
-                  return (
-                    totalAllocated > (row.totalAvailable || 0) ||
-                    totalAllocated < requiredToAllocate
-                  );
-                }) && "opacity-50 grayscale cursor-not-allowed",
+          <div className="flex flex-col md:flex-row justify-between items-end gap-8">
+            <div>
+              <h1 className="text-5xl lg:text-6xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic leading-[0.85] mb-3">
+                MA TRẬN <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">ĐIỀU PHỐI</span>
+              </h1>
+              <p className="text-zinc-400 max-w-xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
+                Tối ưu hóa phân bổ thành phẩm từ <span className="text-amber-500">Bếp Trung Tâm</span> tới các <span className="text-amber-400">Cửa hàng nhượng quyền</span>
+              </p>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex items-center gap-4">
+              <div className="backdrop-blur-3xl bg-white/5 border border-white/10 rounded-2xl px-5 py-3 flex items-center gap-4">
+                <div className="flex flex-col items-center">
+                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Trạng thái</span>
+                  {selectedPlan?.status === "FINISHED" ? (
+                    <Badge variant="success" className="font-black px-3 py-0.5 uppercase tracking-widest text-[9px] mt-1">ĐÃ ĐIỀU PHỐI</Badge>
+                  ) : (
+                    <Badge variant="info" className="font-black px-3 py-0.5 uppercase tracking-widest text-[9px] mt-1">ĐANG ĐIỀU PHỐI</Badge>
+                  )}
+                </div>
+                {matrix.length > 0 && selectedPlan?.status === "PRODUCED" && (
+                  <>
+                    <div className="w-px h-8 bg-white/10" />
+                    <button
+                      onClick={() => {
+                        setMatrix((prev) =>
+                          prev.map((row) => ({
+                            ...row,
+                            allocations: (row.allocations || []).map((a) => ({
+                              ...a,
+                              allocatedQuantity: 0,
+                            })),
+                          })),
+                        );
+                        toast.success("Đã đặt lại tất cả số lượng về 0");
+                      }}
+                      className="text-[9px] font-black text-red-400/70 hover:text-red-400 uppercase tracking-widest transition-colors px-2 py-1"
+                    >
+                      Reset
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {selectedPlan?.status === "PRODUCED" && (
+                <Button
+                  onClick={handleSaveAllocation}
+                  disabled={
+                    matrix.length === 0 ||
+                    isSaving ||
+                    isSuccess ||
+                    hasYield === false ||
+                    matrix.some((row) => {
+                      const totalAllocated = (row.allocations || []).reduce(
+                        (s, a) => s + a.allocatedQuantity,
+                        0,
+                      );
+                      const totalRequested = (row.allocations || []).reduce(
+                        (s, a) => s + a.requestedQuantity,
+                        0,
+                      );
+                      const requiredToAllocate = Math.min(
+                        totalRequested,
+                        row.totalAvailable || 0,
+                      );
+                      return (
+                        totalAllocated > (row.totalAvailable || 0) ||
+                        totalAllocated < requiredToAllocate
+                      );
+                    })
+                  }
+                  className={cn(
+                    "font-black uppercase text-xs tracking-[0.2em] px-10 h-14 rounded-2xl shadow-xl border-0 flex items-center gap-3 transition-all active:scale-95",
+                    isSuccess
+                      ? "bg-emerald-600/20 text-emerald-500 border border-emerald-500/30 cursor-default"
+                      : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black shadow-[0_20px_50px_-10px_rgba(245,158,11,0.4)] hover:-translate-y-1",
+                    matrix.some((row) => {
+                      const totalAllocated = (row.allocations || []).reduce(
+                        (s, a) => s + a.allocatedQuantity,
+                        0,
+                      );
+                      const totalRequested = (row.allocations || []).reduce(
+                        (s, a) => s + a.requestedQuantity,
+                        0,
+                      );
+                      const requiredToAllocate = Math.min(
+                        totalRequested,
+                        row.totalAvailable || 0,
+                      );
+                      return (
+                        totalAllocated > (row.totalAvailable || 0) ||
+                        totalAllocated < requiredToAllocate
+                      );
+                    }) && "opacity-50 grayscale cursor-not-allowed",
+                  )}
+                >
+                  {isSaving ? (
+                    "Đang lưu..."
+                  ) : isSuccess ? (
+                    <>
+                      <CheckCircle size={18} /> Đã phân bổ
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} strokeWidth={3} /> Chốt Phân Bổ
+                    </>
+                  )}
+                </Button>
               )}
-            >
-              {isSaving ? (
-                "Đang lưu..."
-              ) : isSuccess ? (
-                <>
-                  <CheckCircle size={18} /> Đã phân bổ
-                </>
-              ) : (
-                <>
-                  <Save size={18} /> Chốt Phân Bổ
-                </>
-              )}
-            </Button>
-          )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Main Content Layout: Sidebar + Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="max-w-[1600px] mx-auto px-8 -mt-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left: Plan Selection Sidebar (Sticky) */}
         <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-8 self-start">
-          <div className="bg-zinc-900/60 p-5 rounded-3xl border border-zinc-800/50 flex flex-col max-h-[calc(100vh-12rem)]">
+          <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 p-5 rounded-[2rem] border border-[var(--border-primary)] flex flex-col max-h-[calc(100vh-12rem)] shadow-2xl relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
             <div className="flex items-center justify-between mb-4 px-1">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
+              <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">
                 Kế Hoạch SX
               </label>
               <Badge
@@ -563,7 +561,7 @@ export const AllocationMatrix = () => {
                               "w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between group",
                               selectedPlanId === p.planId
                                 ? "bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.1)]"
-                                : "bg-zinc-950/40 border-zinc-800/50 hover:bg-zinc-800/40 hover:border-zinc-700",
+                                : "bg-[var(--bg-root)]/[0.4] border-[var(--border-primary)] hover:bg-[var(--text-primary)]/5 hover:border-[var(--text-secondary)]/30",
                             )}
                           >
                             <div className="flex flex-col min-w-0">
@@ -571,8 +569,8 @@ export const AllocationMatrix = () => {
                                 className={cn(
                                   "text-[11px] font-black uppercase tracking-tight transition-colors truncate",
                                   selectedPlanId === p.planId
-                                    ? "text-white"
-                                    : "text-zinc-400 group-hover:text-zinc-200",
+                                    ? "text-[var(--text-primary)]"
+                                    : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]",
                                 )}
                               >
                                 {p.planName}
@@ -616,7 +614,7 @@ export const AllocationMatrix = () => {
                               "w-full text-left p-2.5 rounded-2xl border transition-all flex items-center justify-between group",
                               selectedPlanId === p.planId
                                 ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
-                                : "bg-zinc-950/20 border-zinc-800/20 hover:bg-zinc-800/30 hover:border-zinc-700",
+                                : "bg-[var(--bg-root)]/[0.2] border-[var(--border-primary)]/50 hover:bg-[var(--text-primary)]/5 hover:border-[var(--border-primary)]",
                             )}
                           >
                             <div className="flex flex-col min-w-0">
@@ -657,21 +655,22 @@ export const AllocationMatrix = () => {
         {/* Right: Matrix Display Area */}
         <div className="lg:col-span-9 space-y-8">
           {/* Matrix Table */}
-          <div className="bg-zinc-900/40 rounded-[40px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+          <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 rounded-[3rem] border border-[var(--border-primary)] overflow-hidden shadow-2xl relative">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse border-spacing-0">
                 <thead>
-                  <tr className="bg-zinc-900 border-b border-zinc-800">
-                    <th className="px-8 py-8 bg-zinc-900 sticky left-0 z-30 border-r border-zinc-800/50 w-[300px] shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+                  <tr className="bg-[var(--bg-card)] border-b border-[var(--border-primary)]">
+                    <th className="px-8 py-8 bg-[var(--bg-card)] sticky left-0 z-30 border-r border-[var(--border-primary)] w-[300px] shadow-[10px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-amber-500 border border-zinc-800">
+                        <div className="w-10 h-10 rounded-xl bg-[var(--bg-root)] flex items-center justify-center text-[var(--accent-amber)] border border-[var(--border-primary)]">
                           <Package size={20} />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-sm font-black text-white uppercase tracking-tighter">
+                          <span className="text-sm font-black text-[var(--text-primary)] uppercase tracking-tighter">
                             Sản phẩm đầu ra
                           </span>
-                          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-0.5">
+                          <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest mt-0.5">
                             Đã phân / SL có
                           </span>
                         </div>
@@ -688,24 +687,24 @@ export const AllocationMatrix = () => {
                       return (
                         <th
                           key={col.storeId}
-                          className="px-6 py-6 min-w-[200px] border-b border-zinc-800/50 bg-zinc-900/50"
+                          className="px-6 py-6 min-w-[200px] border-b border-[var(--border-primary)] bg-[var(--text-primary)]/[0.02]"
                         >
                           <div className="flex flex-col items-center">
-                            <div className="w-8 h-8 rounded-full bg-zinc-950 flex items-center justify-center text-zinc-400 mb-2 border border-zinc-800">
+                            <div className="w-8 h-8 rounded-full bg-[var(--bg-root)] flex items-center justify-center text-[var(--text-secondary)] mb-2 border border-[var(--border-primary)] shadow-sm">
                               <Store size={14} />
                             </div>
-                            <span className="text-xs font-black text-white uppercase tracking-tighter text-center">
+                            <span className="text-xs font-black text-[var(--text-primary)] uppercase tracking-tighter text-center">
                               {col.storeName}
                             </span>
                             {col.deliveryDate && (
-                              <span className="text-[10px] font-bold text-amber-500 uppercase tracking-tighter mt-1">
+                              <span className="text-[10px] font-bold text-[var(--accent-amber)] uppercase tracking-tighter mt-1">
                                 Ngày nhận:{" "}
                                 {new Date(col.deliveryDate).toLocaleDateString(
                                   "vi-VN",
                                 )}
                               </span>
                             )}
-                            <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest mt-1">
+                            <span className="text-[8px] font-black text-[var(--text-secondary)]/50 uppercase tracking-widest mt-1">
                               Tổng YC: {storeTotalRequested}
                             </span>
                           </div>
@@ -714,7 +713,7 @@ export const AllocationMatrix = () => {
                     })}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800/30">
+                <tbody className="divide-y divide-[var(--border-primary)]/50">
                   {isLoadingMatrix ? (
                     <tr>
                       <td
@@ -788,9 +787,9 @@ export const AllocationMatrix = () => {
                           key={row.productId}
                           className="hover:bg-zinc-800/30 group transition-all duration-300 text-[11px]"
                         >
-                          <td className="px-6 py-5 bg-zinc-900/90 backdrop-blur-md sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+                          <td className="px-6 py-5 bg-[var(--bg-card)]/90 backdrop-blur-md sticky left-0 z-20 border-r border-[var(--border-primary)] shadow-[10px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
                             <div className="flex flex-col gap-2">
-                              <span className="font-black text-zinc-100 tracking-tight group-hover:text-amber-500 transition-colors uppercase leading-none truncate max-w-[220px]">
+                              <span className="font-black text-[var(--text-primary)] tracking-tight group-hover:text-[var(--accent-amber)] transition-colors uppercase leading-none truncate max-w-[220px]">
                                 {row.productName}
                               </span>
                               {/* Progress bar */}
@@ -815,10 +814,10 @@ export const AllocationMatrix = () => {
                                     className={cn(
                                       "text-[9px] font-black font-mono",
                                       isExceeded
-                                        ? "text-red-400"
+                                        ? "text-red-500"
                                         : isBalanced
-                                          ? "text-emerald-400"
-                                          : "text-amber-400",
+                                          ? "text-emerald-600 dark:text-emerald-400"
+                                          : "text-amber-600 dark:text-amber-400",
                                     )}
                                   >
                                     {currentTotal}/{row.totalAvailable} đã phân
@@ -842,7 +841,7 @@ export const AllocationMatrix = () => {
                               return (
                                 <td
                                   key={col.storeId}
-                                  className="px-6 py-6 text-center bg-zinc-950/10 italic text-zinc-800 text-[9px] font-black uppercase tracking-widest"
+                                  className="px-6 py-6 text-center bg-[var(--bg-root)]/[0.1] italic text-[var(--text-secondary)]/30 text-[9px] font-black uppercase tracking-widest"
                                 >
                                   -
                                 </td>
@@ -861,9 +860,9 @@ export const AllocationMatrix = () => {
                                 className={cn(
                                   "px-4 py-4 transition-colors relative",
                                   isShortage
-                                    ? "bg-red-500/[0.02]"
+                                    ? "bg-red-500/[0.04]"
                                     : isOptimized
-                                      ? "bg-emerald-500/[0.02]"
+                                      ? "bg-emerald-500/[0.04]"
                                       : "",
                                 )}
                               >
@@ -875,14 +874,14 @@ export const AllocationMatrix = () => {
                                         selectedPlan?.status === "FINISHED"
                                       }
                                       className={cn(
-                                        "w-20 h-10 bg-zinc-950 border rounded-lg text-center text-sm font-black font-mono focus:outline-none focus:ring-2 transition-all px-1 shadow-inner",
+                                        "w-20 h-10 bg-[var(--bg-root)] border rounded-lg text-center text-sm font-black font-mono focus:outline-none focus:ring-2 transition-all px-1 shadow-inner",
                                         selectedPlan?.status === "FINISHED"
-                                          ? "opacity-50 cursor-not-allowed border-zinc-800/50 text-zinc-400"
+                                          ? "opacity-50 cursor-not-allowed border-[var(--border-primary)] text-[var(--text-secondary)]/50"
                                           : isShortage
-                                            ? "border-red-500/40 text-red-400 focus:ring-red-500/20 focus:border-red-500"
+                                            ? "border-red-500/40 text-red-500 focus:ring-red-500/20 focus:border-red-500"
                                             : isOptimized
-                                              ? "border-emerald-500/40 text-emerald-400 focus:ring-emerald-500/20 focus:border-emerald-500"
-                                              : "border-zinc-700 text-zinc-100 focus:ring-amber-500/20 focus:border-amber-500",
+                                              ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                              : "border-[var(--border-primary)] text-[var(--text-primary)] focus:ring-[var(--accent-amber)]/20 focus:border-[var(--accent-amber)]",
                                       )}
                                       value={cell.allocatedQuantity.toString()}
                                       onChange={(e) =>
@@ -897,9 +896,9 @@ export const AllocationMatrix = () => {
                                     />
                                   </div>
                                   {/* Requested label */}
-                                  <span className="text-[8px] font-bold text-zinc-500">
+                                  <span className="text-[8px] font-bold text-[var(--text-secondary)]">
                                     YC:{" "}
-                                    <span className="font-mono text-zinc-400">
+                                    <span className="font-mono text-[var(--text-secondary)]/70">
                                       {cell.requestedQuantity}
                                     </span>
                                   </span>
@@ -929,9 +928,9 @@ export const AllocationMatrix = () => {
                   )}
                   {/* Summary Row */}
                   {matrix.length > 0 && (
-                    <tr className="bg-zinc-900/80 border-t-2 border-zinc-700">
-                      <td className="px-6 py-4 bg-zinc-900 sticky left-0 z-20 border-r border-zinc-800/50 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
-                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                    <tr className="bg-[var(--text-primary)]/[0.05] border-t-2 border-[var(--border-primary)]">
+                      <td className="px-6 py-4 bg-[var(--bg-card)] sticky left-0 z-20 border-r border-[var(--border-primary)] shadow-[10px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+                        <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                           Tổng phân bổ
                         </span>
                       </td>
@@ -964,10 +963,10 @@ export const AllocationMatrix = () => {
                                 className={cn(
                                   "text-sm font-black font-mono",
                                   pct >= 100
-                                    ? "text-emerald-400"
+                                    ? "text-emerald-600 dark:text-emerald-400"
                                     : pct > 0
-                                      ? "text-amber-400"
-                                      : "text-zinc-600",
+                                      ? "text-amber-600 dark:text-amber-400"
+                                      : "text-[var(--text-secondary)]/40",
                                 )}
                               >
                                 {storeAllocated}/{storeRequested}
@@ -976,10 +975,10 @@ export const AllocationMatrix = () => {
                                 className={cn(
                                   "text-[9px] font-black",
                                   pct >= 100
-                                    ? "text-emerald-500"
+                                    ? "text-emerald-600 dark:text-emerald-500"
                                     : pct > 0
-                                      ? "text-amber-500"
-                                      : "text-zinc-600",
+                                      ? "text-amber-600 dark:text-amber-500"
+                                      : "text-[var(--text-secondary)]/40",
                                 )}
                               >
                                 {pct}%
@@ -995,25 +994,25 @@ export const AllocationMatrix = () => {
             </div>
 
             {/* Table Footer / Summary Bar */}
-            <div className="bg-zinc-900/80 p-6 border-t border-zinc-800/50 flex items-center justify-between">
+            <div className="bg-[var(--bg-card)] p-6 border-t border-[var(--border-primary)] flex items-center justify-between">
               <div className="flex items-center gap-8">
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-0.5">
+                  <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-0.5">
                     Chi nhánh nhượng quyền
                   </span>
-                  <span className="text-xl font-black text-white">
+                  <span className="text-xl font-black text-[var(--text-primary)]">
                     {storeColumns.length}{" "}
-                    <span className="text-[9px] text-zinc-500">CHI NHÁNH</span>
+                    <span className="text-[9px] text-[var(--text-secondary)]">CHI NHÁNH</span>
                   </span>
                 </div>
-                <div className="w-[1px] h-8 bg-zinc-800"></div>
+                <div className="w-[1px] h-8 bg-[var(--border-primary)]"></div>
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-0.5">
+                  <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-0.5">
                     Sản phẩm điều phối
                   </span>
-                  <span className="text-xl font-black text-white">
+                  <span className="text-xl font-black text-[var(--text-primary)]">
                     {matrix.length}{" "}
-                    <span className="text-[9px] text-zinc-500">MẶT HÀNG</span>
+                    <span className="text-[9px] text-[var(--text-secondary)]">MẶT HÀNG</span>
                   </span>
                 </div>
               </div>
@@ -1029,28 +1028,28 @@ export const AllocationMatrix = () => {
 
           {/* Bottom Stats & Rules Grid */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-            <div className="md:col-span-8 bg-zinc-900/20 p-8 rounded-[32px] border border-zinc-800/30 flex items-center justify-between gap-8">
+            <div className="md:col-span-8 backdrop-blur-3xl bg-[var(--bg-card)]/40 p-8 rounded-[2.5rem] border border-[var(--border-primary)] flex items-center justify-between gap-8 shadow-2xl">
               <div className="flex items-center gap-6">
                 <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                   <Network size={28} />
                 </div>
                 <div className="max-w-xs">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">
+                  <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-1">
                     Quy tắc điều phối
                   </p>
-                  <p className="text-[11px] text-zinc-500 font-bold leading-relaxed">
+                  <p className="text-[11px] text-[var(--text-secondary)] font-bold leading-relaxed">
                     Hệ thống tự động cân đối dựa trên mức tồn kho tối thiểu và
                     ưu tiên đơn đặt sớm nhất.
                   </p>
                 </div>
               </div>
-              <div className="w-[1px] h-12 bg-zinc-800"></div>
+              <div className="w-[1px] h-12 bg-[var(--border-primary)]"></div>
               <div className="flex items-center gap-6 text-right">
                 <div className="max-w-sm">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1 text-right">
+                  <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-1 text-right">
                     Phạm vi tác động
                   </p>
-                  <p className="text-[11px] text-zinc-500 font-bold leading-relaxed text-right">
+                  <p className="text-[11px] text-[var(--text-secondary)] font-bold leading-relaxed text-right">
                     {storeColumns.length} chi nhánh đang chờ hàng từ lô sản xuất
                     này.
                   </p>
@@ -1061,18 +1060,18 @@ export const AllocationMatrix = () => {
               </div>
             </div>
 
-            <div className="md:col-span-4 bg-zinc-900/30 p-8 rounded-[32px] border border-zinc-800/50 flex flex-col justify-center space-y-4">
+            <div className="md:col-span-4 backdrop-blur-3xl bg-[var(--bg-card)]/40 p-8 rounded-[2.5rem] border border-[var(--border-primary)] shadow-2xl flex flex-col justify-center space-y-4">
               <div className="flex justify-between items-end">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">
+                  <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-1">
                     Tiến độ phân bổ
                   </span>
                   <span
                     className={cn(
                       "text-2xl font-black uppercase tracking-tighter",
                       selectedPlan?.status === "FINISHED"
-                        ? "text-emerald-500"
-                        : "text-amber-500",
+                        ? "text-emerald-600"
+                        : "text-amber-600",
                     )}
                   >
                     {selectedPlan?.status === "FINISHED"
@@ -1086,7 +1085,7 @@ export const AllocationMatrix = () => {
                   <Timer size={32} className="text-amber-500 mb-1" />
                 )}
               </div>
-              <div className="h-2 w-full bg-zinc-950 rounded-full overflow-hidden p-[1px]">
+              <div className="h-2 w-full bg-[var(--bg-root)] rounded-full overflow-hidden p-[1px]">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-1000 ease-out",
@@ -1100,7 +1099,7 @@ export const AllocationMatrix = () => {
           </div>
         </div>
       </div>
-
+      </div>
 
     </div>
   );
