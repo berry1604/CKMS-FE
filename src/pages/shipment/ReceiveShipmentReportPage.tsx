@@ -128,12 +128,12 @@ export const ReceiveShipmentReportPage = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center gap-6">
+            <div className="min-h-screen bg-[var(--bg-root)] flex flex-col items-center justify-center gap-6">
                 <div className="relative">
                     <div className="w-16 h-16 border-4 border-amber-500/10 border-t-amber-500 rounded-full animate-spin"></div>
                     <div className="absolute inset-0 blur-xl bg-amber-500/20 rounded-full"></div>
                 </div>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.4em] animate-pulse">Đang truy xuất vận đơn...</span>
+                <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.4em] animate-pulse">Đang truy xuất vận đơn...</span>
             </div>
         );
     }
@@ -141,7 +141,7 @@ export const ReceiveShipmentReportPage = () => {
     if (!shipment) return null;
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pb-20">
+        <div className="min-h-screen bg-[var(--bg-root)] pb-20">
             {/* Cinematic Header */}
             <div className="relative h-[300px] w-full overflow-hidden">
                 <img
@@ -149,14 +149,14 @@ export const ReceiveShipmentReportPage = () => {
                     className="w-full h-full object-cover opacity-40 scale-105"
                     alt="Luxury Logistics"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black via-black/20 to-[#0a0a0a]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-root)]/80 via-[var(--bg-root)]/20 to-[var(--bg-root)]" />
 
                 <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
                     <button 
                         onClick={() => navigate('/shipment/receive')}
-                        className="group flex items-center gap-3 text-gray-400 hover:text-white transition-colors mb-10 w-fit"
+                        className="group flex items-center gap-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-10 w-fit"
                     >
-                        <div className="p-2.5 bg-white/5 rounded-2xl border border-white/10 group-hover:border-amber-500/50 group-hover:bg-amber-500/10 transition-all">
+                        <div className="p-2.5 bg-[var(--text-primary)]/5 rounded-2xl border border-[var(--border-primary)] group-hover:border-amber-500/50 group-hover:bg-amber-500/10 transition-all">
                             <ArrowLeft size={18} />
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Quay lại vận đơn</span>
@@ -165,47 +165,47 @@ export const ReceiveShipmentReportPage = () => {
                     <div className="flex flex-col md:flex-row justify-between items-end gap-10">
                         <div className="flex items-center gap-8">
                             <div className="w-24 h-24 rounded-[32px] bg-gradient-to-br from-amber-500 to-orange-600 p-px shadow-2xl shadow-amber-500/20 group/icon">
-                                <div className="w-full h-full bg-[#0a0a0a] rounded-[32px] flex items-center justify-center text-amber-500 group-hover/icon:bg-transparent group-hover/icon:text-black transition-all">
+                                <div className="w-full h-full bg-[var(--bg-root)] rounded-[32px] flex items-center justify-center text-amber-500 group-hover/icon:bg-transparent group-hover/icon:text-black transition-all">
                                     <Truck size={42} strokeWidth={1.5} />
                                 </div>
                             </div>
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
                                     <Badge variant="orange" className="h-5 text-[9px] font-black px-2 py-0 border-0 uppercase tracking-widest">RECEIPT_PROTOCOL</Badge>
-                                    <span className="text-zinc-600 font-black text-[10px] uppercase tracking-widest">System v4.0.2</span>
+                                    <span className="text-[var(--text-secondary)]/40 font-black text-[10px] uppercase tracking-widest">System v4.0.2</span>
                                 </div>
-                                <h1 className="text-5xl font-black text-white tracking-tighter mb-2 italic">
+                                <h1 className="text-5xl font-black text-[var(--text-primary)] tracking-tighter mb-2 italic">
                                     BIÊN BẢN <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">NHẬN HÀNG</span>
                                 </h1>
                                 <div className="flex items-center gap-4">
                                     <div className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                                         <span className="text-amber-500 font-black tracking-tighter text-xl font-mono">#{shipment.shipmentId}</span>
                                     </div>
-                                    <span className="w-2 h-2 rounded-full bg-zinc-800"></span>
-                                    <span className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em]">{shipment.status}</span>
+                                    <span className="w-2 h-2 rounded-full bg-[var(--border-primary)]"></span>
+                                    <span className="text-[var(--text-secondary)]/40 text-[10px] font-black uppercase tracking-[0.3em]">{shipment.status}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="px-10 py-6 bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[40px] shadow-2xl flex items-center gap-10 min-w-[360px]">
+                        <div className="px-10 py-6 bg-[var(--text-primary)]/[0.02] backdrop-blur-3xl border border-[var(--border-primary)] rounded-[40px] shadow-2xl flex items-center gap-10 min-w-[360px]">
                             <div className="flex-1">
-                                <span className="text-zinc-600 text-[9px] uppercase tracking-[0.3em] block mb-2 font-black">Khởi hành</span>
-                                <span className="text-lg font-black text-white tracking-tighter italic">
+                                <span className="text-[var(--text-secondary)]/40 text-[9px] uppercase tracking-[0.3em] block mb-2 font-black">Khởi hành</span>
+                                <span className="text-lg font-black text-[var(--text-primary)] tracking-tighter italic">
                                     {shipment.shippedAt ? new Date(shipment.shippedAt).toLocaleDateString('vi-VN') : 'CHỜ XUẤT KHO'}
                                 </span>
                             </div>
-                            <div className="h-12 w-px bg-white/5"></div>
+                            <div className="h-12 w-px bg-[var(--border-primary)]"></div>
                             <div className="flex-1 text-right">
-                                <span className="text-zinc-600 text-[9px] uppercase tracking-[0.3em] block mb-2 font-black">Điểm đến</span>
+                                <span className="text-[var(--text-secondary)]/40 text-[9px] uppercase tracking-[0.3em] block mb-2 font-black">Điểm đến</span>
                                 <span className="text-lg font-black text-amber-500 tracking-tighter truncate max-w-[140px] block font-mono capitalize">
                                     {shipment.stops?.find(s => s.storeId === Number(user?.storeId))?.storeName || shipment.storeName || 'Cửa hàng'}
                                 </span>
                             </div>
                             {(shipment.shippingFee ?? 0) > 0 && (
                                 <>
-                                    <div className="h-12 w-px bg-white/5"></div>
+                                    <div className="h-12 w-px bg-[var(--border-primary)]"></div>
                                     <div className="flex-1 text-right">
-                                        <span className="text-zinc-600 text-[9px] uppercase tracking-[0.3em] block mb-2 font-black">Cước phí</span>
+                                        <span className="text-[var(--text-secondary)]/40 text-[9px] uppercase tracking-[0.3em] block mb-2 font-black">Cước phí</span>
                                         <span className="text-lg font-black text-emerald-500 tracking-tighter font-mono">
                                             {shipment.shippingFee?.toLocaleString('vi-VN')} ₫
                                         </span>
@@ -222,7 +222,7 @@ export const ReceiveShipmentReportPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     <div className="lg:col-span-8 space-y-12">
                         {/* Aggregated Item Summary Section */}
-                        <div className="bg-zinc-900/10 border border-white/5 rounded-[40px] p-8 shadow-2xl relative overflow-hidden group">
+                        <div className="bg-[var(--bg-card)]/10 border border-[var(--border-primary)] rounded-[40px] p-8 shadow-2xl relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full -translate-x-32 -translate-y-32"></div>
                             
                             <div className="flex items-center justify-between mb-8">
@@ -231,8 +231,8 @@ export const ReceiveShipmentReportPage = () => {
                                         <ClipboardList size={22} />
                                     </div>
                                     <div>
-                                        <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em]">Tổng hợp hàng hóa</h3>
-                                        <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">Thống kê toàn bộ vận đơn</p>
+                                        <h3 className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-[0.3em]">Tổng hợp hàng hóa</h3>
+                                        <p className="text-[9px] text-[var(--text-secondary)]/40 font-bold uppercase tracking-widest mt-0.5">Thống kê toàn bộ vận đơn</p>
                                     </div>
                                 </div>
                                 <Badge variant="success" className="h-6 text-[9px] font-black px-3 tracking-[0.2em] border-emerald-500/20 bg-emerald-500/10 text-emerald-500">
@@ -242,23 +242,23 @@ export const ReceiveShipmentReportPage = () => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {aggregatedItems.map((item) => (
-                                    <div key={item.productId} className="group/item flex items-center justify-between p-5 bg-black/40 border border-white/5 rounded-3xl hover:border-amber-500/30 hover:bg-amber-500/5 transition-all duration-500">
+                                    <div key={item.productId} className="group/item flex items-center justify-between p-5 bg-[var(--bg-root)]/40 border border-[var(--border-primary)] rounded-3xl hover:border-amber-500/30 hover:bg-amber-500/5 transition-all duration-500">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-2xl bg-zinc-950 border border-zinc-900 overflow-hidden flex items-center justify-center group-hover/item:scale-105 transition-transform duration-500 shadow-lg">
+                                            <div className="w-14 h-14 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)] overflow-hidden flex items-center justify-center group-hover/item:scale-105 transition-transform duration-500 shadow-lg">
                                                 {item.imageUrl ? (
                                                     <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <Package size={20} className="text-zinc-800" />
+                                                    <Package size={20} className="text-[var(--text-secondary)]/20" />
                                                 )}
                                             </div>
                                             <div>
-                                                <span className="text-sm font-black text-white tracking-tight block mb-1">{item.productName}</span>
-                                                <span className="text-[9px] text-zinc-600 font-black tracking-widest uppercase">{item.categoryName || 'Sản phẩm'}</span>
+                                                <span className="text-sm font-black text-[var(--text-primary)] tracking-tight block mb-1">{item.productName}</span>
+                                                <span className="text-[9px] text-[var(--text-secondary)]/40 font-black tracking-widest uppercase">{item.categoryName || 'Sản phẩm'}</span>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <span className="text-xl font-black text-amber-500 font-mono tracking-tighter">{item.quantity}</span>
-                                            <span className="text-[9px] text-zinc-600 font-black block uppercase tracking-tighter -mt-1">{item.unit || 'đơn vị'}</span>
+                                            <span className="text-[9px] text-[var(--text-secondary)]/40 font-black block uppercase tracking-tighter -mt-1">{item.unit || 'đơn vị'}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -269,7 +269,7 @@ export const ReceiveShipmentReportPage = () => {
                         <div className="space-y-6">
                             <div className="flex items-center gap-3 ml-2">
                                 <div className="w-1.5 h-6 bg-amber-500 rounded-full"></div>
-                                <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em]">Chi tiết & Ký nhận xác thực</h3>
+                                <h3 className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-[0.3em]">Chi tiết & Ký nhận xác thực</h3>
                             </div>
                             
                             <div className="relative">
@@ -292,32 +292,32 @@ export const ReceiveShipmentReportPage = () => {
 
                     <div className="lg:col-span-4 space-y-6">
                         {/* Driver & Logistics Information Card */}
-                        <div className="bg-white/[0.02] border border-white/5 rounded-[40px] p-8 shadow-2xl relative overflow-hidden group/card shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                        <div className="bg-[var(--text-primary)]/[0.02] border border-[var(--border-primary)] rounded-[40px] p-8 shadow-2xl relative overflow-hidden group/card shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-3xl rounded-full translate-x-16 -translate-y-16 group-hover/card:bg-amber-500/10 transition-colors"></div>
                             
-                            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mb-10 border-b border-white/5 pb-5 flex items-center justify-between">
+                            <h3 className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.4em] mb-10 border-b border-[var(--border-primary)] pb-5 flex items-center justify-between">
                                 Thông tin vận tải
                                 <Truck size={14} className="text-amber-500/50" />
                             </h3>
                             
                             <div className="space-y-10">
                                 <div className="flex items-center gap-5 group/entry">
-                                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center text-gray-400 group-hover/entry:border-amber-500/50 transition-colors">
+                                    <div className="w-14 h-14 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)] group-hover/entry:border-amber-500/50 transition-colors">
                                         <User size={24} />
                                     </div>
                                     <div>
-                                        <div className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-1.5">Cơ trưởng điều hành</div>
-                                        <div className="text-xl font-black text-white tracking-tighter italic">{shipment.driverName || 'VÔ DANH'}</div>
+                                        <div className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest mb-1.5">Cơ trưởng điều hành</div>
+                                        <div className="text-xl font-black text-[var(--text-primary)] tracking-tighter italic">{shipment.driverName || 'VÔ DANH'}</div>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center gap-5 group/entry">
-                                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center text-gray-400 group-hover/entry:border-amber-500/50 transition-colors">
+                                    <div className="w-14 h-14 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)] group-hover/entry:border-amber-500/50 transition-colors">
                                         <Truck size={24} />
                                     </div>
                                     <div>
-                                        <div className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-1.5">Mã phương tiện</div>
-                                        <div className="text-xl font-black text-white tracking-tighter italic font-mono uppercase">{shipment.vehicleInfo || 'CHƯA CẬP NHẬT'}</div>
+                                        <div className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest mb-1.5">Mã phương tiện</div>
+                                        <div className="text-xl font-black text-[var(--text-primary)] tracking-tighter italic font-mono uppercase">{shipment.vehicleInfo || 'CHƯA CẬP NHẬT'}</div>
                                     </div>
                                 </div>
 
@@ -340,12 +340,12 @@ export const ReceiveShipmentReportPage = () => {
 
                         {/* Audit Details (Remarks) */}
                         {shipment.remarks && (
-                            <div className="bg-zinc-950/40 border border-zinc-800 rounded-[32px] p-8 space-y-4">
-                                <div className="flex items-center gap-2 text-zinc-600 mb-2">
+                            <div className="bg-[var(--bg-root)]/40 border border-[var(--border-primary)] rounded-[32px] p-8 space-y-4">
+                                <div className="flex items-center gap-2 text-[var(--text-secondary)]/40 mb-2">
                                     <AlertCircle size={14} />
                                     <span className="text-[10px] font-black uppercase tracking-widest">Ghi chú vận hành</span>
                                 </div>
-                                <p className="text-sm font-medium text-zinc-400 italic leading-relaxed text-pretty border-l-2 border-amber-500/30 pl-4 py-1">
+                                <p className="text-sm font-medium text-[var(--text-secondary)] italic leading-relaxed text-pretty border-l-2 border-amber-500/30 pl-4 py-1">
                                     "{shipment.remarks}"
                                 </p>
                             </div>

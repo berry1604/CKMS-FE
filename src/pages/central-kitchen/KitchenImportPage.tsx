@@ -142,7 +142,7 @@ export const KitchenImportPage = () => {
                 <div className="absolute inset-0 flex flex-col justify-end px-8 pb-16 max-w-7xl mx-auto w-full">
                     <button
                         onClick={() => navigate('/kitchen/inventory')}
-                        className="group flex items-center gap-3 text-amber-500 hover:text-amber-400 transition-all mb-8 w-fit bg-amber-500/5 px-6 py-3 rounded-2xl border border-amber-500/10 backdrop-blur-md shadow-sm"
+                        className="group flex items-center gap-3 text-amber-500 hover:text-amber-400 transition-all mb-8 w-fit bg-amber-500/10 px-6 py-3 rounded-2xl border border-amber-500/20 backdrop-blur-md shadow-sm"
                     >
                         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
                         <span className="text-[10px] font-black tracking-[0.3em] uppercase italic">Quay lại Kho Bếp</span>
@@ -164,7 +164,7 @@ export const KitchenImportPage = () => {
                         </div>
                         
                         <div className="w-full md:w-auto pb-2">
-                            <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl p-6 rounded-[2rem] border border-[var(--border-primary)] shadow-2xl">
+                            <div className="bg-[var(--bg-card)]/80 backdrop-blur-3xl p-6 rounded-[2rem] border border-[var(--border-primary)] shadow-2xl">
                                 <label className="text-[9px] font-black text-amber-500 uppercase tracking-[0.3em] mb-4 block ml-2 italic">Cơ sở sản xuất định danh</label>
                                 <KitchenSelector 
                                     selectedKitchenId={selectedKitchenId}
@@ -177,7 +177,7 @@ export const KitchenImportPage = () => {
             </div>
 
             <div className="max-w-4xl mx-auto px-8 -mt-12 relative z-10">
-                <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] p-12 md:p-16 shadow-2xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-card)]/80 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] p-12 md:p-16 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
                     {/* Decorative glow */}
                     <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full group-hover:bg-amber-500/10 transition-all duration-1000" />
@@ -251,7 +251,7 @@ export const KitchenImportPage = () => {
                                         placeholder="0.00"
                                         value={importQuantity || ''}
                                         onChange={(e) => setImportQuantity(Number(e.target.value))}
-                                        className="w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-[1.5rem] text-[var(--text-primary)] font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all placeholder:text-[var(--text-secondary)]/20 hover:border-amber-500/30 font-mono text-lg italic"
+                                        className="w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/80 border border-[var(--border-primary)] rounded-[1.5rem] text-[var(--text-primary)] font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all placeholder:text-[var(--text-secondary)]/40 hover:border-amber-500/30 font-mono text-lg italic"
                                     />
                                 </div>
                             </div>
@@ -268,7 +268,7 @@ export const KitchenImportPage = () => {
                                         value={expiryDate}
                                         onChange={(e) => setExpiryDate(e.target.value)}
                                         min={new Date().toISOString().split('T')[0]}
-                                        className="w-full pl-16 pr-10 py-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-[1.5rem] text-[var(--text-primary)] font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all hover:border-amber-500/30 cursor-pointer italic"
+                                        className="w-full pl-16 pr-10 py-5 bg-[var(--bg-root)]/80 border border-[var(--border-primary)] rounded-[1.5rem] text-[var(--text-primary)] font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all hover:border-amber-500/30 cursor-pointer italic"
                                     />
                                 </div>
                             </div>

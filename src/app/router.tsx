@@ -48,6 +48,7 @@ import { AllocationMatrix } from '../pages/warehouse/AllocationMatrix';
 import { ReceiveShipment } from '../pages/shipment/ReceiveShipment';
 import { ReceiveShipmentReportPage } from '../pages/shipment/ReceiveShipmentReportPage';
 import { VNPayReturn } from '../pages/billing/VNPayReturn';
+import { ReportsDashboard } from '../pages/reports/ReportsDashboard';
 import { useAuth } from '../hooks/useAuth';
 import type { UserRole } from '../types/user';
 
@@ -56,8 +57,8 @@ const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: UserRole[] }) => {
 
     if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-    const userRoleStr = typeof user?.role === 'string' ? user.role.replace('ROLE_', '') : '';
-    if (allowedRoles && userRoleStr && !allowedRoles.includes(userRoleStr as any)) {
+    const userRoleStr = typeof user?.role === 'string' ? user.role.toUpperCase().replace('ROLE_', '') : '';
+    if (allowedRoles && userRoleStr && !allowedRoles.map(r => r.toUpperCase()).includes(userRoleStr as any)) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center">
                 <h2 className="text-2xl font-bold text-red-600 mb-2">Truy cập bị từ chối</h2>
@@ -213,6 +214,15 @@ export const router = createBrowserRouter([
                             },
                             { path: 'receive', element: <ReceiveShipment /> },
                             { path: 'receive/:id', element: <ReceiveShipmentReportPage /> }
+                        ]
+                    },
+
+                    // Reports Module (Manager only)
+                    {
+                        path: 'reports',
+                        element: <ProtectedRoute allowedRoles={['MANAGER']} />, // Manager only as specified in ReportsDashboard
+                        children: [
+                            { index: true, element: <ReportsDashboard /> }
                         ]
                     },
                 ]

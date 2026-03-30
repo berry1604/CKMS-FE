@@ -4,8 +4,6 @@ import {
   Clock,
   CheckCircle,
   Truck,
-  Printer,
-  Download,
   XCircle,
   Phone,
 } from "lucide-react";
@@ -117,22 +115,9 @@ export const OrderDetailDrawer = ({
   };
 
   const footer = (
-    <div className="flex justify-between w-full items-center">
-      <div className="flex gap-2 text-zinc-400">
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-zinc-800 text-zinc-400 hover:text-white rounded-lg h-9"
-        >
-          <Printer size={16} className="mr-2" /> In đơn
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-zinc-800 text-zinc-400 hover:text-white rounded-lg h-9"
-        >
-          <Download size={16} className="mr-2" /> Xuất hóa đơn
-        </Button>
+    <div className="flex justify-between w-full items-center px-4">
+      <div className="flex gap-2 text-[var(--text-secondary)] opacity-0 pointer-events-none">
+        {/* Placeholder to keep layout consistent if needed, but the gap-3 div below already handles right-alignment */}
       </div>
       <div className="flex gap-3">
         {canCancel && onCancelOrder && (
@@ -178,7 +163,7 @@ export const OrderDetailDrawer = ({
         <Button
           variant="ghost"
           onClick={onClose}
-          className="text-zinc-500 hover:text-zinc-100 font-bold uppercase text-[10px] tracking-widest h-9 px-4"
+          className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-bold uppercase text-[10px] tracking-widest h-9 px-4"
         >
           Đóng
         </Button>
@@ -204,10 +189,10 @@ export const OrderDetailDrawer = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 py-2 animate-in slide-in-from-right duration-500">
           {/* Left Column: Visual & Global Status */}
           <div className="lg:col-span-5 space-y-8">
-            <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar shadow-2xl">
+            <div className="bg-[var(--bg-card)]/40 backdrop-blur-md border border-[var(--border-primary)] rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar shadow-2xl">
               {/* Luxury Visual Element */}
               <div className="relative -mx-8 -mt-8 mb-8 group/img h-64 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950/90 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg-root)]/90 z-10"></div>
                 <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full scale-150 group-hover/img:bg-amber-500/20 transition-all duration-700"></div>
                 <img
                   src="/Users/phunghuyphuoc/.gemini/antigravity/brain/0e7878ef-fd61-49a8-909f-b3ae8c725512/order_management_luxury_1773305899211.png"
@@ -215,7 +200,7 @@ export const OrderDetailDrawer = ({
                   className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 group-hover/img:scale-110 transition-all duration-[2s]"
                 />
                 <div className="absolute bottom-6 left-8 z-20">
-                  <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-zinc-950/80 backdrop-blur-md border border-amber-500/30 shadow-lg shadow-amber-500/10">
+                  <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-[var(--bg-root)]/80 backdrop-blur-md border border-amber-500/30 shadow-lg shadow-amber-500/10">
                     <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
                     <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
                       Trung tâm Quản lý Hệ thống
@@ -253,34 +238,34 @@ export const OrderDetailDrawer = ({
                               ? "TỪ CHỐI"
                               : orderStatus}
                   </Badge>
-                  <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">
+                  <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tighter">
                     Trạng thái Hiện tại
                   </span>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-amber-500 shadow-inner">
+                  <div className="w-14 h-14 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-amber-500 shadow-inner">
                     <Package size={28} />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">
+                    <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-1">
                       Mã đơn hàng
                     </span>
-                    <span className="text-2xl font-black text-white tracking-tighter">
+                    <span className="text-2xl font-black text-[var(--text-primary)] tracking-tighter">
                       #{currentOrder.orderId}
                     </span>
                   </div>
                 </div>
-                <p className="text-xs text-zinc-500 font-medium italic leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] font-medium italic leading-relaxed">
                   Thông tin chi tiết về đơn hàng được khởi tạo từ chuỗi cửa hàng
                   nhượng quyền.
                 </p>
               </div>
 
-              <div className="h-px bg-zinc-800/50"></div>
+              <div className="h-px bg-[var(--border-primary)]/50"></div>
 
               <div className="space-y-2">
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                   Tổng giá trị thanh toán
                 </span>
                 <div className="flex items-baseline gap-2">
@@ -296,44 +281,44 @@ export const OrderDetailDrawer = ({
 
             {/* Meta Specs */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
-                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">
+              <div className="p-6 bg-[var(--bg-card)]/40 rounded-[32px] border border-[var(--border-primary)] space-y-3 group/spec">
+                <span className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-widest block">
                   Cửa hàng đặt hàng
                 </span>
-                <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
+                <span className="text-[13px] font-black text-[var(--text-primary)] uppercase truncate block">
                   {currentOrder.storeName || `Shop #${currentOrder.storeId}`}
                 </span>
                 {currentOrder.storePhone ? (
                   <div className="flex items-center gap-1.5">
                     <Phone size={10} className="text-amber-500" />
-                    <span className="text-[10px] font-bold text-zinc-400 font-mono tracking-tighter">
+                    <span className="text-[10px] font-bold text-[var(--text-secondary)] font-mono tracking-tighter">
                       {currentOrder.storePhone}
                     </span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1.5 opacity-60">
-                    <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
+                    <span className="text-[10px] font-bold text-[var(--text-secondary)] font-mono tracking-tighter uppercase italic">
                       Xác thực Terminal
                     </span>
                   </div>
                 )}
               </div>
-              <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec">
-                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block">
+              <div className="p-6 bg-[var(--bg-card)]/40 rounded-[32px] border border-[var(--border-primary)] space-y-3 group/spec">
+                <span className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-widest block">
                   Ngày đặt hàng
                 </span>
-                <span className="text-[13px] font-black text-zinc-300 uppercase truncate block">
+                <span className="text-[13px] font-black text-[var(--text-primary)] uppercase truncate block">
                   {new Date(currentOrder.orderDate).toLocaleDateString("vi-VN")}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black text-zinc-600 font-mono uppercase">
+                  <span className="text-[9px] font-black text-[var(--text-secondary)]/60 font-mono uppercase">
                     {new Date(currentOrder.orderDate).toLocaleTimeString(
                       "vi-VN",
                     )}
                   </span>
                 </div>
               </div>
-              <div className="p-6 bg-zinc-900/40 rounded-[32px] border border-zinc-800/50 space-y-3 group/spec col-span-2">
+              <div className="p-6 bg-[var(--bg-card)]/40 rounded-[32px] border border-[var(--border-primary)] space-y-3 group/spec col-span-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">
                     Ngày giao hàng dự kiến
@@ -344,14 +329,14 @@ export const OrderDetailDrawer = ({
                       orderStatus === "ALLOCATED") && (
                       <button
                         onClick={() => setIsRescheduleModalOpen(true)}
-                        className="text-[10px] font-black text-zinc-500 hover:text-amber-500 uppercase tracking-widest transition-colors"
+                        className="text-[10px] font-black text-[var(--text-secondary)] hover:text-amber-500 uppercase tracking-widest transition-colors"
                       >
                         Thay đổi
                       </button>
                     )}
                 </div>
 
-                <span className="text-[15px] font-black text-white uppercase truncate block">
+                <span className="text-[15px] font-black text-[var(--text-primary)] uppercase truncate block">
                   {currentOrder.deliveryDate
                     ? new Date(currentOrder.deliveryDate).toLocaleDateString(
                         "vi-VN",
@@ -360,7 +345,7 @@ export const OrderDetailDrawer = ({
                 </span>
                 <div className="flex items-center gap-1.5 opacity-60">
                   <Clock size={12} className="text-amber-500" />
-                  <span className="text-[10px] font-bold text-zinc-500 font-mono tracking-tighter uppercase italic">
+                  <span className="text-[10px] font-bold text-[var(--text-secondary)]/60 font-mono tracking-tighter uppercase italic">
                     Lịch trình vận chuyển dự kiến
                   </span>
                 </div>
@@ -372,16 +357,16 @@ export const OrderDetailDrawer = ({
           <div className="lg:col-span-7 space-y-10">
             {/* Progress Tracker */}
             {orderStatus !== "REJECTED" ? (
-              <div className="bg-zinc-900/20 backdrop-blur-sm rounded-[40px] border border-zinc-800/50 p-10 space-y-10 shadow-xl">
+              <div className="bg-[var(--bg-card)]/20 backdrop-blur-sm rounded-[40px] border border-[var(--border-primary)] p-10 space-y-10 shadow-xl">
                 <div className="flex items-center gap-3 ml-2">
                   <Clock size={18} className="text-amber-500/50" />
-                  <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                  <h4 className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">
                     Lộ trình xử lý đơn hàng
                   </h4>
                 </div>
 
                 <div className="relative">
-                  <div className="absolute top-[26px] left-[24px] right-[24px] h-[3px] bg-zinc-800/50 rounded-full"></div>
+                  <div className="absolute top-[26px] left-[24px] right-[24px] h-[3px] bg-[var(--border-primary)]/50 rounded-full"></div>
                   <div
                     className="absolute top-[26px] left-[24px] h-[3px] bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                     style={{
@@ -406,10 +391,10 @@ export const OrderDetailDrawer = ({
                         >
                           <div
                             className={cn(
-                              "w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 bg-zinc-950",
+                              "w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 bg-[var(--bg-root)]",
                               isActive
-                                ? "border-amber-500 text-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.15)] bg-zinc-900"
-                                : "border-zinc-800/50 text-zinc-700 hover:border-zinc-700",
+                                ? "border-amber-500 text-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.15)] bg-[var(--bg-card)]"
+                                : "border-[var(--border-primary)] text-[var(--text-secondary)]/30 hover:border-[var(--text-secondary)]/50",
                             )}
                           >
                             <StepIcon
@@ -446,7 +431,7 @@ export const OrderDetailDrawer = ({
                   <h5 className="text-[16px] font-black text-red-500 uppercase tracking-[0.2em]">
                     HỆ THỐNG ĐÃ TỪ CHỐI
                   </h5>
-                  <p className="text-[12px] text-zinc-500 font-medium max-w-md mx-auto italic">
+                  <p className="text-[12px] text-[var(--text-secondary)] font-medium max-w-md mx-auto italic">
                     Vui lòng kiểm tra lại thông tin đơn hàng hoặc liên hệ
                     Coordinator để nhận hỗ trợ kỹ thuật.
                   </p>
@@ -458,13 +443,13 @@ export const OrderDetailDrawer = ({
             <div className="space-y-5">
               <div className="flex items-center justify-between ml-2">
                 <div className="flex items-center gap-3">
-                  <Package size={18} className="text-zinc-600" />
-                  <h4 className="text-[12px] font-black text-zinc-400 uppercase tracking-[0.2em]">
+                  <Package size={18} className="text-[var(--text-secondary)]/60" />
+                  <h4 className="text-[12px] font-black text-[var(--text-secondary)]/60 uppercase tracking-[0.2em]">
                     Danh mục sản phẩm
                   </h4>
                 </div>
-                <div className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full">
-                  <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">
+                <div className="px-3 py-1 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-full">
+                  <span className="text-[10px] text-[var(--text-secondary)]/60 font-black uppercase tracking-widest">
                     {currentOrder.orderDetails?.reduce(
                       (acc, curr) => acc + curr.quantity,
                       0,
@@ -474,40 +459,40 @@ export const OrderDetailDrawer = ({
                 </div>
               </div>
 
-              <div className="bg-zinc-900/20 rounded-[36px] border border-zinc-800/50 overflow-hidden shadow-2xl">
+              <div className="bg-[var(--bg-card)]/20 rounded-[36px] border border-[var(--border-primary)] overflow-hidden shadow-2xl">
                 <table className="w-full text-left">
-                  <thead className="bg-zinc-950/40 border-b border-zinc-800/50">
+                  <thead className="bg-[var(--bg-root)]/40 border-b border-[var(--border-primary)]">
                     <tr>
-                      <th className="px-8 py-5 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                      <th className="px-8 py-5 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                         Sản phẩm
                       </th>
-                      <th className="px-6 py-5 text-center text-[10px] font-black text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                      <th className="px-6 py-5 text-center text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest whitespace-nowrap">
                         Số lượng
                       </th>
-                      <th className="px-8 py-5 text-right text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                         Thành tiền
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/30">
+                  <tbody className="divide-y divide-[var(--border-primary)]/30">
                     {currentOrder.orderDetails?.map((item, idx) => {
                       return (
                         <tr
                           key={idx}
-                          className="group/row hover:bg-white/[0.02] transition-colors"
+                          className="group/row hover:bg-[var(--text-primary)]/[0.02] transition-colors"
                         >
                           <td className="px-8 py-5">
                             <div className="flex flex-col">
-                              <span className="text-[14px] font-black text-zinc-100 uppercase tracking-tight group-hover/row:text-amber-500 transition-colors">
+                              <span className="text-[14px] font-black text-[var(--text-primary)] uppercase tracking-tight group-hover/row:text-amber-500 transition-colors">
                                 {item.productName || `SKU #${item.productId}`}
                               </span>
-                              <span className="text-[10px] text-zinc-600 font-bold font-mono tracking-tighter italic">
+                              <span className="text-[10px] text-[var(--text-secondary)]/40 font-bold font-mono tracking-tighter italic">
                                 Unit ID: {item.productId}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-5 text-center">
-                            <span className="text-[14px] font-black text-zinc-300">
+                            <span className="text-[14px] font-black text-[var(--text-secondary)]">
                               {item.quantity} đơn vị
                             </span>
                           </td>
@@ -519,7 +504,7 @@ export const OrderDetailDrawer = ({
                                   item.quantity * (item.unitPrice || 0)
                                 ).toLocaleString()}
                               </span>
-                              <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
+                              <span className="text-[9px] text-[var(--text-secondary)]/40 font-bold uppercase tracking-widest">
                                 VNĐ
                               </span>
                             </div>
@@ -531,7 +516,7 @@ export const OrderDetailDrawer = ({
                 </table>
 
                 {/* Note Section */}
-                <div className="bg-amber-500/[0.03] p-8 border-t border-zinc-800/50 flex items-start gap-5">
+                <div className="bg-amber-500/[0.03] p-8 border-t border-[var(--border-primary)] flex items-start gap-5">
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
                     <Clock size={18} />
                   </div>
@@ -539,7 +524,7 @@ export const OrderDetailDrawer = ({
                     <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] block">
                       Ghi chú điều phối chuyên biệt
                     </span>
-                    <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">
+                    <p className="text-[11px] text-[var(--text-secondary)] font-medium italic leading-relaxed text-balance">
                       {currentOrder.note ||
                         "Hệ thống chưa ghi nhận ghi chú bổ sung cho đơn hàng này."}
                     </p>
