@@ -40,7 +40,6 @@ import { WarehousePage } from '../pages/warehouse/WarehousePage';
 import { ShipmentList } from '../pages/shipment/ShipmentList';
 import { CreateShipment } from '../pages/shipment/CreateShipment';
 import { BillingList } from '../pages/billing/BillingList';
-import { ReportsDashboard } from '../pages/reports/ReportsDashboard';
 import { UserProfile } from '../pages/profile/UserProfile';
 import { Notifications } from '../pages/common/Notifications';
 import { ComingSoon } from '../components/ComingSoon';
@@ -190,7 +189,6 @@ export const router = createBrowserRouter([
                             { path: 'allocation', element: <AllocationMatrix /> }
                         ]
                     },
-
                     // Billing Module (Admin, Manager)
                     {
                         path: 'billing',
@@ -217,15 +215,6 @@ export const router = createBrowserRouter([
                             { path: 'receive/:id', element: <ReceiveShipmentReportPage /> }
                         ]
                     },
-
-                    // Reports Module (Admin, Manager)
-                    {
-                        path: 'reports',
-                        element: <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />,
-                        children: [
-                            { index: true, element: <ReportsDashboard /> }
-                        ]
-                    }
                 ]
             }
         ]

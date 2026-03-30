@@ -101,9 +101,13 @@ axiosClient.interceptors.response.use(
 
                 const data = response.data?.data || response.data;
                 const newAccessToken = data.accessToken || data.token;
+                const newRefreshToken = data.refreshToken;
 
                 if (newAccessToken) {
                     sessionStorage.setItem('accessToken', newAccessToken);
+                    if (newRefreshToken) {
+                        sessionStorage.setItem('refreshToken', newRefreshToken);
+                    }
                     // Update header and retry original request
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                     onRefreshed(newAccessToken);
