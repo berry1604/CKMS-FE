@@ -782,7 +782,7 @@ export const CreateShipment = () => {
                                     Dispatch Summary
                                 </h2>
                                 <p className="text-[9px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
-                                    Tổng hợp thông tin mẻ vận chuyển
+                                    Tổng hợp thông tin kế hoạch vận chuyển
                                 </p>
                             </div>
 

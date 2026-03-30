@@ -628,7 +628,7 @@ export const CreateProductionPlan = () => {
                       </div>
 
                       <div className="p-8 bg-[var(--bg-root)] rounded-[2.5rem] border border-[var(--border-primary)] shadow-inner text-center">
-                        <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic block mb-2">Quy mô mẻ sản xuất</span>
+                        <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic block mb-2">Quy mô kế hoạch sản xuất</span>
                         <div className="flex items-center justify-center gap-4">
                             <span className="text-5xl font-black text-amber-500 italic drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]">
                               {selectedOrderIds.size}
@@ -831,7 +831,7 @@ export const CreateProductionPlan = () => {
                 ) : (
                   <div className="flex items-center gap-4">
                     <Save size={24} /> 
-                    <span>Chốt & Kích hoạt mẻ sản xuất</span>
+                    <span>Chốt & Kích hoạt kế hoạch sản xuất</span>
                   </div>
                 )}
               </Button>

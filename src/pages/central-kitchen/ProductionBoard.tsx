@@ -296,7 +296,7 @@ export const ProductionBoard = () => {
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase text-[10px] tracking-widest h-14 shadow-lg shadow-amber-500/20 rounded-2xl border-0 transition-all hover:-translate-y-1 active:scale-95 italic"
               onClick={() => openYieldModal(plan.planId, plan.version)}
             >
-              <CheckCircle2 size={16} className="mr-3" /> Hoàn tất mẻ nấu
+              <CheckCircle2 size={16} className="mr-3" /> Hoàn tất kế hoạch nấu
             </Button>
           )}
           {columnType === "DONE" && (
@@ -318,7 +318,7 @@ export const ProductionBoard = () => {
       ringColor: "ring-indigo-500/20",
       badgeVariant: "info" as const,
       emptyIcon: <Database size={48} className="text-indigo-500/20" />,
-      emptyText: "Trống dữ liệu mẻ nấu",
+      emptyText: "Trống dữ liệu kế hoạch nấu",
       columnBg: "bg-[var(--bg-card)]",
       columnBorder: "border-[var(--border-primary)]",
       headerBg: "bg-[var(--bg-root)]/50",
@@ -331,7 +331,7 @@ export const ProductionBoard = () => {
       ringColor: "ring-amber-500/20",
       badgeVariant: "orange" as const,
       emptyIcon: <Flame size={48} className="text-amber-500/20" />,
-      emptyText: "Chưa bắt đầu mẻ nào",
+      emptyText: "Chưa bắt đầu kế hoạch nào",
       columnBg: "bg-amber-500/[0.01]",
       columnBorder: "border-amber-500/20",
       headerBg: "bg-amber-500/[0.03]",
@@ -344,7 +344,7 @@ export const ProductionBoard = () => {
       ringColor: "ring-emerald-500/20",
       badgeVariant: "success" as const,
       emptyIcon: <CheckCircle2 size={48} className="text-emerald-500/20" />,
-      emptyText: "Chưa có mẻ hoàn tất",
+      emptyText: "Chưa có kế hoạch hoàn tất",
       columnBg: "bg-[var(--bg-card)]",
       columnBorder: "border-[var(--border-primary)]",
       headerBg: "bg-[var(--bg-root)]/50",
@@ -502,7 +502,7 @@ export const ProductionBoard = () => {
                     </span>
                   </div>
                   <h3 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic">
-                    Nghiệm thu mẻ nấu
+                    Nghiệm thu kế hoạch nấu
                   </h3>
                 </div>
               </div>
@@ -520,7 +520,7 @@ export const ProductionBoard = () => {
                 <div className="space-y-8 animate-in fade-in duration-700">
                   <div className="grid grid-cols-2 gap-6">
                     <div className="bg-[var(--bg-root)] p-6 rounded-[2rem] border border-[var(--border-primary)] space-y-2 shadow-inner">
-                        <span className="text-[9px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic">Tên mẻ nấu</span>
+                        <span className="text-[9px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic">Tên kế hoạch nấu</span>
                         <p className="text-sm font-black text-amber-500 uppercase tracking-tighter truncate">{planDetailForYield.planName}</p>
                     </div>
                     <div className="bg-[var(--bg-root)] p-6 rounded-[2rem] border border-[var(--border-primary)] space-y-2 shadow-inner">
@@ -574,7 +574,7 @@ export const ProductionBoard = () => {
                   <div className="p-8 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 flex gap-6 italic">
                     <AlertCircle size={24} className="text-amber-500 shrink-0 mt-1" />
                     <p className="text-[11px] text-[var(--text-secondary)]/60 font-medium leading-relaxed uppercase tracking-wider">
-                      Lưu ý: Sau khi xác nhận hoàn thành, mẻ sản xuất sẽ được niêm phong trạng thái <span className="text-amber-500 font-black">"PRODUCED"</span> và sẵn sàng để quản trị kho điều hành chuỗi cung ứng phân phối (Allocation).
+                      Lưu ý: Sau khi xác nhận hoàn thành, kế hoạch sản xuất sẽ được niêm phong trạng thái <span className="text-amber-500 font-black">"PRODUCED"</span> và sẵn sàng để quản trị kho điều hành chuỗi cung ứng phân phối (Allocation).
                     </p>
                   </div>
                 </div>

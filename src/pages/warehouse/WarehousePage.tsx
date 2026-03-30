@@ -150,7 +150,7 @@ export const WarehousePage = () => {
                             <p className="text-[10px] font-black tracking-widest text-zinc-500 uppercase italic">Tổng công suất</p>
                             <div className="flex items-baseline gap-2 mt-1">
                                 <span className="text-4xl font-black text-amber-500 tracking-tighter font-mono italic">{stats.totalCapacity.toLocaleString()}</span>
-                                <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">ĐƠN VỊ/MẺ</span>
+                                <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">ĐƠN VỊ/KẾ HOẠCH</span>
                             </div>
                         </div>
                     </div>
