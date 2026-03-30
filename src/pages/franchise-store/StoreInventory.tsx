@@ -127,10 +127,10 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
             <Package size={20} />
           </div>
           <div>
-            <p className="font-bold text-zinc-100 group-hover/item:text-white transition-colors uppercase tracking-tight">
+            <p className="font-bold text-[var(--text-primary)] transition-colors uppercase tracking-tight group-hover/item:text-amber-500">
               {row.productName}
             </p>
-            <p className="text-[10px] text-zinc-500 font-black tracking-widest uppercase">
+            <p className="text-[10px] text-[var(--text-secondary)] font-black tracking-widest uppercase">
               Mã SP: {row.productId}
             </p>
           </div>
@@ -142,7 +142,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
       cell: (row) => (
         <button
           onClick={() => handleViewBatches(row)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-zinc-400 hover:bg-amber-500/10 hover:text-amber-500 border border-transparent hover:border-amber-500/20 transition-all font-bold text-[11px] uppercase tracking-widest"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--bg-root)] text-[var(--text-secondary)] hover:bg-amber-500/10 hover:text-amber-500 border border-transparent hover:border-amber-500/20 transition-all font-bold text-[11px] uppercase tracking-widest"
         >
           Chi tiết lô{" "}
           <ChevronRight
@@ -171,14 +171,14 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       {/* Cinematic Header Section */}
       <div className="relative h-[250px] -mx-4 -mt-8 mb-12 overflow-hidden group/header">
-        <div className="absolute inset-0 bg-zinc-950">
+        <div className="absolute inset-0 bg-[var(--bg-root)]">
           <img
-            src="/src/assets/luxury_steakhouse_bg.png"
+            src="https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=2070&auto=format&fit=crop"
             alt="Inventory Header"
             className="w-full h-full object-cover opacity-40 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-transparent to-zinc-950"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-root)] via-[var(--bg-root)]/60 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-root)] via-transparent to-[var(--bg-root)]"></div>
         </div>
 
         <div className="absolute inset-0 flex flex-col justify-end p-10 pb-12 max-w-[1600px] mx-auto w-full">
@@ -190,13 +190,13 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                 </span>
               </div>
             </div>
-            <h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2">
+            <h1 className="text-5xl font-black text-[var(--text-primary)] uppercase tracking-tighter leading-none mb-2 italic">
               Tồn kho{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">
                 Cửa hàng
               </span>
             </h1>
-            <p className="text-zinc-400 text-sm font-medium uppercase tracking-widest max-w-xl leading-relaxed opacity-80">
+            <p className="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-widest max-w-xl leading-relaxed opacity-80">
               Giám sát sản phẩm, số lượng và hạn sử dụng thời gian thực tại điểm
               kinh doanh.
             </p>
@@ -235,7 +235,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
             key={i}
             className={cn(
               "p-8 rounded-[32px] border transition-all duration-500 group/card relative overflow-hidden",
-              "bg-zinc-900/60 backdrop-blur-xl border-zinc-800/50 hover:border-zinc-700/80 shadow-2xl",
+              "backdrop-blur-3xl bg-[var(--bg-card)]/40 border-[var(--border-primary)] hover:bg-[var(--bg-card)]/60 shadow-2xl",
               stat.highlight && `ring-1 ring-${stat.color}-500/30`,
             )}
           >
@@ -264,14 +264,14 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                 <stat.icon size={22} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">
+                <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] mb-1">
                   {stat.label}
                 </p>
-                <h3 className="text-3xl font-black text-white tracking-tighter">
+                <h3 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter italic">
                   {isLoading ? "---" : (stat.value || 0).toLocaleString()}
                 </h3>
               </div>
-              <p className="text-[11px] text-zinc-500 font-medium italic opacity-60">
+              <p className="text-[11px] text-[var(--text-secondary)] font-medium italic opacity-60">
                 {stat.desc}
               </p>
             </div>
@@ -284,7 +284,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
           <div className="flex items-center gap-3">
             <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
-            <h4 className="text-[12px] font-black text-zinc-400 uppercase tracking-[0.3em]">
+            <h4 className="text-[12px] font-black text-[var(--text-secondary)] uppercase tracking-[0.3em]">
               Chi tiết danh mục tồn kho
             </h4>
           </div>
@@ -293,11 +293,11 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
             <div className="relative w-full sm:w-80">
               <Search
                 size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"
               />
               <Input
                 placeholder="Tìm kiếm sản phẩm..."
-                className="pl-12 bg-zinc-900/40 border-zinc-800 focus:border-amber-500/50 h-12 rounded-2xl"
+                className="pl-12 bg-[var(--bg-card)]/40 border-[var(--border-primary)] focus:border-amber-500/50 h-12 rounded-2xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -305,7 +305,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
             <button
               onClick={loadInventory}
               disabled={isLoading}
-              className="flex items-center justify-center w-12 h-12 bg-white/5 hover:bg-amber-500/10 text-amber-500 rounded-2xl transition-all border border-white/5 hover:border-amber-500/20"
+              className="flex items-center justify-center w-12 h-12 bg-[var(--bg-card)]/40 hover:bg-amber-500/10 text-amber-500 rounded-2xl transition-all border border-[var(--border-primary)] hover:border-amber-500/20"
             >
               <RefreshCw
                 size={20}
@@ -315,7 +315,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
           </div>
         </div>
 
-        <div className="bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/50 rounded-[40px] overflow-hidden shadow-2xl relative group/table sm:mx-0 -mx-4">
+        <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[40px] overflow-hidden shadow-2xl relative group/table sm:mx-0 -mx-4">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
           <div className="p-4">
             <DataTable
@@ -329,14 +329,14 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
 
           {/* Pagination */}
           {totalElements > 0 && (
-            <div className="px-8 py-6 border-t border-zinc-800/50 flex items-center justify-between bg-zinc-950/20">
-              <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+            <div className="px-8 py-6 border-t border-[var(--border-primary)] flex items-center justify-between bg-[var(--bg-root)]/20">
+              <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                 Hiển thị{" "}
-                <span className="text-zinc-300 mx-1">
+                <span className="text-[var(--text-primary)] mx-1">
                   {startItem} — {endItem}
                 </span>{" "}
                 trong số{" "}
-                <span className="text-zinc-300 mx-1">{totalElements}</span> sản
+                <span className="text-[var(--text-primary)] mx-1">{totalElements}</span> sản
                 phẩm
               </span>
               <div className="flex gap-3">
@@ -345,7 +345,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                   size="sm"
                   disabled={currentPage === 0}
                   onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                  className="rounded-xl border-zinc-800 bg-transparent text-zinc-400 font-bold uppercase text-[10px] tracking-widest px-6"
+                  className="rounded-xl border-[var(--border-primary)] bg-transparent text-[var(--text-secondary)] font-bold uppercase text-[10px] tracking-widest px-6"
                 >
                   Trước
                 </Button>
@@ -354,7 +354,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                   size="sm"
                   disabled={currentPage >= totalPages - 1}
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  className="rounded-xl border-zinc-800 bg-transparent text-zinc-400 font-bold uppercase text-[10px] tracking-widest px-6"
+                  className="rounded-xl border-[var(--border-primary)] bg-transparent text-[var(--text-secondary)] font-bold uppercase text-[10px] tracking-widest px-6"
                 >
                   Sau
                 </Button>
@@ -369,14 +369,14 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
         <div className="fixed inset-0 z-[60] flex justify-end">
           {/* Overlay */}
           <div
-            className="absolute inset-0 bg-zinc-950/80 backdrop-blur-xl animate-in fade-in duration-500"
+            className="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-xl animate-in fade-in duration-500"
             onClick={closeBatchDrawer}
           />
 
           {/* Drawer panel */}
-          <div className="relative w-full max-w-xl bg-zinc-950 border-l border-zinc-800 flex flex-col animate-in slide-in-from-right duration-500 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <div className="relative w-full max-w-xl bg-[var(--bg-root)] border-l border-[var(--border-primary)] flex flex-col animate-in slide-in-from-right duration-500 shadow-[0_0_50px_rgba(0,0,0,0.3)]">
             {/* Header */}
-            <div className="p-10 border-b border-zinc-800/50">
+            <div className="p-10 border-b border-[var(--border-primary)]">
               <div className="flex items-center justify-between mb-8">
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
@@ -385,13 +385,13 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                       Chi tiết kho hàng
                     </span>
                   </div>
-                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">
+                  <h3 className="text-3xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter">
                     {selectedProduct.productName}
                   </h3>
                 </div>
                 <button
                   onClick={closeBatchDrawer}
-                  className="p-3 bg-white/5 text-zinc-500 hover:text-white hover:bg-red-500/10 hover:text-red-500 rounded-2xl transition-all border border-transparent hover:border-red-500/20"
+                  className="p-3 bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all border border-transparent hover:border-red-500/20"
                 >
                   <X size={24} />
                 </button>
@@ -422,22 +422,22 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                 ].map((s, i) => (
                   <div
                     key={i}
-                    className="bg-zinc-900/50 rounded-[24px] p-4 border border-zinc-800/50"
+                    className="bg-[var(--bg-card)]/50 rounded-[24px] p-4 border border-[var(--border-primary)]"
                   >
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">
+                    <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest mb-2">
                       {s.label}
                     </p>
                     <div className="flex items-baseline gap-1">
                       <span
                         className={cn(
                           "text-2xl font-black tracking-tighter",
-                          s.color || "text-zinc-100",
+                          s.color || "text-[var(--text-primary)]",
                         )}
                       >
                         {s.value}
                       </span>
                       {!s.isText && (
-                        <span className="text-[10px] font-bold text-zinc-600 uppercase">
+                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">
                           {s.sub}
                         </span>
                       )}
@@ -450,8 +450,8 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
             {/* Batch List */}
             <div className="flex-1 overflow-y-auto p-10 space-y-4">
               <div className="flex items-center gap-3 mb-6">
-                <Layers size={18} className="text-zinc-500" />
-                <span className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">
+                <Layers size={18} className="text-[var(--text-secondary)]" />
+                <span className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                   Danh sách các lô hàng có sẵn
                 </span>
               </div>
@@ -459,17 +459,17 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
               {isBatchLoading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
-                  <p className="mt-4 text-[11px] font-bold text-zinc-500 uppercase tracking-widest animate-pulse">
+                  <p className="mt-4 text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-widest animate-pulse">
                     Đang truy xuất dữ liệu lô hàng...
                   </p>
                 </div>
               ) : batches.length === 0 ? (
-                <div className="text-center py-20 bg-zinc-900/20 rounded-[32px] border border-dashed border-zinc-800">
+                <div className="text-center py-20 bg-[var(--bg-card)]/20 rounded-[32px] border border-dashed border-[var(--border-primary)]">
                   <Package
                     size={40}
-                    className="mx-auto text-zinc-700 mb-4 opacity-20"
+                    className="mx-auto text-[var(--text-secondary)] mb-4 opacity-20"
                   />
-                  <p className="text-zinc-500 font-bold text-sm uppercase">
+                  <p className="text-[var(--text-secondary)] font-bold text-sm uppercase">
                     Trống
                   </p>
                 </div>
@@ -487,13 +487,13 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                             ? "border-red-500/30 bg-red-500/5"
                             : expiringSoon
                               ? "border-amber-500/30 bg-amber-500/5"
-                              : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900",
+                              : "border-[var(--border-primary)] bg-[var(--bg-card)]/50 hover:border-[var(--text-secondary)]/20 hover:bg-[var(--bg-card)]",
                         )}
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-zinc-950 rounded-xl border border-zinc-800">
-                              <span className="font-mono text-xs font-black text-zinc-100 uppercase tracking-tighter">
+                            <div className="p-2 bg-[var(--bg-root)] rounded-xl border border-[var(--border-primary)]">
+                              <span className="font-mono text-xs font-black text-[var(--text-primary)] uppercase tracking-tighter">
                                 {batch.batchCode}
                               </span>
                             </div>
@@ -507,27 +507,27 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                               </div>
                             ) : null}
                           </div>
-                          <Badge className="bg-white/5 border-white/10 text-zinc-400 group-hover:bg-amber-500/10 group-hover:text-amber-500 transition-colors">
+                          <Badge className="bg-[var(--bg-card)] border-[var(--border-primary)] text-[var(--text-secondary)] group-hover:bg-amber-500/10 group-hover:text-amber-500 transition-colors">
                             {translateStatus(batch.status)}
                           </Badge>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                           <div>
-                            <p className="text-[10px] font-black text-zinc-600 uppercase mb-1">
+                            <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase mb-1">
                               Số lượng
                             </p>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-xl font-black text-zinc-100 tracking-tighter">
+                              <span className="text-xl font-black text-[var(--text-primary)] tracking-tighter">
                                 {(batch.quantity || 0).toLocaleString()}
                               </span>
-                              <span className="text-[9px] font-bold text-zinc-500">
+                              <span className="text-[9px] font-bold text-[var(--text-secondary)]">
                                 {translateUnit(selectedProduct.unit)}
                               </span>
                             </div>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-zinc-600 uppercase mb-1">
+                            <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase mb-1">
                               Hạn SD
                             </p>
                             <p
@@ -537,7 +537,7 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
                                   ? "text-red-500"
                                   : expiringSoon
                                     ? "text-amber-500"
-                                    : "text-zinc-100",
+                                    : "text-[var(--text-primary)]",
                               )}
                             >
                               {new Date(batch.expiryDate).toLocaleDateString(
@@ -558,3 +558,4 @@ export const StoreInventory: React.FC<StoreInventoryProps> = ({ storeId }) => {
     </div>
   );
 };
+

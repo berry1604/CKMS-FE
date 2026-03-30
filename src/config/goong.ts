@@ -5,5 +5,5 @@ export const goongConfig = {
 
 export const isGoongConfigured = Boolean(goongConfig.apiKey && goongConfig.mapKey);
 
-export const GOONG_DEFAULT_CENTER: [number, number] = [105.85242472181584, 21.029579719995272];
+export const GOONG_DEFAULT_CENTER: [number, number] = [106.80988826285073, 10.841074421690422];
 export const GOONG_DEFAULT_ZOOM = 13;

@@ -33,7 +33,7 @@ export function DataTable<T>({
   if (isLoading) {
     return (
       <div
-        className={`w-full h-48 flex items-center justify-center text-gray-400 ${className}`}
+        className={`w-full h-48 flex items-center justify-center text-[var(--text-secondary)] ${className}`}
       >
         Đang tải...
       </div>
@@ -43,7 +43,7 @@ export function DataTable<T>({
   if (data.length === 0) {
     return (
       <div
-        className={`w-full h-48 flex items-center justify-center text-gray-400 border border-zinc-800 rounded-lg bg-zinc-900/50 ${className}`}
+        className={`w-full h-48 flex items-center justify-center text-[var(--text-secondary)] border border-[var(--border-primary)] rounded-lg bg-[var(--bg-card)]/50 ${className}`}
       >
         {emptyMessage}
       </div>
@@ -52,12 +52,12 @@ export function DataTable<T>({
 
   return (
     <div
-      className={`relative overflow-x-auto shadow-sm rounded-lg border border-zinc-800 ${className}`}
+      className={`relative overflow-x-auto shadow-sm rounded-lg border border-[var(--border-primary)] ${className}`}
     >
       <table
-        className={`w-full text-sm text-left text-gray-400 ${layout === "fixed" ? "table-fixed" : "table-auto"}`}
+        className={`w-full text-sm text-left text-[var(--text-secondary)] ${layout === "fixed" ? "table-fixed" : "table-auto"}`}
       >
-        <thead className="text-xs text-gray-300 uppercase bg-zinc-900/50 border-b border-zinc-800">
+        <thead className="text-xs text-[var(--text-primary)] uppercase bg-[var(--bg-card)] border-b border-[var(--border-primary)]">
           <tr>
             {columns.map((col, index) => (
               <th
@@ -74,7 +74,7 @@ export function DataTable<T>({
           {data.map((item) => (
             <tr
               key={keyExtractor(item)}
-              className={`bg-zinc-900 border-b border-zinc-800 hover:bg-zinc-800/50 ${onRowClick ? "cursor-pointer" : ""}`}
+              className={`bg-[var(--bg-card)] border-b border-[var(--border-primary)] hover:bg-[var(--text-primary)]/5 ${onRowClick ? "cursor-pointer" : ""}`}
               onClick={() => onRowClick && onRowClick(item)}
             >
               {columns.map((col, index) => (

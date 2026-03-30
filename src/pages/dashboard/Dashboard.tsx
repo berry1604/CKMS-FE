@@ -220,7 +220,7 @@ export const Dashboard = () => {
     }, [user]);
 
     const StatCard = ({
-        title, value, icon: Icon, colorClass, index = 1, bgClass = 'bg-white/[0.02]'
+        title, value, icon: Icon, colorClass, index = 1, bgClass = 'bg-[var(--bg-card)]'
     }: {
         title: string;
         value: string | number;
@@ -230,22 +230,22 @@ export const Dashboard = () => {
         bgClass?: string;
     }) => (
         <div
-            className={`flex flex-col relative p-6 rounded-3xl ${bgClass} border border-white/[0.05] hover:bg-white/[0.04] transition-all duration-300 shadow-sm hover:shadow-lg animate-in fade-in slide-in-from-bottom-4`}
+            className={`flex flex-col relative p-6 rounded-3xl ${bgClass} border border-[var(--border-primary)] hover:bg-[var(--text-primary)]/[0.04] transition-all duration-300 shadow-sm hover:shadow-lg animate-in fade-in slide-in-from-bottom-4`}
             style={{ animationDelay: `${index * 100}ms` }}
         >
             <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-white/[0.05] ${colorClass}`}>
+                <div className={`p-3 rounded-xl bg-[var(--text-primary)]/[0.05] ${colorClass}`}>
                     <Icon size={24} strokeWidth={1.5} />
                 </div>
             </div>
             <div className="mt-auto">
-                <h3 className="text-3xl font-bold text-white tracking-tight mb-1">
-                    {isLoading ? <span className="block w-24 h-9 bg-white/10 animate-pulse rounded-lg" /> : value}
+                <h3 className="text-3xl font-bold text-[var(--text-primary)] tracking-tight mb-1">
+                    {isLoading ? <span className="block w-24 h-9 bg-[var(--text-primary)]/10 animate-pulse rounded-lg" /> : value}
                 </h3>
-                <p className="text-sm font-medium text-zinc-400">{title}</p>
+                <p className="text-sm font-medium text-[var(--text-secondary)]">{title}</p>
             </div>
             {/* Subtle glow effect behind card */}
-            <div className="absolute inset-0 rounded-3xl opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-tr from-white/[0.02] to-transparent pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-tr from-[var(--text-primary)]/[0.02] to-transparent pointer-events-none" />
         </div>
     );
 
@@ -263,36 +263,36 @@ export const Dashboard = () => {
     };
 
     return (
-        <div className="min-h-screen relative p-4 md:p-8 space-y-6">
+        <div className="min-h-screen relative p-4 md:p-8 space-y-6 text-[var(--text-primary)]">
 
             {/* Hero Welcome Banner */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-zinc-900 border border-white/[0.05] p-8 md:p-10 shadow-xl">
+            <div className="relative overflow-hidden rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-primary)] p-8 md:p-10 shadow-xl">
                 {/* Decorative blob */}
                 <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-amber-500/20 rounded-full blur-[80px] pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.1] text-zinc-300 text-xs font-semibold mb-6">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--text-primary)]/[0.05] border border-[var(--border-primary)] text-[var(--text-secondary)] text-xs font-semibold mb-6">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                             </span>
                             Vai trò hoạt động: {getVietnameseRole(user?.role)}
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-3">
-                            Chào mừng trở lại, <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">{user?.name?.split(' ')[0] || 'Khách'}</span>
+                        <h1 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)] tracking-tight mb-3">
+                            Chào mừng trở lại, <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-400 dark:to-amber-600">{user?.name?.split(' ')[0] || 'Khách'}</span>
                         </h1>
-                        <p className="text-zinc-400 text-sm md:text-base max-w-lg leading-relaxed">
+                        <p className="text-[var(--text-secondary)] text-sm md:text-base max-w-lg leading-relaxed">
                             Theo dõi hoạt động, quản lý tài nguyên và các chỉ số quan trọng trên toàn hệ thống.
                         </p>
                     </div>
                     <div className="flex flex-col items-start md:items-end justify-center">
-                        <Button onClick={loadDashboardData} disabled={isLoading} variant="outline" className="rounded-xl border-white/[0.1] bg-white/[0.02] text-zinc-300 hover:bg-white/[0.08] hover:text-white transition-all shadow-sm">
+                        <Button onClick={loadDashboardData} disabled={isLoading} variant="outline" className="rounded-xl border-[var(--border-primary)] bg-[var(--text-primary)]/[0.02] text-[var(--text-secondary)] hover:bg-[var(--text-primary)]/[0.08] hover:text-[var(--text-primary)] transition-all shadow-sm">
                             <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                             Đồng bộ dữ liệu
                         </Button>
                         {lastUpdated && (
-                            <p className="text-xs text-zinc-500 font-medium mt-3">
+                            <p className="text-xs text-[var(--text-secondary)]/70 font-medium mt-3">
                                 Cập nhật lần cuối: {lastUpdated.toLocaleDateString('vi-VN')} {lastUpdated.toLocaleTimeString('vi-VN')}
                             </p>
                         )}
@@ -305,7 +305,7 @@ export const Dashboard = () => {
 
                 {/* Analytics Row - Spans based on role */}
                 <div className="col-span-12 space-y-4">
-                    <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2 px-1">
+                    <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 px-1 uppercase tracking-wider">
                         <Activity size={16} className="text-amber-500" /> Chỉ Số Hoạt Động
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -336,7 +336,7 @@ export const Dashboard = () => {
 
                 {/* Command Center (Navigation) */}
                 <div className="col-span-12 lg:col-span-8 space-y-4">
-                    <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2 px-1">
+                    <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 px-1 uppercase tracking-wider">
                         <Store size={16} className="text-amber-500" /> Trung Tâm Quản Lý
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -346,16 +346,16 @@ export const Dashboard = () => {
                                 <button
                                     key={link.href}
                                     onClick={() => navigate(link.href)}
-                                    className="group relative flex items-center p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05] hover:bg-white/[0.04] hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg text-left"
+                                    className="group relative flex items-center p-4 bg-[var(--bg-card)] rounded-2xl border border-[var(--border-primary)] hover:bg-[var(--text-primary)]/[0.04] hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg text-left"
                                 >
-                                    <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/5 text-zinc-400 group-hover:text-amber-500 transition-colors mr-4 shadow-sm">
+                                    <div className="p-3 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] text-[var(--text-secondary)] group-hover:text-amber-500 transition-colors mr-4 shadow-sm">
                                         <Icon size={20} strokeWidth={1.5} />
                                     </div>
                                     <div className="flex flex-col pointer-events-none">
-                                        <span className="text-[13px] font-semibold text-zinc-200 group-hover:text-amber-500 transition-colors">
+                                        <span className="text-[13px] font-bold text-[var(--text-primary)] group-hover:text-amber-600 dark:group-hover:text-amber-500 transition-colors uppercase tracking-tight">
                                             {link.name}
                                         </span>
-                                        <span className="text-[11px] text-zinc-500 leading-tight mt-0.5">
+                                        <span className="text-[11px] text-[var(--text-secondary)] leading-tight mt-0.5">
                                             Truy cập quản lý
                                         </span>
                                     </div>
@@ -368,7 +368,7 @@ export const Dashboard = () => {
 
                 {/* Recent Activity */}
                 <div className="col-span-12 lg:col-span-4 space-y-4">
-                    <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2 px-1">
+                    <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 px-1 uppercase tracking-wider">
                         <RefreshCw size={16} className="text-amber-500" /> Hoạt Động Gần Đây
                     </h2>
 
@@ -378,18 +378,18 @@ export const Dashboard = () => {
                                 <div
                                     key={order.id}
                                     onClick={() => navigate('/orders')}
-                                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md group"
+                                    className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-primary)] hover:bg-[var(--text-primary)]/[0.04] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md group"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/[0.04] text-zinc-400 border border-white/5 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
+                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--bg-root)] text-[var(--text-secondary)] border border-[var(--border-primary)] group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
                                             <Package size={16} />
                                         </div>
                                         <div>
-                                            <p className="text-[13px] font-semibold text-zinc-200 group-hover:text-white transition-colors">Mã ĐH: #{order.id}</p>
-                                            <p className="text-[11px] text-zinc-500 font-medium">{order.storeName}</p>
+                                            <p className="text-[13px] font-bold text-[var(--text-primary)] group-hover:text-amber-600 dark:group-hover:text-amber-500 transition-colors">Mã ĐH: #{order.id}</p>
+                                            <p className="text-[11px] text-[var(--text-secondary)] font-medium">{order.storeName}</p>
                                         </div>
                                     </div>
-                                    <Badge variant={statusColor[order.status] as any || 'default'} className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-white/5 shadow-sm border border-white/5 text-amber-500">
+                                    <Badge variant={statusColor[order.status] as any || 'default'} className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-[var(--text-primary)]/[0.05] shadow-sm border border-[var(--border-primary)]">
                                         {statusLabel[order.status] || order.status}
                                     </Badge>
                                 </div>
@@ -399,18 +399,18 @@ export const Dashboard = () => {
                                 <div
                                     key={ship.id}
                                     onClick={() => navigate('/shipment')}
-                                    className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md group"
+                                    className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-primary)] hover:bg-[var(--text-primary)]/[0.04] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md group"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/[0.04] text-zinc-400 border border-white/5 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
+                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--bg-root)] text-[var(--text-secondary)] border border-[var(--border-primary)] group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors">
                                             <Truck size={16} />
                                         </div>
                                         <div>
-                                            <p className="text-[13px] font-semibold text-zinc-200 group-hover:text-white transition-colors">Xe: TRK-{ship.id}</p>
-                                            <p className="text-[11px] text-zinc-500 font-medium">{ship.storeName}</p>
+                                            <p className="text-[13px] font-bold text-[var(--text-primary)] group-hover:text-amber-600 dark:group-hover:text-amber-500 transition-colors">Xe: TRK-{ship.id}</p>
+                                            <p className="text-[11px] text-[var(--text-secondary)] font-medium">{ship.storeName}</p>
                                         </div>
                                     </div>
-                                    <Badge variant={statusColor[ship.status] as any || 'default'} className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-white/5 shadow-sm border border-white/5">
+                                    <Badge variant={statusColor[ship.status] as any || 'default'} className="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-[var(--text-primary)]/[0.05] shadow-sm border border-[var(--border-primary)]">
                                         {statusLabel[ship.status] || ship.status}
                                     </Badge>
                                 </div>
@@ -425,7 +425,7 @@ export const Dashboard = () => {
                         <Button
                             variant="ghost"
                             onClick={() => navigate('/reports')}
-                            className="w-full mt-2 py-5 rounded-xl border border-white/[0.05] text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-all bg-white/[0.01]"
+                            className="w-full mt-2 py-5 rounded-xl border border-[var(--border-primary)] text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/[0.04] transition-all bg-[var(--bg-card)] uppercase tracking-widest shadow-sm"
                         >
                             Xem Cổng Báo Cáo
                         </Button>

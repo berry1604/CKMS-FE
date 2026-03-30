@@ -42,14 +42,14 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     </div>
                 </div>
 
-                <h3 className="text-2xl font-black text-white mb-3 uppercase tracking-tight">{title}</h3>
-                <p className="text-zinc-500 font-medium mb-10 text-sm leading-relaxed max-w-[320px]">{message}</p>
+                <h3 className="text-2xl font-black text-[var(--text-primary)] mb-3 uppercase tracking-tight">{title}</h3>
+                <p className="text-[var(--text-secondary)] font-medium mb-10 text-sm leading-relaxed max-w-[320px]">{message}</p>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full">
                     <Button
                         variant="ghost"
                         onClick={onClose}
-                        className="flex-1 h-14 bg-white/5 border-white/5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all"
+                        className="flex-1 h-14 bg-[var(--text-primary)]/5 border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/10 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all"
                         disabled={isLoading}
                     >
                         {cancelText}

@@ -213,7 +213,7 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                 variant="ghost"
                 onClick={onClose}
                 disabled={isLoading}
-                className="h-12 px-8 rounded-2xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 font-black uppercase text-[10px] tracking-widest transition-all"
+                className="h-12 px-8 rounded-2xl bg-[var(--bg-root)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/[0.05] border border-[var(--border-primary)] font-black uppercase text-[10px] tracking-widest transition-all"
             >
                 Đóng
             </Button>
@@ -252,15 +252,15 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
         >
             {/* Tab Bar */}
             {initialData && (
-                <div className="flex gap-1 p-1 bg-zinc-950/60 rounded-2xl border border-white/5 mb-8">
+                <div className="flex gap-1 p-1 bg-[var(--bg-root)]/60 rounded-2xl border border-[var(--border-primary)] mb-8">
                     <button
                         type="button"
                         onClick={() => setActiveTab('info')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
                             activeTab === 'info'
-                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                                : "text-zinc-500 hover:text-zinc-300"
+                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-sm"
+                                : "text-[var(--text-secondary)] hover:text-amber-500"
                         )}
                     >
                         <Package size={16} /> Thông tin SP
@@ -271,8 +271,8 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
                             activeTab === 'recipe'
-                                ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                                : "text-zinc-500 hover:text-zinc-300"
+                                ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-sm"
+                                : "text-[var(--text-secondary)] hover:text-emerald-500"
                         )}
                     >
                         <ChefHat size={16} /> Công thức
@@ -283,68 +283,68 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
             {/* TAB 1: Product Info */}
             {activeTab === 'info' && (
                 <form id="product-form" onSubmit={handleSubmit(onSubmitForm)} className="space-y-8 py-2 animate-in fade-in duration-300">
-                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-primary)]">
                         <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
                             <Package size={18} className="text-amber-500" />
                         </div>
-                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Thông tin cơ bản</h3>
+                        <h3 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">Thông tin cơ bản</h3>
                     </div>
 
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Tên sản phẩm</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Tên sản phẩm</label>
                             <Input
                                 placeholder="VD: Cà phê Signature"
-                                icon={<Package size={18} className="text-zinc-600" />}
+                                icon={<Package size={18} className="text-[var(--text-secondary)]/40" />}
                                 error={errors.name?.message}
                                 {...register('name')}
-                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Mô tả chi tiết</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Mô tả chi tiết</label>
                             <Input
                                 placeholder="Mô tả ngắn gọn về sản phẩm..."
                                 error={errors.description?.message}
                                 {...register('description')}
-                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Đơn vị tính</label>
+                                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Đơn vị tính</label>
                                 <Input
                                     placeholder="KG, Cái, Chai..."
                                     error={errors.unit?.message}
                                     {...register('unit')}
-                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                    className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Mã danh mục</label>
+                                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Mã danh mục</label>
                                 <Input
                                     type="number"
                                     placeholder="1"
-                                    icon={<Tag size={16} className="text-zinc-600" />}
+                                    icon={<Tag size={16} className="text-[var(--text-secondary)]/40" />}
                                     error={errors.categoryId?.message}
                                     {...register('categoryId', { valueAsNumber: true })}
-                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                    className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Giá bán niên yết (VNĐ)</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Giá bán niên yết (VNĐ)</label>
                             <Input
                                 type="number"
                                 step="1000"
                                 placeholder="0"
-                                icon={<span className="text-zinc-600 font-bold">₫</span>}
+                                icon={<span className="text-[var(--text-secondary)]/40 font-bold">₫</span>}
                                 error={errors.price?.message}
                                 {...register('price', { valueAsNumber: true })}
-                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300 font-mono"
+                                className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300 font-mono"
                             />
                         </div>
                     </div>
@@ -356,19 +356,19 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                 <div className="space-y-8 animate-in fade-in duration-300">
                     {isLoadingRecipe ? (
                         <div className="flex flex-col items-center justify-center gap-4 py-20 opacity-40">
-                            <div className="w-10 h-10 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin"></div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Đang tải công thức...</span>
+                            <div className="w-10 h-10 border-2 border-[var(--border-primary)] border-t-emerald-500 rounded-full animate-spin"></div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Đang tải công thức...</span>
                         </div>
                     ) : (
                         <>
                             {/* Recipe status bar */}
                             {recipeId && (
-                                <div className="flex items-center justify-between p-5 rounded-2xl bg-zinc-900/60 border border-white/5">
+                                <div className="flex items-center justify-between p-5 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)]">
                                     <div className="flex items-center gap-3">
-                                        <ChefHat size={18} className={recipeActive ? 'text-emerald-500' : 'text-zinc-600'} />
+                                        <ChefHat size={18} className={recipeActive ? 'text-emerald-500' : 'text-[var(--text-secondary)]'} />
                                         <div>
-                                            <p className="text-xs font-black text-zinc-300 uppercase tracking-widest">Trạng thái công thức</p>
-                                            <p className={cn("text-[10px] font-bold mt-0.5", recipeActive ? "text-emerald-500" : "text-red-400")}>
+                                            <p className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest italic">Trạng thái công thức</p>
+                                            <p className={cn("text-[10px] font-bold mt-0.5", recipeActive ? "text-emerald-500" : "text-rose-400")}>
                                                 {recipeActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
                                             </p>
                                         </div>
@@ -392,22 +392,22 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                             {/* Recipe settings — yield + instructions */}
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Sản lượng (Yield)</label>
+                                    <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1 italic">Sản lượng (Yield)</label>
                                     <input
                                         type="number"
                                         min="1"
                                         value={recipeYield}
                                         onChange={(e) => setRecipeYield(Number(e.target.value))}
-                                        className="w-full h-14 px-5 bg-white/5 border border-white/5 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 text-zinc-100 rounded-2xl transition-all duration-300 font-mono text-sm"
+                                        className="w-full h-14 px-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300 font-mono text-sm"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Hướng dẫn chế biến</label>
+                                    <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1 italic">Hướng dẫn chế biến</label>
                                     <input
                                         value={instructions}
                                         onChange={(e) => setInstructions(e.target.value)}
                                         placeholder="Mô tả ngắn gọn..."
-                                        className="w-full h-14 px-5 bg-white/5 border border-white/5 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 text-zinc-100 rounded-2xl transition-all duration-300 text-sm"
+                                        className="w-full h-14 px-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300 text-sm"
                                     />
                                 </div>
                             </div>
@@ -416,10 +416,10 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                        <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shadow-sm">
                                             <ChefHat size={18} className="text-emerald-500" />
                                         </div>
-                                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Định mức Nguyên liệu</h3>
+                                        <h3 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">Định mức Nguyên liệu</h3>
                                     </div>
                                     <button
                                         type="button"
@@ -438,22 +438,22 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                                 ) : (
                                     <div className="space-y-3">
                                         {/* Header */}
-                                        <div className="flex items-center gap-3 px-4 text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                                        <div className="flex items-center gap-3 px-4 text-[9px] font-black text-[var(--text-secondary)]/50 uppercase tracking-widest italic">
                                             <div className="flex-1">Nguyên liệu</div>
                                             <div className="w-28">Số lượng</div>
                                             <div className="w-16 text-center">Đơn vị</div>
                                             <div className="w-10"></div>
                                         </div>
                                         {recipeItems.map((item, index) => (
-                                            <div key={index} className="flex items-center gap-3 p-4 bg-zinc-900/60 rounded-2xl border border-white/5 hover:border-emerald-500/20 transition-all group">
+                                            <div key={index} className="flex items-center gap-3 p-4 bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-2xl hover:border-emerald-500/30 transition-all group shadow-sm">
                                                 <div className="flex-1">
                                                     <select
-                                                        className="w-full h-11 px-4 bg-zinc-950/50 border border-white/5 rounded-xl text-zinc-200 text-sm font-medium focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 transition-all appearance-none"
+                                                        className="w-full h-11 px-4 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-xl text-[var(--text-primary)] text-sm font-black italic uppercase focus:border-emerald-500/50 transition-all appearance-none"
                                                         value={item.materialId}
                                                         onChange={(e) => handleRecipeItemChange(index, 'materialId', e.target.value)}
                                                     >
                                                         {availableMaterials.map(m => (
-                                                            <option key={m.id} value={m.id} className="bg-zinc-900">{m.name}</option>
+                                                            <option key={m.id} value={m.id} className="bg-[var(--bg-card)]">{m.name}</option>
                                                         ))}
                                                     </select>
                                                 </div>
@@ -464,16 +464,16 @@ export const ProductModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                                                         step="0.01"
                                                         value={item.quantityNeeded}
                                                         onChange={(e) => handleRecipeItemChange(index, 'quantityNeeded', e.target.value)}
-                                                        className="w-full h-11 px-3 bg-zinc-950/50 border border-white/5 rounded-xl text-zinc-200 text-sm font-mono text-center focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                                                        className="w-full h-11 px-3 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-xl text-[var(--text-primary)] text-sm font-mono text-center focus:border-emerald-500/50 transition-all"
                                                     />
                                                 </div>
-                                                <div className="w-16 text-center text-[11px] font-bold text-zinc-500 uppercase">
+                                                <div className="w-16 text-center text-[10px] font-black text-[var(--text-secondary)]/60 uppercase italic">
                                                     {item.unit}
                                                 </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveRecipeItem(index)}
-                                                    className="w-10 h-10 rounded-xl bg-zinc-950/50 text-zinc-600 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 border border-transparent transition-all flex items-center justify-center"
+                                                    className="w-10 h-10 rounded-xl bg-[var(--bg-card)] text-[var(--text-secondary)]/30 hover:text-rose-500 hover:bg-rose-500/5 border border-[var(--border-primary)] transition-all flex items-center justify-center shadow-sm"
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>

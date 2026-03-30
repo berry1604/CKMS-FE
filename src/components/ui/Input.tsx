@@ -1,4 +1,5 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
@@ -24,15 +25,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                     )}
                     <input
                         ref={ref}
-                        className={`
-                            block w-full rounded-md border border-zinc-700 bg-zinc-900/50
-                            py-2 text-sm text-gray-200 placeholder-gray-500
-                            focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500
-                            disabled:opacity-50
-                            ${icon ? 'pl-10' : 'px-3'}
-                            ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
-                            ${className}
-                        `}
+                        className={cn(
+                            "block w-full rounded-xl border border-[var(--border-primary)] bg-[var(--bg-card)]",
+                            "py-3 text-sm text-[var(--text-primary)] placeholder-zinc-400 dark:placeholder-zinc-500",
+                            "focus:border-[var(--accent-amber)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-amber)]/20",
+                            "disabled:opacity-50 transition-all duration-300 shadow-sm dark:shadow-inner",
+                            icon ? 'pl-10' : 'px-4',
+                            error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : '',
+                            className
+                        )}
                         {...props}
                     />
                 </div>
