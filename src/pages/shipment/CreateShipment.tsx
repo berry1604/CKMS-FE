@@ -399,7 +399,7 @@ export const CreateShipment = () => {
                                 <Button
                                     variant="ghost"
                                     onClick={() => navigate("/shipment")}
-                                    className="h-12 w-12 flex items-center justify-center bg-white/5 border border-white/10 text-white hover:bg-amber-500 hover:text-black rounded-2xl transition-all shadow-2xl"
+                                    className="h-12 w-12 flex items-center justify-center bg-[var(--bg-card)]/20 border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-amber-500 hover:text-black rounded-2xl transition-all shadow-2xl"
                                 >
                                     <ArrowLeft size={20} strokeWidth={3} />
                                 </Button>
@@ -415,7 +415,7 @@ export const CreateShipment = () => {
                             <Button
                                 variant="outline"
                                 onClick={() => navigate("/shipment")}
-                                className="h-16 px-10 border-[var(--border-primary)] text-zinc-500 hover:text-white hover:bg-[var(--bg-card)] uppercase text-[11px] font-black tracking-[0.2em] rounded-2xl transition-all"
+                                className="h-16 px-10 border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] uppercase text-[11px] font-black tracking-[0.2em] rounded-2xl transition-all"
                             >
                                 Hủy bỏ
                             </Button>
@@ -446,13 +446,13 @@ export const CreateShipment = () => {
                             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
                             
                             <div>
-                                <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                                <h2 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-[0.2em] flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
                                         <ClipboardList size={18} strokeWidth={2.5} />
                                     </div>
                                     Cấu hình cốt lõi
                                 </h2>
-                                <p className="text-[10px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
+                                <p className="text-[10px] text-[var(--text-secondary)]/80 font-bold mt-2 uppercase tracking-widest ml-11">
                                     Thiết lập kế hoạch và phương thức vận tải cho luồng đối soát
                                 </p>
                             </div>
@@ -464,7 +464,7 @@ export const CreateShipment = () => {
                                     </label>
                                     <div className="relative group/input">
                                         <select
-                                            className="w-full appearance-none pl-12 pr-6 h-16 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl text-[11px] font-black tracking-widest uppercase text-zinc-200 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all cursor-pointer hover:bg-[var(--bg-root)]"
+                                            className="w-full appearance-none pl-12 pr-6 h-16 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl text-[11px] font-black tracking-widest uppercase text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all cursor-pointer hover:bg-[var(--bg-root)]"
                                             value={
                                                 availablePlans.some(
                                                     (p: ProductionPlanSummaryResponse) =>
@@ -480,7 +480,7 @@ export const CreateShipment = () => {
                                                 }))
                                             }
                                         >
-                                            <option value="" className="bg-[var(--bg-card)] text-zinc-500 whitespace-pre">-- CHỌN KẾ HOẠCH --</option>
+                                            <option value="" className="bg-[var(--bg-card)] text-[var(--text-secondary)] whitespace-pre">-- CHỌN KẾ HOẠCH --</option>
                                             {[...availablePlans]
                                                 .sort(
                                                     (
@@ -534,14 +534,14 @@ export const CreateShipment = () => {
                         {/* Drop Points Card */}
                         <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] p-10 space-y-10 shadow-2xl relative">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                                                <div>
+                                    <h2 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-[0.2em] flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                                             <MapPin size={18} strokeWidth={2.5} />
                                         </div>
                                         Lộ trình & Các điểm giao
                                     </h2>
-                                    <p className="text-[10px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
+                                    <p className="text-[10px] text-[var(--text-secondary)]/80 font-bold mt-2 uppercase tracking-widest ml-11">
                                         Tổ chức thứ tự điểm đến cho đội ngũ vận tải
                                     </p>
                                 </div>
@@ -590,13 +590,13 @@ export const CreateShipment = () => {
                                                 </label>
                                                 <div className="relative group/input">
                                                     <select
-                                                        className="w-full appearance-none pl-12 pr-6 h-14 bg-zinc-950/80 border border-[var(--border-primary)] rounded-2xl text-[11px] font-black tracking-widest uppercase text-zinc-200 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all cursor-pointer hover:bg-zinc-950"
+                                                        className="w-full appearance-none pl-12 pr-6 h-14 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl text-[11px] font-black tracking-widest uppercase text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all cursor-pointer hover:bg-[var(--bg-root)]"
                                                         value={dp.storeId}
                                                         onChange={(e) =>
                                                             updateDropPoint(dp.id, "storeId", e.target.value)
                                                         }
                                                     >
-                                                        <option value="" className="bg-[var(--bg-card)] text-zinc-500 whitespace-pre">-- CHỌN CHI NHÁNH --</option>
+                                                        <option value="" className="bg-[var(--bg-card)] text-[var(--text-secondary)] whitespace-pre">-- CHỌN CHI NHÁNH --</option>
                                                         {availableStores.map((s) => {
                                                             const sId = (s as any).id || (s as any).storeId;
                                                             const isSelectedByOther = form.dropPoints.some(
@@ -648,7 +648,7 @@ export const CreateShipment = () => {
                                                             )}
                                                         </div>
 
-                                                        <div className="border border-[var(--border-primary)] rounded-2xl overflow-hidden bg-zinc-950/20 backdrop-blur-sm">
+                                                        <div className="border border-[var(--border-primary)] rounded-2xl overflow-hidden bg-[var(--bg-root)]/20 backdrop-blur-sm">
                                                             {unshippedOrders.length > 0 ? (
                                                                 <div className="divide-y divide-[var(--border-primary)]/30 max-h-72 overflow-y-auto custom-scrollbar">
                                                                     {unshippedOrders.map((order) => (
@@ -686,7 +686,7 @@ export const CreateShipment = () => {
                                                                             </div>
                                                                             <div className="flex-1">
                                                                                 <div className="flex items-center gap-3">
-                                                                                    <span className="text-[13px] font-black text-zinc-100 uppercase tracking-tighter">
+                                                                                    <span className="text-[13px] font-black text-[var(--text-primary)] uppercase tracking-tighter">
                                                                                         Order #{order.orderId}
                                                                                     </span>
                                                                                     <Badge
@@ -751,7 +751,7 @@ export const CreateShipment = () => {
                                         min="0"
                                         step="1000"
                                         placeholder="Ví dụ: 50000"
-                                        className="w-full pl-12 pr-6 h-16 bg-zinc-950 border border-[var(--border-primary)] rounded-2xl text-[13px] font-black text-zinc-200 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all placeholder:text-zinc-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none uppercase tracking-widest"
+                                        className="w-full pl-12 pr-6 h-16 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl text-[13px] font-black text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all placeholder:text-[var(--text-secondary)]/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none uppercase tracking-widest"
                                         value={form.shippingFee}
                                         onChange={(e) =>
                                             setForm((prev) => ({
@@ -775,13 +775,13 @@ export const CreateShipment = () => {
                             <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
                             
                             <div>
-                                <h2 className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                                <h2 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-[0.2em] flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                                         <Truck size={18} strokeWidth={2.5} />
                                     </div>
                                     Dispatch Summary
                                 </h2>
-                                <p className="text-[9px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
+                                <p className="text-[9px] text-[var(--text-secondary)]/80 font-bold mt-2 uppercase tracking-widest ml-11">
                                     Tổng hợp thông tin mẻ vận chuyển
                                 </p>
                             </div>
@@ -789,8 +789,8 @@ export const CreateShipment = () => {
                             <div className="space-y-5">
                                 <div className="p-6 bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-2xl flex items-center justify-between group/stat hover:bg-[var(--bg-root)] transition-colors">
                                     <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">Route Stops</span>
-                                        <span className="text-2xl font-black text-white tracking-tighter leading-none italic">
+                                        <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">Route Stops</span>
+                                        <span className="text-2xl font-black text-[var(--text-primary)] tracking-tighter leading-none italic">
                                             {form.dropPoints.filter(dp => dp.storeId).length.toString().padStart(2, '0')}
                                         </span>
                                     </div>
@@ -801,8 +801,8 @@ export const CreateShipment = () => {
 
                                 <div className="p-6 bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-2xl flex items-center justify-between group/stat hover:bg-[var(--bg-root)] transition-colors">
                                     <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">Selected Units</span>
-                                        <span className="text-2xl font-black text-white tracking-tighter leading-none italic">
+                                        <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">Selected Units</span>
+                                        <span className="text-2xl font-black text-[var(--text-primary)] tracking-tighter leading-none italic">
                                             {getTotalOrdersSelected().toString().padStart(2, '0')}
                                         </span>
                                     </div>
@@ -812,12 +812,12 @@ export const CreateShipment = () => {
                                 </div>
 
                                 <div className="relative pt-4 border-t border-[var(--border-primary)]/50 group/input">
-                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1 mb-3 block">
+                                    <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest ml-1 mb-3 block">
                                         Ghi chú vận hành (Optional)
                                     </label>
                                     <textarea
                                         rows={4}
-                                        className="w-full bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl p-4 text-[11px] font-bold text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/30 transition-all uppercase tracking-widest"
+                                        className="w-full bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl p-4 text-[11px] font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 focus:outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/30 transition-all uppercase tracking-widest"
                                         placeholder="NHẬP GHI CHÚ BỔ SUNG..."
                                         value={form.remarks}
                                         onChange={(e) => setForm((prev) => ({ ...prev, remarks: e.target.value }))}

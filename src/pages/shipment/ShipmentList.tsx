@@ -396,7 +396,7 @@ export const ShipmentList = () => {
                             <h1 className="text-6xl font-black text-[var(--text-primary)] tracking-tighter mb-4 uppercase italic leading-[0.85]">
                                 Shipment <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Pipeline</span>
                             </h1>
-                            <p className="text-zinc-400 max-w-xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
+                            <p className="text-[var(--text-secondary)] max-w-xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
                                 Theo dõi thời gian thực quá trình giao hàng từ <span className="text-amber-500">Kho bếp</span> tới các điểm tiêu thụ. Tối ưu hóa lộ trình vận tải.
                             </p>
                         </div>
@@ -416,7 +416,7 @@ export const ShipmentList = () => {
 
             <div className="max-w-7xl mx-auto px-8 -mt-10 relative z-10 space-y-8">
                 {/* Filters Bar */}
-                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[2.5rem] p-4 shadow-2xl relative overflow-hidden group">
+                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/80 border border-[var(--border-primary)] rounded-[2.5rem] p-4 shadow-2xl relative overflow-hidden group">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
                     
                     <div className="flex flex-col xl:flex-row gap-6 items-center relative z-10">
@@ -450,7 +450,7 @@ export const ShipmentList = () => {
                             </div>
                             <Input
                                 placeholder="TÌM KIẾM THEO MÃ VẬN ĐƠN..."
-                                className="pl-14 pr-6 h-14 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-[2rem] text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase placeholder:text-[var(--text-secondary)]/50 focus:border-amber-500/40 transition-all duration-300 hover:bg-[var(--bg-root)]"
+                                className="pl-14 pr-6 h-14 bg-[var(--bg-root)]/80 border border-[var(--border-primary)] rounded-[2rem] text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase placeholder:text-[var(--text-secondary)]/50 focus:border-amber-500/40 transition-all duration-300 hover:bg-[var(--bg-root)]"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -459,7 +459,7 @@ export const ShipmentList = () => {
                 </div>
 
                 {/* Main Table Container */}
-                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-2xl">
+                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/80 border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-2xl">
         <DataTable
           data={shipments}
           columns={columns}
@@ -479,7 +479,7 @@ export const ShipmentList = () => {
         />
 
                     {/* Pagination */}
-                    <div className="p-8 border-t border-[var(--border-primary)] bg-[var(--bg-card)]/60 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="p-8 border-t border-[var(--border-primary)] bg-[var(--bg-card)]/90 flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="flex items-center gap-4">
                             <div className="flex -space-x-2">
                                 {[1, 2, 3].map((i) => (

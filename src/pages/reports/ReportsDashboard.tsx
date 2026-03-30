@@ -24,7 +24,7 @@ export interface StorePerformance {
 
 export const ReportsDashboard = () => {
     const { user } = useAuth();
-    const role = user?.role?.replace('ROLE_', '');
+    const role = user?.role?.toUpperCase().replace('ROLE_', '');
 
     const [salesData, setSalesData] = useState<SalesData[]>([]);
     const [topStores, setTopStores] = useState<StorePerformance[]>([]);
