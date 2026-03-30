@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Store as StoreIcon, MapPin, ArrowLeft, Save, CreditCard, Navigation } from 'lucide-react';
+import { Store as StoreIcon, MapPin, Save, CreditCard, Navigation, ChevronLeft, Globe } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import { storeApi } from '../../services/store.api';
+import { cn } from '../../utils/classNames';
+import storeHeaderBg from '../../assets/store_list_header_bg.png';
 
 const createStoreSchema = z.object({
     name: z.string().min(1, 'Vui lòng nhập tên cửa hàng'),
@@ -62,146 +63,241 @@ export default function CreateStorePage() {
     };
 
     return (
-        <div className="p-6 max-w-4xl mx-auto">
-            <div className="flex items-center gap-4 mb-8">
-                <button
-                    onClick={() => navigate('/stores')}
-                    className="p-2 hover:bg-zinc-800 rounded-lg transition-colors text-gray-400 hover:text-white"
-                >
-                    <ArrowLeft size={20} />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Đăng ký Cửa hàng mới</h1>
-                    <p className="text-gray-400">Thêm một chi nhánh nhượng quyền mới vào hệ thống.</p>
+        <div className="min-h-screen bg-[var(--bg-root)] animate-in fade-in duration-700 pb-20">
+            {/* Cinematic Header Area */}
+            <div className="relative h-[400px] w-full overflow-hidden">
+                <img
+                    src={storeHeaderBg}
+                    className="w-full h-full object-cover scale-105 motion-safe:animate-[pulse_10s_ease-in-out_infinite] opacity-40 dark:opacity-60"
+                    alt="Store Infrastructure Background"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-card)]/80 via-[var(--bg-card)]/20 to-[var(--bg-root)] backdrop-blur-[2px]" />
+
+                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-16 max-w-7xl mx-auto w-full">
+                    <button
+                        onClick={() => navigate('/stores')}
+                        className="group flex items-center gap-3 text-amber-500 hover:text-amber-400 transition-all mb-8 w-fit bg-amber-500/5 px-6 py-3 rounded-2xl border border-amber-500/10 backdrop-blur-md"
+                    >
+                        <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-[10px] font-black tracking-[0.3em] uppercase italic">Quay lại Hệ thống Mạng lưới</span>
+                    </button>
+
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="h-[2px] w-16 bg-amber-500/50" />
+                        <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase italic">Giao thức Đăng ký Thực thể</span>
+                    </div>
+
+                    <h1 className="text-6xl md:text-7xl font-black text-[var(--text-primary)] tracking-tighter mb-4 italic uppercase leading-none">
+                        ĐĂNG KÝ <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">CHI NHÁNH</span>
+                    </h1>
+                    <p className="text-[var(--text-secondary)]/60 max-w-2xl text-lg font-medium leading-relaxed italic uppercase tracking-wider">
+                        Khởi tạo một thực thể kinh doanh mới trong hệ sinh thái Steakhouse. Cấu hình các tham số vận hành và tọa độ logistics.
+                    </p>
                 </div>
             </div>
 
-            <Card className="p-8 bg-zinc-900/50 border-zinc-800">
-                <form id="create-store-form" onSubmit={handleSubmit(onSubmit as any)} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-300 block mb-2">Tên Cửa hàng *</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <StoreIcon size={16} className="text-gray-400" />
+            <div className="max-w-5xl mx-auto px-8 -mt-16 relative z-10">
+                <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] p-12 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
+                    
+                    <form id="create-store-form" onSubmit={handleSubmit(onSubmit as any)} className="space-y-12">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            {/* Section 1: Identity */}
+                            <div className="md:col-span-2 flex items-center gap-4 pb-4 border-b border-[var(--border-primary)]/10">
+                                <div className="p-3 bg-amber-500/10 rounded-xl">
+                                    <StoreIcon size={20} className="text-amber-500" />
                                 </div>
-                                <input
-                                    type="text"
-                                    className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white ${errors.name ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
-                                    placeholder="VD: Chi nhánh Quận 1"
-                                    {...register('name')}
-                                />
+                                <h3 className="text-xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Định danh Cửa hàng</h3>
                             </div>
-                            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-                        </div>
 
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-300 block mb-2">Địa chỉ *</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <MapPin size={16} className="text-gray-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white ${errors.location ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
-                                    placeholder="VD: 123 Nguyễn Huệ, TP.HCM"
-                                    {...register('location')}
-                                />
-                            </div>
-                            {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location.message}</p>}
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-300 block mb-2">Số điện thoại *</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span className="text-gray-400 p-1">📞</span>
-                                </div>
-                                <input
-                                    type="text"
-                                    className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white ${errors.phone ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
-                                    placeholder="VD: 0912345678 or 84912345678"
-                                    {...register('phone')}
-                                />
-                            </div>
-                            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-300 block mb-2">Chu kỳ thanh toán *</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <CreditCard size={16} className="text-gray-400" />
-                                </div>
-                                <select
-                                    className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white appearance-none ${errors.paymentCycle ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
-                                    {...register('paymentCycle')}
-                                >
-                                    <option value="WEEKLY">Theo tuần</option>
-                                    <option value="MONTHLY">Theo tháng</option>
-                                    <option value="QUARTERLY">Theo quý</option>
-                                </select>
-                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
-                            </div>
-                            {errors.paymentCycle && <p className="text-red-500 text-xs mt-1">{errors.paymentCycle.message}</p>}
-                        </div>
-
-                        <div className="space-y-1 md:col-span-2">
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium text-gray-300 block mb-2">Vĩ độ *</label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Navigation size={16} className="text-gray-400 rotate-45" />
-                                        </div>
-                                        <input
-                                            type="number"
-                                            step="any"
-                                            className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white ${errors.latitude ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
-                                            placeholder="VD: 10.762622"
-                                            {...register('latitude')}
-                                        />
+                            <div className="space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Tên Cửa hàng (Legal Name) *</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <StoreIcon size={18} className="text-[var(--text-secondary)]/30 group-focus-within/field:text-amber-500" />
                                     </div>
-                                    {errors.latitude && <p className="text-red-500 text-xs mt-1">{errors.latitude.message}</p>}
+                                    <input
+                                        {...register('name')}
+                                        placeholder="VD: Chi nhánh Steakhouse Quận 1"
+                                        className={cn(
+                                            "w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border rounded-2xl text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)]/20 focus:outline-none focus:ring-4 transition-all italic text-sm",
+                                            errors.name
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
+                                        )}
+                                    />
                                 </div>
+                                {errors.name && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.name.message}</p>}
+                            </div>
 
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium text-gray-300 block mb-2">Kinh độ *</label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Navigation size={16} className="text-gray-400 -rotate-45" />
-                                        </div>
-                                        <input
-                                            type="number"
-                                            step="any"
-                                            className={`w-full pl-10 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-zinc-950 border-zinc-700 text-white ${errors.longitude ? 'border-red-500 focus:ring-red-500/20' : 'focus:ring-amber-500/20'}`}
-                                            placeholder="VD: 106.660172"
-                                            {...register('longitude')}
-                                        />
+                            <div className="space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Liên hệ Giao dịch (Hotline) *</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <Globe size={18} className="text-[var(--text-secondary)]/30 group-focus-within/field:text-amber-500" />
                                     </div>
-                                    {errors.longitude && <p className="text-red-500 text-xs mt-1">{errors.longitude.message}</p>}
+                                    <input
+                                        {...register('phone')}
+                                        placeholder="VD: 0912 345 678"
+                                        className={cn(
+                                            "w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border rounded-2xl text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)]/20 focus:outline-none focus:ring-4 transition-all italic text-sm",
+                                            errors.phone
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
+                                        )}
+                                    />
                                 </div>
-                             </div>
+                                {errors.phone && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.phone.message}</p>}
+                            </div>
+
+                            {/* Section 2: Logistics & Geography */}
+                            <div className="md:col-span-2 flex items-center gap-4 pb-4 border-b border-[var(--border-primary)]/10 mt-6">
+                                <div className="p-3 bg-amber-500/10 rounded-xl">
+                                    <MapPin size={20} className="text-amber-500" />
+                                </div>
+                                <h3 className="text-xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Địa bàn & Logistics</h3>
+                            </div>
+
+                            <div className="md:col-span-2 space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Địa chỉ Toàn hành (Physical Address) *</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <MapPin size={18} className="text-[var(--text-secondary)]/30 group-focus-within/field:text-amber-500" />
+                                    </div>
+                                    <input
+                                        {...register('location')}
+                                        placeholder="VD: 123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM"
+                                        className={cn(
+                                            "w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border rounded-2xl text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)]/20 focus:outline-none focus:ring-4 transition-all italic text-sm",
+                                            errors.location
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
+                                        )}
+                                    />
+                                </div>
+                                {errors.location && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.location.message}</p>}
+                            </div>
+
+                            <div className="space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Vĩ độ (Latitude) *</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <Navigation size={18} className="text-[var(--text-secondary)]/30 rotate-45 group-focus-within/field:text-amber-500" />
+                                    </div>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        {...register('latitude')}
+                                        placeholder="VD: 10.7626"
+                                        className={cn(
+                                            "w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border rounded-2xl text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)]/20 focus:outline-none focus:ring-4 transition-all italic text-sm",
+                                            errors.latitude
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
+                                        )}
+                                    />
+                                </div>
+                                {errors.latitude && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.latitude.message}</p>}
+                            </div>
+
+                            <div className="space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Kinh độ (Longitude) *</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <Navigation size={18} className="text-[var(--text-secondary)]/30 -rotate-45 group-focus-within/field:text-amber-500" />
+                                    </div>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        {...register('longitude')}
+                                        placeholder="VD: 106.6601"
+                                        className={cn(
+                                            "w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border rounded-2xl text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)]/20 focus:outline-none focus:ring-4 transition-all italic text-sm",
+                                            errors.longitude
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
+                                        )}
+                                    />
+                                </div>
+                                {errors.longitude && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.longitude.message}</p>}
+                            </div>
+
+                            {/* Section 3: Financial & Operations */}
+                            <div className="md:col-span-2 flex items-center gap-4 pb-4 border-b border-[var(--border-primary)]/10 mt-6">
+                                <div className="p-3 bg-amber-500/10 rounded-xl">
+                                    <CreditCard size={20} className="text-amber-500" />
+                                </div>
+                                <h3 className="text-xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Tài chính & Vận hành</h3>
+                            </div>
+
+                            <div className="md:col-span-2 space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Chu kỳ Thanh toán (Settlement Cycle) *</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                                        <CreditCard size={18} className="text-[var(--text-secondary)]/30 group-focus-within/field:text-amber-500" />
+                                    </div>
+                                    <select
+                                        {...register('paymentCycle')}
+                                        className={cn(
+                                            "w-full pl-16 pr-12 py-5 bg-[var(--bg-root)]/50 border rounded-2xl text-[var(--text-primary)] font-black italic uppercase appearance-none focus:outline-none focus:ring-4 transition-all text-xs tracking-widest cursor-pointer",
+                                            errors.paymentCycle
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
+                                        )}
+                                    >
+                                        <option value="WEEKLY">THEO TUẦN (WEEKLY INTEL)</option>
+                                        <option value="MONTHLY">THEO THÁNG (MONTHLY AUDIT)</option>
+                                        <option value="QUARTERLY">THEO QUÝ (QUARTERLY CONSOLIDATION)</option>
+                                    </select>
+                                    <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-amber-500">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                    </div>
-
-                    <div className="flex justify-end pt-6 border-t border-zinc-800">
-                        <Button
-                            type="submit"
-                            isLoading={isSubmitting}
-                            className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold px-8 h-11"
-                        >
-                            {!isSubmitting && <Save size={18} className="mr-2" />}
-                            Đăng ký Cửa hàng
-                        </Button>
-                    </div>
-                </form>
-            </Card>
+                        <div className="pt-10 border-t border-[var(--border-primary)]/10 flex flex-col md:flex-row gap-6 justify-end items-center">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/stores')}
+                                className="w-full md:w-auto px-10 h-16 rounded-2xl bg-[var(--bg-root)]/50 border border-[var(--border-primary)] text-[var(--text-secondary)]/40 hover:text-amber-500 hover:border-amber-500/20 transition-all font-black uppercase text-[10px] tracking-widest italic"
+                            >
+                                Hủy bỏ yêu cầu
+                            </button>
+                            <Button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className={cn(
+                                    "w-full md:w-auto h-16 px-12 rounded-2xl font-black tracking-widest uppercase text-[10px] shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] italic",
+                                    isSubmitting
+                                        ? 'bg-[var(--bg-card)] text-[var(--text-secondary)]/30 border border-[var(--border-primary)]'
+                                        : 'bg-amber-500 hover:bg-amber-600 text-black border-none shadow-amber-500/20'
+                                )}
+                            >
+                                {isSubmitting ? (
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                        <span>Đang khởi tạo...</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3">
+                                        <Save size={18} />
+                                        <span>Đăng ký Chi nhánh mới</span>
+                                    </div>
+                                )}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <style>{`
+                select {
+                    background-image: none !important;
+                }
+            `}</style>
         </div>
     );
 }

@@ -9,6 +9,7 @@ import { recipeApi } from '../../services/recipe.api';
 import { materialApi } from '../../services/material.api';
 import type { RecipeDetailRequest, RecipeRequest } from '../../types/recipe';
 import toast from 'react-hot-toast';
+import { cn } from '../../utils/classNames';
 
 interface RecipeEditorProps {
     product: Product;
@@ -164,71 +165,104 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" onClick={onBack}>
+        <div className="space-y-8 max-w-5xl mx-auto pb-10">
+            {/* Header Area */}
+            <div className="flex items-center gap-6 animate-in fade-in slide-in-from-left-4 duration-700">
+                <Button 
+                    variant="ghost" 
+                    onClick={onBack}
+                    className="h-12 w-12 rounded-2xl bg-[var(--bg-root)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/10 transition-all duration-300 border border-[var(--border-primary)]"
+                >
                     <ArrowLeft size={20} />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-200">Thiết lập Công thức</h1>
-                    <p className="text-gray-400">{product.name} (ID: {product.id})</p>
+                    <h1 className="text-3xl font-black text-[var(--text-primary)] uppercase tracking-tight flex items-center gap-3 italic">
+                        <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                            <Plus size={24} className="text-emerald-500" />
+                        </div>
+                        Thiết lập <span className="text-emerald-500">Công thức</span>
+                    </h1>
+                    <p className="text-xs text-[var(--text-secondary)]/60 mt-1 font-medium uppercase tracking-[0.2em] ml-1">
+                        Sản phẩm: {product.name} (ID: {product.id})
+                    </p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main: Ingredient List */}
                 <div className="lg:col-span-2 space-y-6">
-                    <Card className="p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-semibold text-lg">Định mức Nguyên liệu</h3>
-                            <Button size="sm" onClick={handleAddItem}>
-                                <Plus size={16} className="mr-2" /> Thêm nguyên liệu
+                    <Card className="p-8 border-[var(--border-primary)] bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-[40px] shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent"></div>
+                        
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-[0.2em] flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                    <Plus size={16} className="text-emerald-500" />
+                                </div>
+                                Định mức Nguyên liệu
+                            </h3>
+                            <Button 
+                                size="sm" 
+                                onClick={handleAddItem}
+                                className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 rounded-xl text-[10px] uppercase font-black tracking-widest px-4 py-2.5"
+                            >
+                                <Plus size={14} className="mr-2" /> Thêm nguyên liệu
                             </Button>
                         </div>
 
                         {items.length === 0 ? (
-                            <p className="text-gray-400 text-center py-6">Chưa có nguyên liệu nào. Nhấn "Thêm nguyên liệu" để bắt đầu.</p>
+                            <div className="text-center py-16 border-2 border-dashed border-[var(--border-primary)] rounded-[30px] bg-[var(--bg-root)]/30 group-hover:bg-[var(--bg-root)]/50 transition-colors">
+                                <div className="w-16 h-16 bg-emerald-500/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/10">
+                                    <Plus className="text-emerald-500/40" size={32} />
+                                </div>
+                                <p className="text-[var(--text-secondary)]/40 text-xs font-medium max-w-[200px] mx-auto italic uppercase tracking-wider">
+                                    Chưa có nguyên liệu nào. Nhấn "Thêm nguyên liệu" để bắt đầu.
+                                </p>
+                            </div>
                         ) : (
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 px-3 text-xs text-gray-500 font-medium uppercase">
-                                    <div className="flex-1">Nguyên liệu</div>
-                                    <div className="w-28">Số lượng</div>
-                                    <div className="w-16">Đơn vị</div>
-                                    <div className="w-10"></div>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-4 px-4 text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest border-b border-[var(--border-primary)] pb-4">
+                                    <div className="flex-[2]">Nguyên liệu</div>
+                                    <div className="flex-1 min-w-[120px]">Số lượng</div>
+                                    <div className="w-20 text-center">Đơn vị</div>
+                                    <div className="w-12"></div>
                                 </div>
                                 {items.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-3 p-3 bg-zinc-900/80 rounded-lg">
-                                        <div className="flex-1">
+                                    <div key={index} className="group/item flex items-center gap-4 p-4 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl hover:border-emerald-500/30 hover:bg-emerald-500/[0.02] transition-all duration-300">
+                                        <div className="flex-[2]">
                                             <select
-                                                className="flex h-10 w-full rounded-md border border-zinc-700 bg-zinc-900/50 text-gray-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                                                className="w-full px-4 h-12 bg-transparent text-[var(--text-primary)] text-sm font-medium focus:outline-none transition-colors cursor-pointer appearance-none"
                                                 value={item.materialId}
                                                 onChange={(e) => handleItemChange(index, 'materialId', e.target.value)}
                                             >
                                                 {availableMaterials.map(m => (
-                                                    <option key={m.id} value={m.id}>{m.name}</option>
+                                                    <option key={m.id} value={m.id} className="bg-[var(--bg-card)]">{m.name}</option>
                                                 ))}
                                             </select>
                                         </div>
-                                        <div className="w-28">
+                                        <div className="flex-1 min-w-[120px]">
                                             <Input
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
                                                 value={item.quantityNeeded}
                                                 onChange={(e) => handleItemChange(index, 'quantityNeeded', e.target.value)}
+                                                className="h-10 bg-[var(--bg-card)]/50 border-[var(--border-primary)] focus:border-emerald-500/50 focus:ring-emerald-500/10 text-[var(--text-primary)] font-mono"
                                             />
                                         </div>
-                                        <div className="w-16 text-sm text-gray-400 text-center">
+                                        <div className="w-20 text-[10px] font-black text-emerald-500 bg-emerald-500/10 rounded-lg py-1.5 text-center uppercase tracking-widest border border-emerald-500/20">
                                             {item.unit}
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-red-500 hover:text-red-700 h-10 px-2"
-                                            onClick={() => handleRemoveItem(index)}
-                                        >
-                                            <Trash2 size={16} />
-                                        </Button>
+                                        <div className="w-12 flex justify-end">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-red-500/40 hover:text-red-500 hover:bg-red-500/10 h-10 w-10 p-0 rounded-xl transition-all"
+                                                onClick={() => handleRemoveItem(index)}
+                                            >
+                                                <Trash2 size={16} />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -237,17 +271,22 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                 </div>
 
                 {/* Sidebar: Settings */}
-                <div className="space-y-6">
-                    <Card className="p-6">
-                        <h3 className="font-semibold text-lg mb-4">Thông tin Công thức</h3>
-                        <div className="space-y-4">
+                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-1000">
+                    <Card className="p-8 border-[var(--border-primary)] bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-[40px] shadow-2xl relative overflow-hidden">
+                        <h3 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                <Plus size={16} className="text-amber-500" />
+                            </div>
+                            Thông tin Công thức
+                        </h3>
+                        <div className="space-y-8">
                             {/* Status */}
                             {recipeId && (
-                                <div className="pb-4 border-b border-zinc-800">
-                                    <label className="text-sm font-medium mb-2 block">Trạng thái</label>
-                                    <div className="flex items-center justify-between">
-                                        <Badge variant={recipeStatus === 'ACTIVE' ? 'success' : 'warning'}>
-                                            {recipeStatus === 'ACTIVE' ? 'Đang hoạt động' : recipeStatus === 'INACTIVE' ? 'Ngừng hoạt động' : recipeStatus || 'N/A'}
+                                <div className="pb-8 border-b border-[var(--border-primary)]/40">
+                                    <label className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-widest mb-4 block">Trạng thái hiện tại</label>
+                                    <div className="flex items-center justify-between bg-[var(--bg-root)]/50 p-4 rounded-2xl border border-[var(--border-primary)]">
+                                        <Badge variant={recipeStatus === 'ACTIVE' ? 'success' : 'warning'} className="uppercase text-[9px] tracking-widest font-black px-3 py-1.5 border-0">
+                                            {recipeStatus === 'ACTIVE' ? 'Hoạt động' : 'Ngừng hoạt động'}
                                         </Badge>
                                         <Button
                                             variant="outline"
@@ -268,66 +307,79 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                                                     setIsToggling(false);
                                                 }
                                             }}
-                                            className={recipeStatus === 'ACTIVE'
-                                                ? 'text-red-400 hover:bg-red-500/10 border-red-500/30'
-                                                : 'text-green-400 hover:bg-green-500/10 border-green-500/30'
-                                            }
+                                            className={cn(
+                                                "h-10 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all px-4",
+                                                recipeStatus === 'ACTIVE' 
+                                                    ? 'text-red-500 bg-red-500/5 hover:bg-red-500/10 border-red-500/20' 
+                                                    : 'text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20'
+                                            )}
                                         >
-                                            <Power size={14} className="mr-1.5" />
+                                            <Power size={14} className="mr-2" />
                                             {isToggling ? '...' : (recipeStatus === 'ACTIVE' ? 'Vô hiệu hóa' : 'Kích hoạt')}
                                         </Button>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Product Info */}
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Sản phẩm</span>
-                                    <span className="text-gray-200 font-medium">{product.name}</span>
+                            {/* Product Info Summary */}
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center group/info">
+                                    <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest">Nguyên liệu</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-black text-[var(--text-primary)]">{items.length}</span>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Đơn vị</span>
-                                    <span className="text-gray-200">{product.unit}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Số nguyên liệu</span>
-                                    <span className="text-gray-200 font-medium">{items.length}</span>
+                                <div className="flex justify-between items-center group/info">
+                                    <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest">Đơn vị gốc</span>
+                                    <span className="text-[10px] font-black text-amber-500 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg uppercase tracking-[0.2em]">{product.unit}</span>
                                 </div>
                             </div>
 
                             {/* Yield */}
-                            <div className="pt-4 border-t border-zinc-800 space-y-2">
-                                <label className="text-sm font-medium text-gray-300 block">Sản lượng (Yield) *</label>
+                            <div className="pt-8 border-t border-[var(--border-primary)]/40 space-y-3">
+                                <label className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-widest ml-1">Sản lượng (Yield) *</label>
                                 <input
                                     type="number"
                                     min="1"
                                     step="1"
                                     value={recipeYield}
                                     onChange={(e) => setRecipeYield(Number(e.target.value))}
-                                    placeholder="VD: 1"
-                                    className="w-full px-3 py-2 border border-zinc-700 rounded-md text-sm bg-zinc-900/50 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                    className="w-full h-14 px-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300 font-mono text-sm"
                                 />
-                                <p className="text-xs text-gray-500">Số lượng sản phẩm tạo ra từ công thức này.</p>
+                                <p className="text-[9px] text-[var(--text-secondary)]/40 ml-1 italic leading-tight">Số lượng sản phẩm tạo ra từ định mức trên.</p>
                             </div>
 
                             {/* Instructions */}
-                            <div className="pt-4 border-t border-zinc-800 space-y-2">
-                                <label className="text-sm font-medium text-gray-300 block">Hướng dẫn chế biến *</label>
+                            <div className="pt-8 border-t border-[var(--border-primary)]/40 space-y-3">
+                                <label className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-widest ml-1">Hướng dẫn chế biến *</label>
                                 <textarea
                                     value={instructions}
                                     onChange={(e) => setInstructions(e.target.value)}
-                                    placeholder="VD: Ướp thịt bò với gia vị 30 phút, sau đó nướng ở 200°C trong 15 phút..."
-                                    rows={4}
-                                    className="w-full px-3 py-2 border border-zinc-700 rounded-md text-sm bg-zinc-900/50 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"
+                                    placeholder="VD: Mô tả các bước chế biến..."
+                                    rows={5}
+                                    className="w-full px-5 py-4 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 text-[var(--text-primary)] rounded-3xl transition-all duration-300 text-sm placeholder:text-[var(--text-secondary)]/30 resize-none leading-relaxed"
                                 />
-                                <p className="text-xs text-gray-500">Mô tả các bước chế biến sản phẩm.</p>
+                                <p className="text-[9px] text-[var(--text-secondary)]/40 ml-1 italic leading-tight">Quy trình thực hiện chi tiết cho nhân viên bếp.</p>
                             </div>
 
-                            <div className="pt-4 border-t border-zinc-800">
-                                <Button className="w-full" onClick={handleSave} disabled={isSaving}>
-                                    <Save size={16} className="mr-2" />
-                                    {isSaving ? 'Đang lưu...' : 'Lưu Công thức'}
+                            <div className="pt-10 border-t border-[var(--border-primary)]/40">
+                                <Button 
+                                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-black font-black uppercase text-xs tracking-widest transition-all duration-500 border-0 shadow-2xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100" 
+                                    onClick={handleSave} 
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? (
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                            Đang lưu...
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-3">
+                                            <Save size={18} />
+                                            Lưu Công thức
+                                        </div>
+                                    )}
                                 </Button>
                             </div>
                         </div>
@@ -335,5 +387,6 @@ export const RecipeEditor = ({ product, onBack }: RecipeEditorProps) => {
                 </div>
             </div>
         </div>
+
     );
 };

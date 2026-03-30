@@ -104,7 +104,7 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
                         variant="ghost"
                         onClick={onClose}
                         disabled={isLoading}
-                        className="h-12 px-8 rounded-2xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 font-black uppercase text-[10px] tracking-widest transition-all"
+                        className="h-12 px-8 rounded-2xl bg-[var(--bg-root)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/[0.05] border border-[var(--border-primary)] font-black uppercase text-[10px] tracking-widest transition-all"
                     >
                         Hủy
                     </Button>
@@ -122,75 +122,75 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
             <form id="store-form" onSubmit={handleSubmit(onSubmitForm, onError)} className="space-y-10 py-2">
                 {/* Section 1: Basic Info */}
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-primary)]">
                         <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
                             <StoreIcon size={18} className="text-amber-500" />
                         </div>
-                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Thông tin cửa hàng</h3>
+                        <h3 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">Thông tin cửa hàng</h3>
                     </div>
 
                     <div className="grid gap-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Tên cửa hàng</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Tên cửa hàng</label>
                             <Input
                                 placeholder="VD: Chi nhánh Quận 1"
-                                icon={<StoreIcon size={18} className="text-zinc-600" />}
+                                icon={<StoreIcon size={18} className="text-[var(--text-secondary)]/40" />}
                                 error={errors.name?.message}
                                 {...register('name')}
-                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Địa chỉ chính xác</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Địa chỉ chính xác</label>
                             <Input
                                 placeholder="Nhập địa chỉ cửa hàng"
-                                icon={<MapPin size={18} className="text-zinc-600" />}
+                                icon={<MapPin size={18} className="text-[var(--text-secondary)]/40" />}
                                 error={errors.address?.message}
                                 {...register('address')}
-                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Điện thoại</label>
+                                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Điện thoại</label>
                                 <Input
                                     placeholder="090..."
-                                    icon={<Phone size={18} className="text-zinc-600" />}
+                                    icon={<Phone size={18} className="text-[var(--text-secondary)]/40" />}
                                     {...register('phone')}
-                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                    className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Email liên hệ</label>
+                                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Email liên hệ</label>
                                 <Input
                                     type="email"
                                     placeholder="store@email.com"
-                                    icon={<Mail size={18} className="text-zinc-600" />}
+                                    icon={<Mail size={18} className="text-[var(--text-secondary)]/40" />}
                                     error={errors.email?.message}
                                     {...register('email')}
-                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                    className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Chu kỳ thanh toán</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Chu kỳ thanh toán</label>
                             <div className="relative group/select">
                                 <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none z-10 transition-transform duration-300 group-focus-within/select:scale-110">
-                                    <CreditCard size={18} className="text-zinc-600 group-focus-within/select:text-amber-500 transition-colors" />
+                                    <CreditCard size={18} className="text-[var(--text-secondary)]/40 group-focus-within/select:text-amber-500 transition-colors" />
                                 </div>
                                 <select
-                                    className={`w-full h-14 pl-14 pr-10 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300 appearance-none font-bold text-sm cursor-pointer ${errors.paymentCycle ? 'border-red-500' : ''}`}
+                                    className={`w-full h-14 pl-14 pr-10 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300 appearance-none font-bold text-sm cursor-pointer italic uppercase ${errors.paymentCycle ? 'border-red-500' : ''}`}
                                     {...register('paymentCycle')}
                                 >
-                                    <option value="WEEKLY">Theo tuần</option>
-                                    <option value="MONTHLY">Theo tháng</option>
-                                    <option value="QUARTERLY">Theo quý</option>
+                                    <option value="WEEKLY" className="bg-[var(--bg-card)]">Theo tuần</option>
+                                    <option value="MONTHLY" className="bg-[var(--bg-card)]">Theo tháng</option>
+                                    <option value="QUARTERLY" className="bg-[var(--bg-card)]">Theo quý</option>
                                 </select>
                                 <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none">
-                                    <svg className="w-4 h-4 text-zinc-600 group-focus-within/select:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-[var(--text-secondary)]/40 group-focus-within/select:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </div>
@@ -200,27 +200,27 @@ export const StoreModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }
 
                         <div className="grid grid-cols-2 gap-6 pb-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Vĩ độ</label>
+                                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Vĩ độ</label>
                                 <Input
                                     type="number"
                                     step="any"
                                     placeholder="10.762..."
-                                    icon={<Navigation size={18} className="text-zinc-600 rotate-45" />}
+                                    icon={<Navigation size={18} className="text-[var(--text-secondary)]/40 rotate-45" />}
                                     error={errors.latitude?.message}
                                     {...register('latitude')}
-                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                    className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Kinh độ</label>
+                                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Kinh độ</label>
                                 <Input
                                     type="number"
                                     step="any"
                                     placeholder="106.66..."
-                                    icon={<Navigation size={18} className="text-zinc-600 -rotate-45" />}
+                                    icon={<Navigation size={18} className="text-[var(--text-secondary)]/40 -rotate-45" />}
                                     error={errors.longitude?.message}
                                     {...register('longitude')}
-                                    className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                    className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                                 />
                             </div>
                         </div>

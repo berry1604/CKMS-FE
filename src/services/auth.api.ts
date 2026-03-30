@@ -53,7 +53,7 @@ export const authApi = {
             sessionStorage.setItem('accessToken', validAccessToken);
         }
 
-        // ⚠️ chỉ overwrite nếu BE trả về refreshToken mới
+
         if (newRefreshToken) {
             sessionStorage.setItem('refreshToken', newRefreshToken);
         }

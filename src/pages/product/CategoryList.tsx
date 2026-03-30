@@ -72,13 +72,16 @@ export const CategoryList: React.FC = () => {
     return (
         <div className="max-w-[1400px] mx-auto pb-20 animate-in fade-in duration-700">
             {/* Cinematic Header (Condensed) */}
-            <div className="relative h-[240px] rounded-[2.5rem] overflow-hidden shadow-2xl mb-8 group border border-white/5">
-                <img
-                    src={productHeaderBg}
-                    alt="Category Cover"
-                    className="absolute inset-0 w-full h-full object-cover opacity-60 brightness-75 transition-transform duration-[2000ms] group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent"></div>
+            <div className="relative h-[250px] -mx-4 -mt-8 mb-12 overflow-hidden group/header">
+                <div className="absolute inset-0 bg-[var(--bg-root)]">
+                    <img
+                        src={productHeaderBg}
+                        alt="Category Cover"
+                        className="w-full h-full object-cover opacity-80 scale-105 group-hover/header:scale-110 transition-transform duration-[3s] ease-out shadow-inner"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-root)] via-[var(--bg-root)]/60 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-root)] via-transparent to-[var(--bg-root)]"></div>
+                </div>
 
                 <div className="absolute bottom-8 left-10 right-10 flex flex-col md:flex-row justify-between items-end gap-6">
                     <div className="space-y-2">
@@ -86,11 +89,11 @@ export const CategoryList: React.FC = () => {
                             <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500 border border-amber-500/30">
                                 <Layers size={20} />
                             </div>
-                            <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">
+                            <h1 className="text-3xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter">
                                 Danh mục <span className="text-amber-400">Sản phẩm</span>
                             </h1>
                         </div>
-                        <p className="text-zinc-400 font-black uppercase tracking-[0.2em] text-[9px] italic flex items-center gap-2">
+                        <p className="text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] text-[9px] italic flex items-center gap-2">
                             <Sparkles size={10} className="text-amber-400" />
                             Quản lý phân loại thực đơn ELITE
                         </p>
@@ -106,17 +109,17 @@ export const CategoryList: React.FC = () => {
             </div>
 
             {/* Glass Toolbar */}
-            <div className="bg-[#080808]/60 backdrop-blur-3xl rounded-[2rem] border border-white/5 p-5 mb-8 shadow-xl">
+            <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-[2rem] border border-[var(--border-primary)] p-5 mb-8 shadow-sm">
                 <div className="relative w-full md:w-[450px] group">
                     <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-zinc-600 group-focus-within:text-amber-400">
+                        <div className="w-10 h-10 rounded-xl bg-[var(--bg-root)] flex items-center justify-center text-[var(--text-secondary)] group-focus-within:text-amber-400">
                             <Search size={18} />
                         </div>
                     </div>
                     <input
                         type="text"
                         placeholder="Tìm kiếm danh mục..."
-                        className="w-full h-12 pl-14 pr-6 bg-zinc-950/50 border border-white/5 focus:border-amber-500/50 rounded-xl text-zinc-100 font-bold placeholder:text-zinc-700 focus:outline-none transition-all duration-300"
+                        className="w-full h-12 pl-14 pr-6 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] focus:border-amber-500/50 rounded-xl text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)]/30 focus:outline-none transition-all duration-300"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -126,43 +129,43 @@ export const CategoryList: React.FC = () => {
             {/* List Components */}
             <div className="grid grid-cols-1 gap-4">
                 {loading ? (
-                    <div className="p-20 text-center bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5">
+                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-[2rem] border border-[var(--border-primary)]">
                         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500 mx-auto"></div>
-                        <p className="mt-4 text-zinc-500 font-black uppercase tracking-widest text-[10px] italic">Đang tải danh mục...</p>
+                        <p className="mt-4 text-[var(--text-secondary)] font-black uppercase tracking-widest text-[10px] italic">Đang tải danh mục...</p>
                     </div>
                 ) : filteredCategories.length === 0 ? (
-                    <div className="p-20 text-center bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/5">
-                        <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px] italic">Không tìm thấy danh mục nào</p>
+                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-[2rem] border border-[var(--border-primary)]">
+                        <p className="text-[var(--text-secondary)] font-black uppercase tracking-widest text-[10px] italic">Không tìm thấy danh mục nào</p>
                     </div>
                 ) : (
                     filteredCategories.map((category) => (
                         <div
                             key={category.id}
-                            className="group flex flex-col md:flex-row items-center justify-between p-6 bg-[#0d0d0d]/80 backdrop-blur-2xl rounded-[2rem] border border-white/5 transition-all duration-500 hover:border-amber-500/30 hover:shadow-2xl hover:-translate-y-1"
+                            className="group flex flex-col md:flex-row items-center justify-between p-6 bg-[var(--bg-card)]/80 backdrop-blur-2xl rounded-[2rem] border border-[var(--border-primary)] transition-all duration-500 hover:border-amber-500/30 hover:shadow-xl hover:-translate-y-1"
                         >
                             <div className="flex items-center gap-6 w-full md:w-auto">
-                                <div className="w-14 h-14 rounded-2xl bg-zinc-950 flex items-center justify-center text-zinc-700 group-hover:text-amber-500 transition-colors shadow-inner border border-white/5">
+                                <div className="w-14 h-14 rounded-2xl bg-[var(--bg-root)] flex items-center justify-center text-[var(--text-secondary)]/40 group-hover:text-amber-500 transition-colors shadow-inner border border-[var(--border-primary)]">
                                     <Tag size={24} />
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter group-hover:text-amber-400 transition-colors">
+                                        <h3 className="text-xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter group-hover:text-amber-400 transition-colors">
                                             {category.name}
                                         </h3>
                                         <span className={cn(
                                             "px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest italic border",
                                             category.status === 'ACTIVE'
                                                 ? "bg-green-500/10 text-green-500 border-green-500/20"
-                                                : "bg-zinc-950 text-zinc-600 border-white/5"
+                                                : "bg-[var(--bg-root)] text-[var(--text-secondary)]/40 border-[var(--border-primary)]"
                                         )}>
                                             {category.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm dừng'}
                                         </span>
                                     </div>
-                                    <p className="text-zinc-500 text-sm font-medium line-clamp-1 max-w-md italic">
+                                    <p className="text-[var(--text-secondary)]/60 text-sm font-medium line-clamp-1 max-w-md italic">
                                         {category.description || 'Không có mô tả cho danh mục này'}
                                     </p>
                                     <div className="flex items-center gap-2 pt-1">
-                                        <span className="text-[10px] font-mono text-zinc-700">ID: #{String(category.id).padStart(3, '0')}</span>
+                                        <span className="text-[10px] font-mono text-[var(--text-secondary)]/30">ID: #{String(category.id).padStart(3, '0')}</span>
                                     </div>
                                 </div>
                             </div>
@@ -170,18 +173,18 @@ export const CategoryList: React.FC = () => {
                             <div className="flex items-center gap-3 mt-6 md:mt-0 w-full md:w-auto">
                                 <button
                                     onClick={() => openEditModal(category)}
-                                    className="flex-1 md:flex-none h-12 px-6 rounded-xl bg-zinc-950 text-zinc-400 hover:text-amber-400 border border-white/5 hover:border-amber-500/30 transition-all font-black uppercase tracking-widest text-[10px] italic flex items-center justify-center gap-2 shadow-inner"
+                                    className="flex-1 md:flex-none h-12 px-6 rounded-xl bg-[var(--bg-root)] text-[var(--text-secondary)]/60 hover:text-amber-400 border border-[var(--border-primary)] hover:border-amber-500/30 transition-all font-black uppercase tracking-widest text-[10px] italic flex items-center justify-center gap-2 shadow-inner"
                                 >
                                     <Pencil size={14} /> Chỉnh sửa
                                 </button>
                                 <button
                                     onClick={() => openDeleteModal(category)}
-                                    className="w-12 h-12 rounded-xl bg-zinc-950 text-zinc-600 hover:text-rose-500 border border-white/5 hover:border-rose-500/30 transition-all flex items-center justify-center shadow-inner"
+                                    className="w-12 h-12 rounded-xl bg-[var(--bg-root)] text-[var(--text-secondary)]/40 hover:text-rose-500 border border-[var(--border-primary)] hover:border-rose-500/30 transition-all flex items-center justify-center shadow-inner"
                                 >
                                     <Trash2 size={18} />
                                 </button>
                                 <div className="ml-2 hidden md:block">
-                                    <ChevronRight size={20} className="text-zinc-800 group-hover:text-amber-500/50 transition-colors" />
+                                    <ChevronRight size={20} className="text-[var(--text-secondary)]/20 group-hover:text-amber-500/50 transition-colors" />
                                 </div>
                             </div>
                         </div>
@@ -192,21 +195,21 @@ export const CategoryList: React.FC = () => {
             {/* Elite Delete Modal */}
             {isDeleteModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-[#0f0f0f] rounded-[2.5rem] border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.8)] w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
+                    <div className="bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border-primary)] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="p-10 text-center">
                             <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-[0_0_30px_rgba(244,63,94,0.1)] text-rose-500">
                                 <Trash2 size={36} strokeWidth={2.5} />
                             </div>
-                            <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-3">Xác nhận xóa</h2>
-                            <p className="text-zinc-500 font-medium italic mb-10 leading-relaxed">
+                            <h2 className="text-2xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter mb-3">Xác nhận xóa</h2>
+                            <p className="text-[var(--text-secondary)] font-medium italic mb-10 leading-relaxed">
                                 Bạn có chắc chắn muốn xóa danh mục <span className="text-rose-400 font-black">{selectedCategory?.name}</span>? <br />
-                                <span className="text-[10px] uppercase tracking-widest text-zinc-700">Hành động này không thể hoàn tác</span>
+                                <span className="text-[10px] uppercase tracking-widest text-[var(--text-secondary)]/30">Hành động này không thể hoàn tác</span>
                             </p>
 
                             <div className="flex gap-4">
                                 <button
                                     onClick={() => setIsDeleteModalOpen(false)}
-                                    className="flex-1 h-16 rounded-[1.25rem] bg-zinc-900 text-zinc-400 hover:text-white border border-white/5 transition-all font-black uppercase tracking-widest text-xs italic"
+                                    className="flex-1 h-16 rounded-[1.25rem] bg-[var(--bg-root)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-primary)] transition-all font-black uppercase tracking-widest text-xs italic"
                                 >
                                     Hủy bỏ
                                 </button>

@@ -60,6 +60,7 @@ export interface ProductRequest {
     description?: string;
     price: number;
     categoryId: number;
+    isActive?: boolean;
 }
 
 export interface AddMaterialRequest {

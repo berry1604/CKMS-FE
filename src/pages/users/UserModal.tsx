@@ -113,14 +113,14 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                         variant="ghost"
                         onClick={onClose}
                         disabled={isSubmitting}
-                        className="h-12 px-8 rounded-2xl bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 font-black uppercase text-[10px] tracking-widest transition-all"
+                        className="h-12 px-8 rounded-2xl bg-[var(--bg-root)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/[0.05] border border-[var(--border-primary)] font-black uppercase text-[10px] tracking-widest transition-all"
                     >
                         Hủy
                     </Button>
                     <Button
                         onClick={handleSubmit(handleFormSubmit)}
                         isLoading={isSubmitting}
-                        className="h-12 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-black uppercase text-[10px] tracking-widest transition-all duration-300 border-0 shadow-2xl shadow-amber-900/40"
+                        className="h-12 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-black uppercase text-[10px] tracking-widest transition-all duration-300 border-0 shadow-lg shadow-amber-500/20"
                     >
                         {user ? 'Lưu thay đổi' : 'Tạo nhân viên'}
                     </Button>
@@ -130,34 +130,34 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
             <form className="space-y-10 py-2">
                 {/* Section 1: Basic Info */}
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-primary)]">
                         <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
                             <Briefcase size={18} className="text-amber-500" />
                         </div>
-                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Thông tin cơ bản</h3>
+                        <h3 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">Thông tin cơ bản</h3>
                     </div>
 
                     <div className="grid gap-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Họ và tên</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Họ và tên</label>
                             <Input
                                 placeholder="Nhập đầy đủ họ tên"
-                                icon={<User size={18} className="text-zinc-600" />}
+                                icon={<User size={18} className="text-[var(--text-secondary)]/40" />}
                                 error={errors.name?.message}
                                 {...register('name')}
-                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Địa chỉ Email</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Địa chỉ Email</label>
                             <Input
                                 type="email"
                                 placeholder="example@bistack.com"
-                                icon={<Mail size={18} className="text-zinc-600" />}
+                                icon={<Mail size={18} className="text-[var(--text-secondary)]/40" />}
                                 error={errors.email?.message}
                                 {...register('email')}
-                                className="h-14 bg-white/5 border-white/5 focus:border-amber-500/50 focus:ring-amber-500/10 text-zinc-100 rounded-2xl transition-all duration-300"
+                                className="h-14 bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 focus:ring-amber-500/10 text-[var(--text-primary)] rounded-2xl transition-all duration-300"
                             />
                         </div>
                     </div>
@@ -165,31 +165,31 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
 
                 {/* Section 2: Roles & Assignments */}
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-primary)]">
                         <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
                             <Shield size={18} className="text-amber-500" />
                         </div>
-                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Vai trò và Cửa hàng</h3>
+                        <h3 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">Vai trò và Cửa hàng</h3>
                     </div>
 
-                    <div className="bg-zinc-900/40 border border-white/5 rounded-[32px] p-8 space-y-6 relative overflow-hidden group/card shadow-2xl">
+                    <div className="bg-[var(--bg-root)]/40 border border-[var(--border-primary)] rounded-[32px] p-8 space-y-6 relative overflow-hidden group/card shadow-sm">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Vai trò hệ thống</label>
+                            <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Vai trò hệ thống</label>
                             <div className="relative group/select">
                                 <select
-                                    className="flex h-14 w-full rounded-2xl border border-white/5 bg-black/40 pl-4 pr-12 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500/50 appearance-none transition-all duration-300"
+                                    className="flex h-14 w-full rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-card)]/40 pl-4 pr-12 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500/50 appearance-none transition-all duration-300 font-bold uppercase"
                                     {...register('roleId', { valueAsNumber: true })}
                                 >
-                                    <option value={0} disabled className="bg-zinc-900">Chọn vai trò...</option>
+                                    <option value={0} disabled className="bg-[var(--bg-card)]">Chọn vai trò...</option>
                                     {roles.map(role => (
-                                        <option key={role.roleId} value={role.roleId} className="bg-zinc-900">
+                                        <option key={role.roleId} value={role.roleId} className="bg-[var(--bg-card)]">
                                             {role.roleName?.replace(/_/g, ' ') || `Role ${role.roleId}`}
                                         </option>
                                     ))}
                                 </select>
-                                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-zinc-600 group-focus-within/select:text-amber-500 transition-colors">
+                                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-[var(--text-secondary)] group-focus-within/select:text-amber-500 transition-colors">
                                     <Shield size={20} />
                                 </div>
                             </div>
@@ -198,20 +198,20 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                         {/* Store Assignment */}
                         {(selectedRoleName === 'STORE_STAFF' || selectedRoleName === 'MANAGER' || selectedRoleName === 'STAFF') && (
                             <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Đơn vị công tác</label>
+                                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Đơn vị công tác</label>
                                 <div className="relative group/select">
                                     <select
-                                        className="flex h-14 w-full rounded-2xl border border-white/5 bg-black/40 pl-4 pr-12 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500/50 appearance-none transition-all duration-300"
+                                        className="flex h-14 w-full rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-card)]/40 pl-4 pr-12 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500/50 appearance-none transition-all duration-300 font-bold uppercase"
                                         {...register('storeId')}
                                     >
-                                        <option value="null" className="bg-zinc-900">Chưa gán đơn vị</option>
+                                        <option value="null" className="bg-[var(--bg-card)]">Chưa gán đơn vị</option>
                                         {stores.map(store => (
-                                            <option key={store.storeId} value={store.storeId} className="bg-zinc-900">
+                                            <option key={store.storeId} value={store.storeId} className="bg-[var(--bg-card)]">
                                                 {store.name}
                                             </option>
                                         ))}
                                     </select>
-                                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-zinc-600 group-focus-within/select:text-amber-500 transition-colors">
+                                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-[var(--text-secondary)] group-focus-within/select:text-amber-500 transition-colors">
                                         <Store size={20} />
                                     </div>
                                 </div>
@@ -229,11 +229,11 @@ export const UserModal = ({ isOpen, onClose, onSubmit, user }: UserModalProps) =
                 </div>
 
                 {!user && (
-                    <div className="bg-emerald-500/5 rounded-3xl p-6 flex items-start gap-4 border border-emerald-500/10 animate-in fade-in zoom-in-95 duration-700">
+                    <div className="bg-emerald-500/5 rounded-3xl p-6 flex items-start gap-4 border border-emerald-500/10 animate-in fade-in zoom-in-95 duration-700 shadow-sm">
                         <CheckCircle2 size={24} className="text-emerald-500 shrink-0 mt-0.5" />
                         <div className="space-y-1">
-                            <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest">Kích hoạt tức thì</h4>
-                            <p className="text-[10px] text-zinc-500 font-medium leading-relaxed uppercase tracking-wide">
+                            <h4 className="text-xs font-black text-emerald-500/80 uppercase tracking-widest">Kích hoạt tức thì</h4>
+                            <p className="text-[10px] text-[var(--text-secondary)] font-medium leading-relaxed uppercase tracking-wide">
                                 Hệ thống tự động gửi email mời thiết lập mật khẩu đến nhân viên ngay sau khi khởi tạo.
                             </p>
                         </div>

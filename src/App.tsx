@@ -1,20 +1,21 @@
 import { RouterProvider } from 'react-router-dom';
 import { router } from './app/router';
 import { Toaster } from 'react-hot-toast';
+import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
   return (
-    <>
+    <ThemeProvider>
       <RouterProvider router={router} />
       <Toaster
         position="top-right"
         reverseOrder={false}
         toastOptions={{
-          className: '',
+          className: 'dark:bg-zinc-900 dark:text-white dark:border-white/10',
           style: {
-            border: '1px solid #713200',
+            border: '1px solid #e2e8f0',
             padding: '16px',
-            color: '#713200',
+            color: '#1a202c',
           },
           success: {
             style: {
@@ -42,7 +43,7 @@ function App() {
           },
         }}
       />
-    </>
+    </ThemeProvider>
   );
 }
 

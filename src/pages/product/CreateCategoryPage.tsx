@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Tag, AlertCircle, Activity, FileText, Sparkles, Chevro
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
 import { categoryApi } from '../../services/category.api';
 import type { CategoryResponse } from '../../types/category';
 
@@ -109,7 +110,7 @@ export const CreateCategoryPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-gray-100">
+        <div className="min-h-screen bg-[var(--bg-root)] text-[var(--text-primary)]">
             {/* Cinematic Header */}
             <div className="relative h-64 w-full overflow-hidden">
                 <img
@@ -117,7 +118,7 @@ export const CreateCategoryPage = () => {
                     className="w-full h-full object-cover scale-105 opacity-40 text-transparent"
                     alt="Background"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0a0a]/60 to-[#0a0a0a]"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--bg-root)]/60 to-[var(--bg-root)]"></div>
 
                 <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-5xl mx-auto">
                     <div className="flex items-center gap-2 text-amber-500/80 mb-4 animate-in fade-in slide-in-from-left duration-700">
@@ -128,8 +129,8 @@ export const CreateCategoryPage = () => {
                             <ArrowLeft size={16} />
                             Quay lại danh sách
                         </button>
-                        <ChevronRight size={14} className="text-gray-600" />
-                        <span className="text-gray-400 text-sm">Quản lý danh mục</span>
+                        <ChevronRight size={14} className="text-[var(--text-secondary)]/20" />
+                        <span className="text-[var(--text-secondary)]/60 text-sm">Quản lý danh mục</span>
                     </div>
 
                     <div className="flex items-end justify-between gap-6">
@@ -138,11 +139,11 @@ export const CreateCategoryPage = () => {
                                 <div className="p-2 bg-amber-500/20 rounded-lg border border-amber-500/30">
                                     <Tag className="text-amber-500" size={24} />
                                 </div>
-                                <h1 className="text-4xl font-bold tracking-tight text-white italic">
+                                <h1 className="text-4xl font-bold tracking-tight text-[var(--text-primary)] italic">
                                     {isEditMode ? 'CHỈNH SỬA' : 'THÊM MỚI'} <span className="text-amber-500">DANH MỤC</span>
                                 </h1>
                             </div>
-                            <p className="text-gray-400 max-w-xl">
+                            <p className="text-[var(--text-secondary)]/60 max-w-xl">
                                 {isEditMode
                                     ? 'Cập nhật thông tin chi tiết cho danh mục sản phẩm hiện có.'
                                     : 'Bắt đầu tạo một danh mục mới để quản lý phân loại sản phẩm hiệu quả hơn.'}
@@ -152,112 +153,117 @@ export const CreateCategoryPage = () => {
                 </div>
             </div>
 
-            {/* Main Form Content */}
-            <div className="max-w-5xl mx-auto px-8 -mt-6 relative z-10 pb-20">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="max-w-5xl mx-auto px-8 -mt-10 relative z-10 pb-20">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                     {/* Left Column: Form */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <Sparkles size={60} className="text-amber-500" />
+                    <div className="lg:col-span-2 space-y-8">
+                        <Card className="backdrop-blur-xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[40px] p-10 shadow-2xl relative overflow-hidden group animate-in fade-in zoom-in-95 duration-1000">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Sparkles size={120} className="text-amber-500" />
                             </div>
 
                             {backendError && (
-                                <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-start gap-3 animate-in fade-in scale-in-95">
+                                <div className="mb-10 p-5 bg-red-500/5 border border-red-500/10 text-red-500 rounded-2xl flex items-start gap-4 animate-shake">
                                     <AlertCircle size={20} className="shrink-0 mt-0.5" />
                                     <div>
-                                        <h3 className="font-bold text-sm">Lỗi hệ thống</h3>
-                                        <p className="text-sm opacity-80">{backendError}</p>
+                                        <h3 className="font-black text-[10px] uppercase tracking-widest">Thao tác thất bại</h3>
+                                        <p className="text-xs mt-1 font-medium">{backendError}</p>
                                     </div>
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Name */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Tên danh mục *</label>
-                                        <div className="relative group/input">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within/input:text-amber-500 transition-colors">
-                                                <Activity size={18} />
+                                        <label className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-[0.2em] ml-1">Tên danh mục *</label>
+                                        <div className="relative group/field">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <Tag size={18} className="text-[var(--text-secondary)]/40 group-focus-within/field:text-amber-500/50 transition-colors" />
                                             </div>
                                             <input
                                                 type="text"
                                                 {...register('name')}
-                                                className={`w-full pl-12 pr-4 py-3 bg-black/40 border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${errors.name ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'
-                                                    }`}
+                                                className={`w-full pl-12 pr-4 h-14 bg-[var(--bg-root)]/50 border rounded-2xl text-sm transition-all focus:outline-none focus:ring-4 focus:ring-amber-500/10 ${errors.name ? 'border-red-500/50' : 'border-[var(--border-primary)] hover:border-amber-500/30'
+                                                    } text-[var(--text-primary)] font-medium placeholder:text-[var(--text-secondary)]/30`}
                                                 placeholder="VD: Đồ uống"
                                             />
                                         </div>
-                                        {errors.name && <p className="text-red-400 text-xs mt-1 ml-1">{errors.name.message}</p>}
+                                        {errors.name && <p className="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase tracking-tight">{errors.name.message}</p>}
                                     </div>
 
                                     {/* Status */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Trạng thái *</label>
-                                        <div className="relative group/input">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within/input:text-amber-500 transition-colors">
-                                                <Sparkles size={18} />
+                                        <label className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-[0.2em] ml-1">Trạng thái *</label>
+                                        <div className="relative group/field">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <Activity size={18} className="text-[var(--text-secondary)]/40 group-focus-within/field:text-amber-500/50 transition-colors" />
                                             </div>
                                             <select
                                                 {...register('status')}
-                                                className={`w-full pl-12 pr-10 py-3 bg-black/40 border rounded-xl text-sm appearance-none transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${errors.status ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'
-                                                    }`}
+                                                className={`w-full pl-12 pr-10 h-14 bg-[var(--bg-root)]/50 border rounded-2xl text-sm appearance-none transition-all focus:outline-none focus:ring-4 focus:ring-amber-500/10 ${errors.status ? 'border-red-500/50' : 'border-[var(--border-primary)] hover:border-amber-500/30'
+                                                    } text-[var(--text-primary)] font-medium`}
                                             >
-                                                <option value="ACTIVE">Hoạt động</option>
-                                                <option value="INACTIVE">Ngưng hoạt động</option>
+                                                <option value="ACTIVE" className="bg-[var(--bg-card)]">Hoạt động</option>
+                                                <option value="INACTIVE" className="bg-[var(--bg-card)]">Ngưng hoạt động</option>
                                             </select>
-                                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500">
-                                                <ChevronRight size={16} className="rotate-90" />
+                                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                                <ChevronRight size={14} className="rotate-90 text-[var(--text-secondary)]/40" />
                                             </div>
                                         </div>
-                                        {errors.status && <p className="text-red-400 text-xs mt-1 ml-1">{errors.status.message}</p>}
+                                        {errors.status && <p className="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase tracking-tight">{errors.status.message}</p>}
                                     </div>
 
                                     {/* Description */}
                                     <div className="space-y-2 md:col-span-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Mô tả chi tiết</label>
-                                        <div className="relative group/input">
-                                            <div className="absolute top-4 left-4 flex items-start pointer-events-none text-gray-500 group-focus-within/input:text-amber-500 transition-colors">
-                                                <FileText size={18} />
+                                        <label className="text-[10px] font-black text-[var(--text-secondary)]/60 uppercase tracking-[0.2em] ml-1">Mô tả chi tiết</label>
+                                        <div className="relative group/field">
+                                            <div className="absolute top-4 left-4 flex items-start pointer-events-none">
+                                                <FileText size={18} className="text-[var(--text-secondary)]/40 group-focus-within/field:text-amber-500/50 transition-colors" />
                                             </div>
                                             <textarea
                                                 {...register('description')}
                                                 rows={4}
-                                                className={`w-full pl-12 pr-4 py-3 bg-black/40 border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none ${errors.description ? 'border-red-500/50 bg-red-500/5' : 'border-white/10 hover:border-white/20'
-                                                    }`}
+                                                className={`w-full pl-12 pr-4 py-4 bg-[var(--bg-root)]/50 border rounded-3xl text-sm transition-all focus:outline-none focus:ring-4 focus:ring-amber-500/10 resize-none ${errors.description ? 'border-red-500/50' : 'border-[var(--border-primary)] hover:border-amber-500/30'
+                                                    } text-[var(--text-primary)] font-medium placeholder:text-[var(--text-secondary)]/30 min-h-[120px]`}
                                                 placeholder="Nhập mô tả chi tiết cho danh mục này..."
                                             />
                                         </div>
-                                        {errors.description && <p className="text-red-400 text-xs mt-1 ml-1">{errors.description.message}</p>}
+                                        {errors.description && <p className="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase tracking-tight">{errors.description.message}</p>}
                                     </div>
                                 </div>
 
-                                <div className="pt-6 flex justify-end gap-4 border-t border-white/5">
+                                <div className="pt-10 flex flex-col sm:flex-row justify-end gap-4 border-t border-[var(--border-primary)]/40">
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         onClick={() => navigate('/products/categories')}
-                                        className="text-gray-400 hover:text-white hover:bg-white/5 px-8 rounded-xl h-12"
+                                        className="h-14 px-8 rounded-2xl text-[var(--text-secondary)]/60 hover:text-[var(--text-primary)] font-black uppercase text-[10px] tracking-widest transition-all"
                                     >
                                         Hủy bỏ
                                     </Button>
                                     <Button
                                         type="submit"
                                         disabled={isSubmitting || !isValid}
-                                        className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-bold px-10 rounded-xl shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed h-12 flex items-center gap-2 group/btn transition-all active:scale-95"
+                                        className="h-14 px-10 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-black uppercase text-xs tracking-widest transition-all duration-500 border-0 shadow-2xl shadow-amber-900/40 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100"
                                     >
                                         {isSubmitting ? (
-                                            <RefreshIcon className="animate-spin h-5 w-5" />
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                                Đang lưu...
+                                            </div>
                                         ) : (
-                                            <Save size={20} className="group-hover/btn:scale-110 transition-transform" />
+                                            <div className="flex items-center gap-3">
+                                                <Save size={18} />
+                                                {isEditMode ? 'Cập nhật' : 'Hoàn tất'}
+                                            </div>
                                         )}
-                                        {isEditMode ? 'CẬP NHẬT' : 'HOÀN TẤT'}
                                     </Button>
                                 </div>
                             </form>
-                        </div>
+                        </Card>
                     </div>
+
 
                     {/* Right Column: Tips/Preview */}
                     <div className="space-y-6">
@@ -266,24 +272,24 @@ export const CreateCategoryPage = () => {
                                 <Sparkles size={18} />
                                 Ghi chú quan trọng
                             </h3>
-                            <ul className="space-y-4 text-sm text-gray-400">
+                            <ul className="space-y-4 text-sm text-[var(--text-secondary)]/60">
                                 <li className="flex gap-3">
                                     <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5"></div>
-                                    <p><span className="text-gray-200">Tên danh mục</span> nên ngắn gọn, dễ nhớ để hiển thị tốt trên thực đơn.</p>
+                                    <p><span className="text-[var(--text-primary)]">Tên danh mục</span> nên ngắn gọn, dễ nhớ để hiển thị tốt trên thực đơn.</p>
                                 </li>
                                 <li className="flex gap-3">
                                     <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5"></div>
-                                    <p><span className="text-gray-200">Trạng thái</span> Ngưng hoạt động sẽ ẩn các sản phẩm thuộc danh mục này khỏi cửa hàng.</p>
+                                    <p><span className="text-[var(--text-primary)]">Trạng thái</span> Ngưng hoạt động sẽ ẩn các sản phẩm thuộc danh mục này khỏi cửa hàng.</p>
                                 </li>
                             </ul>
                         </div>
 
-                        <div className="backdrop-blur-xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 text-center">
-                            <div className="w-16 h-16 bg-gradient-to-br from-amber-500/20 to-transparent rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
+                        <div className="backdrop-blur-xl bg-[var(--text-primary)]/[0.02] border border-[var(--border-primary)]/40 rounded-2xl p-6 text-center">
+                            <div className="w-16 h-16 bg-gradient-to-br from-amber-500/20 to-transparent rounded-full flex items-center justify-center mx-auto mb-4 border border-[var(--border-primary)]/40">
                                 <Tag className="text-amber-500/60" size={32} />
                             </div>
-                            <h4 className="text-gray-300 font-semibold mb-1">Mẹo nhỏ</h4>
-                            <p className="text-gray-500 text-xs leading-relaxed">
+                            <h4 className="text-[var(--text-primary)] font-semibold mb-1">Mẹo nhỏ</h4>
+                            <p className="text-[var(--text-secondary)]/40 text-xs leading-relaxed">
                                 Sử dụng mô tả chi tiết giúp nhân viên dễ dàng phân loại và tìm kiếm sản phẩm trong hệ thống.
                             </p>
                         </div>
@@ -294,9 +300,4 @@ export const CreateCategoryPage = () => {
     );
 };
 
-const RefreshIcon = ({ className }: { className?: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-);
+

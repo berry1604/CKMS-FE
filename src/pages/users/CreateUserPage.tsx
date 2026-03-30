@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Save, UserPlus, Mail, Shield, Store } from 'lucide-react';
+import { ArrowLeft, Save, UserPlus, Mail, Shield, Store, Warehouse, ChevronRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/Button';
@@ -12,6 +12,7 @@ import { roleApi } from '../../services/role.api';
 import { storeApi } from '../../services/store.api';
 import { kitchenApi } from '../../services/kitchen.api';
 import type { RoleResponse } from '../../types/role';
+import securityAuthBg from '../../assets/security_auth.png';
 
 const createUserSchema = z.object({
     email: z.string().email('Email không hợp lệ'),
@@ -98,45 +99,43 @@ export const CreateUserPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pb-20">
+        <div className="min-h-screen bg-[var(--bg-root)] pb-20 animate-in fade-in duration-700">
             {/* Cinematic Header */}
-            <div className="relative h-[350px] w-full overflow-hidden">
+            <div className="relative h-[400px] w-full overflow-hidden">
                 <img
-                    src="/Users/phunghuyphuoc/.gemini/antigravity/brain/5ad3745d-382e-481d-8167-b732c447a69b/system_onboarding_bg_1773028432172.png"
-                    className="w-full h-full object-cover scale-110 motion-safe:animate-[pulse_8s_ease-in-out_infinite]"
-                    alt="System Onboarding Background"
+                    src={securityAuthBg}
+                    className="w-full h-full object-cover scale-105 motion-safe:animate-[pulse_10s_ease-in-out_infinite] opacity-60"
+                    alt="System Authority Background"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#0a0a0a] backdrop-blur-[1px]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-card)]/80 via-[var(--bg-card)]/20 to-[var(--bg-root)] backdrop-blur-[2px]" />
 
-                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-16 max-w-5xl mx-auto w-full">
+                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-16 max-w-6xl mx-auto w-full">
                     <button
                         onClick={() => navigate('/users')}
-                        className="group flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors mb-6 w-fit"
+                        className="group flex items-center gap-3 text-amber-500 hover:text-amber-400 transition-all mb-8 w-fit bg-amber-500/5 px-6 py-3 rounded-2xl border border-amber-500/10 backdrop-blur-md"
                     >
-                        <div className="p-2 rounded-full bg-blue-500/10 border border-blue-500/20 group-hover:bg-blue-500/20 transition-all">
-                            <ArrowLeft size={16} />
-                        </div>
-                        <span className="text-sm font-medium tracking-widest uppercase">Quay lại danh sách</span>
+                        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-[10px] font-black tracking-[0.3em] uppercase italic">Quay lại Tổng hành dinh</span>
                     </button>
 
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="h-[2px] w-12 bg-indigo-500" />
-                        <span className="text-indigo-400 font-bold tracking-[0.3em] text-[10px] uppercase">Khởi tạo tài khoản</span>
+                        <div className="h-[2px] w-16 bg-amber-500/50" />
+                        <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase italic">Giao diện Khởi tạo Nhân sự</span>
                     </div>
 
-                    <h1 className="text-6xl font-black text-white tracking-tighter mb-4">
-                        KHỞI TẠO <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600">THÀNH VIÊN</span>
+                    <h1 className="text-6xl md:text-7xl font-black text-[var(--text-primary)] tracking-tighter mb-4 italic uppercase leading-none">
+                        KHỞI TẠO <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">THỰC THỂ</span>
                     </h1>
-                    <p className="text-gray-400 max-w-2xl text-lg font-light leading-relaxed">
-                        Thiết lập thông tin định danh và cấp quyền truy cập hệ thống cho thành viên mới của đội ngũ vận hành.
+                    <p className="text-[var(--text-secondary)]/60 max-w-2xl text-lg font-medium leading-relaxed italic uppercase tracking-wider">
+                        Thiết lập định danh và phân cấp đặc quyền truy cập hệ thống cho thành viên mới của mạng lưới vận hành Steakhouse.
                     </p>
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-8 -mt-12 relative z-10 transition-all duration-700 ease-out animate-in fade-in slide-in-from-bottom-8">
-                <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden p-8 md:p-12 relative">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                        <UserPlus size={120} className="text-blue-500" />
+            <div className="max-w-5xl mx-auto px-8 -mt-16 relative z-10 transition-all duration-700 ease-out animate-in fade-in slide-in-from-bottom-8">
+                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/60 border border-[var(--border-primary)] rounded-[3rem] shadow-2xl overflow-hidden p-10 md:p-20 relative group/form">
+                    <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover/form:opacity-10 transition-opacity duration-1000">
+                        <UserPlus size={180} className="text-amber-500" />
                     </div>
 
                     {backendError && (
@@ -145,195 +144,194 @@ export const CreateUserPage = () => {
                                 <Shield size={20} className="text-red-500" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-white uppercase tracking-wider text-xs mb-1">Cảnh báo hệ thống</h3>
-                                <p className="text-red-400 text-sm leading-relaxed font-light">{backendError}</p>
+                                <h3 className="font-bold text-[var(--text-primary)] uppercase tracking-wider text-xs mb-1">Cảnh báo hệ thống</h3>
+                                <p className="text-red-500/80 text-sm leading-relaxed font-light italic">{backendError}</p>
                             </div>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-12">
                         {/* Section 1: Identity */}
-                        <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                                    <Mail size={20} />
+                        <div className="space-y-10">
+                            <div className="flex items-center gap-6 pb-6 border-b border-[var(--border-primary)]/40">
+                                <div className="h-14 w-14 rounded-[1.5rem] bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-inner">
+                                    <Mail size={24} />
                                 </div>
-                                <h3 className="text-xl font-bold text-white tracking-tight">Thông tin định danh</h3>
+                                <div className="space-y-1">
+                                    <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Thông tin Định danh</h3>
+                                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic leading-none">Cấp địa chỉ liên lạc và định danh số</p>
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Địa chỉ Email</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                            <Mail size={18} className="text-gray-500 group-focus-within:text-blue-500" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-3 group/field">
+                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Địa chỉ Email (Identity)</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                            <Mail size={18} className="text-[var(--text-secondary)]/30 group-focus-within/field:text-amber-500" />
                                         </div>
                                         <input
                                             type="email"
-                                            className={`w-full pl-12 pr-4 py-4 bg-white/[0.03] border rounded-2xl text-white placeholder:text-gray-700 focus:outline-none focus:ring-4 transition-all ${errors.email
-                                                ? 'border-red-500/40 focus:ring-red-500/10'
-                                                : 'border-white/10 focus:ring-blue-500/10 focus:border-blue-500/50 group-hover:bg-white/[0.05]'
+                                            className={`w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border rounded-[1.5rem] text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)]/20 focus:outline-none focus:ring-4 transition-all italic text-sm ${errors.email
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
                                                 }`}
-                                            placeholder="VD: john.doe@ckms.com"
+                                            placeholder="VD: alpha.manager@steakchain.vn"
                                             {...register('email')}
                                         />
                                     </div>
-                                    {errors.email && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1">{errors.email.message}</p>}
+                                    {errors.email && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.email.message}</p>}
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Họ và tên</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                            <UserPlus size={18} className="text-gray-500 group-focus-within:text-blue-500" />
+                                <div className="space-y-3 group/field">
+                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Danh tính đầy đủ (Fullname)</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                            <UserPlus size={18} className="text-[var(--text-secondary)]/30 group-focus-within/field:text-amber-500" />
                                         </div>
                                         <input
                                             type="text"
-                                            className={`w-full pl-12 pr-4 py-4 bg-white/[0.03] border rounded-2xl text-white placeholder:text-gray-700 focus:outline-none focus:ring-4 transition-all ${errors.fullName
-                                                ? 'border-red-500/40 focus:ring-red-500/10'
-                                                : 'border-white/10 focus:ring-blue-500/10 focus:border-blue-500/50 group-hover:bg-white/[0.05]'
+                                            className={`w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border rounded-[1.5rem] text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)]/20 focus:outline-none focus:ring-4 transition-all italic text-sm ${errors.fullName
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
                                                 }`}
-                                            placeholder="VD: Nguyễn Văn A"
+                                            placeholder="VD: PHẠM KHÁNH NAM"
                                             {...register('fullName')}
                                         />
                                     </div>
-                                    {errors.fullName && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1">{errors.fullName.message}</p>}
+                                    {errors.fullName && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.fullName.message}</p>}
                                 </div>
                             </div>
                         </div>
 
                         {/* Section 2: Authority */}
-                        <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500 delay-150">
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                    <Shield size={20} />
+                        <div className="space-y-10">
+                            <div className="flex items-center gap-6 pb-6 border-b border-[var(--border-primary)]/40">
+                                <div className="h-14 w-14 rounded-[1.5rem] bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-inner">
+                                    <Shield size={24} />
                                 </div>
-                                <h3 className="text-xl font-bold text-white tracking-tight">Phân quyền hệ thống</h3>
+                                <div className="space-y-1">
+                                    <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Phân quyền Hệ thống</h3>
+                                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic leading-none">Thiết lập ma trận đặc quyền bảo mật</p>
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Vai trò truy cập</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                            <Shield size={18} className="text-gray-500 group-focus-within:text-indigo-500" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-3 group/field">
+                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Vai trò Truy cập (Cyber Role)</label>
+                                    <div className="relative group/select">
+                                        <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/select:scale-110">
+                                            <Shield size={18} className="text-[var(--text-secondary)]/30 group-focus-within/select:text-amber-500" />
                                         </div>
                                         <select
-                                            className={`w-full pl-12 pr-10 py-4 bg-white/[0.03] border rounded-2xl text-white appearance-none focus:outline-none focus:ring-4 transition-all cursor-pointer ${errors.roleId
-                                                ? 'border-red-500/40 focus:ring-red-500/10'
-                                                : 'border-white/10 focus:ring-indigo-500/10 focus:border-indigo-500/50 group-hover:bg-white/[0.05]'
+                                            className={`w-full pl-16 pr-10 py-5 bg-[var(--bg-root)]/50 border rounded-[1.5rem] text-[var(--text-primary)] font-bold appearance-none focus:outline-none focus:ring-4 transition-all cursor-pointer italic text-sm ${errors.roleId
+                                                ? 'border-red-500/40 focus:ring-red-500/5'
+                                                : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
                                                 }`}
                                             {...register('roleId', { valueAsNumber: true })}
                                         >
-                                            <option value={0} disabled className="bg-[#1a1a1a]">Chọn vai trò phù hợp...</option>
+                                            <option value={0} disabled className="bg-[var(--bg-card)]">-- Tuyển chọn Ma trận Quyền --</option>
                                             {roles.map(role => (
-                                                <option key={role.roleId} value={role.roleId} className="bg-[#1a1a1a]">
+                                                <option key={role.roleId} value={role.roleId} className="bg-[var(--bg-card)]">
                                                     {role.roleName?.replace(/_/g, ' ') || `Role ${role.roleId}`}
                                                 </option>
                                             ))}
                                         </select>
-                                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-600">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                            </svg>
+                                        <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-[var(--text-secondary)]/30">
+                                            <ChevronRight size={16} className="rotate-90" />
                                         </div>
                                     </div>
-                                    {errors.roleId && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1">{errors.roleId.message}</p>}
-                                    <p className="text-[10px] text-gray-600 uppercase tracking-widest mt-3 ml-1">Xác định các module và hành động được phép thực hiện.</p>
+                                    {errors.roleId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.roleId.message}</p>}
                                 </div>
 
                                 {selectedRole === 'STORE_STAFF' && (
-                                    <div className="space-y-2 animate-in zoom-in-95 duration-300">
-                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Cửa hàng gán trực tiếp</label>
-                                        <div className="relative group">
-                                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                                <Store size={18} className="text-gray-500 group-focus-within:text-blue-500" />
+                                    <div className="space-y-3 group/field animate-in zoom-in-95 duration-500">
+                                        <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Cửa hàng Gán trực tiếp (Direct Store)</label>
+                                        <div className="relative group/select">
+                                            <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/select:scale-110">
+                                                <Store size={18} className="text-[var(--text-secondary)]/30 group-focus-within/select:text-amber-500" />
                                             </div>
                                             <select
-                                                className={`w-full pl-12 pr-10 py-4 bg-white/[0.03] border rounded-2xl text-white appearance-none focus:outline-none focus:ring-4 transition-all cursor-pointer ${errors.storeId
-                                                    ? 'border-red-500/40 focus:ring-red-500/10'
-                                                    : 'border-white/10 focus:ring-blue-500/10 focus:border-blue-500/50 group-hover:bg-white/[0.05]'
+                                                className={`w-full pl-16 pr-10 py-5 bg-[var(--bg-root)]/50 border rounded-[1.5rem] text-[var(--text-primary)] font-bold appearance-none focus:outline-none focus:ring-4 transition-all cursor-pointer italic text-sm ${errors.storeId
+                                                    ? 'border-red-500/40 focus:ring-red-500/5'
+                                                    : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
                                                     }`}
                                                 {...register('storeId')}
                                             >
-                                                <option value="" className="bg-[#1a1a1a]">Tạm thời chưa gán chi nhánh</option>
+                                                <option value="" className="bg-[var(--bg-card)]">Tạm thời chưa gán chi nhánh</option>
                                                 {stores.map(store => (
-                                                    <option key={store.storeId} value={store.storeId} className="bg-[#1a1a1a]">
+                                                    <option key={store.storeId} value={store.storeId} className="bg-[var(--bg-card)]">
                                                         {store.name}
                                                     </option>
                                                 ))}
                                             </select>
-                                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-600">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                                </svg>
+                                            <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-[var(--text-secondary)]/30">
+                                                <ChevronRight size={16} className="rotate-90" />
                                             </div>
                                         </div>
-                                        {errors.storeId && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1">{errors.storeId.message}</p>}
+                                        {errors.storeId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.storeId.message}</p>}
                                     </div>
                                 )}
 
                                 {selectedRole === 'KITCHEN_STAFF' && (
-                                    <div className="space-y-2 animate-in zoom-in-95 duration-300">
-                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Bếp trung tâm gán trực tiếp</label>
-                                        <div className="relative group">
-                                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                                <Store size={18} className="text-gray-500 group-focus-within:text-amber-500" />
+                                    <div className="space-y-3 group/field animate-in zoom-in-95 duration-500">
+                                        <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Bếp Trung Tâm Gán trực tiếp (Direct Kitchen)</label>
+                                        <div className="relative group/select">
+                                            <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/select:scale-110">
+                                                <Warehouse size={18} className="text-[var(--text-secondary)]/30 group-focus-within/select:text-amber-500" />
                                             </div>
                                             <select
-                                                className={`w-full pl-12 pr-10 py-4 bg-white/[0.03] border rounded-2xl text-white appearance-none focus:outline-none focus:ring-4 transition-all cursor-pointer ${errors.kitchenId
-                                                    ? 'border-red-500/40 focus:ring-red-500/10'
-                                                    : 'border-white/10 focus:ring-amber-500/10 focus:border-amber-500/50 group-hover:bg-white/[0.05]'
+                                                className={`w-full pl-16 pr-10 py-5 bg-[var(--bg-root)]/50 border rounded-[1.5rem] text-[var(--text-primary)] font-bold appearance-none focus:outline-none focus:ring-4 transition-all cursor-pointer italic text-sm ${errors.kitchenId
+                                                    ? 'border-red-500/40 focus:ring-red-500/5'
+                                                    : 'border-[var(--border-primary)] focus:ring-amber-500/5 focus:border-amber-500/30'
                                                     }`}
                                                 {...register('kitchenId')}
                                             >
-                                                <option value="" className="bg-[#1a1a1a]">Chọn Bếp Trung Tâm...</option>
+                                                <option value="" className="bg-[var(--bg-card)]">-- Tuyển chọn Bếp Trung Tâm --</option>
                                                 {kitchens.map(kitchen => (
-                                                    <option key={kitchen.kitchenId} value={kitchen.kitchenId} className="bg-[#1a1a1a]">
+                                                    <option key={kitchen.kitchenId} value={kitchen.kitchenId} className="bg-[var(--bg-card)]">
                                                         {kitchen.name}
                                                     </option>
                                                 ))}
                                             </select>
-                                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-600">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                                </svg>
+                                            <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-[var(--text-secondary)]/30">
+                                                <ChevronRight size={16} className="rotate-90" />
                                             </div>
                                         </div>
-                                        {errors.kitchenId && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1">{errors.kitchenId.message}</p>}
+                                        {errors.kitchenId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.kitchenId.message}</p>}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-end gap-4">
+                        <div className="pt-16 border-t border-[var(--border-primary)] flex flex-col md:flex-row justify-end gap-6">
                             <Button
                                 type="button"
                                 variant="ghost"
                                 onClick={() => navigate('/users')}
                                 disabled={isSubmitting}
-                                className="h-14 px-10 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all order-2 md:order-1"
+                                className="h-16 px-12 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)] text-[var(--text-secondary)]/60 hover:text-amber-500 hover:border-amber-500/30 transition-all order-2 md:order-1 font-black uppercase text-[10px] tracking-widest italic"
                             >
                                 Hủy bỏ yêu cầu
                             </Button>
                             <Button
                                 type="submit"
-                                className={`h-14 px-12 rounded-2xl font-bold tracking-widest uppercase text-xs shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] order-1 md:order-2 ${!isValid || isSubmitting
-                                    ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white border-none shadow-blue-500/20'
+                                className={`h-16 px-16 rounded-2xl font-black tracking-widest uppercase text-[10px] shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] order-1 md:order-2 italic ${!isValid || isSubmitting
+                                    ? 'bg-[var(--bg-card)] text-[var(--text-secondary)]/30 border border-[var(--border-primary)] cursor-not-allowed opacity-50'
+                                    : 'bg-amber-500 hover:bg-amber-600 text-black border-none shadow-amber-500/20'
                                     }`}
                                 disabled={isSubmitting || !isValid}
                             >
                                 {isSubmitting ? (
                                     <div className="flex items-center gap-3">
-                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                        <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                                         <span>Đang khởi tạo...</span>
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-3">
                                         <Save size={18} />
-                                        <span>Kích hoạt tài khoản</span>
+                                        <span>Kích hoạt thực thể</span>
                                     </div>
                                 )}
                             </Button>
@@ -344,4 +342,5 @@ export const CreateUserPage = () => {
         </div>
     );
 };
+
 export default CreateUserPage;

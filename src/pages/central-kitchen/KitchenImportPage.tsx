@@ -10,7 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import type { MaterialResponse } from '../../types/material';
 import type { ProductResponse } from '../../types/product';
 import toast from 'react-hot-toast';
-import warehouseBg from '../../assets/luxury_steakhouse_bg.png';
+import kitchenBg from '../../assets/kitchen_inventory.png';
 
 export const KitchenImportPage = () => {
     const navigate = useNavigate();
@@ -51,25 +51,23 @@ export const KitchenImportPage = () => {
     const loadLookups = useCallback(async () => {
         setIsLoadingLookups(true);
         try {
-            // Fetch materials and products separately to avoid one failure blocking the other
             const fetchMaterials = async () => {
                 try {
                     const matRes = await materialApi.getAll();
                     setMaterials(matRes || []);
                 } catch (error) {
                     console.error('Failed to load materials', error);
-                    toast.error('Không thể tải danh sách nguyên liệu. Vui lòng kiểm tra quyền hạn.');
+                    toast.error('Không thể tải danh sách nguyên liệu.');
                 }
             };
 
             const fetchProducts = async () => {
                 try {
                     const prodRes = await productApi.getProducts({ size: 100 });
-                    // prodRes is the ApiResponse object, so prodRes.data is the Page object
                     setProducts(prodRes.data?.content || []);
                 } catch (error) {
                     console.error('Failed to load products', error);
-                    toast.error('Không thể tải danh sách thành phẩm. Vui lòng kiểm tra quyền hạn.');
+                    toast.error('Không thể tải danh sách thành phẩm.');
                 }
             };
 
@@ -98,7 +96,6 @@ export const KitchenImportPage = () => {
 
         setIsImporting(true);
         try {
-            // Payload follows KitchenStockImportRequest DTO structure
             const requestPayload = [{
                 itemId: Number(selectedItemId),
                 quantity: Number(importQuantity),
@@ -132,63 +129,67 @@ export const KitchenImportPage = () => {
     const isReadyToImport = selectedItemId > 0 && importQuantity > 0;
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pb-20">
+        <div className="min-h-screen bg-[var(--bg-root)] pb-20 animate-in fade-in duration-700">
             {/* Cinematic Header */}
-            <div className="relative h-[300px] w-full overflow-hidden">
+            <div className="relative h-[450px] w-full overflow-hidden">
                 <img
-                    src={warehouseBg}
-                    className="w-full h-full object-cover scale-105"
-                    alt="Warehouse Background"
+                    src={kitchenBg}
+                    className="w-full h-full object-cover scale-105 motion-safe:animate-[pulse_12s_ease-in-out_infinite] opacity-40 dark:opacity-60"
+                    alt="Kitchen Inventory Management"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#0a0a0a] backdrop-blur-[2px]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-card)]/80 via-[var(--bg-card)]/20 to-[var(--bg-root)] backdrop-blur-[2px]" />
 
-                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
+                <div className="absolute inset-0 flex flex-col justify-end px-8 pb-16 max-w-7xl mx-auto w-full">
+                    <button
+                        onClick={() => navigate('/kitchen/inventory')}
+                        className="group flex items-center gap-3 text-amber-500 hover:text-amber-400 transition-all mb-8 w-fit bg-amber-500/5 px-6 py-3 rounded-2xl border border-amber-500/10 backdrop-blur-md shadow-sm"
+                    >
+                        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-[10px] font-black tracking-[0.3em] uppercase italic">Quay lại Kho Bếp</span>
+                    </button>
+
                     <div className="flex items-center gap-4 mb-4">
-                        <Button
-                            variant="ghost"
-                            onClick={() => navigate('/kitchen/inventory')}
-                            className="bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-full p-2 h-10 w-10 transition-all"
-                        >
-                            <ArrowLeft size={20} className="text-white" />
-                        </Button>
-                        <div className="h-px w-12 bg-amber-500/50" />
-                        <span className="text-amber-500 font-medium tracking-widest text-xs uppercase">Kitchen Logistics</span>
+                        <div className="h-[2px] w-16 bg-amber-500/50" />
+                        <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase italic">Giao thức Điều phối Logistics</span>
                     </div>
 
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div className="flex-1">
-                            <h1 className="text-5xl font-bold text-white tracking-tighter mb-2 italic uppercase">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
+                        <div className="flex-1 space-y-4">
+                            <h1 className="text-6xl md:text-7xl font-black text-[var(--text-primary)] tracking-tighter italic uppercase leading-none">
                                 NHẬP KHO <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">HỆ THỐNG</span>
                             </h1>
-                            <p className="text-gray-400 max-w-xl text-lg font-light leading-relaxed">
-                                Điều phối và nhập mới nguyên liệu, thành phẩm vào hệ thống lưu trữ trung tâm để đảm bảo chuỗi cung ứng.
+                            <p className="text-[var(--text-secondary)]/60 max-w-2xl text-lg font-medium leading-relaxed italic uppercase tracking-wider">
+                                Khởi tạo quy trình nhập liệu nguyên liệu và thành phẩm. Đảm bảo tính minh bạch và chuẩn xác cho chuỗi cung ứng thực phẩm.
                             </p>
                         </div>
                         
-                        <div className="w-full md:w-auto pb-1">
-                            <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-3 block ml-1">Cơ sở sản xuất</label>
-                            <KitchenSelector 
-                                selectedKitchenId={selectedKitchenId}
-                                onKitchenChange={setSelectedKitchenId}
-                            />
+                        <div className="w-full md:w-auto pb-2">
+                            <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl p-6 rounded-[2rem] border border-[var(--border-primary)] shadow-2xl">
+                                <label className="text-[9px] font-black text-amber-500 uppercase tracking-[0.3em] mb-4 block ml-2 italic">Cơ sở sản xuất định danh</label>
+                                <KitchenSelector 
+                                    selectedKitchenId={selectedKitchenId}
+                                    onKitchenChange={setSelectedKitchenId}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-8 -mt-8 relative z-10">
-                <div className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
+            <div className="max-w-4xl mx-auto px-8 -mt-12 relative z-10">
+                <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] p-12 md:p-16 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
                     {/* Decorative glow */}
-                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 blur-[80px] rounded-full" />
+                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full group-hover:bg-amber-500/10 transition-all duration-1000" />
 
-                    <form onSubmit={handleImport} className="space-y-8 relative z-10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <form onSubmit={handleImport} className="space-y-10 relative z-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             {/* Loại Nhập */}
-                            <div className="space-y-2 group">
-                                <label className="text-xs font-semibold text-amber-500/80 uppercase tracking-wider ml-1">Loại Nhập</label>
+                            <div className="space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Loại hình nhập liệu</label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                        <Layers size={18} className="text-gray-500 group-focus-within:text-amber-400" />
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <Layers size={18} className="text-[var(--text-secondary)]/40 group-focus-within/field:text-amber-500" />
                                     </div>
                                     <select
                                         value={importType}
@@ -196,87 +197,86 @@ export const KitchenImportPage = () => {
                                             setImportType(e.target.value as 'MATERIAL' | 'PRODUCT');
                                             setSelectedItemId(0);
                                         }}
-                                        className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all hover:bg-white/[0.07]"
+                                        className="w-full pl-16 pr-6 py-5 bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-[1.5rem] text-[var(--text-primary)] font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all hover:border-amber-500/30 uppercase italic text-sm"
                                     >
-                                        <option value="MATERIAL" className="bg-[#1a1a1a]">Nguyên liệu (Materials)</option>
-                                        <option value="PRODUCT" className="bg-[#1a1a1a]">Thành phẩm (Products)</option>
+                                        <option value="MATERIAL">Nguyên liệu (Materials)</option>
+                                        <option value="PRODUCT">Thành phẩm (Products)</option>
                                     </select>
-                                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                                        <ChevronRight size={16} className="text-gray-500 rotate-90" />
+                                    <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none">
+                                        <ChevronRight size={16} className="text-[var(--text-secondary)]/40 rotate-90" />
                                     </div>
                                 </div>
                             </div>
 
                             {/* Chọn Món */}
-                            <div className="space-y-2 group">
-                                <label className="text-xs font-semibold text-amber-500/80 uppercase tracking-wider ml-1">
-                                    {importType === 'MATERIAL' ? 'Chọn Nguyên liệu' : 'Chọn Thành phẩm'}
+                            <div className="space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">
+                                    {importType === 'MATERIAL' ? 'Nguyên liệu định danh' : 'Thành phẩm định danh'}
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                        <Package size={18} className="text-gray-500 group-focus-within:text-amber-400" />
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <Package size={18} className="text-[var(--text-secondary)]/40 group-focus-within/field:text-amber-500" />
                                     </div>
                                     <select
                                         value={selectedItemId}
                                         onChange={(e) => setSelectedItemId(Number(e.target.value))}
-                                        className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all hover:bg-white/[0.07]"
+                                        className="w-full pl-16 pr-6 py-5 bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-[1.5rem] text-[var(--text-primary)] font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all hover:border-amber-500/30 uppercase italic text-sm"
                                     >
-                                        <option value={0} disabled className="bg-[#1a1a1a]">
-                                            {isLoadingLookups ? '-- Đang tải dữ liệu... --' : '-- Vui lòng chọn --'}
+                                        <option value={0} disabled>
+                                            {isLoadingLookups ? '-- Đang truy xuất tập tin... --' : '-- Tuyển chọn vật phẩm --'}
                                         </option>
                                         {currentItemsLookup.map((item: MaterialResponse | ProductResponse) => (
-                                            <option key={item.id} value={item.id} className="bg-[#1a1a1a] text-gray-200">
+                                            <option key={item.id} value={item.id}>
                                                 {item.name} {importType === 'MATERIAL' && (item as MaterialResponse).unit && `(${(item as MaterialResponse).unit})`}
                                             </option>
                                         ))}
                                     </select>
-                                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                                        <ChevronRight size={16} className="text-gray-500 rotate-90" />
+                                    <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none">
+                                        <ChevronRight size={16} className="text-[var(--text-secondary)]/40 rotate-90" />
                                     </div>
                                 </div>
                             </div>
 
                             {/* Số lượng */}
-                            <div className="space-y-2 group">
-                                <label className="text-xs font-semibold text-amber-500/80 uppercase tracking-wider ml-1">
-                                    Số lượng ({importType === 'MATERIAL' ? 'theo Đơn vị' : 'Cái/Phần'})
+                            <div className="space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">
+                                    Số lượng vận hành ({importType === 'MATERIAL' ? 'theo đơn vị' : 'cái/phần'})
                                 </label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                        <Hash size={18} className="text-gray-500 group-focus-within:text-amber-400" />
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <Hash size={18} className="text-[var(--text-secondary)]/40 group-focus-within/field:text-amber-500" />
                                     </div>
                                     <input
                                         type="number"
-                                        placeholder="0"
+                                        placeholder="0.00"
                                         value={importQuantity || ''}
                                         onChange={(e) => setImportQuantity(Number(e.target.value))}
-                                        className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all placeholder:text-gray-600 hover:bg-white/[0.07]"
+                                        className="w-full pl-16 pr-6 py-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-[1.5rem] text-[var(--text-primary)] font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all placeholder:text-[var(--text-secondary)]/20 hover:border-amber-500/30 font-mono text-lg italic"
                                     />
                                 </div>
                             </div>
 
                             {/* Ngày hết hạn */}
-                            <div className="space-y-2 group">
-                                <label className="text-xs font-semibold text-amber-500/80 uppercase tracking-wider ml-1">Ngày hết hạn (Tuỳ chọn)</label>
+                            <div className="space-y-3 group/field">
+                                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Ngày hết hạn hiệu dụng (Tuỳ chọn)</label>
                                 <div className="relative">
-                                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
-                                        <Calendar size={18} className="text-gray-500 group-focus-within:text-amber-400" />
+                                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
+                                        <Calendar size={18} className="text-[var(--text-secondary)]/40 group-focus-within/field:text-amber-500" />
                                     </div>
                                     <input
                                         type="date"
                                         value={expiryDate}
                                         onChange={(e) => setExpiryDate(e.target.value)}
                                         min={new Date().toISOString().split('T')[0]}
-                                        className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all hover:bg-white/[0.07]"
-                                        style={{ colorScheme: 'dark' }}
+                                        className="w-full pl-16 pr-10 py-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-[1.5rem] text-[var(--text-primary)] font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/5 transition-all hover:border-amber-500/30 cursor-pointer italic"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="pt-8 border-t border-white/10 flex items-center justify-between">
+                        <div className="pt-10 border-t border-[var(--border-primary)]/10 flex flex-col md:flex-row items-center justify-between gap-8">
                             <div className="hidden md:block">
-                                <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em]">Kitchen Inventory System v2.0</p>
+                                <p className="text-[10px] text-[var(--text-secondary)]/40 uppercase tracking-[0.4em] font-black italic">Kitchen Inventory System v2.0-ELITE</p>
                             </div>
 
                             <div className="flex gap-4 w-full md:w-auto">
@@ -285,22 +285,22 @@ export const KitchenImportPage = () => {
                                     variant="outline"
                                     onClick={() => navigate('/kitchen/inventory')}
                                     disabled={isImporting}
-                                    className="flex-1 md:flex-none border-white/10 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl px-8"
+                                    className="flex-1 md:flex-none border-[var(--border-primary)] text-[var(--text-secondary)] hover:bg-[var(--text-primary)]/5 rounded-2xl px-10 h-16 uppercase text-[10px] font-black tracking-widest italic"
                                 >
-                                    Hủy bỏ
+                                    Hủy bỏ tác vụ
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={!isReadyToImport || isImporting}
-                                    className="flex-1 md:flex-none bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-bold rounded-xl px-12 shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="flex-1 md:flex-none bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black rounded-2xl px-14 h-16 shadow-[0_20px_40px_rgba(245,158,11,0.2)] transition-all hover:scale-[1.05] active:scale-95 uppercase text-[10px] tracking-widest italic"
                                 >
                                     {isImporting ? (
-                                        <div className="flex items-center gap-2 uppercase tracking-widest text-xs">
+                                        <div className="flex items-center gap-3">
                                             <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                                             Đang lưu...
                                         </div>
                                     ) : (
-                                        <div className="flex items-center gap-2 uppercase tracking-widest text-xs">
+                                        <div className="flex items-center gap-3">
                                             <Save size={18} />
                                             Xác nhận nhập kho
                                         </div>
@@ -312,14 +312,14 @@ export const KitchenImportPage = () => {
                 </div>
 
                 {/* Logistics Tip */}
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex items-start gap-4">
-                        <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500">
-                            <Zap size={20} />
+                <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                    <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] p-8 flex items-start gap-5 shadow-sm hover:border-amber-500/20 transition-all group">
+                        <div className="p-4 bg-amber-500/10 rounded-2xl text-amber-500 group-hover:scale-110 transition-transform">
+                            <Zap size={22} />
                         </div>
                         <div>
-                            <h4 className="text-white font-medium text-sm mb-1 text-amber-400/80">Tối ưu vận hành</h4>
-                            <p className="text-gray-500 text-xs leading-relaxed">Nhập kho kịp thời giúp tối ưu hóa việc phân phối đến các chi nhánh.</p>
+                            <h4 className="text-[var(--text-primary)] font-black text-sm mb-2 uppercase italic tracking-widest">Tối ưu vận hành</h4>
+                            <p className="text-[var(--text-secondary)]/60 text-xs font-medium leading-relaxed italic">Nhập kho kịp thời giúp tối ưu hóa việc phân phối tinh hoa đến các chi nhánh.</p>
                         </div>
                     </div>
                 </div>
