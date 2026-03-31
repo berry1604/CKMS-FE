@@ -389,10 +389,10 @@ export const CreateShipment = () => {
         <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-3 mb-4">
             <Badge variant="orange" className="text-[10px] font-black tracking-[0.3em] px-3 py-1 border-0 uppercase bg-amber-500/10 text-amber-500">
-              FLEET DISPATCH
+              ĐIỀU PHỐI VẬN HÀNH
             </Badge>
             <div className="h-px w-12 bg-amber-500/30" />
-            <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Logistics Command</span>
+            <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Trung Tâm Điều Hành</span>
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-end gap-8">
@@ -406,7 +406,7 @@ export const CreateShipment = () => {
                   <ArrowLeft size={20} strokeWidth={3} />
                 </Button>
                 <h1 className="text-6xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic leading-[0.85]">
-                  Create <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Shipment</span>
+                  TẠO <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">CHUYẾN HÀNG</span>
                 </h1>
               </div>
               <p className="text-zinc-400 max-w-xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
@@ -644,8 +644,8 @@ export const CreateShipment = () => {
                                 >
                                   {dp.storeOrderIds.length ===
                                     unshippedOrders.length
-                                    ? "Deselect All"
-                                    : "Select All Units"}
+                                    ? "HỦY CHỌN TẤT CẢ"
+                                    : "CHỌN TOÀN BỘ ĐƠN"}
                                 </button>
                               )}
                             </div>
@@ -689,7 +689,7 @@ export const CreateShipment = () => {
                                       <div className="flex-1">
                                         <div className="flex items-center gap-3">
                                           <span className="text-[13px] font-black text-[var(--text-primary)] uppercase tracking-tighter">
-                                            Order #{order.orderId}
+                                            Đơn hàng #{order.orderId}
                                           </span>
                                           <Badge
                                             variant="orange"
@@ -727,7 +727,7 @@ export const CreateShipment = () => {
                                     <Package size={32} className="text-zinc-600" />
                                   </div>
                                   <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] italic">
-                                    NO READY UNITS FOUND
+                                    KHÔNG CÓ ĐƠN SẴN SÀNG
                                   </span>
                                 </div>
                               )}
@@ -781,7 +781,7 @@ export const CreateShipment = () => {
                   <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                     <Truck size={18} strokeWidth={2.5} />
                   </div>
-                  Dispatch Summary
+                  TỔNG QUAN VẬN HÀNH
                 </h2>
                 <p className="text-[9px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
                   Tổng hợp thông tin kế hoạch vận chuyển                  </p>
@@ -790,7 +790,7 @@ export const CreateShipment = () => {
               <div className="space-y-5">
                 <div className="p-6 bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-2xl flex items-center justify-between group/stat hover:bg-[var(--bg-root)] transition-colors">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">Route Stops</span>
+                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">ĐIỂM DỪNG TUYẾN</span>
                     <span className="text-2xl font-black text-[var(--text-primary)] tracking-tighter leading-none italic">
                       {form.dropPoints.filter(dp => dp.storeId).length.toString().padStart(2, '0')}
                     </span>
@@ -802,7 +802,7 @@ export const CreateShipment = () => {
 
                 <div className="p-6 bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-2xl flex items-center justify-between group/stat hover:bg-[var(--bg-root)] transition-colors">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">Selected Units</span>
+                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">ĐƠN ĐÃ CHỌN</span>
                     <span className="text-2xl font-black text-[var(--text-primary)] tracking-tighter leading-none italic">
                       {getTotalOrdersSelected().toString().padStart(2, '0')}
                     </span>
@@ -814,7 +814,7 @@ export const CreateShipment = () => {
 
                 <div className="relative pt-4 border-t border-[var(--border-primary)]/50 group/input">
                   <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest ml-1 mb-3 block">
-                    Ghi chú vận hành (Optional)
+                    GHI CHÚ (TÙY CHỌN)
                   </label>
                   <textarea
                     rows={4}

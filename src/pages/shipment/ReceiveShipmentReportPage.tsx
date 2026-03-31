@@ -171,7 +171,7 @@ export const ReceiveShipmentReportPage = () => {
                             </div>
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
-                                    <Badge variant="orange" className="h-5 text-[9px] font-black px-2 py-0 border-0 uppercase tracking-widest">RECEIPT_PROTOCOL</Badge>
+                                    <Badge variant="orange" className="h-5 text-[9px] font-black px-2 py-0 border-0 uppercase tracking-widest">GIAO THỨC NHẬN HÀNG</Badge>
                                     <span className="text-[var(--text-secondary)]/40 font-black text-[10px] uppercase tracking-widest">System v4.0.2</span>
                                 </div>
                                 <h1 className="text-5xl font-black text-[var(--text-primary)] tracking-tighter mb-2 italic">

@@ -389,10 +389,10 @@ export const AllocationMatrix = () => {
         <div className="absolute inset-0 flex flex-col justify-end px-8 pb-10 max-w-[1600px] mx-auto w-full">
           <div className="flex items-center gap-3 mb-4">
             <Badge variant="orange" className="text-[10px] font-black tracking-[0.3em] px-3 py-1 border-0 uppercase bg-amber-500/10 text-amber-500">
-              ALLOCATION GRID
+              LƯỚI ĐIỀU PHỐI
             </Badge>
             <div className="h-px w-12 bg-amber-500/30" />
-            <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Central Kitchen Command</span>
+            <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Trung Tâm Điều Hành Bếp</span>
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-end gap-8">
