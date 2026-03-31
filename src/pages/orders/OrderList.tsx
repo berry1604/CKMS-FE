@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, Filter, Eye } from 'lucide-react';
+import { Plus, Search, Filter, Eye, ExternalLink } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Badge } from '../../components/ui/Badge';
@@ -192,6 +192,34 @@ export const OrderList = () => {
                     </Badge>
                 );
             }
+        },
+        {
+            header: 'Theo dõi',
+            cell: (order) => (
+                <div className="flex items-center gap-2">
+                    {order.trackingLink ? (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(order.trackingLink, '_blank');
+                            }}
+                            className="h-8 px-4 bg-amber-500/5 text-amber-500 hover:bg-amber-500 hover:text-black rounded-lg border border-amber-500/20 transition-all flex items-center gap-2"
+                            title="Mở link theo dõi AhaMove"
+                        >
+                            <ExternalLink size={12} strokeWidth={3} />
+                            <span className="text-[9px] font-black uppercase tracking-widest">
+                                Trực tuyến
+                            </span>
+                        </Button>
+                    ) : (
+                        <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] italic ml-2 opacity-50">
+                            Chưa có
+                        </span>
+                    )}
+                </div>
+            )
         },
         {
             header: '',

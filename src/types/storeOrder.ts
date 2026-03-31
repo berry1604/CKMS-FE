@@ -35,6 +35,7 @@ export interface StoreOrderResponse {
     deliveryDate: string; // ISO 8601 date string
     note?: string;
     shipmentStopId?: number;
+    trackingLink?: string;
     orderDetails: OrderDetailResponse[];
 }
 
