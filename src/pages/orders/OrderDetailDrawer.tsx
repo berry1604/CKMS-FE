@@ -229,9 +229,9 @@ export const OrderDetailDrawer = ({
                     {orderStatus === "SUBMITTED"
                       ? "CHỜ DUYỆT"
                       : orderStatus === "APPROVED"
-                        ? "ĐA DUYỆT"
+                        ? "ĐÃ DUYỆT"
                         : orderStatus === "ALLOCATED"
-                          ? "ĐA PHÂN BỔ"
+                          ? "ĐÃ PHÂN BỔ"
                           : orderStatus === "DELIVERED"
                             ? "HOÀN THÀNH"
                             : orderStatus === "REJECTED"
@@ -487,7 +487,7 @@ export const OrderDetailDrawer = ({
                                 {item.productName || `SKU #${item.productId}`}
                               </span>
                               <span className="text-[10px] text-[var(--text-secondary)]/40 font-bold font-mono tracking-tighter italic">
-                                Unit ID: {item.productId}
+                                Mã sản phẩm: {item.productId}
                               </span>
                             </div>
                           </td>

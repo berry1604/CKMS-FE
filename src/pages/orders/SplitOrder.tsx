@@ -111,7 +111,7 @@ export const SplitOrder = () => {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-zinc-800">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800">
                 <div className="space-y-4">
                     <button 
                         onClick={() => navigate(-1)}
@@ -125,7 +125,7 @@ export const SplitOrder = () => {
                             <Scissors size={24} />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black text-white tracking-tighter uppercase">
+                            <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">
                                 Tách đơn hàng <span className="text-indigo-500">#{order.orderId}</span>
                             </h1>
                             <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider">
@@ -139,7 +139,7 @@ export const SplitOrder = () => {
                     <Button
                         variant="ghost"
                         onClick={() => navigate(-1)}
-                        className="h-12 px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest border-zinc-800"
+                        className="h-12 px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400"
                     >
                         Hủy bỏ
                     </Button>
@@ -159,26 +159,26 @@ export const SplitOrder = () => {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between px-2">
                         <h2 className="text-xs font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-sm bg-zinc-600" />
+                            <div className="w-2 h-2 rounded-sm bg-zinc-400 dark:bg-zinc-600" />
                             Đơn hàng gốc (Sau khi tách)
                         </h2>
                         <Badge variant="indigo" className="font-bold">ORD-{order.orderId}</Badge>
                     </div>
                     
-                    <div className="bg-zinc-900/40 border border-zinc-800 rounded-[2rem] overflow-hidden backdrop-blur-xl">
+                    <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] overflow-hidden backdrop-blur-xl shadow-sm dark:shadow-none">
                         <div className="p-6 space-y-4">
                             {order.orderDetails.map((item, idx) => {
                                 const splitQty = splitItems[item.productId] || 0;
                                 const remainingQty = item.quantity - splitQty;
                                 
                                 return (
-                                    <div key={idx} className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-950/50 border border-zinc-800/50 hover:border-zinc-700 transition-all">
+                                    <div key={idx} className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800/50 hover:border-zinc-200 dark:hover:border-zinc-700 transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-500 group-hover:bg-zinc-800 transition-colors">
+                                            <div className="h-10 w-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800 transition-colors">
                                                 <Package size={20} />
                                             </div>
                                             <div>
-                                                <h3 className="text-sm font-black text-zinc-200">{item.productName}</h3>
+                                                <h3 className="text-sm font-black text-zinc-900 dark:text-zinc-200">{item.productName}</h3>
                                                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter">
                                                     Đơn giá: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.unitPrice)}
                                                 </p>
@@ -191,11 +191,11 @@ export const SplitOrder = () => {
                                                 <span className="text-[10px] font-bold text-zinc-600 uppercase">Còn lại</span>
                                             </div>
                                             
-                                            <div className="flex items-center gap-2 bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-800">
+                                            <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800">
                                                 <button 
                                                     onClick={() => handleUpdateQuantity(item.productId, -1, item.quantity)}
                                                     disabled={splitQty <= 0}
-                                                    className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-500 disabled:opacity-30 transition-colors"
+                                                    className="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 disabled:opacity-30 transition-colors"
                                                 >
                                                     <Minus size={14} />
                                                 </button>
@@ -205,7 +205,7 @@ export const SplitOrder = () => {
                                                 <button 
                                                     onClick={() => handleUpdateQuantity(item.productId, 1, item.quantity)}
                                                     disabled={splitQty >= item.quantity}
-                                                    className="p-1.5 rounded-lg hover:bg-zinc-800 text-indigo-500 disabled:opacity-30 transition-colors"
+                                                    className="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 text-indigo-500 disabled:opacity-30 transition-colors"
                                                 >
                                                     <Plus size={14} />
                                                 </button>
@@ -216,10 +216,10 @@ export const SplitOrder = () => {
                             })}
                         </div>
                         
-                        <div className="p-6 bg-zinc-950/80 border-t border-zinc-800">
+                        <div className="p-6 bg-zinc-50 dark:bg-zinc-950/80 border-t border-zinc-200 dark:border-zinc-800">
                             <div className="flex justify-between items-center">
                                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Tổng giá trị đơn gốc:</span>
-                                <span className="text-lg font-black text-white">
+                                <span className="text-lg font-black text-zinc-900 dark:text-white">
                                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(originalTotal)}
                                 </span>
                             </div>
@@ -237,11 +237,11 @@ export const SplitOrder = () => {
                         <Badge variant="indigo" className="font-bold">NEW ORDER</Badge>
                     </div>
 
-                    <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-[2rem] overflow-hidden backdrop-blur-xl flex flex-col h-full min-h-[400px]">
+                    <div className="bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 rounded-[2rem] overflow-hidden backdrop-blur-xl flex flex-col h-full min-h-[400px] shadow-sm dark:shadow-none">
                         <div className="p-6 flex-1 space-y-4">
                             {splitCount === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-zinc-800 rounded-[1.5rem] bg-zinc-950/20">
-                                    <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-zinc-700 mb-4">
+                                <div className="h-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] bg-white dark:bg-zinc-950/20">
+                                    <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 dark:text-zinc-700 mb-4">
                                         <Plus size={24} />
                                     </div>
                                     <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider max-w-[200px]">
@@ -254,20 +254,20 @@ export const SplitOrder = () => {
                                     if (splitQty === 0) return null;
                                     
                                     return (
-                                        <div key={`new-${idx}`} className="flex items-center justify-between p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+                                        <div key={`new-${idx}`} className="flex items-center justify-between p-4 rounded-2xl bg-indigo-100/50 dark:bg-indigo-500/10 border border-indigo-200/50 dark:border-indigo-500/20">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                                <div className="h-10 w-10 rounded-xl bg-indigo-200 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                                                     <Package size={20} />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-sm font-black text-zinc-200">{item.productName}</h3>
+                                                    <h3 className="text-sm font-black text-zinc-900 dark:text-zinc-200">{item.productName}</h3>
                                                     <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">
                                                         Tách {splitQty} đơn vị
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-sm font-black text-white">
+                                                <p className="text-sm font-black text-indigo-700 dark:text-white">
                                                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(splitQty * parseFloat(item.unitPrice.toString()))}
                                                 </p>
                                             </div>
@@ -278,10 +278,10 @@ export const SplitOrder = () => {
                         </div>
 
                         {splitCount > 0 && (
-                            <div className="p-6 bg-indigo-500/10 border-t border-indigo-500/20">
+                            <div className="p-6 bg-indigo-100/30 dark:bg-indigo-500/10 border-t border-indigo-200/50 dark:border-indigo-500/20">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Tổng giá trị đơn mới:</span>
-                                    <span className="text-lg font-black text-white">
+                                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Tổng giá trị đơn mới:</span>
+                                    <span className="text-lg font-black text-indigo-900 dark:text-white">
                                         {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(newTotal)}
                                     </span>
                                 </div>
@@ -297,10 +297,10 @@ export const SplitOrder = () => {
                     <AlertTriangle size={24} />
                 </div>
                 <div>
-                    <h3 className="text-sm font-black text-amber-500 uppercase tracking-tight mb-1">Lưu ý quan trọng</h3>
-                    <ul className="text-xs font-bold text-zinc-400 space-y-2 list-disc ml-4">
+                    <h3 className="text-sm font-black text-amber-600 dark:text-amber-500 uppercase tracking-tight mb-1">Lưu ý quan trọng</h3>
+                    <ul className="text-xs font-bold text-zinc-500 dark:text-zinc-400 space-y-2 list-disc ml-4">
                         <li>Hành động này sẽ tạo ra 2 mã đơn hàng mới thay thế cho mã cũ.</li>
-                        <li>Đơn hàng cũ <span className="text-zinc-200 font-black">#{order.orderId}</span> sẽ được chuyển sang trạng thái <Badge variant="indigo" size="sm">SPLIT</Badge>.</li>
+                        <li>Đơn hàng cũ <span className="text-zinc-900 dark:text-zinc-200 font-black">#{order.orderId}</span> sẽ được chuyển sang trạng thái <Badge variant="indigo" size="sm">SPLIT</Badge>.</li>
                         <li>Cả 2 đơn hàng mới sẽ được gửi thông báo cập nhật cho Khách hàng.</li>
                     </ul>
                 </div>
@@ -308,7 +308,7 @@ export const SplitOrder = () => {
 
             {/* Notification Preview Hint */}
             <div className="pb-12 flex justify-center">
-               <div className="flex items-center gap-2 text-zinc-500 bg-zinc-900/50 px-4 py-2 rounded-full border border-zinc-800">
+               <div className="flex items-center gap-2 text-zinc-500 bg-white dark:bg-zinc-900/50 px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 shadow-sm">
                     <Info size={14} className="text-amber-500" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">Hệ thống sẽ tự động tạo Billing Statement cho cả 2 đơn hàng mới</span>
                </div>

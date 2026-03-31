@@ -160,7 +160,13 @@ export const WarehouseFulfillment = () => {
                 const statusStr = order.status?.toLowerCase() || 'unknown';
                 return (
                     <Badge variant={statusMap[statusStr] || 'default'}>
-                        {statusStr.toUpperCase()}
+                        {statusStr === 'approved' ? 'ĐÃ DUYỆT' :
+                         statusStr === 'ready' ? 'SẴN SÀNG' :
+                         statusStr === 'preparing' ? 'ĐANG CHẾ BIẾN' :
+                         statusStr === 'shipping' ? 'ĐANG GIAO' :
+                         statusStr === 'completed' ? 'HOÀN THÀNH' :
+                         statusStr === 'submitted' ? 'CHỜ DUYỆT' :
+                         statusStr.toUpperCase()}
                     </Badge>
                 );
             },
@@ -261,7 +267,7 @@ export const WarehouseFulfillment = () => {
                                         return (
                                             <tr key={idx} className={`transition-colors border-b border-[var(--border-primary)]/5 ${stockInfo.isSufficient ? 'bg-transparent' : 'bg-red-500/5'}`}>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-black italic uppercase text-[var(--text-primary)]">
-                                                    {item.productName || `Product #${item.productId}`}
+                                                    {item.productName || `Sản phẩm #${item.productId}`}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)] text-right font-black italic">
                                                     {item.quantity}

@@ -84,14 +84,14 @@ export const RolesList = () => {
                         <div className="space-y-4">
                             <div className="flex items-center gap-4 mb-2">
                                 <div className="h-[2px] w-16 bg-amber-500/50" />
-                                <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase italic">Hệ thống Ma trận Quyền</span>
+                                <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase italic">Hệ thống Phân quyền</span>
                             </div>
 
                             <h1 className="text-6xl md:text-7xl font-black text-[var(--text-primary)] tracking-tighter mb-4 italic uppercase leading-none">
-                                QUẢN TRỊ <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">VAI TRÒ</span>
+                                QUẢN LÝ <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">VAI TRÒ</span>
                             </h1>
                             <p className="text-[var(--text-secondary)]/60 max-w-2xl text-lg font-medium leading-relaxed italic uppercase tracking-wider">
-                                Phân cấp đặc quyền và thiết lập kiến trúc bảo mật cho toàn bộ mạng lưới vận hành Steakhouse.
+                                Thiết lập và kiểm soát quyền truy cập trong toàn bộ hệ thống
                             </p>
                         </div>
 
@@ -105,7 +105,7 @@ export const RolesList = () => {
                                     <div className="text-4xl font-black text-amber-500 tracking-tighter italic leading-none">
                                         {roles.reduce((acc, curr) => acc + (curr.privileges?.length || 0), 0)}
                                     </div>
-                                    <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--text-secondary)]/40 font-black mt-1 italic">Quyền hạn</div>
+                                    <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--text-secondary)]/40 font-black mt-1 italic">Quyền</div>
                                 </div>
                             </div>
 
@@ -113,7 +113,7 @@ export const RolesList = () => {
                                 onClick={handleCreate}
                                 className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-widest px-10 h-16 shadow-[0_20px_40px_rgba(245,158,11,0.2)] hover:shadow-[0_25px_50px_rgba(245,158,11,0.3)] border-0 flex items-center gap-3 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 italic"
                             >
-                                <Plus size={18} /> Khởi tạo vai trò mới
+                                <Plus size={18} /> Tạo vai trò mới
                             </Button>
                         </div>
                     </div>
@@ -152,10 +152,10 @@ export const RolesList = () => {
                             <table className="w-full text-left whitespace-nowrap">
                                 <thead>
                                     <tr className="bg-[var(--text-primary)]/[0.03] border-b border-[var(--border-primary)]">
-                                        <th className="px-10 py-8 font-black text-[var(--text-secondary)]/40 text-[10px] uppercase tracking-[0.3em] italic">Thực thể Vai trò</th>
-                                        <th className="px-10 py-8 font-black text-[var(--text-secondary)]/40 text-[10px] uppercase tracking-[0.3em] italic">Mã Định danh</th>
-                                        <th className="px-10 py-8 font-black text-[var(--text-secondary)]/40 text-[10px] uppercase tracking-[0.3em] italic text-center">Ma trận Quyền</th>
-                                        <th className="px-10 py-8 font-black text-[var(--text-secondary)]/40 text-[10px] uppercase tracking-[0.3em] italic text-right">Thao tác hệ thống</th>
+                                        <th className="px-10 py-8 font-black text-[var(--text-secondary)]/40 text-[10px] uppercase tracking-[0.3em] italic">Vai trò</th>
+                                        <th className="px-10 py-8 font-black text-[var(--text-secondary)]/40 text-[10px] uppercase tracking-[0.3em] italic">Mã</th>
+                                        <th className="px-10 py-8 font-black text-[var(--text-secondary)]/40 text-[10px] uppercase tracking-[0.3em] italic text-center">Quyền</th>
+                                        <th className="px-10 py-8 font-black text-[var(--text-secondary)]/40 text-[10px] uppercase tracking-[0.3em] italic text-right">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[var(--border-primary)]/10">
@@ -173,7 +173,7 @@ export const RolesList = () => {
                                                         <span className="block font-black text-[var(--text-primary)] text-xl tracking-tighter group-hover/row:text-amber-500 transition-colors uppercase italic">
                                                             {role.roleName?.replace(/_/g, ' ')}
                                                         </span>
-                                                        <span className="block text-[10px] text-[var(--text-secondary)]/30 font-black uppercase tracking-[0.2em] italic">Global Security Identity</span>
+                                                        <span className="block text-[10px] text-[var(--text-secondary)]/30 font-black uppercase tracking-[0.2em] italic">Hồ sơ hệ thống</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -205,7 +205,7 @@ export const RolesList = () => {
                                                         onClick={() => handleView(role)}
                                                         className="h-12 px-6 text-[var(--text-secondary)]/40 hover:text-amber-500 hover:bg-amber-500/5 border border-transparent hover:border-amber-500/20 rounded-xl flex items-center gap-3 font-black text-[9px] tracking-widest uppercase italic transition-all"
                                                     >
-                                                        <Shield size={14} className="text-amber-500/50" /> Chi tiết
+                                                        <Shield size={14} className="text-amber-500/50" /> Xem chi tiết
                                                     </Button>
                                                     <div className="w-px h-6 bg-[var(--border-primary)]/20 mx-1"></div>
                                                     <button
