@@ -318,18 +318,6 @@ export const OrderList = () => {
                     </div>
                 </div>
 
-<<<<<<< HEAD
-                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="overflow-x-auto">
-                        <DataTable
-                            data={filteredOrders}
-                            columns={columns}
-                            keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
-                            isLoading={isLoading}
-                            onRowClick={(order) => setSelectedOrder(order)}
-                        />
-                    </div>
-=======
                 <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-2xl">
                     <DataTable
                         data={filteredOrders}
@@ -338,7 +326,6 @@ export const OrderList = () => {
                         isLoading={isLoading}
                         onRowClick={(order) => setSelectedOrder(order)}
                     />
->>>>>>> 8ae7acef0b3aa06c131d04e05983c65f524ee3ba
 
                     {/* Pagination */}
                     {totalPages > 1 && (

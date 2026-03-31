@@ -449,13 +449,8 @@ export const ShipmentList = () => {
                                 <Search className="text-[var(--text-secondary)] group-focus-within/search:text-amber-500 transition-colors" size={20} />
                             </div>
                             <Input
-<<<<<<< HEAD
-                                placeholder="TÌM KIẾM THEO MÃ VẬN ĐƠN..."
-                                className="pl-14 pr-6 h-14 bg-[var(--bg-root)]/80 border border-[var(--border-primary)] rounded-2xl text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase placeholder:text-[var(--text-secondary)]/50 focus:border-amber-500/40 transition-all duration-300 hover:bg-[var(--bg-root)]"
-=======
                                 placeholder="TÌM MÃ VẬN ĐƠN..."
                                 className="pl-14 pr-6 h-14 bg-[var(--bg-root)]/80 border border-[var(--border-primary)] rounded-[2rem] text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase placeholder:text-[var(--text-secondary)]/50 focus:border-amber-500/40 transition-all duration-300 hover:bg-[var(--bg-root)]"
->>>>>>> 8ae7acef0b3aa06c131d04e05983c65f524ee3ba
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
