@@ -1121,6 +1121,7 @@ export const ProductionSchedule = () => {
                 </span>
               </div>
             </div>
+          </div>
         }
         width="max-w-5xl"
       >
