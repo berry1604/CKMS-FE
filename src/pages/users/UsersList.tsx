@@ -138,22 +138,22 @@ export const UsersList = () => {
                         <Badge
                             className="text-[10px] font-black tracking-[0.3em] px-4 py-1.5 border-amber-500/20 uppercase bg-amber-500/5 text-amber-600 italic"
                         >
-                            Quản trị Hệ thống
+                            Hệ thống Quản trị
                         </Badge>
                     </div>
                     <div className="space-y-1">
                         <h1 className="text-5xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
-                            Thành viên <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Hệ thống</span>
+                            Quản lý <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Người dùng</span>
                         </h1>
                         <p className="text-[var(--text-secondary)]/60 text-sm font-medium tracking-wide leading-relaxed italic uppercase max-w-lg">
-                            Quản lý nhân sự, phân quyền truy cập và giám sát toàn bộ đội ngũ vận hành chuỗi Steakhouse.
+                            Quản lý danh sách thành viên và phân quyền truy cập hệ thống.
                         </p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-6">
                     <div className="px-8 py-5 bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-primary)] rounded-[2rem] shadow-xl group/stat hover:border-amber-500/30 transition-all duration-500">
-                        <span className="text-[var(--text-secondary)]/40 text-[9px] font-black uppercase tracking-[0.3em] block mb-1 italic">Tổ chức nhân sự</span>
+                        <span className="text-[var(--text-secondary)]/40 text-[9px] font-black uppercase tracking-[0.3em] block mb-1 italic">Tổng số người dùng</span>
                         <div className="flex items-baseline gap-2">
                             <span className="text-3xl font-black text-[var(--text-primary)] group-hover:text-amber-500 transition-colors leading-none">{totalElements}</span>
                             <span className="text-[10px] font-black text-[var(--text-secondary)]/30 uppercase italic">Thành viên</span>
@@ -163,7 +163,7 @@ export const UsersList = () => {
                         onClick={handleCreate} 
                         className="h-16 px-10 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-2xl shadow-2xl shadow-amber-500/10 transition-all hover:-translate-y-1 active:scale-95 italic"
                     >
-                        <Plus size={18} className="mr-3" /> Chiêu mộ thành viên
+                        <Plus size={18} className="mr-3" /> Thêm người dùng
                     </Button>
                 </div>
             </div>
@@ -177,7 +177,7 @@ export const UsersList = () => {
                                 <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]/30 group-focus-within:text-amber-500 transition-colors z-10" />
                                 <Input
                                     type="text"
-                                    placeholder="Tìm kiếm danh tính hoặc địa chỉ thư điện tử..."
+                                    placeholder="Tìm kiếm tên hoặc email..."
                                     className="pl-16 h-16 w-full bg-[var(--bg-root)]/50 border-[var(--border-primary)] focus:border-amber-500/50 rounded-2xl font-bold text-sm tracking-tight italic"
                                     value={searchTerm}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
@@ -199,7 +199,7 @@ export const UsersList = () => {
                                                 : "bg-[var(--bg-root)]/40 border-[var(--border-primary)] text-[var(--text-secondary)]/60 hover:text-[var(--text-primary)] hover:border-amber-500/30"
                                         )}
                                     >
-                                        {role === 'ALL' ? 'Tất cả vai trò' : role?.replace(/_/g, ' ') || 'Chưa xác định'}
+                                        {role === 'ALL' ? 'Tất cả vị trí' : role?.replace(/_/g, ' ') || 'Chưa xác định'}
                                     </button>
                                 ))}
                             </div>
@@ -210,10 +210,10 @@ export const UsersList = () => {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-[var(--text-primary)]/[0.03] border-b border-[var(--border-primary)] text-[9px] uppercase text-[var(--text-secondary)]/40 font-black tracking-[0.4em] italic">
-                                    <th className="px-10 py-7">Thực thể thành viên</th>
-                                    <th className="px-10 py-7">Giao thức truy cập</th>
-                                    <th className="px-10 py-7">Trạng thái vận hành</th>
-                                    <th className="px-10 py-7 text-right">Trung tâm điều khiển</th>
+                                    <th className="px-10 py-7">Họ và tên</th>
+                                    <th className="px-10 py-7">Vai trò</th>
+                                    <th className="px-10 py-7">Trạng thái</th>
+                                    <th className="px-10 py-7 text-right">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[var(--border-primary)]/20">
@@ -222,14 +222,14 @@ export const UsersList = () => {
                                         <td colSpan={4} className="px-8 py-24 text-center">
                                             <div className="flex flex-col items-center justify-center">
                                                 <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
-                                                <span className="text-[var(--text-secondary)] text-[10px] font-black tracking-widest uppercase">Đang khởi tạo...</span>
+                                                <span className="text-[var(--text-secondary)] text-[10px] font-black tracking-widest uppercase">Đang truy xuất...</span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : users.length === 0 ? (
                                     <tr>
                                         <td colSpan={4} className="px-8 py-24 text-center text-[var(--text-secondary)]/60 font-medium italic">
-                                            Không tìm thấy thành viên nào phù hợp với yêu cầu.
+                                            Không có dữ liệu người dùng.
                                         </td>
                                     </tr>
                                 ) : (
@@ -272,11 +272,11 @@ export const UsersList = () => {
                                                                 const rName = user.roleName || (user as any).role || 'N/A';
                                                                 if (rName === 'N/A') return 'N/A';
                                                                 const formatted = rName.replace('ROLE_', '').replace(/_/g, ' ');
-                                                                if (formatted === 'ADMIN') return 'Tổng Quản trị';
-                                                                if (formatted === 'MANAGER') return 'Quản lý vận hành';
-                                                                if (formatted === 'STORE STAFF') return 'Nhân viên cửa hàng';
-                                                                if (formatted === 'KITCHEN STAFF') return 'Nhân viên bếp';
-                                                                if (formatted === 'COORDINATOR') return 'Điều phối viên';
+                                                                if (formatted === 'ADMIN') return 'TỔNG QUẢN TRỊ';
+                                                                if (formatted === 'MANAGER') return 'QUẢN LÝ CHI NHÁNH';
+                                                                if (formatted === 'STORE STAFF') return 'NHÂN VIÊN ĐIỂM BÁN';
+                                                                if (formatted === 'KITCHEN STAFF') return 'CHUYÊN VIÊN BẾP';
+                                                                if (formatted === 'COORDINATOR') return 'ĐIỀU PHỐI VIÊN';
                                                                 return formatted;
                                                             })()}
                                                         </span>
@@ -339,9 +339,9 @@ export const UsersList = () => {
                         <div className="flex items-center gap-4 order-2 md:order-1">
                             <span className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-[0.3em] italic leading-none">
                                 {totalElements > 0 ? (
-                                    <>Hiển thị <span className="text-amber-500 font-black">{startItem}-{endItem}</span> trên tổng số <span className="text-[var(--text-primary)] font-black">{totalElements}</span> thực thể</>
+                                    <>Hiển thị <span className="text-amber-500 font-black">{startItem}-{endItem}</span> trên tổng số <span className="text-[var(--text-primary)] font-black">{totalElements}</span> người dùng</>
                                 ) : (
-                                    'Dữ liệu nhân sự rỗng'
+                                    'Dữ liệu trống'
                                 )}
                             </span>
                         </div>
@@ -362,7 +362,7 @@ export const UsersList = () => {
                                 onClick={() => setCurrentPage((p) => p + 1)}
                                 className="border-[var(--border-primary)] bg-[var(--bg-root)]/50 text-[var(--text-secondary)] hover:text-amber-500 hover:border-amber-500/30 rounded-2xl px-8 h-12 font-black uppercase text-[10px] tracking-widest transition-all italic disabled:opacity-20"
                             >
-                                Trang tiếp theo
+                                Trang tiếp
                             </Button>
                         </div>
                     </div>
@@ -378,10 +378,10 @@ export const UsersList = () => {
                     isOpen={isDeleteModalOpen}
                     onClose={() => setIsDeleteModalOpen(false)}
                     onConfirm={confirmDelete}
-                    title="Xóa Quyền Truy Cập"
-                    message="Bạn có chắc chắn muốn thu hồi toàn bộ quyền truy cập của thành viên này? Hành động này không thể hoàn tác."
-                    confirmText="Xác nhận Thu hồi"
-                    cancelText="Giữ lại"
+                    title="Vô hiệu hóa tài khoản"
+                    message="Bạn có chắc chắn muốn vô hiệu hóa tài khoản này? Người dùng sẽ không thể truy cập vào hệ thống."
+                    confirmText="Xác nhận"
+                    cancelText="Hủy bỏ"
                     isLoading={isDeleting}
                     variant="danger"
                 />
