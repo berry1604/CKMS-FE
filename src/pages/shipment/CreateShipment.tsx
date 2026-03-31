@@ -168,7 +168,9 @@ export const CreateShipment = () => {
         // Update available stores for this plan
         const stores = storeIds
           .map((id) => {
-            const o = planOrders.find((x: StoreOrderResponse) => x.storeId === id);
+            const o = planOrders.find(
+              (x: StoreOrderResponse) => x.storeId === id,
+            );
             return {
               id,
               name: o?.storeName || `Chi nhánh ${id}`,

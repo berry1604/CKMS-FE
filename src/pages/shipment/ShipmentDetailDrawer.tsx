@@ -26,6 +26,7 @@ import { shipmentApi } from "../../services/shipment.api";
 import { storeOrderApi } from "../../services/storeOrderApi";
 import type {
   StoreOrderResponse,
+  OrderDetailResponse,
 } from "../../types/storeOrder";
 import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
 import { cn } from "../../utils/classNames";
@@ -58,6 +59,20 @@ export const ShipmentDetailDrawer = ({
   const [shipmentKitchenId, setShipmentKitchenId] = useState<number | null>(
     null,
   );
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+  // Derived state: Aggregate all items from all orders in this shipment for a summary
+  const aggregatedItems = detailedOrders.reduce((acc, order) => {
+    order.orderDetails?.forEach((item) => {
+      const existing = acc.find((i) => i.productId === item.productId);
+      if (existing) {
+        existing.quantity += item.quantity;
+      } else {
+        acc.push({ ...item });
+      }
+    });
+    return acc;
+  }, [] as OrderDetailResponse[]);
 
   const handleResendOrder = async (orderId: number, silent = false) => {
     if (
@@ -84,6 +99,7 @@ export const ShipmentDetailDrawer = ({
   useEffect(() => {
     if (isOpen && shipment?.shipmentId) {
       const loadData = async () => {
+        setIsLoadingDetails(true);
         try {
           const fullShipment = await shipmentApi.getShipmentById(
             shipment.shipmentId,
@@ -148,6 +164,8 @@ export const ShipmentDetailDrawer = ({
         } catch (error) {
           console.error("Failed to fetch shipment details/items:", error);
           toast.error("Không thể tải chi tiết món hàng");
+        } finally {
+          setIsLoadingDetails(false);
         }
       };
       loadData();
