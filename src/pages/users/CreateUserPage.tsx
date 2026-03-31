@@ -115,19 +115,19 @@ export const CreateUserPage = () => {
                         className="group flex items-center gap-3 text-amber-500 hover:text-amber-400 transition-all mb-8 w-fit bg-amber-500/5 px-6 py-3 rounded-2xl border border-amber-500/10 backdrop-blur-md"
                     >
                         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-[10px] font-black tracking-[0.3em] uppercase italic">Quay lại Tổng hành dinh</span>
+                        <span className="text-[10px] font-black tracking-[0.3em] uppercase italic">Quay lại</span>
                     </button>
 
                     <div className="flex items-center gap-4 mb-4">
                         <div className="h-[2px] w-16 bg-amber-500/50" />
-                        <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase italic">Giao diện Khởi tạo Nhân sự</span>
+                        <span className="text-amber-500 font-black tracking-[0.4em] text-[10px] uppercase italic">Thêm người dùng</span>
                     </div>
 
                     <h1 className="text-6xl md:text-7xl font-black text-[var(--text-primary)] tracking-tighter mb-4 italic uppercase leading-none">
-                        KHỞI TẠO <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">THỰC THỂ</span>
+                        TẠO NGƯỜI <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">DÙNG</span>
                     </h1>
                     <p className="text-[var(--text-secondary)]/60 max-w-2xl text-lg font-medium leading-relaxed italic uppercase tracking-wider">
-                        Thiết lập định danh và phân cấp đặc quyền truy cập hệ thống cho thành viên mới của mạng lưới vận hành Steakhouse.
+                        Tạo tài khoản và phân quyền truy cập
                     </p>
                 </div>
             </div>
@@ -158,14 +158,14 @@ export const CreateUserPage = () => {
                                     <Mail size={24} />
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Thông tin Định danh</h3>
-                                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic leading-none">Cấp địa chỉ liên lạc và định danh số</p>
+                                    <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Thông tin người dùng</h3>
+                                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic leading-none">Nhập thông tin cơ bản</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div className="space-y-3 group/field">
-                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Địa chỉ Email (Identity)</label>
+                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Email</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
                                             <Mail size={18} className="text-[var(--text-secondary)]/30 group-focus-within/field:text-amber-500" />
@@ -184,7 +184,7 @@ export const CreateUserPage = () => {
                                 </div>
 
                                 <div className="space-y-3 group/field">
-                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Danh tính đầy đủ (Fullname)</label>
+                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Họ và tên</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/field:scale-110">
                                             <UserPlus size={18} className="text-[var(--text-secondary)]/30 group-focus-within/field:text-amber-500" />
@@ -211,14 +211,14 @@ export const CreateUserPage = () => {
                                     <Shield size={24} />
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Phân quyền Hệ thống</h3>
-                                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic leading-none">Thiết lập ma trận đặc quyền bảo mật</p>
+                                    <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight italic uppercase">Phân quyền</h3>
+                                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic leading-none">Chọn quyền cho người dùng</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div className="space-y-3 group/field">
-                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Vai trò Truy cập (Cyber Role)</label>
+                                    <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Vai trò</label>
                                     <div className="relative group/select">
                                         <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-transform group-focus-within/select:scale-110">
                                             <Shield size={18} className="text-[var(--text-secondary)]/30 group-focus-within/select:text-amber-500" />
@@ -230,7 +230,7 @@ export const CreateUserPage = () => {
                                                 }`}
                                             {...register('roleId', { valueAsNumber: true })}
                                         >
-                                            <option value={0} disabled className="bg-[var(--bg-card)]">-- Tuyển chọn Ma trận Quyền --</option>
+                                            <option value={0} disabled className="bg-[var(--bg-card)]">-- Chọn vai trò --</option>
                                             {roles.map(role => (
                                                 <option key={role.roleId} value={role.roleId} className="bg-[var(--bg-card)]">
                                                     {role.roleName?.replace(/_/g, ' ') || `Role ${role.roleId}`}
@@ -326,12 +326,12 @@ export const CreateUserPage = () => {
                                 {isSubmitting ? (
                                     <div className="flex items-center gap-3">
                                         <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                        <span>Đang khởi tạo...</span>
+                                        <span>Đang xử lý...</span>
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-3">
                                         <Save size={18} />
-                                        <span>Kích hoạt thực thể</span>
+                                        <span>Tạo người dùng</span>
                                     </div>
                                 )}
                             </Button>
