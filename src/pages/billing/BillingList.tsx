@@ -428,12 +428,12 @@ export const BillingList = () => {
       {/* Modernized Billing List */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="bg-[var(--bg-root)] backdrop-blur-xl rounded-[3rem] p-32 text-center border border-[var(--border-primary)] shadow-inner">
+          <div className="bg-[var(--bg-root)] backdrop-blur-xl rounded-3xl p-32 text-center border border-[var(--border-primary)] shadow-inner">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500 mx-auto"></div>
             <p className="mt-6 text-[var(--text-secondary)] font-black uppercase tracking-[0.4em] text-[10px] italic">Đang đồng bộ hóa sổ cái...</p>
           </div>
         ) : statements.length === 0 ? (
-          <div className="bg-[var(--bg-root)] backdrop-blur-xl rounded-[3rem] p-32 text-center border border-[var(--border-primary)] shadow-inner">
+          <div className="bg-[var(--bg-root)] backdrop-blur-xl rounded-3xl p-32 text-center border border-[var(--border-primary)] shadow-inner">
             <p className="text-[var(--text-secondary)] font-black uppercase tracking-[0.4em] text-[10px] italic">Không tìm thấy dữ liệu hóa đơn</p>
           </div>
         ) : (
@@ -542,7 +542,7 @@ export const BillingList = () => {
 
       {/* Elite Pagination */}
       {totalPages > 1 && (
-        <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-10 px-12 py-8 bg-[var(--bg-card)] backdrop-blur-2xl rounded-[3rem] border border-[var(--border-primary)] shadow-2xl">
+        <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-10 px-12 py-8 bg-[var(--bg-card)] backdrop-blur-2xl rounded-3xl border border-[var(--border-primary)] shadow-2xl">
           <div className="flex flex-col">
             <span className="text-[10px] font-black text-[var(--text-secondary)]/50 uppercase tracking-[0.4em] italic mb-1">Dữ liệu tài chính</span>
             <div className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest italic">
@@ -584,7 +584,7 @@ export const BillingList = () => {
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border-primary)] shadow-2xl w-full max-w-md p-10 text-center animate-in zoom-in-95">
-            <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-rose-500 border border-rose-500/20">
+            <div className="w-20 h-20 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-rose-500 border border-rose-500/20">
               <Trash2 size={32} />
             </div>
             <h2 className="text-2xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter mb-4">Xác nhận xóa tài liệu</h2>
@@ -600,7 +600,7 @@ export const BillingList = () => {
       {/* Manual & Batch Modals (Redesigned as Elite Overlays) */}
       {showManualModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-[var(--bg-card)] w-full max-w-lg rounded-[3rem] border border-[var(--border-primary)] shadow-2xl overflow-hidden animate-in zoom-in-95">
+          <div className="bg-[var(--bg-card)] w-full max-w-lg rounded-3xl border border-[var(--border-primary)] shadow-2xl overflow-hidden animate-in zoom-in-95">
             <div className="bg-amber-500/5 p-12 text-center border-b border-[var(--border-primary)]">
               <h2 className="text-3xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter mb-2">Tạo hóa đơn lẻ</h2>
               <p className="text-[var(--text-secondary)] font-bold uppercase tracking-[0.3em] text-[10px] italic">Khởi tạo chứng từ đối soát thủ công</p>
@@ -663,7 +663,7 @@ export const BillingList = () => {
       {/* Batch Statement Modal */}
       {showBatchModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-[var(--bg-card)] w-full max-w-lg rounded-[3rem] border border-[var(--border-primary)] shadow-2xl overflow-hidden animate-in zoom-in-95">
+          <div className="bg-[var(--bg-card)] w-full max-w-lg rounded-3xl border border-[var(--border-primary)] shadow-2xl overflow-hidden animate-in zoom-in-95">
             <div className="bg-orange-500/5 p-12 text-center border-b border-[var(--border-primary)]">
               <h2 className="text-3xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter mb-2">Quyết toán loạt</h2>
               <p className="text-[var(--text-secondary)] font-bold uppercase tracking-[0.3em] text-[10px] italic">Pht hành chứng từ đồng bộ toàn hệ thống</p>

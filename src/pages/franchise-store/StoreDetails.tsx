@@ -74,7 +74,7 @@ export const StoreDetails = () => {
 
     if (!store) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 rounded-[3rem] bg-[var(--bg-card)] border border-[var(--border-primary)] shadow-sm">
+            <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-primary)] shadow-sm">
                 <StoreIcon className="w-16 h-16 text-[var(--text-secondary)]/20 mb-6" />
                 <h2 className="text-2xl font-black tracking-tight text-[var(--text-primary)] uppercase italic mb-2">Cửa hàng không tồn tại</h2>
                 <p className="text-[var(--text-secondary)] mb-8 italic">Dữ liệu có thể đã bị di dời hoặc ID không chính xác.</p>
@@ -100,7 +100,7 @@ export const StoreDetails = () => {
     return (
         <div className="max-w-[1400px] mx-auto space-y-12 pb-20 animate-in fade-in duration-1000 pt-8">
             {/* Header Cinematic with Glassmorphism */}
-            <div className="relative group overflow-hidden rounded-[3rem] bg-[var(--bg-card)] border border-[var(--border-primary)] p-8 md:p-14 shadow-2xl">
+            <div className="relative group overflow-hidden rounded-3xl bg-[var(--bg-card)] border border-[var(--border-primary)] p-8 md:p-14 shadow-2xl">
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/[0.02] blur-[150px] -mr-40 -mt-40 rounded-full group-hover:bg-amber-500/5 transition-all duration-1000"></div>
                 <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-amber-500/[0.01] blur-[100px] rounded-full"></div>
 
@@ -159,7 +159,7 @@ export const StoreDetails = () => {
             {/* Info Cards - Modern Dashboard Aesthetic */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Contact Card */}
-                <div className="group relative bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] p-10 hover:border-amber-500/20 transition-all duration-700 overflow-hidden shadow-sm">
+                <div className="group relative bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl p-10 hover:border-amber-500/20 transition-all duration-700 overflow-hidden shadow-sm">
                     <div className="absolute top-0 left-0 w-24 h-24 bg-amber-500/5 blur-3xl -ml-12 -mt-12 group-hover:bg-amber-500/10 transition-all"></div>
 
                     <div className="relative space-y-8">
@@ -214,7 +214,7 @@ export const StoreDetails = () => {
                 </div>
 
                 {/* System Stats / Overview Card */}
-                <div className="group relative bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] p-10 hover:border-amber-500/20 transition-all duration-700 overflow-hidden shadow-sm col-span-1 md:col-span-2">
+                <div className="group relative bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl p-10 hover:border-amber-500/20 transition-all duration-700 overflow-hidden shadow-sm col-span-1 md:col-span-2">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/[0.02] blur-3xl -mr-32 -mt-32"></div>
                     <div className="relative space-y-10">
                         <div className="flex items-center gap-5">
@@ -314,7 +314,7 @@ export const StoreDetails = () => {
                             </div>
                         ))}
 
-                        <div className="col-span-full h-[500px] bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-primary)] rounded-[3rem] flex items-center justify-center text-[var(--text-secondary)]/20 group overflow-hidden relative shadow-sm">
+                        <div className="col-span-full h-[500px] bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-primary)] rounded-3xl flex items-center justify-center text-[var(--text-secondary)]/20 group overflow-hidden relative shadow-sm">
                             <div className="absolute inset-0 bg-[var(--text-primary)]/[0.01] pointer-events-none"></div>
                             <div className="relative text-center max-w-md px-10">
                                 <div className="w-20 h-20 mx-auto mb-8 rounded-3xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]/40 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
@@ -334,7 +334,7 @@ export const StoreDetails = () => {
                 )}
 
                 {activeTab === 'Inventory' && (
-                    <div className="animate-in fade-in zoom-in-95 duration-700 rounded-[3rem] overflow-hidden shadow-2xl">
+                    <div className="animate-in fade-in zoom-in-95 duration-700 rounded-3xl overflow-hidden shadow-2xl">
                         <StoreInventory storeId={Number(id)} />
                     </div>
                 )}
@@ -353,7 +353,7 @@ export const StoreDetails = () => {
 
                 {activeTab === 'Settings' && (
                     <div className="max-w-3xl mx-auto space-y-8 py-10 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-                        <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] p-12 space-y-10 shadow-sm">
+                        <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl p-12 space-y-10 shadow-sm">
                             <div className="flex items-center justify-between border-b border-[var(--border-primary)]/10 pb-10 opacity-60">
                                 <div className="max-w-md">
                                     <h4 className="text-[var(--text-primary)] font-black tracking-widest uppercase text-base mb-2 italic">Chế độ Thanh toán ELITE</h4>

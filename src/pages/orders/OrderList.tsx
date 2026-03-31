@@ -277,7 +277,7 @@ export const OrderList = () => {
                             <input
                                 type="text"
                                 placeholder="TÌM MÃ ĐƠN, TÊN CỬA HÀNG..."
-                                className="w-full pl-14 pr-6 py-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-[2rem] text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all duration-300 placeholder:text-[var(--text-secondary)]/50 hover:bg-[var(--bg-root)]"
+                                className="w-full pl-14 pr-6 py-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all duration-300 placeholder:text-[var(--text-secondary)]/50 hover:bg-[var(--bg-root)]"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -314,7 +314,7 @@ export const OrderList = () => {
                     </div>
                 </div>
 
-                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-2xl">
+                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-2xl">
                     <div className="overflow-x-auto">
                         <DataTable
                             data={filteredOrders}

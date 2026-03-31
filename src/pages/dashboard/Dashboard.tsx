@@ -266,7 +266,7 @@ export const Dashboard = () => {
         <div className="min-h-screen relative p-4 md:p-8 space-y-6 text-[var(--text-primary)]">
 
             {/* Hero Welcome Banner */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-primary)] p-8 md:p-10 shadow-xl">
+            <div className="relative overflow-hidden rounded-2xl bg-[var(--bg-card)] border border-[var(--border-primary)] p-8 md:p-10 shadow-xl">
                 {/* Decorative blob */}
                 <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-amber-500/20 rounded-full blur-[80px] pointer-events-none" />
 

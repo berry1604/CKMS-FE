@@ -118,7 +118,7 @@ export const OrderPool = () => {
                 </div>
 
                 <div className="flex items-center gap-6 animate-in slide-in-from-right-8 duration-1000">
-                    <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] px-8 py-5 flex flex-col items-end shadow-sm relative group">
+                    <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-2xl px-8 py-5 flex flex-col items-end shadow-sm relative group">
                         <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 blur-2xl rounded-full" />
                         <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic relative z-10">Tập đơn tuyển chọn</span>
                         <span className="text-2xl font-black text-amber-500 italic mt-1 relative z-10">{selectedOrderIds.size} <span className="text-[10px] text-[var(--text-secondary)] ml-1">Đơn vị</span></span>
@@ -126,7 +126,7 @@ export const OrderPool = () => {
                     <Button 
                         onClick={handleCreateManualPlan}
                         disabled={selectedOrderIds.size === 0 || isCreating}
-                        className="bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-400 hover:to-indigo-600 text-white font-black uppercase text-[10px] tracking-[0.2em] h-20 px-12 rounded-[2rem] border-0 shadow-xl shadow-indigo-500/20 active:scale-95 transition-all italic leading-none"
+                        className="bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-400 hover:to-indigo-600 text-white font-black uppercase text-[10px] tracking-[0.2em] h-20 px-12 rounded-2xl border-0 shadow-xl shadow-indigo-500/20 active:scale-95 transition-all italic leading-none"
                     >
                         {isCreating ? (
                             <div className="flex items-center gap-3">
@@ -161,7 +161,7 @@ export const OrderPool = () => {
             </div>
 
             {/* Table Area */}
-            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-sm relative group/table">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-sm relative group/table">
                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/10 to-transparent"></div>
                  <div className="overflow-x-auto max-h-[700px] no-scrollbar">
                     <table className="w-full text-left border-collapse">
@@ -198,7 +198,7 @@ export const OrderPool = () => {
                                 <tr>
                                     <td colSpan={6} className="px-10 py-40 text-center">
                                         <div className="flex flex-col items-center gap-6 opacity-20">
-                                            <div className="w-24 h-24 rounded-[3rem] bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
+                                            <div className="w-24 h-24 rounded-3xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
                                                 <Inbox size={48} />
                                             </div>
                                             <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--text-secondary)] italic">Hồ sơ chờ hiện đang trống</span>

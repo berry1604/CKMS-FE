@@ -152,7 +152,7 @@ export const DispatchDashboard = () => {
             </div>
 
             {/* Main Content Card */}
-            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-sm relative group">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-sm relative group">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
                 
                 <div className="p-8 md:p-10 border-b border-[var(--border-primary)]/10 flex flex-col md:flex-row justify-between items-center gap-6 bg-[var(--text-primary)]/[0.01]">
@@ -201,7 +201,7 @@ export const DispatchDashboard = () => {
                                 <tr>
                                     <td colSpan={5} className="px-10 py-40 text-center">
                                         <div className="opacity-20 flex flex-col items-center gap-6">
-                                            <div className="w-20 h-20 rounded-[2rem] bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
+                                            <div className="w-20 h-20 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
                                                 <LayoutDashboard size={40} />
                                             </div>
                                             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--text-secondary)]/60 italic">Không có nhu cầu điều phối phát sinh</span>
@@ -245,7 +245,7 @@ export const DispatchDashboard = () => {
                                                         <div className="group/tip relative flex items-center justify-center">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping absolute" />
                                                             <AlertTriangle className="text-amber-500 relative z-10" size={18} />
-                                                            <div className="absolute bottom-full right-0 mb-4 w-60 p-5 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] shadow-2xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-20 scale-90 group-hover/tip:scale-100 origin-bottom-right">
+                                                            <div className="absolute bottom-full right-0 mb-4 w-60 p-5 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-2xl shadow-2xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-20 scale-90 group-hover/tip:scale-100 origin-bottom-right">
                                                                 <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 italic">Cảnh báo thiếu hụt</h4>
                                                                 <p className="text-[11px] text-[var(--text-secondary)] font-medium leading-relaxed italic uppercase">{item.shortageDetails || `Thâm hụt tồn kho/công suất: ${item.demandQty - item.suggestedQty} đơn vị.`}</p>
                                                             </div>
@@ -294,7 +294,7 @@ export const DispatchDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div 
                     onClick={() => navigate('/kitchen/order-pool')}
-                    className="p-8 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] hover:border-amber-500/30 transition-all cursor-pointer group shadow-sm hover:shadow-xl relative overflow-hidden"
+                    className="p-8 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl hover:border-amber-500/30 transition-all cursor-pointer group shadow-sm hover:shadow-xl relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/5 transition-all duration-700" />
                     <div className="relative flex flex-col h-full gap-6">
@@ -313,7 +313,7 @@ export const DispatchDashboard = () => {
                 
                 <div 
                     onClick={() => navigate('/kitchen/production-plans')}
-                    className="p-8 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] hover:border-emerald-500/30 transition-all cursor-pointer group shadow-sm hover:shadow-xl relative overflow-hidden"
+                    className="p-8 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl hover:border-emerald-500/30 transition-all cursor-pointer group shadow-sm hover:shadow-xl relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.02] blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/5 transition-all duration-700" />
                     <div className="relative flex flex-col h-full gap-6">

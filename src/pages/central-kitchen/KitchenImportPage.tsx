@@ -164,7 +164,7 @@ export const KitchenImportPage = () => {
                         </div>
                         
                         <div className="w-full md:w-auto pb-2">
-                            <div className="bg-[var(--bg-card)]/80 backdrop-blur-3xl p-6 rounded-[2rem] border border-[var(--border-primary)] shadow-2xl">
+                            <div className="bg-[var(--bg-card)]/80 backdrop-blur-3xl p-6 rounded-2xl border border-[var(--border-primary)] shadow-2xl">
                                 <label className="text-[9px] font-black text-amber-500 uppercase tracking-[0.3em] mb-4 block ml-2 italic">Cơ sở sản xuất định danh</label>
                                 <KitchenSelector 
                                     selectedKitchenId={selectedKitchenId}
@@ -177,7 +177,7 @@ export const KitchenImportPage = () => {
             </div>
 
             <div className="max-w-4xl mx-auto px-8 -mt-12 relative z-10">
-                <div className="bg-[var(--bg-card)]/80 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] p-12 md:p-16 shadow-2xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-card)]/80 backdrop-blur-3xl border border-[var(--border-primary)] rounded-3xl p-12 md:p-16 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
                     {/* Decorative glow */}
                     <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full group-hover:bg-amber-500/10 transition-all duration-1000" />
@@ -313,7 +313,7 @@ export const KitchenImportPage = () => {
 
                 {/* Logistics Tip */}
                 <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                    <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] p-8 flex items-start gap-5 shadow-sm hover:border-amber-500/20 transition-all group">
+                    <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-2xl p-8 flex items-start gap-5 shadow-sm hover:border-amber-500/20 transition-all group">
                         <div className="p-4 bg-amber-500/10 rounded-2xl text-amber-500 group-hover:scale-110 transition-transform">
                             <Zap size={22} />
                         </div>

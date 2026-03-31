@@ -63,7 +63,7 @@ export const WarehouseModal: React.FC<WarehouseModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-[var(--bg-root)]/60 dark:bg-black/80 backdrop-blur-md transition-opacity" onClick={onClose} />
             
-            <div className="relative bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] w-full max-w-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 fade-in zoom-in-95 duration-500">
+            <div className="relative bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 fade-in zoom-in-95 duration-500">
                 {/* Decorative glow */}
                 <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500/0 via-amber-500 to-amber-500/0"></div>
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/20 rounded-full blur-[60px] pointer-events-none"></div>

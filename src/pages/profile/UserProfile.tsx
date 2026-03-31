@@ -187,7 +187,7 @@ export const UserProfile = () => {
                 {/* Header Content */}
                 <div className="absolute bottom-32 left-10 md:left-16 flex flex-col md:flex-row items-end gap-6">
                     <div className="relative group">
-                        <div className="absolute inset-0 bg-amber-500 rounded-[2rem] blur-2xl group-hover:blur-3xl transition-all opacity-20 group-hover:opacity-40"></div>
+                        <div className="absolute inset-0 bg-amber-500 rounded-2xl blur-2xl group-hover:blur-3xl transition-all opacity-20 group-hover:opacity-40"></div>
                         <img
                             src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.name}&background=f59e0b&color=fff&bold=true`}
                             alt={user.name}

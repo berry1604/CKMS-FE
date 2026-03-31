@@ -122,7 +122,7 @@ export const WarehouseStockModal: React.FC<WarehouseStockModalProps> = ({ wareho
                             <p className="text-sm font-black text-emerald-500/70 uppercase tracking-widest animate-pulse">Truy xuất dữ liệu bếp trung tâm...</p>
                         </div>
                     ) : (
-                        <div className="bg-[var(--bg-card)] rounded-[2rem] border border-[var(--border-primary)] overflow-hidden shadow-sm dark:shadow-2xl">
+                        <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-primary)] overflow-hidden shadow-sm dark:shadow-2xl">
                             <table className="w-full text-left text-sm whitespace-nowrap">
                                 <thead>
                                     <tr className="border-b border-[var(--border-primary)] bg-[var(--text-primary)]/5 backdrop-blur-md">

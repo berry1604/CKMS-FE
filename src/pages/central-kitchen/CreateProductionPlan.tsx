@@ -310,7 +310,7 @@ export const CreateProductionPlan = () => {
           {step === 1 && (
             <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
               {/* HUB & CONFIG DASHBOARD */}
-              <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] shadow-sm relative overflow-hidden group">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
 
                 <div className="p-8 md:p-10 space-y-8 relative z-10">
@@ -335,7 +335,7 @@ export const CreateProductionPlan = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-6 bg-[var(--bg-root)] p-3 rounded-[2rem] border border-[var(--border-primary)] shadow-inner">
+                    <div className="flex flex-wrap items-center gap-6 bg-[var(--bg-root)] p-3 rounded-2xl border border-[var(--border-primary)] shadow-inner">
                       <div className="text-right px-4">
                         <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-[0.2em] flex items-center justify-end gap-2 italic">
                           {isCapacityLoading && (
@@ -397,7 +397,7 @@ export const CreateProductionPlan = () => {
               <div className="flex flex-col gap-10">
                 {/* Workspace */}
                 <div className="w-full">
-                  <div className="bg-[var(--bg-card)] rounded-[3rem] border border-[var(--border-primary)] overflow-hidden shadow-sm relative group/table">
+                  <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-primary)] overflow-hidden shadow-sm relative group/table">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent"></div>
 
                     <div className="p-8 border-b border-[var(--border-primary)]/10 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -409,6 +409,14 @@ export const CreateProductionPlan = () => {
                           Danh sách đơn hàng đã được duyệt chờ gom đơn
                         </p>
                       </div>
+                      <Button
+                        onClick={() => setStep(2)}
+                        disabled={selectedOrderIds.size === 0}
+                        className="h-12 bg-amber-500 hover:bg-amber-600 text-black border-0 rounded-2xl px-8 font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-amber-500/20 italic disabled:opacity-40 shrink-0"
+                      >
+                        Tiếp theo: Gom đơn ({selectedOrderIds.size})
+                        <ChevronRight size={16} className="ml-2 inline-block" />
+                      </Button>
                     </div>
 
                     <div className="overflow-x-auto max-h-[600px] no-scrollbar">
@@ -457,7 +465,7 @@ export const CreateProductionPlan = () => {
                                 className="px-10 py-40 text-center"
                               >
                                 <div className="flex flex-col items-center gap-6 opacity-20">
-                                  <div className="w-24 h-24 rounded-[3rem] bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
+                                  <div className="w-24 h-24 rounded-3xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
                                     <Package size={48} />
                                   </div>
                                   <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--text-secondary)] italic">
@@ -572,12 +580,12 @@ export const CreateProductionPlan = () => {
 
           {step === 2 && (
             <div className="max-w-4xl mx-auto space-y-10 animate-in slide-in-from-right-8 duration-700 pb-20">
-              <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[4rem] overflow-hidden shadow-sm relative group/summary">
+              <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-sm relative group/summary">
                 <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-emerald-500/50 via-teal-500/50 to-emerald-500/50"></div>
 
                 <div className="p-10 border-b border-[var(--border-primary)]/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-10 bg-[var(--text-primary)]/[0.01]">
                   <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-[2rem] bg-emerald-500 shadow-xl shadow-emerald-500/10 flex items-center justify-center text-black rotate-2">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500 shadow-xl shadow-emerald-500/10 flex items-center justify-center text-black rotate-2">
                       <ClipboardCheck size={32} />
                     </div>
                     <div>
@@ -710,7 +718,7 @@ export const CreateProductionPlan = () => {
                                   {item.quantity}
                                 </span>
                                 <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">
-                                  Ước tính (Units)
+                                  Ước tính (Phần)
                                 </span>
                               </div>
                             </td>
@@ -720,11 +728,11 @@ export const CreateProductionPlan = () => {
                     </table>
                   </div>
 
-                  <div className="bg-emerald-500/[0.03] rounded-[3rem] border border-emerald-500/10 p-10 flex flex-col md:flex-row items-center justify-between gap-10 group/yield relative overflow-hidden">
+                  <div className="bg-emerald-500/[0.03] rounded-3xl border border-emerald-500/10 p-10 flex flex-col md:flex-row items-center justify-between gap-10 group/yield relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/5 blur-3xl -mr-20 -mt-20 group-hover/yield:bg-emerald-500/10 transition-all duration-1000" />
 
                     <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-xl shadow-emerald-500/5 border border-emerald-500/20 rotate-3 group-hover/yield:rotate-6 transition-transform">
+                      <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-xl shadow-emerald-500/5 border border-emerald-500/20 rotate-3 group-hover/yield:rotate-6 transition-transform">
                         <LayoutGrid size={28} />
                       </div>
                       <div className="flex flex-col gap-2">

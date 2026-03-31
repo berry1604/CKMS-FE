@@ -89,7 +89,7 @@ export const MaterialList = () => {
             </div>
 
             {/* Glass Toolbar */}
-            <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-[2rem] border border-[var(--border-primary)] p-5 mb-8 shadow-sm">
+            <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-2xl border border-[var(--border-primary)] p-5 mb-8 shadow-sm">
                 <div className="relative w-full md:w-[450px] group">
                     <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
                         <div className="w-10 h-10 rounded-xl bg-[var(--bg-root)] flex items-center justify-center text-[var(--text-secondary)]/40 group-focus-within:text-amber-400">
@@ -109,19 +109,19 @@ export const MaterialList = () => {
             {/* List components */}
             <div className="grid grid-cols-1 gap-4">
                 {isLoading ? (
-                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-[2rem] border border-[var(--border-primary)]">
+                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-2xl border border-[var(--border-primary)]">
                         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500 mx-auto"></div>
                         <p className="mt-4 text-[var(--text-secondary)]/60 font-black uppercase tracking-widest text-[10px] italic">Đang tải nguyên liệu...</p>
                     </div>
                 ) : filteredMaterials.length === 0 ? (
-                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-[2rem] border border-[var(--border-primary)]">
+                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-2xl border border-[var(--border-primary)]">
                         <p className="text-[var(--text-secondary)]/60 font-black uppercase tracking-widest text-[10px] italic">Không tìm thấy bản ghi nào</p>
                     </div>
                 ) : (
                     filteredMaterials.map((material) => (
                         <div
                             key={material.id}
-                            className="group flex flex-col md:flex-row items-center justify-between p-6 bg-[var(--bg-card)]/80 backdrop-blur-2xl rounded-[2rem] border border-[var(--border-primary)] transition-all duration-500 hover:border-amber-500/30 hover:shadow-xl hover:-translate-y-1"
+                            className="group flex flex-col md:flex-row items-center justify-between p-6 bg-[var(--bg-card)]/80 backdrop-blur-2xl rounded-2xl border border-[var(--border-primary)] transition-all duration-500 hover:border-amber-500/30 hover:shadow-xl hover:-translate-y-1"
                         >
                             <div className="flex items-center gap-6 w-full md:w-auto">
                                 <div className="w-14 h-14 rounded-2xl bg-[var(--bg-root)] flex items-center justify-center text-[var(--text-secondary)]/40 group-hover:text-amber-500 transition-colors shadow-inner border border-[var(--border-primary)]">

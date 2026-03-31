@@ -106,7 +106,7 @@ export const KitchensList = () => {
             </div>
 
             {/* Toolbar Area */}
-            <div className="relative z-10 bg-[#080808]/60 backdrop-blur-3xl rounded-[2rem] border border-white/5 p-5 mb-8 shadow-2xl flex flex-col md:flex-row gap-6 justify-between items-center">
+            <div className="relative z-10 bg-[#080808]/60 backdrop-blur-3xl rounded-2xl border border-white/5 p-5 mb-8 shadow-2xl flex flex-col md:flex-row gap-6 justify-between items-center">
                 <div className="relative w-full md:w-[450px] group">
                     <div className="absolute inset-y-0 left-0 pl-1.5 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
                         <div className="w-10 h-10 rounded-xl bg-zinc-950/80 flex items-center justify-center text-zinc-500 group-focus-within:text-amber-500 group-focus-within:shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-colors">
@@ -142,7 +142,7 @@ export const KitchensList = () => {
                     {filteredKitchens.map(kitchen => (
                         <div 
                             key={kitchen.kitchenId} 
-                            className="bg-zinc-950/80 backdrop-blur-md border border-white/5 hover:border-amber-500/30 transition-all duration-500 rounded-[2rem] overflow-hidden group hover:shadow-[0_15px_40px_rgba(245,158,11,0.05)] flex flex-col"
+                            className="bg-zinc-950/80 backdrop-blur-md border border-white/5 hover:border-amber-500/30 transition-all duration-500 rounded-2xl overflow-hidden group hover:shadow-[0_15px_40px_rgba(245,158,11,0.05)] flex flex-col"
                         >
                             <div className="p-6 flex-1 space-y-5">
                                 <div className="flex justify-between items-start">

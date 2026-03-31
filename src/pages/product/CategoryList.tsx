@@ -109,7 +109,7 @@ export const CategoryList: React.FC = () => {
             </div>
 
             {/* Glass Toolbar */}
-            <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-[2rem] border border-[var(--border-primary)] p-5 mb-8 shadow-sm">
+            <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-2xl border border-[var(--border-primary)] p-5 mb-8 shadow-sm">
                 <div className="relative w-full md:w-[450px] group">
                     <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none transition-transform duration-500 group-focus-within:translate-x-1">
                         <div className="w-10 h-10 rounded-xl bg-[var(--bg-root)] flex items-center justify-center text-[var(--text-secondary)] group-focus-within:text-amber-400">
@@ -129,19 +129,19 @@ export const CategoryList: React.FC = () => {
             {/* List Components */}
             <div className="grid grid-cols-1 gap-4">
                 {loading ? (
-                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-[2rem] border border-[var(--border-primary)]">
+                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-2xl border border-[var(--border-primary)]">
                         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500 mx-auto"></div>
                         <p className="mt-4 text-[var(--text-secondary)] font-black uppercase tracking-widest text-[10px] italic">Đang tải danh mục...</p>
                     </div>
                 ) : filteredCategories.length === 0 ? (
-                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-[2rem] border border-[var(--border-primary)]">
+                    <div className="p-20 text-center bg-[var(--bg-card)]/40 backdrop-blur-xl rounded-2xl border border-[var(--border-primary)]">
                         <p className="text-[var(--text-secondary)] font-black uppercase tracking-widest text-[10px] italic">Không tìm thấy danh mục nào</p>
                     </div>
                 ) : (
                     filteredCategories.map((category) => (
                         <div
                             key={category.id}
-                            className="group flex flex-col md:flex-row items-center justify-between p-6 bg-[var(--bg-card)]/80 backdrop-blur-2xl rounded-[2rem] border border-[var(--border-primary)] transition-all duration-500 hover:border-amber-500/30 hover:shadow-xl hover:-translate-y-1"
+                            className="group flex flex-col md:flex-row items-center justify-between p-6 bg-[var(--bg-card)]/80 backdrop-blur-2xl rounded-2xl border border-[var(--border-primary)] transition-all duration-500 hover:border-amber-500/30 hover:shadow-xl hover:-translate-y-1"
                         >
                             <div className="flex items-center gap-6 w-full md:w-auto">
                                 <div className="w-14 h-14 rounded-2xl bg-[var(--bg-root)] flex items-center justify-center text-[var(--text-secondary)]/40 group-hover:text-amber-500 transition-colors shadow-inner border border-[var(--border-primary)]">
@@ -197,7 +197,7 @@ export const CategoryList: React.FC = () => {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border-primary)] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="p-10 text-center">
-                            <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-[0_0_30px_rgba(244,63,94,0.1)] text-rose-500">
+                            <div className="w-20 h-20 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-[0_0_30px_rgba(244,63,94,0.1)] text-rose-500">
                                 <Trash2 size={36} strokeWidth={2.5} />
                             </div>
                             <h2 className="text-2xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter mb-3">Xác nhận xóa</h2>
