@@ -543,7 +543,7 @@ export const MainLayout: React.FC = () => {
         >
           {/* Animated glow background */}
           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          
+
           {/* Icon with rotation animation */}
           <div className="relative z-10 transition-transform duration-700 ease-out group-hover:rotate-[135deg]">
             {theme === 'light' ? (

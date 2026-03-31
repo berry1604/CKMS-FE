@@ -25,7 +25,6 @@ import { productionPlanApi } from "../../services/productionPlan.api";
 import { shipmentApi } from "../../services/shipment.api";
 import { storeOrderApi } from "../../services/storeOrderApi";
 import type {
-  OrderDetailResponse,
   StoreOrderResponse,
 } from "../../types/storeOrder";
 import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
@@ -53,13 +52,9 @@ export const ShipmentDetailDrawer = ({
   onRefresh,
 }: ShipmentDetailDrawerProps) => {
   const { user, hasAuthority } = useAuth();
-  const [aggregatedItems, setAggregatedItems] = useState<
-    { productId: number; productName: string; quantity: number }[]
-  >([]);
   const [detailedOrders, setDetailedOrders] = useState<StoreOrderResponse[]>(
     [],
   );
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [shipmentKitchenId, setShipmentKitchenId] = useState<number | null>(
     null,
   );
@@ -89,15 +84,10 @@ export const ShipmentDetailDrawer = ({
   useEffect(() => {
     if (isOpen && shipment?.shipmentId) {
       const loadData = async () => {
-        setIsLoadingDetails(true);
         try {
           const fullShipment = await shipmentApi.getShipmentById(
             shipment.shipmentId,
           );
-          const itemsMap = new Map<
-            number,
-            { productId: number; productName: string; quantity: number }
-          >();
           const correctPlanId =
             fullShipment.planId || fullShipment.productionPlanId;
           let loadedFromPlan = false;
@@ -119,23 +109,6 @@ export const ShipmentDetailDrawer = ({
                 );
 
                 if (relevantStock && relevantStock.length > 0) {
-                  relevantStock.forEach(
-                    (item: {
-                      itemId?: number;
-                      id?: number;
-                      itemName: string;
-                      quantity: number;
-                    }) => {
-                      const pid = item.itemId || item.id;
-                      if (pid) {
-                        itemsMap.set(pid, {
-                          productId: pid,
-                          productName: item.itemName,
-                          quantity: item.quantity,
-                        });
-                      }
-                    },
-                  );
                   loadedFromPlan = true;
                 }
               }
@@ -167,40 +140,18 @@ export const ShipmentDetailDrawer = ({
                   (o): o is StoreOrderResponse => o !== null,
                 );
                 setDetailedOrders(validOrders);
-
-                validOrders.forEach((order) => {
-                  if (order && order.orderDetails) {
-                    order.orderDetails.forEach((item: OrderDetailResponse) => {
-                      const existing = itemsMap.get(item.productId);
-                      if (existing) {
-                        existing.quantity += item.quantity;
-                      } else {
-                        itemsMap.set(item.productId, {
-                          productId: item.productId,
-                          productName: item.productName,
-                          quantity: item.quantity,
-                        });
-                      }
-                    });
-                  }
-                });
               }
             } catch (e) {
               console.warn("Could not load items from store orders", e);
             }
           }
-
-          setAggregatedItems(Array.from(itemsMap.values()));
         } catch (error) {
           console.error("Failed to fetch shipment details/items:", error);
           toast.error("Không thể tải chi tiết món hàng");
-        } finally {
-          setIsLoadingDetails(false);
         }
       };
       loadData();
     } else {
-      setAggregatedItems([]);
       setDetailedOrders([]);
     }
   }, [isOpen, shipment?.shipmentId, user?.role, onRefresh]);
@@ -311,7 +262,7 @@ export const ShipmentDetailDrawer = ({
         return (
           <Button
             disabled
-            className="bg-zinc-800 text-zinc-500 font-black uppercase text-[11px] tracking-widest px-8 grow border border-zinc-700"
+            className="bg-[var(--bg-root)] text-[var(--text-secondary)] font-black uppercase text-[11px] tracking-widest px-8 grow border border-[var(--border-primary)]"
           >
             {shipment.status === "DELIVERED"
               ? "Đã hoàn thành"
@@ -340,7 +291,7 @@ export const ShipmentDetailDrawer = ({
       <Button
         variant="outline"
         onClick={onClose}
-        className="border-zinc-800 text-zinc-400 font-black uppercase text-[11px] tracking-widest"
+        className="border-[var(--border-primary)] text-[var(--text-secondary)] font-black uppercase text-[11px] tracking-widest"
       >
         Đóng
       </Button>
@@ -358,24 +309,24 @@ export const ShipmentDetailDrawer = ({
               <Truck size={20} />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-black text-zinc-100 uppercase tracking-tighter">
+              <span className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tighter">
                 Vận đơn #{shipment.shipmentId}
               </span>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                   AhaMove:
                 </span>
                 {shipment.ahamoveOrderId ? (
                   <div className="flex items-center gap-2 group/copy">
                     <Badge
                       variant="secondary"
-                      className="text-[9px] px-1.5 py-0 h-4 border-zinc-700 bg-zinc-800 text-zinc-300 font-mono tracking-tighter"
+                      className="text-[9px] px-1.5 py-0 h-4 border-[var(--border-primary)] bg-[var(--bg-root)] text-[var(--text-secondary)] font-mono tracking-tighter"
                     >
                       {shipment.ahamoveOrderId}
                     </Badge>
                     <button
                       onClick={handleCopyAhamoveId}
-                      className="text-zinc-500 hover:text-amber-500 transition-colors"
+                      className="text-[var(--text-secondary)] hover:text-amber-500 transition-colors"
                       title="Sao chép mã đơn"
                     >
                       <Copy size={10} />
@@ -384,7 +335,7 @@ export const ShipmentDetailDrawer = ({
                 ) : (
                   <Badge
                     variant="secondary"
-                    className="text-[9px] px-1.5 py-0 h-4 border-zinc-800 bg-zinc-900 text-zinc-600 font-mono tracking-tighter italic"
+                    className="text-[9px] px-1.5 py-0 h-4 border-[var(--border-primary)] bg-[var(--bg-root)] text-[var(--text-secondary)] font-mono tracking-tighter italic"
                   >
                     N/A
                   </Badge>
@@ -398,7 +349,7 @@ export const ShipmentDetailDrawer = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRefresh(shipment.shipmentId)}
-                className="h-10 w-10 p-0 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 transition-all"
+                className="h-10 w-10 p-0 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/5 transition-all"
                 title="Làm mới dữ liệu"
               >
                 <RefreshCw size={18} />
@@ -435,12 +386,12 @@ export const ShipmentDetailDrawer = ({
                     SYSTEM_CANCELLED
                   </Badge>
                 </div>
-                <p className="text-lg font-black text-zinc-100 tracking-tight leading-tight uppercase">
+                <p className="text-lg font-black text-[var(--text-primary)] tracking-tight leading-tight uppercase">
                   {shipment.remarks ||
                     shipment.note ||
                     "Không có lý do hủy cụ thể được ghi nhận."}
                 </p>
-                <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">
+                <div className="flex items-center gap-2 text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">
                   <Clock size={12} /> Đã hủy lúc:{" "}
                   {shipment.deliveredAt
                     ? new Date(shipment.deliveredAt).toLocaleString("vi-VN")
@@ -453,10 +404,10 @@ export const ShipmentDetailDrawer = ({
 
         {/* Left Column: Visual & Status */}
         <div className="lg:col-span-5 space-y-8">
-          <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar">
+          <div className="bg-[var(--bg-card)]/80 backdrop-blur-md border border-[var(--border-primary)] rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar">
             {/* Luxury Visual Element */}
             <div className="relative -mx-8 -mt-8 mb-8 group/img h-64 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950/90 z-10"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg-root)]/90 z-10"></div>
               <div className="absolute inset-0 bg-[#DE802B]/10 blur-3xl rounded-full scale-150 group-hover/img:bg-[#DE802B]/20 transition-all duration-700"></div>
               <img
                 src="/src/assets/logistics_delivery.png"
@@ -468,7 +419,7 @@ export const ShipmentDetailDrawer = ({
                 }}
               />
               <div className="absolute bottom-6 left-8 z-20">
-                <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-zinc-950/80 backdrop-blur-md border border-[#DE802B]/30 shadow-lg shadow-[#DE802B]/10">
+                <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-[var(--bg-card)]/80 backdrop-blur-md border border-[#DE802B]/30 shadow-lg shadow-[#DE802B]/10">
                   <div className="w-2 h-2 rounded-full bg-[#DE802B] animate-pulse"></div>
                   <span className="text-[10px] font-black text-[#DE802B] uppercase tracking-[0.2em]">
                     AhaMove Partner
@@ -491,14 +442,14 @@ export const ShipmentDetailDrawer = ({
                 <div className="flex items-center gap-3">
                   <div
                     className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center border border-zinc-800 bg-zinc-900 transition-colors",
+                      "w-12 h-12 rounded-2xl flex items-center justify-center border border-[var(--border-primary)] bg-[var(--bg-root)] transition-colors",
                       isCancelled ? "text-red-500" : "text-[#DE802B]",
                     )}
                   >
                     <Truck size={24} />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">
+                    <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest leading-none mb-1">
                       CKMS Status
                     </span>
                     <Badge
@@ -515,9 +466,9 @@ export const ShipmentDetailDrawer = ({
                           : shipment.status}
                     </Badge>
                   </div>
-                  <div className="w-px h-8 bg-zinc-800 mx-2"></div>
+                  <div className="w-px h-8 bg-[var(--border-primary)]/20 mx-2"></div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">
+                    <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest leading-none mb-1">
                       AhaMove Status
                     </span>
                     {shipment.ahamoveStatus ? (
@@ -525,7 +476,7 @@ export const ShipmentDetailDrawer = ({
                         {shipment.ahamoveStatus}
                       </span>
                     ) : (
-                      <span className="text-xs font-black text-zinc-600 uppercase tracking-tighter mt-1 italic">
+                      <span className="text-xs font-black text-[var(--text-secondary)]/50 uppercase tracking-tighter mt-1 italic">
                         WAITING...
                       </span>
                     )}
@@ -533,7 +484,7 @@ export const ShipmentDetailDrawer = ({
                 </div>
               </div>
 
-              <div className="h-px bg-zinc-800/50"></div>
+              <div className="h-px bg-[var(--border-primary)]/20"></div>
 
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
@@ -547,10 +498,10 @@ export const ShipmentDetailDrawer = ({
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2">
                       <Calendar size={14} /> Ngày khởi tạo
                     </span>
-                    <span className="text-sm font-black text-zinc-200 tracking-tight mt-1 truncate">
+                    <span className="text-sm font-black text-[var(--text-primary)] tracking-tight mt-1 truncate">
                       {new Date(shipment.createdAt).toLocaleDateString("vi-VN")}
                     </span>
                   </div>
@@ -571,8 +522,8 @@ export const ShipmentDetailDrawer = ({
                       </a>
                       {shipment.shippingFee !== undefined &&
                         shipment.shippingFee !== null && (
-                          <div className="flex items-center justify-between px-4 py-2 bg-zinc-950/50 rounded-xl border border-[#DE802B]/20">
-                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                          <div className="flex items-center justify-between px-4 py-2 bg-[var(--bg-root)]/50 rounded-xl border border-[#DE802B]/20">
+                            <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                               Phí vận chuyển:
                             </span>
                             <span className="text-sm font-black text-[#DE802B] font-mono tracking-tighter">
@@ -590,15 +541,13 @@ export const ShipmentDetailDrawer = ({
             </div>
           </div>
 
-          {/* Driver removed as requested */}
-
           {/* Store Contact (if available) */}
           {(shipment.storePhone ||
             shipment.stops?.some((s) => s.storePhone)) && (
-            <div className="p-4 bg-zinc-900/40 rounded-2xl border border-zinc-800/50 space-y-2">
+            <div className="p-4 bg-[var(--bg-card)]/40 rounded-2xl border border-[var(--border-primary)] space-y-2">
               <div className="flex items-center gap-2">
-                <Phone size={14} className="text-zinc-600" />
-                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
+                <Phone size={14} className="text-[var(--text-secondary)]" />
+                <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                   Liên hệ cửa hàng
                 </span>
               </div>
@@ -609,10 +558,10 @@ export const ShipmentDetailDrawer = ({
                       key={stop.stopId}
                       className="flex items-center justify-between"
                     >
-                      <span className="text-[11px] font-bold text-zinc-400 truncate max-w-[120px]">
+                      <span className="text-[11px] font-bold text-[var(--text-secondary)] truncate max-w-[120px]">
                         {stop.storeName}
                       </span>
-                      <span className="text-[11px] font-bold text-zinc-300 font-mono tracking-tighter">
+                      <span className="text-[11px] font-bold text-[var(--text-primary)] font-mono tracking-tighter">
                         {stop.storePhone || "N/A"}
                       </span>
                     </div>
@@ -620,10 +569,10 @@ export const ShipmentDetailDrawer = ({
                 </div>
               ) : shipment.storePhone ? (
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-zinc-400 truncate max-w-[120px]">
+                  <span className="text-[11px] font-bold text-[var(--text-secondary)] truncate max-w-[120px]">
                     {shipment.storeName || "Cửa hàng"}
                   </span>
-                  <span className="text-[11px] font-bold text-zinc-300 font-mono tracking-tighter">
+                  <span className="text-[11px] font-bold text-[var(--text-primary)] font-mono tracking-tighter">
                     {shipment.storePhone}
                   </span>
                 </div>
@@ -636,16 +585,16 @@ export const ShipmentDetailDrawer = ({
         <div className="lg:col-span-7 space-y-10">
           {/* Progress Tracker */}
           {!isCancelled && (
-            <div className="bg-zinc-900/20 backdrop-blur-sm rounded-[40px] border border-zinc-800/50 p-10 space-y-10">
+            <div className="bg-[var(--bg-card)]/40 backdrop-blur-sm rounded-[40px] border border-[var(--border-primary)] p-10 space-y-10">
               <div className="flex items-center gap-3 ml-2">
                 <Package size={18} className="text-[#DE802B]/50" />
-                <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                <h4 className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">
                   Tiến trình vận đơn CKMS
                 </h4>
               </div>
 
               <div className="relative">
-                <div className="absolute top-[26px] left-[24px] right-[24px] h-[3px] bg-zinc-800/50 rounded-full"></div>
+                <div className="absolute top-[26px] left-[24px] right-[24px] h-[3px] bg-[var(--border-primary)]/20 rounded-full"></div>
                 <div
                   className="absolute top-[26px] left-[24px] h-[3px] bg-gradient-to-r from-[#DE802B] to-[#5C6F2B] rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(222,128,43,0.3)]"
                   style={{
@@ -665,10 +614,10 @@ export const ShipmentDetailDrawer = ({
                       >
                         <div
                           className={cn(
-                            "w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 bg-zinc-950",
+                            "w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 bg-[var(--bg-root)]",
                             isActive
-                              ? "border-[#DE802B] text-[#DE802B] shadow-[0_0_25px_rgba(222,128,43,0.15)] bg-zinc-900"
-                              : "border-zinc-800/50 text-zinc-700 hover:border-zinc-700",
+                              ? "border-[#DE802B] text-[#DE802B] shadow-[0_0_25px_rgba(222,128,43,0.15)] bg-[var(--bg-card)]"
+                              : "border-[var(--border-primary)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)]/50",
                           )}
                         >
                           <StepIcon
@@ -681,7 +630,7 @@ export const ShipmentDetailDrawer = ({
                           <span
                             className={cn(
                               "text-[10px] font-black tracking-widest uppercase transition-colors whitespace-nowrap",
-                              isActive ? "text-zinc-200" : "text-zinc-700",
+                              isActive ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
                             )}
                           >
                             {step.label}
@@ -702,8 +651,8 @@ export const ShipmentDetailDrawer = ({
           <div className="space-y-5">
             <div className="flex items-center justify-between ml-2">
               <div className="flex items-center gap-2">
-                <Clock size={18} className="text-zinc-600" />
-                <h4 className="text-[12px] font-black text-zinc-400 uppercase tracking-[0.2em]">
+                <Clock size={18} className="text-[var(--text-secondary)]" />
+                <h4 className="text-[12px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">
                   Nhật ký vận hành
                 </h4>
               </div>
@@ -717,8 +666,8 @@ export const ShipmentDetailDrawer = ({
 
             <div
               className={cn(
-                "bg-zinc-900/20 rounded-[36px] border divide-y divide-zinc-800/30 overflow-hidden",
-                isCancelled ? "border-red-500/20" : "border-zinc-800/50",
+                "bg-[var(--bg-card)]/40 rounded-[36px] border divide-y divide-[var(--border-primary)]/20 overflow-hidden",
+                isCancelled ? "border-red-500/20" : "border-[var(--border-primary)]",
               )}
             >
               <div className="p-8 space-y-8">
@@ -731,7 +680,7 @@ export const ShipmentDetailDrawer = ({
                       <p className="text-[14px] font-black text-red-500 tracking-tight uppercase">
                         Vận đơn bị hủy / thất bại
                       </p>
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">
+                      <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tighter">
                         Lý do:{" "}
                         {shipment.remarks ||
                           shipment.note ||
@@ -741,19 +690,19 @@ export const ShipmentDetailDrawer = ({
                   </div>
                 )}
                 <div className="flex items-start gap-6 group/log animate-in fade-in duration-500">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/log:text-[#5C6F2B] group-hover/log:border-[#5C6F2B]/30 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)] group-hover/log:text-[#5C6F2B] group-hover/log:border-[#5C6F2B]/30 transition-all">
                     <Plus size={18} />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[14px] font-black text-zinc-200 tracking-tight uppercase group-hover/log:text-white transition-colors">
+                    <p className="text-[14px] font-black text-[var(--text-primary)] tracking-tight uppercase group-hover/log:text-[var(--text-primary)] transition-colors">
                       Khởi tạo đơn hàng CKMS
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">
+                      <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tighter">
                         {new Date(shipment.createdAt).toLocaleString("vi-VN")}
                       </span>
-                      <div className="w-1 h-1 rounded-full bg-zinc-800"></div>
-                      <span className="text-[10px] text-zinc-400 font-black uppercase tracking-widest blur-[0.2px]">
+                      <div className="w-1 h-1 rounded-full bg-[var(--border-primary)]/40"></div>
+                      <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest blur-[0.2px]">
                         By {shipment.createdByUsername || "Hệ thống"}
                       </span>
                     </div>
@@ -762,14 +711,14 @@ export const ShipmentDetailDrawer = ({
 
                 {shipment.shippedAt && (
                   <div className="flex items-start gap-6 group/log animate-in slide-in-from-left duration-500">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/log:text-[#DE802B] group-hover/log:border-[#DE802B]/30 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)] group-hover/log:text-[#DE802B] group-hover/log:border-[#DE802B]/30 transition-all">
                       <Truck size={18} />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[14px] font-black text-zinc-200 tracking-tight uppercase">
+                      <p className="text-[14px] font-black text-[var(--text-primary)] tracking-tight uppercase">
                         Bắt đầu vận chuyển
                       </p>
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">
+                      <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tighter">
                         {new Date(shipment.shippedAt).toLocaleString("vi-VN")}
                       </p>
                     </div>
@@ -778,14 +727,14 @@ export const ShipmentDetailDrawer = ({
 
                 {shipment.deliveredAt && (
                   <div className="flex items-start gap-6 group/log animate-in slide-in-from-left duration-500">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/log:text-[#5C6F2B] group-hover/log:border-[#5C6F2B]/30 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)] group-hover/log:text-[#5C6F2B] group-hover/log:border-[#5C6F2B]/30 transition-all">
                       <CheckCircle2 size={18} />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[14px] font-black text-zinc-200 tracking-tight uppercase">
+                      <p className="text-[14px] font-black text-[var(--text-primary)] tracking-tight uppercase">
                         Hoàn tất giao hàng
                       </p>
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">
+                      <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tighter">
                         {new Date(shipment.deliveredAt).toLocaleString("vi-VN")}
                       </p>
                     </div>
@@ -802,7 +751,7 @@ export const ShipmentDetailDrawer = ({
                     <span className="text-[10px] font-black text-[#DE802B] uppercase tracking-[0.2em] block">
                       Ghi chú Shipment
                     </span>
-                    <p className="text-[11px] text-zinc-400 font-medium italic leading-relaxed text-balance">
+                    <p className="text-[11px] text-[var(--text-secondary)] font-medium italic leading-relaxed text-balance">
                       "{shipment.remarks || shipment.note}"
                     </p>
                   </div>
@@ -818,7 +767,7 @@ export const ShipmentDetailDrawer = ({
                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
                   <Package size={18} />
                 </div>
-                <h4 className="text-[12px] font-black text-white uppercase tracking-[0.2em]">
+                <h4 className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em]">
                   Danh sách đơn hàng
                 </h4>
               </div>
@@ -828,8 +777,8 @@ export const ShipmentDetailDrawer = ({
               {shipment.stops?.map((stop) => (
                 <div key={stop.stopId} className="space-y-2">
                   <div className="flex items-center gap-2 px-4">
-                    <MapPin size={12} className="text-zinc-500" />
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                    <MapPin size={12} className="text-[var(--text-secondary)]/50" />
+                    <span className="text-[10px] font-black text-[var(--text-secondary)]/50 uppercase tracking-widest">
                       {stop.storeName}
                     </span>
                   </div>
@@ -844,10 +793,10 @@ export const ShipmentDetailDrawer = ({
                         <div
                           key={order.orderId}
                           className={cn(
-                            "p-5 bg-zinc-950/40 border rounded-[28px] flex flex-col gap-4 hover:border-zinc-700 transition-all group/order",
+                            "p-5 bg-[var(--bg-root)] border rounded-[28px] flex flex-col gap-4 hover:border-amber-500/30 transition-all group/order",
                             order.status === "CANCELLED"
                               ? "border-red-500/30 bg-red-500/[0.02]"
-                              : "border-zinc-800/50",
+                              : "border-[var(--border-primary)]",
                           )}
                         >
                           <div className="flex items-center justify-between">
@@ -858,7 +807,7 @@ export const ShipmentDetailDrawer = ({
                                     "text-[13px] font-black",
                                     order.status === "CANCELLED"
                                       ? "text-red-400"
-                                      : "text-zinc-100",
+                                      : "text-[var(--text-primary)]",
                                   )}
                                 >
                                   Đơn hàng #{order.orderId}
@@ -878,7 +827,7 @@ export const ShipmentDetailDrawer = ({
                                   {order.status}
                                 </Badge>
                               </div>
-                              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">
+                              <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-1">
                                 Ngày tạo:{" "}
                                 {new Date(order.orderDate).toLocaleDateString(
                                   "vi-VN",
@@ -893,7 +842,7 @@ export const ShipmentDetailDrawer = ({
                                   currency: "VND",
                                 }).format(order.totalAmount || 0)}
                               </span>
-                              <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">
+                              <span className="text-[9px] text-[var(--text-secondary)] font-black uppercase tracking-widest">
                                 Giá trị đơn
                               </span>
                             </div>
@@ -902,13 +851,13 @@ export const ShipmentDetailDrawer = ({
                           {/* Order Items List */}
                           {order.orderDetails &&
                             order.orderDetails.length > 0 && (
-                              <div className="bg-zinc-900/40 rounded-2xl p-4 border border-zinc-800/30">
+                              <div className="bg-[var(--bg-card)]/40 rounded-2xl p-4 border border-[var(--border-primary)]">
                                 <div className="flex items-center gap-2 mb-3">
                                   <Package
                                     size={12}
-                                    className="text-zinc-600"
+                                    className="text-[var(--text-secondary)]"
                                   />
-                                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.15em]">
+                                  <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-[0.15em]">
                                     Sản phẩm ({order.orderDetails.length})
                                   </span>
                                 </div>
@@ -916,19 +865,19 @@ export const ShipmentDetailDrawer = ({
                                   {order.orderDetails.map((item, idx) => (
                                     <div
                                       key={`${order.orderId}-item-${idx}`}
-                                      className="flex items-center justify-between py-1.5 border-b border-zinc-800/30 last:border-0"
+                                      className="flex items-center justify-between py-1.5 border-b border-[var(--border-primary)]/20 last:border-0"
                                     >
                                       <div className="flex items-center gap-3">
-                                        <div className="w-1 h-1 rounded-full bg-zinc-700"></div>
-                                        <span className="text-[11px] font-bold text-zinc-300">
+                                        <div className="w-1 h-1 rounded-full bg-[var(--border-primary)]"></div>
+                                        <span className="text-[11px] font-bold text-[var(--text-primary)]">
                                           {item.productName}
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-3">
-                                        <span className="text-[10px] text-zinc-500">
+                                        <span className="text-[10px] text-[var(--text-secondary)]">
                                           x{item.quantity}
                                         </span>
-                                        <span className="text-[10px] font-mono text-zinc-400">
+                                        <span className="text-[10px] font-mono text-[var(--text-secondary)]">
                                           {new Intl.NumberFormat(
                                             "vi-VN",
                                           ).format(
@@ -955,7 +904,7 @@ export const ShipmentDetailDrawer = ({
                                 <span className="text-[9px] font-black text-amber-500/70 uppercase tracking-widest">
                                   Ghi chú đơn:
                                 </span>
-                                <p className="text-[11px] text-zinc-400 italic">
+                                <p className="text-[11px] text-[var(--text-secondary)] italic">
                                   "{order.note}"
                                 </p>
                               </div>
@@ -972,7 +921,7 @@ export const ShipmentDetailDrawer = ({
                                     e.stopPropagation();
                                     handleResendOrder(order.orderId);
                                   }}
-                                  className="h-8 px-4 bg-zinc-900 border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/10 text-zinc-500 hover:text-amber-500 transition-all rounded-xl gap-2 active:scale-95"
+                                  className="h-8 px-4 bg-[var(--bg-root)] border border-[var(--border-primary)] hover:border-amber-500/50 hover:bg-amber-500/10 text-[var(--text-secondary)] hover:text-amber-500 transition-all rounded-xl gap-2 active:scale-95"
                                 >
                                   <RefreshCw size={12} />
                                   <span className="text-[9px] font-black uppercase tracking-widest">
@@ -990,20 +939,18 @@ export const ShipmentDetailDrawer = ({
             </div>
           </div>
 
-          {/* Item Details Panel (Aggregated) removed as requested */}
-
           {/* Action Panel */}
-          <div className="relative group/panel overflow-hidden p-8 bg-zinc-950 border border-zinc-800 rounded-[36px] transition-all duration-500 hover:border-[#DE802B]/20 shadow-2xl">
+          <div className="relative group/panel overflow-hidden p-8 bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-[36px] transition-all duration-500 hover:border-[#DE802B]/20 shadow-2xl">
             <div className="absolute top-0 right-0 w-48 h-48 bg-[#DE802B]/[0.03] blur-[80px] rounded-full transform translate-x-20 -translate-y-20 group-hover/panel:scale-150 transition-transform duration-1000"></div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-8 relative z-10">
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 rounded-[24px] bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 group-hover/panel:text-[#DE802B] group-hover/panel:border-[#DE802B]/30 group-hover/panel:bg-[#DE802B]/5 transition-all duration-500">
+                <div className="w-16 h-16 rounded-[24px] bg-[var(--bg-card)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)] group-hover/panel:text-[#DE802B] group-hover/panel:border-[#DE802B]/30 group-hover/panel:bg-[#DE802B]/5 transition-all duration-500">
                   <Printer size={28} />
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="text-[14px] font-black text-white uppercase tracking-tight">
+                    <span className="text-[14px] font-black text-[var(--text-primary)] uppercase tracking-tight">
                       Cước bổ sung AhaMove
                     </span>
                     <Badge
@@ -1013,7 +960,7 @@ export const ShipmentDetailDrawer = ({
                       AhaMove Bill
                     </Badge>
                   </div>
-                  <span className="text-xs text-zinc-500 font-medium mt-1.5 max-w-[200px] leading-relaxed italic">
+                  <span className="text-xs text-[var(--text-secondary)] font-medium mt-1.5 max-w-[200px] leading-relaxed italic">
                     {shipment.shippingFee
                       ? `VND ${shipment.shippingFee.toLocaleString()}`
                       : "Khoản phí sẽ được cập nhật tự động."}
@@ -1022,7 +969,7 @@ export const ShipmentDetailDrawer = ({
               </div>
               <Button
                 variant="ghost"
-                className="h-14 px-10 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[11px] font-black uppercase tracking-[0.2em] rounded-[22px] hover:bg-[#DE802B] hover:text-black hover:border-transparent transition-all duration-500 shadow-xl hover:shadow-[#DE802B]/20 pointer-events-none opacity-50"
+                className="h-14 px-10 bg-[var(--bg-root)] border border-[var(--border-primary)] text-[var(--text-secondary)] text-[11px] font-black uppercase tracking-[0.2em] rounded-[22px] hover:bg-[#DE802B] hover:text-black hover:border-transparent transition-all duration-500 shadow-xl hover:shadow-[#DE802B]/20 pointer-events-none opacity-50"
               >
                 Not Available
               </Button>
