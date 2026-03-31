@@ -48,7 +48,7 @@ export const ShipmentList = () => {
   const fetchShipments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params: Record<string, string | number> = { page, size: 10, sort: "shipmentId,desc" };
+      const params: Record<string, string | number> = { page, size: 100, sort: "shipmentId,desc" };
       if (statusFilter !== "all") {
         params.status = statusFilter;
       }
@@ -313,7 +313,7 @@ export const ShipmentList = () => {
             >
               <ExternalLink size={14} strokeWidth={3} />
               <span className="text-[10px] font-black uppercase tracking-widest">
-                Real-time
+                Trực tuyến
               </span>
             </Button>
           ) : (
@@ -385,16 +385,16 @@ export const ShipmentList = () => {
                 <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
                     <div className="flex items-center gap-3 mb-4">
                         <Badge variant="orange" className="text-[10px] font-black tracking-[0.3em] px-3 py-1 border-0 uppercase bg-amber-500/10 text-amber-500">
-                           FLEET MANAGEMENT
+                           VẬN CHUYỂN
                         </Badge>
                         <div className="h-px w-12 bg-amber-500/30" />
-                        <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Real-time Logistics</span>
+                        <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Thời gian thực</span>
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-end gap-8">
                         <div>
                             <h1 className="text-6xl font-black text-[var(--text-primary)] tracking-tighter mb-4 uppercase italic leading-[0.85]">
-                                Shipment <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Pipeline</span>
+                                Quản lý <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Vận chuyển</span>
                             </h1>
                             <p className="text-[var(--text-secondary)] max-w-xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
                                 Theo dõi thời gian thực quá trình giao hàng từ <span className="text-amber-500">Kho bếp</span> tới các điểm tiêu thụ. Tối ưu hóa lộ trình vận tải.
@@ -406,7 +406,7 @@ export const ShipmentList = () => {
                                     onClick={() => navigate("/shipment/create")}
                                     className="h-16 px-10 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-[0_20px_50px_-10px_rgba(245,158,11,0.4)] border-0 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3"
                                 >
-                                    <Plus size={20} strokeWidth={4} /> Tạo đơn mới
+                                    <Plus size={20} strokeWidth={4} /> Tạo vận đơn
                                 </Button>
                             )}
                         </div>
@@ -420,7 +420,7 @@ export const ShipmentList = () => {
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
                     
                     <div className="flex flex-col xl:flex-row gap-6 items-center relative z-10">
-                        <div className="flex items-center gap-2 flex-1 w-full overflow-x-auto p-1 custom-scrollbar">
+                        <div className="flex flex-wrap items-center gap-2 flex-1 w-full p-1">
                             {statusOptions.map((opt) => {
                                 const Icon = opt.icon;
                                 const isActive = statusFilter === opt.value;
@@ -449,7 +449,7 @@ export const ShipmentList = () => {
                                 <Search className="text-[var(--text-secondary)] group-focus-within/search:text-amber-500 transition-colors" size={20} />
                             </div>
                             <Input
-                                placeholder="TÌM KIẾM THEO MÃ VẬN ĐƠN..."
+                                placeholder="TÌM MÃ VẬN ĐƠN..."
                                 className="pl-14 pr-6 h-14 bg-[var(--bg-root)]/80 border border-[var(--border-primary)] rounded-[2rem] text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase placeholder:text-[var(--text-secondary)]/50 focus:border-amber-500/40 transition-all duration-300 hover:bg-[var(--bg-root)]"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
