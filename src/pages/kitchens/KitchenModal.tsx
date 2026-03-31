@@ -4,12 +4,15 @@ import { ChefHat, Save, X, Activity } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import type { KitchenResponse } from '../../types/kitchen';
+import { GoongMapPicker } from '../../components/map/GoongMapPicker';
 
 interface KitchenFormData {
     name: string;
     address: string;
     maxDailyCapacity: number;
     isActive: boolean;
+    latitude?: number;
+    longitude?: number;
 }
 
 interface KitchenModalProps {
@@ -21,12 +24,14 @@ interface KitchenModalProps {
 }
 
 export const KitchenModal = ({ isOpen, onClose, onSubmit, initialData, isLoading }: KitchenModalProps) => {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<KitchenFormData>({
+    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<KitchenFormData>({
         defaultValues: {
             name: '',
             address: '',
             maxDailyCapacity: 0,
             isActive: true,
+            latitude: undefined,
+            longitude: undefined,
         }
     });
 
@@ -38,6 +43,8 @@ export const KitchenModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                     address: initialData.address,
                     maxDailyCapacity: initialData.maxDailyCapacity,
                     isActive: initialData.isActive,
+                    latitude: initialData.latitude,
+                    longitude: initialData.longitude,
                 });
             } else {
                 reset({
@@ -45,14 +52,25 @@ export const KitchenModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                     address: '',
                     maxDailyCapacity: 0,
                     isActive: true,
+                    latitude: undefined,
+                    longitude: undefined,
                 });
             }
         }
     }, [isOpen, initialData, reset]);
 
     const handleFormSubmit = async (data: KitchenFormData) => {
-        await onSubmit(data);
+        await onSubmit({
+            ...data,
+            latitude: Number.isFinite(data.latitude) ? data.latitude : undefined,
+            longitude: Number.isFinite(data.longitude) ? data.longitude : undefined,
+        });
     };
+
+    const address = watch('address');
+    const latitude = watch('latitude');
+    const longitude = watch('longitude');
+    const hasValidCoords = Number.isFinite(latitude) && Number.isFinite(longitude) && !(Number(latitude) === 0 && Number(longitude) === 0);
 
     return (
         <Modal 
@@ -83,6 +101,44 @@ export const KitchenModal = ({ isOpen, onClose, onSubmit, initialData, isLoading
                             placeholder="Vd: 123 Nguyễn Thị Minh Khai, Quận 1"
                         />
                         {errors.address && <p className="text-xs text-rose-500 font-bold ml-1">{errors.address.message}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest pl-1">Bản đồ Goong</label>
+                        <GoongMapPicker
+                            initialAddress={address}
+                            initialLngLat={hasValidCoords ? [Number(longitude), Number(latitude)] : undefined}
+                            enableDirections={false}
+                            mapHeightClassName="h-[260px]"
+                            onLocationSelected={({ address: selectedAddress, lngLat }) => {
+                                setValue('address', selectedAddress, { shouldDirty: true, shouldValidate: false });
+                                setValue('longitude', lngLat[0], { shouldDirty: true, shouldValidate: false });
+                                setValue('latitude', lngLat[1], { shouldDirty: true, shouldValidate: true });
+                            }}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-zinc-500 uppercase tracking-widest pl-1">Vĩ độ</label>
+                            <input
+                                type="number"
+                                step="any"
+                                {...register('latitude', { valueAsNumber: true })}
+                                className="w-full bg-zinc-950/50 border border-white/5 focus:border-amber-500/50 rounded-2xl px-5 py-4 text-sm font-bold text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all"
+                                placeholder="Nhận từ map"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-zinc-500 uppercase tracking-widest pl-1">Kinh độ</label>
+                            <input
+                                type="number"
+                                step="any"
+                                {...register('longitude', { valueAsNumber: true })}
+                                className="w-full bg-zinc-950/50 border border-white/5 focus:border-amber-500/50 rounded-2xl px-5 py-4 text-sm font-bold text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all"
+                                placeholder="Nhận từ map"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">

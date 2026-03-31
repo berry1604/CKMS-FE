@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -22,6 +23,7 @@ import { cn } from '../../utils/classNames';
 
 export const OrderPool = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [orders, setOrders] = useState<StoreOrderResponse[]>([]);
     const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
     const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +71,7 @@ export const OrderPool = () => {
             targetDate.setDate(targetDate.getDate() + 1);
             
             await productionPlanApi.createProductionPlan({
+                kitchenId: Number(user?.kitchenId ?? 1),
                 plannedDate: targetDate.toISOString().split('T')[0],
                 storeOrderIds: Array.from(selectedOrderIds)
             });

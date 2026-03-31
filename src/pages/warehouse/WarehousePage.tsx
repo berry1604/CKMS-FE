@@ -4,7 +4,7 @@ import { Search, Store, Zap } from "lucide-react";
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { kitchenApi } from "../../services/kitchen.api";
-import type { KitchenResponse, KitchenUpdateRequest } from "../../types/kitchen";
+import type { KitchenCreateRequest, KitchenResponse, KitchenUpdateRequest } from "../../types/kitchen";
 import toast from "react-hot-toast";
 import { WarehouseTable } from "./components/WarehouseTable";
 import { WarehouseModal } from "./components/WarehouseModal";

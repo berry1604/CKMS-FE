@@ -7,6 +7,7 @@ import { Store as StoreIcon, MapPin, Save, CreditCard, Navigation, ChevronLeft, 
 import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { storeApi } from '../../services/store.api';
+import { GoongMapPicker } from '../../components/map/GoongMapPicker';
 import { cn } from '../../utils/classNames';
 import storeHeaderBg from '../../assets/store_list_header_bg.png';
 
@@ -29,6 +30,8 @@ export default function CreateStorePage() {
     const {
         register,
         handleSubmit,
+        setValue,
+        watch,
         formState: { errors },
     } = useForm<CreateStoreFormValues>({
         resolver: zodResolver(createStoreSchema) as any,
@@ -61,6 +64,11 @@ export default function CreateStorePage() {
             setIsSubmitting(false);
         }
     };
+
+    const latitude = watch('latitude');
+    const longitude = watch('longitude');
+    const location = watch('location');
+    const hasValidCoords = Number.isFinite(latitude) && Number.isFinite(longitude);
 
     return (
         <div className="min-h-screen bg-[var(--bg-root)] animate-in fade-in duration-700 pb-20">
@@ -177,7 +185,26 @@ export default function CreateStorePage() {
                                 </div>
                                 {errors.location && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 ml-4 italic">{errors.location.message}</p>}
                             </div>
-
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-medium text-gray-300 block">Bản đồ Goong (MapLibre)</label>
+                            <GoongMapPicker
+                                initialAddress={location}
+                                initialLngLat={
+                                    hasValidCoords
+                                        ? [Number(longitude), Number(latitude)]
+                                        : undefined
+                                }
+                                enableDirections={false}
+                                onLocationSelected={({ address, lngLat }) => {
+                                    setValue('location', address, { shouldDirty: true, shouldValidate: true });
+                                    setValue('longitude', lngLat[0], { shouldDirty: true, shouldValidate: true });
+                                    setValue('latitude', lngLat[1], { shouldDirty: true, shouldValidate: true });
+                                }}
+                            />
+                            <p className="text-xs text-zinc-400">
+                                Chọn một địa điểm trên gợi ý để tự động điền địa chỉ, vĩ độ và kinh độ.
+                            </p>
+                        </div>
                             <div className="space-y-3 group/field">
                                 <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] ml-2 italic">Vĩ độ (Latitude) *</label>
                                 <div className="relative">

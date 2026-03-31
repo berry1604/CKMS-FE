@@ -117,7 +117,7 @@ export const CreateShipment = () => {
           (Array.isArray(resData?.data) ? resData.data : []) ||
           (Array.isArray(resData) ? resData : []);
 
-        const planOrders = rawOrders.filter((o: any) => {
+        const planOrders: StoreOrderResponse[] = rawOrders.filter((o: any) => {
           // Robust extraction of plan ID from object
           const orderPlanId = o.batchId || o.planId || o.productionPlanId;
           const isValidStatus = ["READY", "ALLOCATED", "APPROVED"].includes(
