@@ -194,7 +194,7 @@ export const CreateRolePage = () => {
                 <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                     {/* Left Column: Basic Info */}
                     <div className="lg:col-span-4 space-y-8">
-                        <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] p-10 space-y-10 shadow-2xl">
+                        <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-3xl p-10 space-y-10 shadow-2xl">
                             <div className="space-y-6">
                                 <div className="flex items-center gap-4 pb-4 border-b border-[var(--border-primary)]/10">
                                     <div className="p-3 bg-amber-500/10 rounded-xl">
@@ -295,7 +295,7 @@ export const CreateRolePage = () => {
 
                         <div className="space-y-8 h-[calc(100vh-450px)] pr-4 custom-scrollbar overflow-y-auto">
                             {availablePrivileges.length === 0 ? (
-                                <div className="bg-[var(--bg-card)]/20 border-2 border-dashed border-[var(--border-primary)] rounded-[3rem] py-32 text-center">
+                                <div className="bg-[var(--bg-card)]/20 border-2 border-dashed border-[var(--border-primary)] rounded-3xl py-32 text-center">
                                     <ShieldCheck className="mx-auto h-20 w-20 text-[var(--text-secondary)]/10 mb-8" />
                                     <p className="text-[var(--text-secondary)]/30 font-black uppercase tracking-[0.3em] text-[10px] italic">Hệ thống chưa nạp dữ liệu đặc quyền</p>
                                 </div>
@@ -305,7 +305,7 @@ export const CreateRolePage = () => {
                                     const isAllSelected = privIds.every((id: number) => selectedPrivilegeIds.includes(id));
 
                                     return (
-                                        <div key={group} className="bg-[var(--bg-card)]/40 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-xl hover:border-amber-500/20 transition-all duration-700 group/section">
+                                        <div key={group} className="bg-[var(--bg-card)]/40 backdrop-blur-3xl border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-xl hover:border-amber-500/20 transition-all duration-700 group/section">
                                             <div className="px-10 py-6 bg-[var(--text-primary)]/[0.02] border-b border-[var(--border-primary)]/10 flex justify-between items-center">
                                                 <div className="flex items-center gap-5">
                                                     <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)]"></div>

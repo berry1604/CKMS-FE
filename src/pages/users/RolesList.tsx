@@ -123,7 +123,7 @@ export const RolesList = () => {
             {/* List Section */}
             <div className="max-w-7xl mx-auto px-8 -mt-10 relative z-10">
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-40 space-y-6 bg-[var(--bg-card)]/40 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem]">
+                    <div className="flex flex-col items-center justify-center py-40 space-y-6 bg-[var(--bg-card)]/40 backdrop-blur-3xl border border-[var(--border-primary)] rounded-3xl">
                         <div className="relative">
                             <div className="h-24 w-24 rounded-full border-t-2 border-amber-500 animate-spin opacity-20"></div>
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -133,8 +133,8 @@ export const RolesList = () => {
                         <p className="text-[var(--text-secondary)] font-black tracking-[0.3em] text-[10px] uppercase italic">Đang đồng bộ ma trận đặc quyền...</p>
                     </div>
                 ) : roles.length === 0 ? (
-                    <div className="text-center py-40 bg-[var(--bg-card)]/40 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] group">
-                        <div className="mx-auto h-24 w-24 bg-[var(--bg-root)]/50 rounded-[2rem] flex items-center justify-center mb-8 border border-[var(--border-primary)] group-hover:border-amber-500/30 transition-all duration-700">
+                    <div className="text-center py-40 bg-[var(--bg-card)]/40 backdrop-blur-3xl border border-[var(--border-primary)] rounded-3xl group">
+                        <div className="mx-auto h-24 w-24 bg-[var(--bg-root)]/50 rounded-2xl flex items-center justify-center mb-8 border border-[var(--border-primary)] group-hover:border-amber-500/30 transition-all duration-700">
                             <Shield className="h-10 w-10 text-[var(--text-secondary)]/20 group-hover:text-amber-500 transition-colors" />
                         </div>
                         <h3 className="text-3xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Cơ cấu rỗng</h3>
@@ -147,7 +147,7 @@ export const RolesList = () => {
                         </Button>
                     </div>
                 ) : (
-                    <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-2xl">
+                    <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-2xl">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left whitespace-nowrap">
                                 <thead>

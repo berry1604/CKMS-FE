@@ -515,7 +515,7 @@ export const AllocationMatrix = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left: Plan Selection Sidebar (Sticky) */}
         <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-8 self-start">
-          <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 p-5 rounded-[2rem] border border-[var(--border-primary)] flex flex-col max-h-[calc(100vh-12rem)] shadow-2xl relative overflow-hidden">
+          <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 p-5 rounded-2xl border border-[var(--border-primary)] flex flex-col max-h-[calc(100vh-12rem)] shadow-2xl relative overflow-hidden">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
             <div className="flex items-center justify-between mb-4 px-1">
               <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">
@@ -655,7 +655,7 @@ export const AllocationMatrix = () => {
         {/* Right: Matrix Display Area */}
         <div className="lg:col-span-9 space-y-8">
           {/* Matrix Table */}
-          <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 rounded-[3rem] border border-[var(--border-primary)] overflow-hidden shadow-2xl relative">
+          <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 rounded-3xl border border-[var(--border-primary)] overflow-hidden shadow-2xl relative">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse border-spacing-0">

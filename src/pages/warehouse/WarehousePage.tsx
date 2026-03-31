@@ -157,7 +157,7 @@ export const WarehousePage = () => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 rounded-[3rem] border border-[var(--border-primary)] overflow-hidden shadow-2xl relative">
+                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 rounded-3xl border border-[var(--border-primary)] overflow-hidden shadow-2xl relative">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
 
                     {/* Toolbar */}

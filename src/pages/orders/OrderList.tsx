@@ -279,7 +279,7 @@ export const OrderList = () => {
                             <input
                                 type="text"
                                 placeholder="TÌM MÃ ĐƠN, TÊN CỬA HÀNG..."
-                                className="w-full pl-14 pr-6 py-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-[2rem] text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all duration-300 placeholder:text-[var(--text-secondary)]/50 hover:bg-[var(--bg-root)]"
+                                className="w-full pl-14 pr-6 py-5 bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl text-[var(--text-primary)] font-black text-[11px] tracking-widest uppercase focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/40 transition-all duration-300 placeholder:text-[var(--text-secondary)]/50 hover:bg-[var(--bg-root)]"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -318,6 +318,18 @@ export const OrderList = () => {
                     </div>
                 </div>
 
+<<<<<<< HEAD
+                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-2xl">
+                    <div className="overflow-x-auto">
+                        <DataTable
+                            data={filteredOrders}
+                            columns={columns}
+                            keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
+                            isLoading={isLoading}
+                            onRowClick={(order) => setSelectedOrder(order)}
+                        />
+                    </div>
+=======
                 <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-2xl">
                     <DataTable
                         data={filteredOrders}
@@ -326,6 +338,7 @@ export const OrderList = () => {
                         isLoading={isLoading}
                         onRowClick={(order) => setSelectedOrder(order)}
                     />
+>>>>>>> 8ae7acef0b3aa06c131d04e05983c65f524ee3ba
 
                     {/* Pagination */}
                     {totalPages > 1 && (

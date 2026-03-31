@@ -199,12 +199,12 @@ export const ProductCatalog = () => {
             {/* Catalog Grid */}
             <div className="space-y-6">
                 {isLoading ? (
-                    <div className="bg-[var(--bg-root)]/40 backdrop-blur-xl rounded-[3rem] border border-[var(--border-primary)] p-32 text-center">
+                    <div className="bg-[var(--bg-root)]/40 backdrop-blur-xl rounded-3xl border border-[var(--border-primary)] p-32 text-center">
                         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500 mx-auto"></div>
                         <p className="mt-6 text-[var(--text-secondary)] font-black uppercase tracking-[0.3em] text-xs italic">Đang tải dữ liệu thực đơn...</p>
                     </div>
                 ) : products.length === 0 ? (
-                    <div className="bg-[var(--bg-root)]/40 backdrop-blur-xl rounded-[3rem] border border-[var(--border-primary)] p-32 text-center">
+                    <div className="bg-[var(--bg-root)]/40 backdrop-blur-xl rounded-3xl border border-[var(--border-primary)] p-32 text-center">
                         <div className="w-20 h-20 rounded-3xl bg-[var(--bg-root)] flex items-center justify-center text-[var(--text-secondary)]/20 mx-auto mb-6 shadow-inner border border-[var(--border-primary)]">
                             <Package size={40} />
                         </div>
@@ -222,7 +222,7 @@ export const ProductCatalog = () => {
 
                                 <div className="flex flex-col gap-6 relative z-10">
                                     <div className="flex justify-between items-start">
-                                        <div className="w-24 h-24 rounded-[2rem] bg-[var(--bg-root)] overflow-hidden border border-[var(--border-primary)] shadow-inner group-hover:scale-105 transition-transform duration-500">
+                                        <div className="w-24 h-24 rounded-2xl bg-[var(--bg-root)] overflow-hidden border border-[var(--border-primary)] shadow-inner group-hover:scale-105 transition-transform duration-500">
                                             {product.imageUrl ? (
                                                 <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                             ) : (
@@ -302,7 +302,7 @@ export const ProductCatalog = () => {
 
                 {/* Pagination Elite */}
                 {pageableInfo && pageableInfo.totalPages > 1 && (
-                    <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-10 px-12 py-8 bg-[var(--bg-card)]/60 backdrop-blur-2xl rounded-[3rem] border border-[var(--border-primary)] shadow-sm">
+                    <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-10 px-12 py-8 bg-[var(--bg-card)]/60 backdrop-blur-2xl rounded-3xl border border-[var(--border-primary)] shadow-sm">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.4em] italic mb-1">Phân trang dữ liệu</span>
                             <div className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest italic">

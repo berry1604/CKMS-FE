@@ -165,7 +165,7 @@ export const SplitOrder = () => {
                         <Badge variant="indigo" className="font-bold">ORD-{order.orderId}</Badge>
                     </div>
                     
-                    <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] overflow-hidden backdrop-blur-xl shadow-sm dark:shadow-none">
+                    <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-xl shadow-sm dark:shadow-none">
                         <div className="p-6 space-y-4">
                             {order.orderDetails.map((item, idx) => {
                                 const splitQty = splitItems[item.productId] || 0;
@@ -237,7 +237,7 @@ export const SplitOrder = () => {
                         <Badge variant="indigo" className="font-bold">NEW ORDER</Badge>
                     </div>
 
-                    <div className="bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 rounded-[2rem] overflow-hidden backdrop-blur-xl flex flex-col h-full min-h-[400px] shadow-sm dark:shadow-none">
+                    <div className="bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 rounded-2xl overflow-hidden backdrop-blur-xl flex flex-col h-full min-h-[400px] shadow-sm dark:shadow-none">
                         <div className="p-6 flex-1 space-y-4">
                             {splitCount === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] bg-white dark:bg-zinc-950/20">
@@ -292,7 +292,7 @@ export const SplitOrder = () => {
             </div>
 
             {/* Warning Section */}
-            <div className="bg-amber-500/10 border border-amber-500/20 p-6 rounded-[2rem] flex gap-4">
+            <div className="bg-amber-500/10 border border-amber-500/20 p-6 rounded-2xl flex gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
                     <AlertTriangle size={24} />
                 </div>

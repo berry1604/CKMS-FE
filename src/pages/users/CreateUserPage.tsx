@@ -133,7 +133,7 @@ export const CreateUserPage = () => {
             </div>
 
             <div className="max-w-5xl mx-auto px-8 -mt-16 relative z-10 transition-all duration-700 ease-out animate-in fade-in slide-in-from-bottom-8">
-                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/60 border border-[var(--border-primary)] rounded-[3rem] shadow-2xl overflow-hidden p-10 md:p-20 relative group/form">
+                <div className="backdrop-blur-3xl bg-[var(--bg-card)]/60 border border-[var(--border-primary)] rounded-3xl shadow-2xl overflow-hidden p-10 md:p-20 relative group/form">
                     <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover/form:opacity-10 transition-opacity duration-1000">
                         <UserPlus size={180} className="text-amber-500" />
                     </div>

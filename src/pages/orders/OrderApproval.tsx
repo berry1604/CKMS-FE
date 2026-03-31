@@ -602,7 +602,7 @@ export const OrderApproval = () => {
 
       <div className="max-w-[1600px] mx-auto px-4 space-y-8">
         {/* Catalog Horizontal Top Bar */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] p-6 shadow-sm flex flex-col gap-6 group/catalog">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl p-6 shadow-sm flex flex-col gap-6 group/catalog">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shrink-0">
@@ -802,7 +802,7 @@ export const OrderApproval = () => {
               </div>
             </div>
 
-            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] shadow-sm overflow-hidden group/table">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl shadow-sm overflow-hidden group/table">
               <div className="overflow-auto custom-scrollbar">
                 <DataTable
                   data={filteredOrders}
@@ -894,7 +894,7 @@ export const OrderApproval = () => {
 
       {showRejectModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
-          <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] p-10 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl p-10 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-300">
             <h2 className="text-2xl font-black text-red-500 uppercase italic mb-2">
               Từ chối đơn hàng
             </h2>

@@ -105,7 +105,7 @@ export default function CreateStorePage() {
             </div>
 
             <div className="max-w-5xl mx-auto px-8 -mt-16 relative z-10">
-                <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] p-12 shadow-2xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-3xl p-12 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
                     
                     <form id="create-store-form" onSubmit={handleSubmit(onSubmit as any)} className="space-y-12">

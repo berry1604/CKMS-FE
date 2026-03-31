@@ -122,7 +122,7 @@ export const CreateTaskPage = () => {
             </div>
 
             {/* Wizard Progress Section */}
-            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] p-8 md:p-12 shadow-sm relative overflow-hidden group">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl p-8 md:p-12 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
                 
                 <div className="flex items-center justify-between relative px-6 md:px-20 mb-16">
@@ -330,7 +330,7 @@ export const CreateTaskPage = () => {
                                 </div>
                              </div>
 
-                            <div className="bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-inner relative group/table">
+                            <div className="bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-inner relative group/table">
                                 <div className="overflow-x-auto no-scrollbar">
                                     <table className="w-full text-left">
                                         <thead className="sticky top-0 bg-[var(--bg-root)] z-10 border-b border-[var(--border-primary)]/20">
@@ -377,7 +377,7 @@ export const CreateTaskPage = () => {
                                 </Button>
                                 <Button
                                     onClick={onSubmit}
-                                    className="h-20 px-16 bg-gradient-to-br from-emerald-600 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 text-black font-black uppercase text-[10px] tracking-[0.4em] rounded-[2rem] shadow-xl shadow-emerald-500/10 border-0 transition-all hover:scale-[1.05] active:scale-95 italic"
+                                    className="h-20 px-16 bg-gradient-to-br from-emerald-600 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 text-black font-black uppercase text-[10px] tracking-[0.4em] rounded-2xl shadow-xl shadow-emerald-500/10 border-0 transition-all hover:scale-[1.05] active:scale-95 italic"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (

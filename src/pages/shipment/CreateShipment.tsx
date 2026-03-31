@@ -454,7 +454,7 @@ export const CreateShipment = () => {
           {/* Left Column: Form Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Primary Info Card */}
-            <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] p-10 space-y-10 shadow-2xl relative overflow-hidden group">
+            <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-3xl p-10 space-y-10 shadow-2xl relative overflow-hidden group">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
 
               <div>
@@ -573,7 +573,7 @@ export const CreateShipment = () => {
             </div>
 
             {/* Drop Points Card */}
-            <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] p-10 space-y-10 shadow-2xl relative">
+            <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-3xl p-10 space-y-10 shadow-2xl relative">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-[0.2em] flex items-center gap-3">
@@ -611,7 +611,7 @@ export const CreateShipment = () => {
                   return (
                     <div
                       key={dp.id}
-                      className="p-8 bg-[var(--bg-root)]/40 border border-[var(--border-primary)] rounded-[2rem] space-y-6 relative group/row transition-all hover:bg-[var(--bg-root)]/60"
+                      className="p-8 bg-[var(--bg-root)]/40 border border-[var(--border-primary)] rounded-2xl space-y-6 relative group/row transition-all hover:bg-[var(--bg-root)]/60"
                     >
                       <div className="absolute -left-4 -top-4 w-12 h-12 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-primary)] flex items-center justify-center font-black text-amber-500 text-lg shadow-xl shadow-black/50 tracking-tighter italic">
                         {String(idx + 1).padStart(2, "0")}
@@ -794,7 +794,7 @@ export const CreateShipment = () => {
             </div>
 
             {/* Shipping Fee Card */}
-            <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] p-10 space-y-8 shadow-2xl">
+            <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-3xl p-10 space-y-8 shadow-2xl">
               <div className="space-y-4">
                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">
                   Phí vận chuyển (VNĐ) — Bỏ trống nếu qua AhaMove

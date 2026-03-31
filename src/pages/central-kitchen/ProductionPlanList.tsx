@@ -125,7 +125,7 @@ export const ProductionPlanList = () => {
                                 variant="ghost" 
                                 onClick={fetchData}
                                 disabled={isLoading}
-                                className="h-20 w-20 bg-[var(--bg-card)]/40 backdrop-blur-3xl border border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-emerald-500 rounded-[2rem] transition-all shadow-2xl group/refresh"
+                                className="h-20 w-20 bg-[var(--bg-card)]/40 backdrop-blur-3xl border border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-emerald-500 rounded-2xl transition-all shadow-2xl group/refresh"
                             >
                                 <RefreshCw size={28} className={cn("transition-transform group-hover/refresh:rotate-180 duration-700", isLoading && "animate-spin")} />
                             </Button>
@@ -191,7 +191,7 @@ export const ProductionPlanList = () => {
             )}
 
             {/* Production Plans Table Section */}
-            <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-2xl relative group/table">
+            <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-2xl relative group/table">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent"></div>
                 <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full text-left">
@@ -218,7 +218,7 @@ export const ProductionPlanList = () => {
                                 <tr>
                                     <td colSpan={5} className="px-10 py-40 text-center">
                                          <div className="flex flex-col items-center gap-6 opacity-20">
-                                            <div className="w-24 h-24 rounded-[3rem] bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
+                                            <div className="w-24 h-24 rounded-3xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[var(--text-secondary)]">
                                                 <ClipboardList size={48} />
                                             </div>
                                             <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--text-secondary)] italic">Hệ thống chưa ghi nhận kế hoạch nào</span>
@@ -340,7 +340,7 @@ export const ProductionPlanList = () => {
                          <p className="text-3xl font-black text-indigo-500 italic group-hover:scale-105 transition-transform origin-left tabular-nums">{plans.filter(p => p.status === 'READY_TO_PRODUCE').length}</p>
                      </div>
                      <div className="flex items-end justify-end">
-                         <div className="flex items-center gap-4 p-5 rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border-primary)] shadow-sm hover:border-emerald-500/20 transition-all">
+                         <div className="flex items-center gap-4 p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-primary)] shadow-sm hover:border-emerald-500/20 transition-all">
                              <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                                 <AlertCircle size={16} />
                              </div>

@@ -333,7 +333,7 @@ export const KitchenInventory = () => {
                     <div
                         key={i}
                         className={cn(
-                            "p-8 rounded-[3rem] border transition-all duration-500 group/card relative overflow-hidden",
+                            "p-8 rounded-3xl border transition-all duration-500 group/card relative overflow-hidden",
                             "bg-[var(--bg-card)] border-[var(--border-primary)] hover:border-amber-500/20 shadow-sm hover:shadow-xl",
                             stat.highlight && `ring-1 ring-amber-500/10`
                         )}
@@ -391,7 +391,7 @@ export const KitchenInventory = () => {
                     </button>
                 </div>
 
-                <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-sm relative group/table">
+                <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-3xl overflow-hidden shadow-sm relative group/table">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent opacity-50"></div>
                     <div className="p-6">
                         <DataTable
@@ -412,7 +412,7 @@ export const KitchenInventory = () => {
                 title="Cập nhật tồn kho"
             >
                 <div className="space-y-6 p-2">
-                    <div className="p-6 rounded-[2rem] bg-[var(--bg-root)] border border-[var(--border-primary)] shadow-inner">
+                    <div className="p-6 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)] shadow-inner">
                         <p className="text-[10px] text-[var(--text-secondary)]/40 uppercase font-black tracking-widest mb-2 italic">Vật phẩm định danh</p>
                         <p className="text-2xl font-black text-[var(--text-primary)] italic uppercase tracking-tighter">{selectedItem?.itemName}</p>
                     </div>
@@ -474,7 +474,7 @@ export const KitchenInventory = () => {
             >
                 <div className="space-y-8 p-4">
                     <div className="flex flex-col items-center text-center space-y-6">
-                        <div className="w-24 h-24 rounded-[2rem] bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 shadow-xl shadow-red-500/5 rotate-3">
+                        <div className="w-24 h-24 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 shadow-xl shadow-red-500/5 rotate-3">
                             <AlertTriangle size={48} />
                         </div>
                         <div>

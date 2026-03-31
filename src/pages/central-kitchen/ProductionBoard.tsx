@@ -204,7 +204,7 @@ export const ProductionBoard = () => {
       <div
         key={plan.planId}
         className={cn(
-          "group relative p-6 rounded-[2rem] border transition-all duration-500 animate-in fade-in slide-in-from-bottom-4 shadow-sm",
+          "group relative p-6 rounded-2xl border transition-all duration-500 animate-in fade-in slide-in-from-bottom-4 shadow-sm",
           config.border,
           config.bg,
           config.glow,
@@ -482,11 +482,11 @@ export const ProductionBoard = () => {
       {/* Premium Yield Reporting Modal */}
       {showYieldModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--bg-root)]/80 backdrop-blur-3xl p-6 animate-in fade-in duration-500">
-          <div className="w-full max-w-2xl bg-[var(--bg-card)] rounded-[4rem] border border-[var(--border-primary)] shadow-[0_40px_100px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-12 duration-700">
+          <div className="w-full max-w-2xl bg-[var(--bg-card)] rounded-3xl border border-[var(--border-primary)] shadow-[0_40px_100px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-12 duration-700">
             <div className="p-10 bg-gradient-to-br from-amber-500/[0.02] to-transparent border-b border-[var(--border-primary)]/20 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/[0.03] blur-[100px]" />
               <div className="flex items-center gap-6 relative z-10">
-                <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-xl shadow-amber-500/5 rotate-3">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-xl shadow-amber-500/5 rotate-3">
                   <ClipboardList size={32} />
                 </div>
                 <div>
@@ -519,11 +519,11 @@ export const ProductionBoard = () => {
               ) : planDetailForYield ? (
                 <div className="space-y-8 animate-in fade-in duration-700">
                   <div className="grid grid-cols-2 gap-6">
-                    <div className="bg-[var(--bg-root)] p-6 rounded-[2rem] border border-[var(--border-primary)] space-y-2 shadow-inner">
+                    <div className="bg-[var(--bg-root)] p-6 rounded-2xl border border-[var(--border-primary)] space-y-2 shadow-inner">
                         <span className="text-[9px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic">Tên kế hoạch nấu</span>
                         <p className="text-sm font-black text-amber-500 uppercase tracking-tighter truncate">{planDetailForYield.planName}</p>
                     </div>
-                    <div className="bg-[var(--bg-root)] p-6 rounded-[2rem] border border-[var(--border-primary)] space-y-2 shadow-inner">
+                    <div className="bg-[var(--bg-root)] p-6 rounded-2xl border border-[var(--border-primary)] space-y-2 shadow-inner">
                         <span className="text-[9px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic">Mã lô định danh</span>
                         <p className="text-sm font-black text-[var(--text-primary)] font-mono tracking-widest">{planDetailForYield.batchCode}</p>
                     </div>
@@ -589,12 +589,12 @@ export const ProductionBoard = () => {
               <Button
                 variant="outline"
                 onClick={() => setShowYieldModal(false)}
-                className="border-[var(--border-primary)] text-[var(--text-secondary)]/60 hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/5 h-20 px-12 rounded-[2rem] flex-1 uppercase text-[10px] font-black tracking-[0.3em] transition-all italic"
+                className="border-[var(--border-primary)] text-[var(--text-secondary)]/60 hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/5 h-20 px-12 rounded-2xl flex-1 uppercase text-[10px] font-black tracking-[0.3em] transition-all italic"
               >
                 Hủy bỏ
               </Button>
               <Button
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-black font-black uppercase text-[10px] tracking-[0.3em] h-20 px-14 rounded-[2rem] flex-1 shadow-[0_20px_50px_rgba(16,185,129,0.2)] border-0 transition-all hover:scale-[1.02] active:scale-95 italic"
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-black font-black uppercase text-[10px] tracking-[0.3em] h-20 px-14 rounded-2xl flex-1 shadow-[0_20px_50px_rgba(16,185,129,0.2)] border-0 transition-all hover:scale-[1.02] active:scale-95 italic"
                 onClick={handleConfirmFinish}
                 disabled={isDetailLoading || !planDetailForYield}
               >

@@ -51,7 +51,7 @@ export const VNPayReturn = () => {
 
     return (
         <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-8">
-            <div className="w-full max-w-lg bg-[#0a0a0a] rounded-[3rem] border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95">
+            <div className="w-full max-w-lg bg-[#0a0a0a] rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95">
                 {status === "loading" && (
                     <div className="p-20 flex flex-col items-center gap-6">
                         <Loader2 size={48} className="text-amber-400 animate-spin" />

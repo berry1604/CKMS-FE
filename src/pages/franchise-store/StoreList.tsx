@@ -169,13 +169,13 @@ export const StoreList = () => {
                         </div>
 
                         <div className="flex items-center gap-6 mb-2">
-                            <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl px-8 py-5 rounded-[2rem] border border-[var(--border-primary)] flex flex-col items-center min-w-[160px] shadow-2xl">
+                            <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl px-8 py-5 rounded-2xl border border-[var(--border-primary)] flex flex-col items-center min-w-[160px] shadow-2xl">
                                 <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1 italic">Thực thể HO</span>
                                 <span className="text-4xl font-black text-[var(--text-primary)] italic tracking-tighter">{totalElements}</span>
                             </div>
                             <Button
                                 onClick={() => navigate('/stores/create')}
-                                className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-[0.2em] px-10 h-20 shadow-[0_20px_50px_rgba(245,158,11,0.3)] border-none flex items-center gap-3 rounded-[2rem] transition-all hover:scale-105 active:scale-95 italic"
+                                className="bg-amber-500 hover:bg-amber-600 text-black font-black uppercase text-[10px] tracking-[0.2em] px-10 h-20 shadow-[0_20px_50px_rgba(245,158,11,0.3)] border-none flex items-center gap-3 rounded-2xl transition-all hover:scale-105 active:scale-95 italic"
                             >
                                 <Plus size={20} strokeWidth={3} /> Đăng ký Chi nhánh
                             </Button>
@@ -186,7 +186,7 @@ export const StoreList = () => {
 
             <div className="max-w-7xl mx-auto px-8 -mt-10 relative z-10 space-y-12">
                 {/* Search & Intelligence Area */}
-                <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-[3rem] border border-[var(--border-primary)] p-8 shadow-2xl relative overflow-hidden group">
+                <div className="bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-3xl border border-[var(--border-primary)] p-8 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                     <div className="flex flex-col md:flex-row gap-8 items-center">
                         <div className="relative w-full md:w-[600px] group/search">
@@ -210,13 +210,13 @@ export const StoreList = () => {
 
                 {/* Store Cards Grid */}
                 {isLoading ? (
-                    <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-[3rem] border border-[var(--border-primary)] p-32 text-center shadow-2xl">
+                    <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-3xl border border-[var(--border-primary)] p-32 text-center shadow-2xl">
                         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-amber-500 opacity-20 mx-auto"></div>
                         <p className="mt-8 text-[var(--text-secondary)]/40 font-black uppercase tracking-[0.4em] text-[10px] italic">Đang đồng bộ hạ tầng mạng lưới...</p>
                     </div>
                 ) : filteredStores.length === 0 ? (
-                    <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-[3rem] border border-[var(--border-primary)] p-32 text-center shadow-2xl">
-                        <div className="w-24 h-24 bg-[var(--bg-root)]/50 rounded-[2rem] border border-[var(--border-primary)] flex items-center justify-center mx-auto mb-8 shadow-inner">
+                    <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-3xl border border-[var(--border-primary)] p-32 text-center shadow-2xl">
+                        <div className="w-24 h-24 bg-[var(--bg-root)]/50 rounded-2xl border border-[var(--border-primary)] flex items-center justify-center mx-auto mb-8 shadow-inner">
                             <StoreIcon className="w-10 h-10 text-[var(--text-secondary)]/10" />
                         </div>
                         <p className="text-[var(--text-secondary)]/30 font-black uppercase tracking-[0.3em] text-[10px] italic">Không tìm thấy thực thể chi nhánh phù hợp</p>
@@ -228,7 +228,7 @@ export const StoreList = () => {
                             return (
                                 <div
                                     key={actualId}
-                                    className="group relative bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-[3rem] border border-[var(--border-primary)] overflow-hidden hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] hover:border-amber-500/20 transition-all duration-700 cursor-pointer shadow-2xl"
+                                    className="group relative bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-3xl border border-[var(--border-primary)] overflow-hidden hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] hover:border-amber-500/20 transition-all duration-700 cursor-pointer shadow-2xl"
                                     onClick={() => navigate(`/stores/${actualId}`)}
                                 >
                                     {/* High-End Background Accent */}
@@ -333,7 +333,7 @@ export const StoreList = () => {
                 )}
 
                 {/* Pagination Controls */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8 px-10 py-8 bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-[3rem] border border-[var(--border-primary)] shadow-2xl relative overflow-hidden">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8 px-10 py-8 bg-[var(--bg-card)]/60 backdrop-blur-3xl rounded-3xl border border-[var(--border-primary)] shadow-2xl relative overflow-hidden">
                     <div className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.4em] italic flex items-center gap-4">
                         <div className="h-1 w-8 bg-amber-500/20 rounded-full" />
                         {totalElements > 0 ? (

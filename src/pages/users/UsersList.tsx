@@ -152,7 +152,7 @@ export const UsersList = () => {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <div className="px-8 py-5 bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-primary)] rounded-[2rem] shadow-xl group/stat hover:border-amber-500/30 transition-all duration-500">
+                    <div className="px-8 py-5 bg-[var(--bg-card)]/40 backdrop-blur-xl border border-[var(--border-primary)] rounded-2xl shadow-xl group/stat hover:border-amber-500/30 transition-all duration-500">
                         <span className="text-[var(--text-secondary)]/40 text-[9px] font-black uppercase tracking-[0.3em] block mb-1 italic">Tổng số người dùng</span>
                         <div className="flex items-baseline gap-2">
                             <span className="text-3xl font-black text-[var(--text-primary)] group-hover:text-amber-500 transition-colors leading-none">{totalElements}</span>
@@ -169,7 +169,7 @@ export const UsersList = () => {
             </div>
 
                 {/* Main Content Area */}
-                <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-[3rem] border border-[var(--border-primary)] overflow-hidden shadow-2xl relative">
+                <div className="bg-[var(--bg-card)]/40 backdrop-blur-3xl rounded-3xl border border-[var(--border-primary)] overflow-hidden shadow-2xl relative">
                     {/* Toolbar */}
                     <div className="p-10 border-b border-[var(--border-primary)] bg-[var(--text-primary)]/[0.02]">
                         <div className="flex flex-col xl:flex-row gap-10 items-center justify-between">
