@@ -21,15 +21,14 @@ import { Badge } from "../../components/ui/Badge";
 import { Modal } from "../../components/ui/Modal";
 import { cn } from "../../utils/classNames";
 import { useOrderValidation } from "../../hooks/useOrderValidation";
-import { productApi } from "../../services/product.api";
-import type { ProductResponse } from "../../types/product";
+
 import { storeOrderApi } from "../../services/storeOrderApi";
-import type { StoreOrderResponse } from "../../types/storeOrder";
+import type { StoreOrderResponse, MaterialPreviewResponse } from "../../types/storeOrder";
 import { toast } from "react-hot-toast";
 import { OrderDetailDrawer } from "./OrderDetailDrawer";
 import { RescheduleModal } from "../../components/orders/RescheduleModal";
 import type { OrderDetailResponse } from "../../types/storeOrder";
-import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
+
 import { useAuth } from "../../hooks/useAuth";
 
 export const OrderApproval = () => {
@@ -40,10 +39,10 @@ export const OrderApproval = () => {
   const [filteredOrders, setFilteredOrders] = useState<StoreOrderResponse[]>(
     [],
   );
-  const [products, setProducts] = useState<ProductResponse[]>([]);
+  const [previewData, setPreviewData] = useState<MaterialPreviewResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [stockMap, setStockMap] = useState<Record<number, number>>({});
 
   // Selection & Drawer state
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(
@@ -99,21 +98,10 @@ export const OrderApproval = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const ordersPromise = storeOrderApi.getAllOrders({
+      const ordersRes = await storeOrderApi.getAllOrders({
         size: 100,
         status: "SUBMITTED",
       });
-      const productsPromise = productApi
-        .getProducts({ size: 100 })
-        .catch((err) => {
-          console.error("Failed to fetch products:", err);
-          return { data: { content: [] } };
-        });
-
-      const [ordersRes, productsRes] = await Promise.all([
-        ordersPromise,
-        productsPromise,
-      ]);
 
       const extract = (res: any): any[] => {
         if (!res) return [];
@@ -128,27 +116,10 @@ export const OrderApproval = () => {
       };
 
       const ordersData = extract(ordersRes);
-      const productsData = extract(productsRes);
 
       setOrders(ordersData);
       setFilteredOrders(ordersData);
-      setProducts(productsData);
       setSelectedOrderIds(new Set());
-
-      // Fetch stock data
-      const kitchenId = user?.kitchenId || (kitchens.length > 0 ? kitchens[0].kitchenId : null);
-      if (kitchenId) {
-        try {
-          const stockRes = await kitchenInventoryApi.getWarehouseStock(kitchenId);
-          const map: Record<number, number> = {};
-          (stockRes.data || []).forEach(item => {
-            if (item.itemId) map[item.itemId] = (map[item.itemId] || 0) + item.quantity;
-          });
-          setStockMap(map);
-        } catch (err) {
-          console.error("Failed to fetch stock:", err);
-        }
-      }
     } catch (error) {
       console.error("Failed to fetch data:", error);
       toast.error("Gặp lỗi khi tải dữ liệu đơn hàng.");
@@ -161,33 +132,36 @@ export const OrderApproval = () => {
     fetchData();
   }, [user?.kitchenId, kitchens.length]);
 
-  const fetchStockData = async (kitchenId: number) => {
-    setIsFetchingStock(true);
-    try {
-      const res = await kitchenInventoryApi.getWarehouseStock(kitchenId);
-      const stockItems = res.data || [];
-      
-      // Aggregate stock by productId for items of type "PRODUCT"
-      const newStockMap: Record<number, number> = {};
-      stockItems.forEach((item: KitchenStockItemResponse) => {
-        if (item.itemType === "PRODUCT") {
-          newStockMap[item.itemId] = (newStockMap[item.itemId] || 0) + item.quantity;
-        }
-      });
-      setStockMap(newStockMap);
-    } catch (error) {
-      console.error("Failed to fetch stock data:", error);
-    } finally {
-      setIsFetchingStock(false);
-    }
-  };
-
-  // Fetch stock when kitchens are loaded
+  // Material Preview Effect
   useEffect(() => {
-    if (kitchens && kitchens.length > 0) {
-      fetchStockData(kitchens[0].kitchenId);
+    let active = true;
+    const fetchPreview = async () => {
+      const kitchenId = user?.kitchenId || (kitchens.length > 0 ? kitchens[0].kitchenId : 1);
+      setIsLoadingPreview(true);
+      try {
+        const preview = await storeOrderApi.previewMaterial({
+          kitchenId,
+          orderIds: Array.from(selectedOrderIds)
+        });
+        if (active) setPreviewData(preview);
+      } catch (err) {
+        console.error("Failed to fetch material preview:", err);
+      } finally {
+        if (active) setIsLoadingPreview(false);
+      }
+    };
+    
+    // Execute after mount
+    if (user?.kitchenId || kitchens.length > 0) {
+      const timeoutId = setTimeout(() => {
+        fetchPreview();
+      }, 300); // 300ms debounce
+      return () => {
+        active = false;
+        clearTimeout(timeoutId);
+      };
     }
-  }, [kitchens]);
+  }, [selectedOrderIds, user?.kitchenId, kitchens.length]);
 
   useEffect(() => {
     let result = orders.filter((o) => o.status === "SUBMITTED");
@@ -377,43 +351,47 @@ export const OrderApproval = () => {
       className: "min-w-[180px]",
       headerClassName: "px-2 py-3",
       cellClassName: "px-2 py-4",
-      cell: (order) => (
-        <div className="flex flex-col gap-1.5 min-w-[150px]">
-          {(order.orderDetails || [])
-            .slice(0, 3)
-            .map((item: OrderDetailResponse, idx: number) => {
-              const stock = stockMap[item.productId] || 0;
-              const isLow = stock < item.quantity;
-              return (
+      cell: (order) => {
+        const orderResult = previewData?.orderResults?.find(r => r.orderId === order.orderId);
+        const isApprovable = orderResult ? orderResult.approvable : undefined;
+        
+        return (
+          <div className="flex flex-col gap-1.5 min-w-[150px]">
+            <div className="mb-1">
+              {isApprovable !== undefined && (
+                <Badge className={cn("border-0 text-[8px] font-black px-2 py-0.5 uppercase italic rounded-full inline-flex", isApprovable ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500")}>
+                  {isApprovable ? "Thỏa mãn NVL" : "Thiếu NVL"}
+                </Badge>
+              )}
+            </div>
+            {(order.orderDetails || [])
+              .slice(0, 3)
+              .map((item: OrderDetailResponse, idx: number) => (
                 <div key={idx} className="flex flex-col gap-0.5 group/prod">
-                  <div className="flex items-center gap-2">
-                    <div className={cn(
-                      "w-1 h-1 rounded-full shrink-0 transition-colors",
-                      isLow ? "bg-red-500" : "bg-emerald-500"
-                    )} />
-                    <span className="text-[11px] font-bold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors truncate">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="w-1 h-1 rounded-full shrink-0 transition-colors bg-[var(--text-secondary)]/30" />
+                    <span className="text-[11px] font-bold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors break-words line-clamp-2 leading-tight">
                       {item.productName}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2 pl-3">
-                    <span className="text-[9px] font-black text-[var(--text-secondary)]/30 uppercase tracking-widest italic">Stock:</span>
-                    <span className={cn(
-                      "text-[9px] font-black italic",
-                      isLow ? "text-red-500" : "text-emerald-500"
-                    )}>
-                      {stock} parts
-                    </span>
+                    <Badge className="bg-[var(--bg-root)] border border-[var(--border-primary)]/50 text-[var(--text-secondary)] text-[9px] px-1.5 py-0 rounded-md font-black italic shadow-sm shrink-0">
+                      x{item.quantity}
+                    </Badge>
                   </div>
                 </div>
-              );
-            })}
-          {order.orderDetails.length > 3 && (
-            <span className="text-[10px] text-amber-500/50 font-black italic pl-3 mt-1">
-              +{order.orderDetails.length - 3} sx...
-            </span>
-          )}
-        </div>
-      ),
+              ))}
+            {order.orderDetails.length > 3 && (
+              <span className="text-[10px] text-amber-500/50 font-black italic pl-3 mt-1">
+                +{order.orderDetails.length - 3} món...
+              </span>
+            )}
+            {orderResult && !orderResult.approvable && (
+              <span className="text-[9px] text-red-400 font-bold italic mt-1 leading-tight line-clamp-2">
+                Lý do: {orderResult.reason}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: <div className="w-full text-center">SỐ LƯỢNG</div>,
@@ -430,8 +408,8 @@ export const OrderApproval = () => {
             <span className="text-[var(--text-primary)] font-black text-sm tabular-nums leading-none">
               {total}
             </span>
-            <span className="text-[8px] text-[var(--text-secondary)] font-black uppercase tracking-widest leading-none">
-              QTY
+            <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest leading-none">
+              PHẦN
             </span>
           </div>
         );
@@ -591,41 +569,75 @@ export const OrderApproval = () => {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-4 space-y-8">
-        {/* Coordination Dashboard Slider */}
-        <div className="flex flex-nowrap gap-4 overflow-x-auto pb-4 no-scrollbar scroll-smooth snap-x">
-          {(kitchens || []).map((kitchen) => {
-            const isProducing = kitchen.currentStatus === "IN_PRODUCTION";
-            const usedCapacity = kitchen.todayUsedCapacity ?? 0;
-            const maxCapacity = kitchen.maxDailyCapacity || 1;
-            const usagePercent = Math.min(Math.round((usedCapacity / maxCapacity) * 100), 100);
-            
-            return (
-              <div key={kitchen.kitchenId} className="flex-shrink-0 w-80 snap-center bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[2rem] p-6 hover:border-amber-500/30 transition-all group/card relative overflow-hidden shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                      <Package size={14} />
+        {/* Catalog Horizontal Top Bar */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] p-6 shadow-sm flex flex-col gap-6 group/catalog">
+           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shrink-0">
+                  <Package size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tight italic flex items-center gap-3">
+                    Tồn kho vận hành
+                    {isLoadingPreview && <RefreshCw size={14} className="animate-spin text-amber-500" />}
+                  </h3>
+                  <p className="text-[9px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic mt-0.5">
+                    {previewData?.approvableOrderCount ?? 0}/{previewData?.selectedOrderCount ?? 0} Đơn khả thi ({previewData?.approvableRatePercent ?? 0}%)
+                  </p>
+                </div>
+             </div>
+
+             <div className="relative w-full md:w-[300px]">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]/40" size={16} />
+                <input
+                  placeholder="Tìm nguyên liệu nhanh..."
+                  className="w-full bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-2xl h-12 pl-12 pr-4 text-xs font-bold text-[var(--text-primary)]"
+                  value={productSearchTerm}
+                  onChange={(e) => setProductSearchTerm(e.target.value)}
+                />
+             </div>
+           </div>
+
+           <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar snap-x">
+              {(previewData?.materials || [])
+                .filter(m => !productSearchTerm || m.materialName.toLowerCase().includes(productSearchTerm.toLowerCase()))
+                .map((m, idx) => {
+                  const isShortage = m.shortageQty > 0;
+                  
+                  return (
+                    <div key={idx} className="w-[260px] shrink-0 p-5 rounded-3xl bg-[var(--bg-root)] border border-[var(--border-primary)] hover:border-amber-500/30 transition-all group/item shadow-sm flex flex-col justify-between">
+                      <div className="flex justify-between items-start mb-3 gap-3">
+                        <span className="text-[13px] font-black text-[var(--text-primary)] uppercase italic leading-tight group-hover:text-amber-500 transition-colors line-clamp-2">{m.materialName}</span>
+                        <Badge className={cn("text-[10px] px-2.5 py-0.5 border-0 font-black italic whitespace-nowrap shrink-0", isShortage ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>
+                          AVL: {m.availableQty}
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-2 mt-2">
+                        <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest border-b border-[var(--border-primary)]/10 pb-1">
+                           <span className="text-[var(--text-secondary)]/50">Cần cho đơn chờ:</span>
+                           <span className="text-[var(--text-primary)]">{m.requiredQtyForSelected} {m.unit}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest pt-1">
+                           <span className="text-[var(--text-secondary)]/50">Còn dư:</span>
+                           <span className={cn(isShortage ? "text-red-500" : "text-emerald-500")}>
+                              {isShortage ? `Thiếu ${m.shortageQty}` : `${m.remainingQty}`} {m.unit}
+                           </span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-tight italic">{kitchen.name}</span>
-                  </div>
-                  <Badge className={cn("border-0 text-[8px] font-black px-2 py-0.5 uppercase italic rounded-full", isProducing ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
-                    {isProducing ? "Producing" : "Ready"}
-                  </Badge>
-                </div>
-                <div className="h-1.5 w-full bg-[var(--bg-root)] rounded-full overflow-hidden p-[1.5px] border border-[var(--border-primary)]/10">
-                  <div className={cn("h-full rounded-full transition-all duration-1000", usagePercent > 90 ? "bg-red-500" : "bg-gradient-to-r from-amber-400 to-orange-500")} style={{ width: `${usagePercent}%` }} />
-                </div>
-                <div className="flex justify-between mt-2">
-                   <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase italic tracking-widest">{usagePercent}% MATRIX LOAD</span>
-                   <span className="text-[9px] font-black text-amber-500 italic">{usedCapacity}/{maxCapacity}</span>
-                </div>
-              </div>
-            );
-          })}
+                  );
+              })}
+              {(!previewData?.materials || previewData.materials.length === 0) && (
+                 <div className="w-full py-8 text-center text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest italic opacity-50">
+                    Chưa có dữ liệu tồn kho
+                 </div>
+              )}
+           </div>
         </div>
 
         {/* Operational Area */}
-        <div className="flex gap-8">
+        <div className="flex flex-col gap-8">
           {/* Main Table Section */}
           <div className="flex-1 space-y-6">
             <div className="flex items-center justify-between gap-6 bg-[var(--bg-card)] p-4 rounded-[2.5rem] border border-[var(--border-primary)] shadow-sm">
@@ -660,10 +672,21 @@ export const OrderApproval = () => {
               <div className="flex items-center gap-4">
                 <Button
                   className="h-14 px-8 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-lg border-0 transition-all flex items-center gap-2 shrink-0 disabled:opacity-30 italic"
-                  onClick={() => handleApprove(Array.from(selectedOrderIds))}
+                  onClick={() => {
+                    const approvableIds = Array.from(selectedOrderIds).filter(id => 
+                      previewData?.orderResults?.find(r => r.orderId === id)?.approvable !== false
+                    );
+                    if (approvableIds.length > 0) {
+                      handleApprove(approvableIds);
+                    } else {
+                      toast.error("Không có đơn hàng nào đủ điều kiện phê duyệt!");
+                    }
+                  }}
                   disabled={selectedOrderIds.size === 0 || isProcessing}
                 >
-                  <CheckCircle2 size={16} /> Duyệt {selectedOrderIds.size > 0 ? selectedOrderIds.size : ""} Đơn
+                  <CheckCircle2 size={16} /> Duyệt khả thi ({
+                    Array.from(selectedOrderIds).filter(id => previewData?.orderResults?.find(r => r.orderId === id)?.approvable !== false).length
+                  }) Đơn
                 </Button>
                 <Button
                   variant="ghost"
@@ -690,58 +713,7 @@ export const OrderApproval = () => {
             </div>
           </div>
 
-          {/* Catalog Sidebar */}
-          <div className="w-[400px] flex flex-col gap-6">
-            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[3rem] p-8 shadow-sm flex flex-col h-full group/catalog">
-               <div className="flex items-center gap-4 mb-8">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                    <Package size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight italic">Tồn kho vận hành</h3>
-                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest italic mt-1">Matrix Resource Control</p>
-                  </div>
-               </div>
 
-               <div className="relative mb-8">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]/40" size={16} />
-                  <input
-                    placeholder="Tìm sản phẩm nhanh..."
-                    className="w-full bg-[var(--bg-root)] border border-[var(--border-primary)] rounded-2xl h-14 pl-12 pr-4 text-xs font-bold text-[var(--text-primary)]"
-                    value={productSearchTerm}
-                    onChange={(e) => setProductSearchTerm(e.target.value)}
-                  />
-               </div>
-
-               <div className="flex-1 overflow-y-auto space-y-8 pr-2 custom-scrollbar">
-                  {Array.from(new Set(products.map(p => p.category?.name || "Khác"))).map((cat, ci) => (
-                    <div key={ci} className="space-y-4">
-                      <div className="flex items-center gap-4 px-2">
-                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] italic">{cat}</span>
-                        <div className="flex-1 h-px bg-[var(--border-primary)]/10" />
-                      </div>
-                      <div className="grid grid-cols-1 gap-3">
-                        {products
-                          .filter(p => (p.category?.name || "Khác") === cat)
-                          .filter(p => !productSearchTerm || p.name.toLowerCase().includes(productSearchTerm.toLowerCase()))
-                          .map((p, pi) => (
-                          <div key={pi} className="p-5 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)] border-transparent hover:border-amber-500/20 transition-all group/item shadow-sm">
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="text-xs font-black text-[var(--text-primary)] uppercase italic leading-tight group-hover:text-amber-500 transition-colors">{p.name}</span>
-                              <Badge className="bg-amber-500/10 text-amber-500 text-[8px] border-0 h-4 font-black italic">{stockMap[p.id] || 0} unit</Badge>
-                            </div>
-                            <div className="flex items-center justify-between text-[10px] font-black italic text-[var(--text-secondary)]/40 uppercase tracking-widest">
-                               <span>{p.unit}</span>
-                               <span className="text-amber-500/60 tabular-nums">{(p.price || 0).toLocaleString()} VNĐ</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-               </div>
-            </div>
-          </div>
         </div>
       </div>
 

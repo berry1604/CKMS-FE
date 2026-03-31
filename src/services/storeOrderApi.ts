@@ -4,7 +4,9 @@ import type {
     StoreOrderResponse,
     PageResponse,
     OrderQueryParams,
-    StoreSimpleResponse
+    StoreSimpleResponse,
+    MaterialPreviewRequest,
+    MaterialPreviewResponse
 } from '../types/storeOrder';
 
 export const storeOrderApi = {
@@ -189,5 +191,14 @@ export const storeOrderApi = {
             console.error(`Error splitting order ${id}:`, error);
             throw error;
         }
+    },
+
+    /**
+     * Preview material availability and check approvable orders.
+     * POST /api/v1/orders/approval/material-preview
+     */
+    previewMaterial: async (data: MaterialPreviewRequest): Promise<MaterialPreviewResponse> => {
+        const response = await axiosClient.post<MaterialPreviewResponse>('/orders/approval/material-preview', data);
+        return response.data;
     }
 };
