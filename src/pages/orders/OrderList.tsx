@@ -34,7 +34,7 @@ export const OrderList = () => {
         try {
             const params: any = {
                 page,
-                size: 10,
+                size: 100,
                 sortBy: 'orderDate',
                 sortDir: 'desc'
             };
@@ -180,7 +180,9 @@ export const OrderList = () => {
                     'SUBMITTED': { label: 'CHỜ DUYỆT', variant: 'warning' },
                     'APPROVED': { label: 'ĐÃ DUYỆT', variant: 'orange' },
                     'ALLOCATED': { label: 'ĐÃ PHÂN BỔ', variant: 'info' },
+                    'IN_TRANSIT': { label: 'ĐANG GIAO', variant: 'primary' },
                     'DELIVERED': { label: 'HOÀN THÀNH', variant: 'success' },
+                    'CANCELLED': { label: 'ĐÃ HỦY', variant: 'danger' },
                     'REJECTED': { label: 'TỪ CHỐI', variant: 'danger' }
                 };
                 const { label, variant } = config[status] || { label: status, variant: 'default' };
@@ -232,16 +234,16 @@ export const OrderList = () => {
                 <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
                     <div className="flex items-center gap-3 mb-4">
                         <Badge variant="orange" className="text-[10px] font-black tracking-[0.3em] px-3 py-1 border-0 uppercase bg-amber-500/10 text-amber-500">
-                           SCM SYSTEM
+                           ĐƠN HÀNG
                         </Badge>
                         <div className="h-px w-12 bg-amber-500/30" />
-                        <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Chain of Command</span>
+                        <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Quản lý tập trung</span>
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-end gap-8">
                         <div>
                             <h1 className="text-6xl font-black text-[var(--text-primary)] tracking-tighter mb-4 uppercase italic leading-[0.85]">
-                                Order <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Inventory</span>
+                                Danh sách <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">Đơn hàng</span>
                             </h1>
                             <p className="text-zinc-400 max-w-xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
                                 Quản lý tập trung các đơn đặt hàng từ hệ thống <span className="text-amber-500">FranchiseSys</span>. Kiểm soát luồng cung ứng thời gian thực.
@@ -249,7 +251,7 @@ export const OrderList = () => {
                         </div>
                         <div className="flex items-center gap-6">
                             <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 min-w-[140px] shadow-2xl">
-                                <span className="text-[var(--text-secondary)] text-[9px] font-black uppercase tracking-[0.2em] block mb-2 italic">Total Orders</span>
+                                <span className="text-[var(--text-secondary)] text-[9px] font-black uppercase tracking-[0.2em] block mb-2 italic">Tổng số đơn</span>
                                 <span className="text-3xl font-black text-[var(--text-primary)] leading-none tracking-tighter">{orders.length}</span>
                             </div>
                             <Button
@@ -257,7 +259,7 @@ export const OrderList = () => {
                                 className="h-16 px-10 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-[0_20px_50px_-10px_rgba(245,158,11,0.4)] border-0 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3"
                             >
                                 <Plus size={20} strokeWidth={4} />
-                                Tạo Đơn Mới
+                                Tạo đơn hàng
                             </Button>
                         </div>
                     </div>
@@ -289,7 +291,7 @@ export const OrderList = () => {
                                 <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest whitespace-nowrap hidden sm:inline">Lọc theo</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                {['all', 'DRAFT', 'SUBMITTED', 'APPROVED', 'ALLOCATED', 'DELIVERED', 'REJECTED'].map(status => (
+                                {['all', 'DRAFT', 'SUBMITTED', 'APPROVED', 'ALLOCATED', 'IN_TRANSIT', 'DELIVERED', 'REJECTED', 'CANCELLED'].map(status => (
                                     <button
                                         key={status}
                                         onClick={() => setStatusFilter(status)}
@@ -305,7 +307,9 @@ export const OrderList = () => {
                                             status === 'SUBMITTED' ? 'CHỜ DUYỆT' :
                                             status === 'APPROVED' ? 'ĐÃ DUYỆT' :
                                             status === 'ALLOCATED' ? 'PHÂN BỔ' :
-                                            status === 'DELIVERED' ? 'HOÀN THÀNH' : 'TỪ CHỐI'
+                                            status === 'IN_TRANSIT' ? 'ĐANG GIAO' :
+                                            status === 'DELIVERED' ? 'HOÀN THÀNH' : 
+                                            status === 'CANCELLED' ? 'ĐÃ HỦY' : 'TỪ CHỐI'
                                         )}
                                     </button>
                                 ))}
@@ -315,15 +319,13 @@ export const OrderList = () => {
                 </div>
 
                 <div className="backdrop-blur-3xl bg-[var(--bg-card)]/40 border border-[var(--border-primary)] rounded-[3rem] overflow-hidden shadow-2xl">
-                    <div className="overflow-x-auto">
-                        <DataTable
-                            data={filteredOrders}
-                            columns={columns}
-                            keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
-                            isLoading={isLoading}
-                            onRowClick={(order) => setSelectedOrder(order)}
-                        />
-                    </div>
+                    <DataTable
+                        data={filteredOrders}
+                        columns={columns}
+                        keyExtractor={(order: StoreOrderResponse) => String(order.orderId)}
+                        isLoading={isLoading}
+                        onRowClick={(order) => setSelectedOrder(order)}
+                    />
 
                     {/* Pagination */}
                     {totalPages > 1 && (
