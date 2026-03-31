@@ -803,7 +803,7 @@ export const ProductionSchedule = () => {
                 <PlayCircle size={32} />
               </div>
               <p className="text-[11px] font-black text-[var(--text-secondary)]/50 uppercase tracking-widest italic">
-                Không có mẻ nào đang nấu
+                Không có kế hoạch nào đang nấu
               </p>
             </div>
           )}
@@ -890,7 +890,7 @@ export const ProductionSchedule = () => {
                       className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
                       onClick={() => handleStatusAction("cancel")}
                     >
-                      <X size={16} className="mr-2" /> Hủy mẻ này
+                      <X size={16} className="mr-2" /> Hủy kế hoạch này
                     </Button>
                   </>
                 )}
@@ -910,7 +910,7 @@ export const ProductionSchedule = () => {
                       className="flex-1 bg-red-600/10 hover:bg-red-600/20 text-red-500 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl border border-red-500/20"
                       onClick={() => handleStatusAction("cancel")}
                     >
-                      <X size={16} className="mr-2" /> Hủy mẻ
+                      <X size={16} className="mr-2" /> Hủy kế hoạch
                     </Button>
                   </>
                 )}
@@ -962,7 +962,7 @@ export const ProductionSchedule = () => {
             Tiến độ <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">Sản xuất</span>
           </h1>
           <p className="text-sm text-[var(--text-secondary)] font-medium tracking-wide max-w-xl leading-relaxed">
-            Tổng hợp & Điều phối các mẻ sản xuất từ <span className="text-amber-500 font-black italic">CENTRAL KITCHEN</span>.
+            Tổng hợp & Điều phối các kế hoạch sản xuất từ <span className="text-amber-500 font-black italic">CENTRAL KITCHEN</span>.
           </p>
         </div>
 
@@ -1061,7 +1061,7 @@ export const ProductionSchedule = () => {
                   size={18}
                 />
                 <Input
-                  placeholder="Tìm tên mẻ, mã lô hoặc ID..."
+                  placeholder="Tìm tên kế hoạch, mã lô hoặc ID..."
                   className="pl-14 pr-6 h-12 bg-[var(--bg-root)]/50 border-[var(--border-primary)] rounded-[22px] font-black text-[10px] tracking-[0.2em] placeholder:text-[var(--text-secondary)]/30 focus:border-amber-500/50 transition-all uppercase"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -1472,7 +1472,7 @@ export const ProductionSchedule = () => {
                     </span>
                   </div>
                   <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight mt-1 italic">
-                    Nghiệm thu mẻ nấu
+                    Nghiệm thu kế hoạch nấu
                   </h3>
                 </div>
               </div>
@@ -1559,7 +1559,7 @@ export const ProductionSchedule = () => {
                 <div className="p-5 rounded-[24px] bg-amber-500/5 border border-amber-500/10 flex gap-4 shadow-sm">
                   <AlertCircle size={20} className="text-amber-500 shrink-0" />
                   <p className="text-[10px] text-[var(--text-secondary)]/60 font-black uppercase tracking-widest italic leading-relaxed">
-                    Lưu ý: Sau khi xác nhận hoàn thành, mẻ sản xuất sẽ chuyển
+                    Lưu ý: Sau khi xác nhận hoàn thành, kế hoạch sản xuất sẽ chuyển
                     trạng thái "PRODUCED" và sẵn sàng để điều phối (Allocation).
                   </p>
                 </div>

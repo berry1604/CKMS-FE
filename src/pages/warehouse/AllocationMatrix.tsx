@@ -766,7 +766,7 @@ export const AllocationMatrix = () => {
                             <Network size={40} />
                           </div>
                           <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-wide">
-                            Vui lòng chọn mẻ sản xuất từ danh sách bên trái
+                            Vui lòng chọn kế hoạch sản xuất từ danh sách bên trái
                           </p>
                         </div>
                       </td>

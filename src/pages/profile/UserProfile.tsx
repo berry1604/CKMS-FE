@@ -42,7 +42,7 @@ const profileSchema = z.object({
 }, {
     message: "Mật khẩu xác nhận không khớp",
     path: ["confirmPassword"],
-}) as z.ZodType<any>;
+});
 
 export const UserProfile = () => {
     const { user } = useAuth();

@@ -487,6 +487,15 @@ export const ShipmentDetailDrawer = ({
               <div className="h-px bg-[var(--border-primary)]/20"></div>
 
               <div className="space-y-4">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  {isLoadingDetails ? (
+                    <span>Đang tải chi tiết đơn giao...</span>
+                  ) : (
+                    <span>
+                      Tổng dòng hàng: {aggregatedItems.length} | Tổng đơn: {detailedOrders.length}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2">

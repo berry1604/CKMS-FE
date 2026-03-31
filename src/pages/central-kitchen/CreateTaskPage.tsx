@@ -79,10 +79,11 @@ export const CreateTaskPage = () => {
     }, [orders, selectedOrderIds]);
 
     const onSubmit = async () => {
-        if (selectedOrderIds.size === 0) return;
+        if (selectedOrderIds.size === 0 || !selectedKitchenId) return;
         setIsSubmitting(true);
         try {
             await productionPlanApi.createProductionPlan({
+                kitchenId: Number(selectedKitchenId),
                 plannedDate,
                 kitchenId: Number(selectedKitchenId),
                 storeOrderIds: Array.from(selectedOrderIds)
@@ -115,7 +116,7 @@ export const CreateTaskPage = () => {
                             <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic">Standard Protocol</span>
                         </div>
                         <h1 className="text-4xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Lập <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Kế hoạch sản xuất</span></h1>
-                        <p className="text-xs text-[var(--text-secondary)]/60 font-black uppercase tracking-[0.2em] italic">Khởi động mẻ sản xuất bằng cách gom đơn hàng chi nhánh hợp lệ.</p>
+                        <p className="text-xs text-[var(--text-secondary)]/60 font-black uppercase tracking-[0.2em] italic">Khởi động kế hoạch sản xuất bằng cách gom đơn hàng chi nhánh hợp lệ.</p>
                     </div>
                 </div>
             </div>
@@ -156,7 +157,7 @@ export const CreateTaskPage = () => {
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-black text-[var(--text-primary)] uppercase italic tracking-tight">Bước 1: Thiết lập Trạm & Thời gian</h2>
-                                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest mt-1 italic">Chỉ định đơn vị thực thi và thời điểm kích hoạt mẻ</p>
+                                    <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest mt-1 italic">Chỉ định đơn vị thực thi và thời điểm kích hoạt kế hoạch</p>
                                 </div>
                              </div>
 
@@ -212,7 +213,7 @@ export const CreateTaskPage = () => {
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-black text-[var(--text-primary)] uppercase italic tracking-tight">Bước 2: Tuyển chọn Đơn hàng</h2>
-                                        <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest mt-1 italic">Gom các đơn hàng đã Approved vào mẻ sản xuất tập trung</p>
+                                        <p className="text-[10px] text-[var(--text-secondary)]/40 font-black uppercase tracking-widest mt-1 italic">Gom các đơn hàng đã Approved vào kế hoạch sản xuất tập trung</p>
                                     </div>
                                 </div>
                                 <div className="bg-[var(--bg-root)] px-6 py-3 rounded-full border border-[var(--border-primary)] shadow-inner">
@@ -335,7 +336,7 @@ export const CreateTaskPage = () => {
                                         <thead className="sticky top-0 bg-[var(--bg-root)] z-10 border-b border-[var(--border-primary)]/20">
                                             <tr className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic">
                                                 <th className="px-10 py-6">Món Sản Xuất (Aggregate Dish)</th>
-                                                <th className="px-10 py-6 text-right w-60">Số lượng gom mẻ (Qty)</th>
+                                                <th className="px-10 py-6 text-right w-60">Số lượng gom kế hoạch (Qty)</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-[var(--border-primary)]/5">
@@ -354,7 +355,7 @@ export const CreateTaskPage = () => {
                                                 </tr>
                                             ))}
                                             <tr className="bg-[var(--bg-primary)]/5">
-                                                <td className="px-10 py-6 text-right text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">Toàn mẻ sản xuất:</td>
+                                                <td className="px-10 py-6 text-right text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">Toàn kế hoạch sản xuất:</td>
                                                 <td className="px-10 py-6 text-right">
                                                     <span className="text-3xl font-black text-[var(--text-primary)] italic tabular-nums">{aggregatedDemand.reduce((s, i) => s + i.quantity, 0)}</span>
                                                     <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest italic ml-4">Total Items</span>
