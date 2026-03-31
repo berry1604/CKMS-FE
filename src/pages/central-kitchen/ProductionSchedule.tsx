@@ -1121,8 +1121,10 @@ export const ProductionSchedule = () => {
                 </span>
               </div>
             </div>
+          </div>
         }
         width="max-w-5xl"
+        footer={footer}
       >
         {isDetailLoading ? (
           <div className="h-96 flex flex-col items-center justify-center gap-4 opacity-30">
