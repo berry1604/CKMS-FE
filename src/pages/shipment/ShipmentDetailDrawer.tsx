@@ -28,7 +28,6 @@ import type {
   StoreOrderResponse,
   OrderDetailResponse,
 } from "../../types/storeOrder";
-import { kitchenInventoryApi } from "../../services/kitchenInventory.api";
 import { cn } from "../../utils/classNames";
 import { useAuth } from "../../hooks/useAuth";
 import type { ShipmentResponse } from "../../types/shipment";
@@ -106,60 +105,78 @@ export const ShipmentDetailDrawer = ({
           );
           const correctPlanId =
             fullShipment.planId || fullShipment.productionPlanId;
-          let loadedFromPlan = false;
 
+          // Load kitchen info (for permission checks) if plan exists
           if (correctPlanId) {
             try {
               const plan =
                 await productionPlanApi.getProductionPlanDetail(correctPlanId);
               if (plan && plan.kitchenId) {
                 setShipmentKitchenId(plan.kitchenId);
-                const stockRes = await kitchenInventoryApi.getWarehouseStock(
-                  plan.kitchenId,
-                );
-                const allStock = stockRes?.data || [];
-                const allStockArray = Array.isArray(allStock) ? allStock : [];
-                const relevantStock = allStockArray.filter(
-                  (s: { productionPlanId?: number; planId?: number }) =>
-                    (s.planId || s.productionPlanId) === correctPlanId,
-                );
-
-                if (relevantStock && relevantStock.length > 0) {
-                  loadedFromPlan = true;
-                }
               }
             } catch (e) {
-              console.warn(
-                "Could not load items from kitchen inventory stock",
-                e,
-              );
+              console.warn("Could not load plan details for kitchenId", e);
             }
           }
 
-          if (!loadedFromPlan) {
-            try {
-              const orderIds = new Set<number>();
-              if (fullShipment.stops && fullShipment.stops.length > 0) {
-                fullShipment.stops.forEach((stop) => {
-                  (stop.storeOrderIds || []).forEach((id) => orderIds.add(id));
-                });
-              } else if (fullShipment.storeOrderIds) {
-                fullShipment.storeOrderIds.forEach((id) => orderIds.add(id));
-              }
-
-              if (orderIds.size > 0) {
-                const orderPromises = Array.from(orderIds).map((id) =>
-                  storeOrderApi.getOrderById(id).catch(() => null),
-                );
-                const orders = await Promise.all(orderPromises);
-                const validOrders = orders.filter(
-                  (o): o is StoreOrderResponse => o !== null,
-                );
-                setDetailedOrders(validOrders);
-              }
-            } catch (e) {
-              console.warn("Could not load items from store orders", e);
+          // Always load detailed orders from shipment stops
+          try {
+            const orderIds = new Set<number>();
+            if (fullShipment.stops && fullShipment.stops.length > 0) {
+              fullShipment.stops.forEach((stop) => {
+                (stop.storeOrderIds || []).forEach((id) => orderIds.add(id));
+              });
+            } else if (fullShipment.storeOrderIds) {
+              fullShipment.storeOrderIds.forEach((id) => orderIds.add(id));
             }
+
+            console.log(
+              "[ShipmentDetailDrawer] Order IDs to load:",
+              Array.from(orderIds),
+            );
+
+            if (orderIds.size > 0) {
+              const orderPromises = Array.from(orderIds).map((id) =>
+                storeOrderApi.getOrderById(id).catch((err) => {
+                  console.warn(
+                    `[ShipmentDetailDrawer] Failed to load order #${id}:`,
+                    err,
+                  );
+                  return null;
+                }),
+              );
+              const rawOrders = await Promise.all(orderPromises);
+              console.log(
+                "[ShipmentDetailDrawer] Raw order responses:",
+                rawOrders,
+              );
+
+              // Robust unwrap: API might return { data: { orderId, ... } } or { orderId, ... } directly
+              const validOrders = rawOrders
+                .map((raw: any) => {
+                  if (!raw) return null;
+                  // If the response is wrapped in ApiResponse format { status, data, message }
+                  if (raw.data && raw.data.orderId)
+                    return raw.data as StoreOrderResponse;
+                  // If already unwrapped
+                  if (raw.orderId) return raw as StoreOrderResponse;
+                  return null;
+                })
+                .filter((o): o is StoreOrderResponse => o !== null);
+
+              console.log(
+                "[ShipmentDetailDrawer] Parsed valid orders:",
+                validOrders.length,
+                validOrders.map((o) => o.orderId),
+              );
+              setDetailedOrders(validOrders);
+            } else {
+              console.warn(
+                "[ShipmentDetailDrawer] No order IDs found in shipment stops",
+              );
+            }
+          } catch (e) {
+            console.warn("Could not load items from store orders", e);
           }
         } catch (error) {
           console.error("Failed to fetch shipment details/items:", error);
@@ -510,7 +527,8 @@ export const ShipmentDetailDrawer = ({
                     <span>Đang tải chi tiết đơn giao...</span>
                   ) : (
                     <span>
-                      Tổng dòng hàng: {aggregatedItems.length} | Tổng đơn: {detailedOrders.length}
+                      Tổng dòng hàng: {aggregatedItems.length} | Tổng đơn:{" "}
+                      {detailedOrders.length}
                     </span>
                   )}
                 </div>
@@ -648,7 +666,9 @@ export const ShipmentDetailDrawer = ({
                           <span
                             className={cn(
                               "text-[10px] font-black tracking-widest uppercase transition-colors whitespace-nowrap",
-                              isActive ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+                              isActive
+                                ? "text-[var(--text-primary)]"
+                                : "text-[var(--text-secondary)]",
                             )}
                           >
                             {step.label}
@@ -685,7 +705,9 @@ export const ShipmentDetailDrawer = ({
             <div
               className={cn(
                 "bg-[var(--bg-card)]/40 rounded-[36px] border divide-y divide-[var(--border-primary)]/20 overflow-hidden",
-                isCancelled ? "border-red-500/20" : "border-[var(--border-primary)]",
+                isCancelled
+                  ? "border-red-500/20"
+                  : "border-[var(--border-primary)]",
               )}
             >
               <div className="p-8 space-y-8">
@@ -795,7 +817,10 @@ export const ShipmentDetailDrawer = ({
               {shipment.stops?.map((stop) => (
                 <div key={stop.stopId} className="space-y-2">
                   <div className="flex items-center gap-2 px-4">
-                    <MapPin size={12} className="text-[var(--text-secondary)]/50" />
+                    <MapPin
+                      size={12}
+                      className="text-[var(--text-secondary)]/50"
+                    />
                     <span className="text-[10px] font-black text-[var(--text-secondary)]/50 uppercase tracking-widest">
                       {stop.storeName}
                     </span>
