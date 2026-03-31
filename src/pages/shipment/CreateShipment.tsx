@@ -388,16 +388,11 @@ export const CreateShipment = () => {
 
         <div className="absolute inset-0 flex flex-col justify-end px-8 pb-12 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-3 mb-4">
-            <Badge
-              variant="orange"
-              className="text-[10px] font-black tracking-[0.3em] px-3 py-1 border-0 uppercase bg-amber-500/10 text-amber-500"
-            >
-              FLEET DISPATCH
+            <Badge variant="orange" className="text-[10px] font-black tracking-[0.3em] px-3 py-1 border-0 uppercase bg-amber-500/10 text-amber-500">
+              ĐIỀU PHỐI VẬN HÀNH
             </Badge>
             <div className="h-px w-12 bg-amber-500/30" />
-            <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">
-              Logistics Command
-            </span>
+            <span className="text-amber-500/80 font-black tracking-[0.2em] text-[10px] uppercase italic">Trung Tâm Điều Hành</span>
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-end gap-8">
@@ -411,16 +406,11 @@ export const CreateShipment = () => {
                   <ArrowLeft size={20} strokeWidth={3} />
                 </Button>
                 <h1 className="text-6xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic leading-[0.85]">
-                  Create{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">
-                    Shipment
-                  </span>
+                  TẠO <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">CHUYẾN HÀNG</span>
                 </h1>
               </div>
               <p className="text-zinc-400 max-w-xl text-sm font-bold leading-relaxed uppercase tracking-wide opacity-80">
-                Tạo lệnh xuất kho cho bộ phận{" "}
-                <span className="text-amber-500">Bếp trung tâm</span>. Khởi tạo
-                quy trình vận chuyển đa điểm.
+                Tạo lệnh xuất kho cho bộ phận <span className="text-amber-500">Bếp trung tâm</span>. Khởi tạo quy trình vận chuyển đa điểm.
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -492,12 +482,7 @@ export const CreateShipment = () => {
                         }))
                       }
                     >
-                      <option
-                        value=""
-                        className="bg-[var(--bg-card)] text-[var(--text-secondary)] whitespace-pre"
-                      >
-                        -- CHỌN KẾ HOẠCH --
-                      </option>
+                      <option value="" className="bg-[var(--bg-card)] text-[var(--text-secondary)] whitespace-pre">-- CHỌN KẾ HOẠCH --</option>
                       {[...availablePlans]
                         .sort(
                           (
@@ -506,11 +491,7 @@ export const CreateShipment = () => {
                           ) => Number(b.planId) - Number(a.planId),
                         )
                         .map((p: ProductionPlanSummaryResponse) => (
-                          <option
-                            key={p.planId}
-                            value={p.planId}
-                            className="bg-[var(--bg-card)]"
-                          >
+                          <option key={p.planId} value={p.planId} className="bg-[var(--bg-card)]">
                             PLAN #{p.planId} - {p.planName}
                           </option>
                         ))}
@@ -538,30 +519,10 @@ export const CreateShipment = () => {
                         }))
                       }
                     >
-                      <option
-                        value="SGN-BIKE"
-                        className="bg-[var(--bg-card)] text-amber-500"
-                      >
-                        BIKE (XE MÁY)
-                      </option>
-                      <option
-                        value="SGN-TRUCK-500"
-                        className="bg-[var(--bg-card)] text-amber-500"
-                      >
-                        TRUCK (XE TẢI 500KG)
-                      </option>
-                      <option
-                        value="SGN-TRUCK-1000"
-                        className="bg-[var(--bg-card)] text-amber-500"
-                      >
-                        TRUCK (XE TẢI 1000KG)
-                      </option>
-                      <option
-                        value="SGN-PREMIUM"
-                        className="bg-[var(--bg-card)] text-amber-500"
-                      >
-                        PREMIUM (GIAO SIÊU TỐC)
-                      </option>
+                      <option value="SGN-BIKE" className="bg-[var(--bg-card)] text-amber-500">BIKE (XE MÁY)</option>
+                      <option value="SGN-TRUCK-500" className="bg-[var(--bg-card)] text-amber-500">TRUCK (XE TẢI 500KG)</option>
+                      <option value="SGN-TRUCK-1000" className="bg-[var(--bg-card)] text-amber-500">TRUCK (XE TẢI 1000KG)</option>
+                      <option value="SGN-PREMIUM" className="bg-[var(--bg-card)] text-amber-500">PREMIUM (GIAO SIÊU TỐC)</option>
                     </select>
                     <Truck
                       className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500"
@@ -600,8 +561,8 @@ export const CreateShipment = () => {
                 {form.dropPoints.map((dp, idx) => {
                   const branchOrders = dp.storeId
                     ? allOrders.filter(
-                        (o: any) => String(o.storeId) === String(dp.storeId),
-                      )
+                      (o: any) => String(o.storeId) === String(dp.storeId),
+                    )
                     : [];
 
                   const unshippedOrders = branchOrders.filter((o: any) =>
@@ -614,7 +575,7 @@ export const CreateShipment = () => {
                       className="p-8 bg-[var(--bg-root)]/40 border border-[var(--border-primary)] rounded-[2rem] space-y-6 relative group/row transition-all hover:bg-[var(--bg-root)]/60"
                     >
                       <div className="absolute -left-4 -top-4 w-12 h-12 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-primary)] flex items-center justify-center font-black text-amber-500 text-lg shadow-xl shadow-black/50 tracking-tighter italic">
-                        {String(idx + 1).padStart(2, "0")}
+                        {String(idx + 1).padStart(2, '0')}
                       </div>
                       {form.dropPoints.length > 1 && (
                         <button
@@ -637,12 +598,7 @@ export const CreateShipment = () => {
                               updateDropPoint(dp.id, "storeId", e.target.value)
                             }
                           >
-                            <option
-                              value=""
-                              className="bg-[var(--bg-card)] text-[var(--text-secondary)] whitespace-pre"
-                            >
-                              -- CHỌN CHI NHÁNH --
-                            </option>
+                            <option value="" className="bg-[var(--bg-card)] text-[var(--text-secondary)] whitespace-pre">-- CHỌN CHI NHÁNH --</option>
                             {availableStores.map((s) => {
                               const sId = (s as any).id || (s as any).storeId;
                               const isSelectedByOther = form.dropPoints.some(
@@ -682,17 +638,14 @@ export const CreateShipment = () => {
                               {unshippedOrders.length > 0 && (
                                 <button
                                   onClick={() =>
-                                    toggleAllOrdersForDropPoint(
-                                      dp.id,
-                                      dp.storeId,
-                                    )
+                                    toggleAllOrdersForDropPoint(dp.id, dp.storeId)
                                   }
                                   className="text-[10px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest transition-colors px-3 py-1 bg-amber-500/10 rounded-lg border border-amber-500/20 shadow-inner italic"
                                 >
                                   {dp.storeOrderIds.length ===
-                                  unshippedOrders.length
-                                    ? "Deselect All"
-                                    : "Select All Units"}
+                                    unshippedOrders.length
+                                    ? "HỦY CHỌN TẤT CẢ"
+                                    : "CHỌN TOÀN BỘ ĐƠN"}
                                 </button>
                               )}
                             </div>
@@ -719,9 +672,7 @@ export const CreateShipment = () => {
                                       <div
                                         className={cn(
                                           "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shadow-lg shrink-0",
-                                          dp.storeOrderIds.includes(
-                                            order.orderId,
-                                          )
+                                          dp.storeOrderIds.includes(order.orderId)
                                             ? "bg-amber-500 border-amber-500 text-black shadow-amber-900/20"
                                             : "border-zinc-800 bg-zinc-900 group-hover/item:border-zinc-600",
                                         )}
@@ -729,16 +680,16 @@ export const CreateShipment = () => {
                                         {dp.storeOrderIds.includes(
                                           order.orderId,
                                         ) && (
-                                          <CheckCircle2
-                                            size={12}
-                                            strokeWidth={4}
-                                          />
-                                        )}
+                                            <CheckCircle2
+                                              size={12}
+                                              strokeWidth={4}
+                                            />
+                                          )}
                                       </div>
                                       <div className="flex-1">
                                         <div className="flex items-center gap-3">
                                           <span className="text-[13px] font-black text-[var(--text-primary)] uppercase tracking-tighter">
-                                            Order #{order.orderId}
+                                            Đơn hàng #{order.orderId}
                                           </span>
                                           <Badge
                                             variant="orange"
@@ -773,13 +724,10 @@ export const CreateShipment = () => {
                               ) : (
                                 <div className="p-10 text-center flex flex-col items-center gap-4 opacity-30 grayscale">
                                   <div className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
-                                    <Package
-                                      size={32}
-                                      className="text-zinc-600"
-                                    />
+                                    <Package size={32} className="text-zinc-600" />
                                   </div>
                                   <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] italic">
-                                    NO READY UNITS FOUND
+                                    KHÔNG CÓ ĐƠN SẴN SÀNG
                                   </span>
                                 </div>
                               )}
@@ -833,24 +781,18 @@ export const CreateShipment = () => {
                   <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                     <Truck size={18} strokeWidth={2.5} />
                   </div>
-                  Dispatch Summary
+                  TỔNG QUAN VẬN HÀNH
                 </h2>
-                <p className="text-[9px] text-[var(--text-secondary)]/80 font-bold mt-2 uppercase tracking-widest ml-11">
-                  Tổng hợp thông tin mẻ vận chuyển
-                </p>
+                <p className="text-[9px] text-zinc-500 font-bold mt-2 uppercase tracking-widest ml-11">
+                  Tổng hợp thông tin kế hoạch vận chuyển                  </p>
               </div>
 
               <div className="space-y-5">
                 <div className="p-6 bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-2xl flex items-center justify-between group/stat hover:bg-[var(--bg-root)] transition-colors">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">
-                      Route Stops
-                    </span>
+                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">ĐIỂM DỪNG TUYẾN</span>
                     <span className="text-2xl font-black text-[var(--text-primary)] tracking-tighter leading-none italic">
-                      {form.dropPoints
-                        .filter((dp) => dp.storeId)
-                        .length.toString()
-                        .padStart(2, "0")}
+                      {form.dropPoints.filter(dp => dp.storeId).length.toString().padStart(2, '0')}
                     </span>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20 group-hover/stat:text-amber-500 group-hover/stat:border-amber-500/20 transition-all">
@@ -860,11 +802,9 @@ export const CreateShipment = () => {
 
                 <div className="p-6 bg-[var(--bg-root)]/60 border border-[var(--border-primary)] rounded-2xl flex items-center justify-between group/stat hover:bg-[var(--bg-root)] transition-colors">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">
-                      Selected Units
-                    </span>
+                    <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest italic group-hover/stat:text-amber-500/80 transition-colors">ĐƠN ĐÃ CHỌN</span>
                     <span className="text-2xl font-black text-[var(--text-primary)] tracking-tighter leading-none italic">
-                      {getTotalOrdersSelected().toString().padStart(2, "0")}
+                      {getTotalOrdersSelected().toString().padStart(2, '0')}
                     </span>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20 group-hover/stat:text-amber-500 group-hover/stat:border-amber-500/20 transition-all">
@@ -874,16 +814,14 @@ export const CreateShipment = () => {
 
                 <div className="relative pt-4 border-t border-[var(--border-primary)]/50 group/input">
                   <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest ml-1 mb-3 block">
-                    Ghi chú vận hành (Optional)
+                    GHI CHÚ (TÙY CHỌN)
                   </label>
                   <textarea
                     rows={4}
                     className="w-full bg-[var(--bg-root)]/50 border border-[var(--border-primary)] rounded-2xl p-4 text-[11px] font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 focus:outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500/30 transition-all uppercase tracking-widest"
                     placeholder="NHẬP GHI CHÚ BỔ SUNG..."
                     value={form.remarks}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, remarks: e.target.value }))
-                    }
+                    onChange={(e) => setForm((prev) => ({ ...prev, remarks: e.target.value }))}
                   />
                 </div>
               </div>
@@ -893,16 +831,13 @@ export const CreateShipment = () => {
                   <InfoIcon size={14} strokeWidth={3} />
                 </div>
                 <p className="text-[10px] font-black text-amber-500/90 leading-relaxed uppercase tracking-widest italic">
-                  Vui lòng kiểm tra kỹ danh sách ĐƠN HÀNG và KẾ HOẠCH đồng bộ
-                  trước khi gửi yêu cầu đến bếp.
+                  Vui lòng kiểm tra kỹ danh sách ĐƠN HÀNG và KẾ HOẠCH đồng bộ trước khi gửi yêu cầu đến bếp.
                 </p>
               </div>
 
               <Button
                 onClick={handleCreate}
-                disabled={
-                  isSubmitting || isLoading || getTotalOrdersSelected() === 0
-                }
+                disabled={isSubmitting || isLoading || getTotalOrdersSelected() === 0}
                 className="w-full h-16 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-amber-900/20 border-0 transition-all hover:-translate-y-1 active:scale-95"
               >
                 {isSubmitting ? "Đang gửi..." : "Gửi đến bếp"}

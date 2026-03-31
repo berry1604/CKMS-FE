@@ -89,3 +89,37 @@ export interface OrderQueryParams {
     storeId?: number;
     productionPlanId?: number;
 }
+
+export interface MaterialPreviewRequest {
+    kitchenId?: number;
+    orderIds?: number[];
+}
+
+export interface MaterialPreviewOrderResult {
+    orderId: number;
+    deliveryDate: string;
+    status: string;
+    requestedQty: number;
+    approvable: boolean;
+    reason: string;
+}
+
+export interface MaterialPreviewItem {
+    materialId: number;
+    materialName: string;
+    unit: string;
+    availableQty: number;
+    requiredQtyForSelected: number;
+    requiredQtyForApprovable: number;
+    remainingQty: number;
+    shortageQty: number;
+}
+
+export interface MaterialPreviewResponse {
+    kitchenId: number;
+    selectedOrderCount: number;
+    approvableOrderCount: number;
+    approvableRatePercent: number;
+    orderResults: MaterialPreviewOrderResult[];
+    materials: MaterialPreviewItem[];
+}

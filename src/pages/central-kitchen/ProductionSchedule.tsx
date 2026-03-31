@@ -864,7 +864,7 @@ export const ProductionSchedule = () => {
       {selectedPlanDetail &&
         !["COMPLETED", "FINISHED", "CANCELLED"].includes(
           selectedPlanDetail.status,
-        ) && (
+        ) && user?.role !== "COORDINATOR" && (
           <div className="space-y-4">
             <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] ml-2 italic">
               Bảng điều khiển trạng thái
@@ -1121,10 +1121,8 @@ export const ProductionSchedule = () => {
                 </span>
               </div>
             </div>
-          </div>
         }
         width="max-w-5xl"
-        footer={footer}
       >
         {isDetailLoading ? (
           <div className="h-96 flex flex-col items-center justify-center gap-4 opacity-30">
@@ -1134,23 +1132,22 @@ export const ProductionSchedule = () => {
             </span>
           </div>
         ) : selectedPlanDetail ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 py-2 animate-in slide-in-from-right duration-500">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 py-2 animate-in slide-in-from-right duration-500">
             {/* Left Column: Visual & Status */}
-            <div className="lg:col-span-5 space-y-8">
-              <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-primary)] rounded-[40px] p-8 space-y-8 overflow-hidden relative group/sidebar shadow-sm">
-                {/* Luxury Visual Element */}
-                <div className="relative -mx-8 -mt-8 mb-8 group/img h-64 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg-root)]/90 z-10"></div>
-                  <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full scale-150 group-hover/img:bg-amber-500/20 transition-all duration-700"></div>
+            <div className="lg:col-span-4 space-y-6">
+              <div className="bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-primary)] rounded-[32px] p-6 space-y-6 overflow-hidden relative group/sidebar shadow-sm">
+                {/* Visual Element */}
+                <div className="relative -mx-6 -mt-6 mb-4 group/img h-32 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-root)]/10 via-transparent to-[var(--bg-root)] z-10"></div>
                   <img
                     src="/src/assets/kitchen_production.png"
                     alt="Kitchen Production"
                     className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 group-hover/img:scale-110 transition-all duration-1000"
                   />
-                  <div className="absolute bottom-6 left-8 z-20">
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-[var(--bg-root)]/80 backdrop-blur-md border border-amber-500/30">
-                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-                      <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
+                  <div className="absolute bottom-4 left-6 z-20">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--bg-root)]/90 backdrop-blur-md border border-amber-500/20">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+                      <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest">
                         Sản xuất trực tiếp
                       </span>
                     </div>
@@ -1202,13 +1199,13 @@ export const ProductionSchedule = () => {
             </div>
 
             {/* Right Column: Inventory & Details */}
-            <div className="lg:col-span-7 space-y-12">
+            <div className="lg:col-span-8 space-y-8">
               {/* Product List Section */}
-              <div className="space-y-5 animate-in slide-in-from-bottom-4 duration-700">
+              <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-700">
                 <div className="flex items-center justify-between ml-2">
                   <div className="flex items-center gap-2">
-                    <Package size={18} className="text-amber-500" />
-                    <h4 className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em] italic">
+                    <Package size={16} className="text-amber-500" />
+                    <h4 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em] italic">
                       Danh sách món sản xuất
                     </h4>
                   </div>
@@ -1220,13 +1217,13 @@ export const ProductionSchedule = () => {
                   </Badge>
                 </div>
 
-                <div className="bg-[var(--bg-root)]/40 backdrop-blur-md rounded-[36px] border border-[var(--border-primary)]/40 overflow-hidden shadow-sm space-y-px divide-y divide-[var(--border-primary)]/10">
+                <div className="bg-[var(--bg-root)]/40 backdrop-blur-md rounded-[24px] border border-[var(--border-primary)]/40 overflow-hidden shadow-sm space-y-px divide-y divide-[var(--border-primary)]/10">
                   {selectedPlanDetail.items &&
                   selectedPlanDetail.items.length > 0 ? (
                     selectedPlanDetail.items.map((item, idx) => (
                       <div
                         key={idx}
-                        className="p-6 flex items-center justify-between hover:bg-[var(--bg-root)] transition-all group/item"
+                        className="p-4 flex items-center justify-between hover:bg-[var(--bg-root)] transition-all group/item"
                       >
                         <div className="flex items-center gap-5">
                           <div className="w-12 h-12 rounded-2xl bg-[var(--bg-root)] border border-[var(--border-primary)]/40 flex items-center justify-center text-[var(--text-secondary)]/40 group-hover/item:border-amber-500/30 group-hover/item:text-amber-500 group-hover/item:bg-amber-500/5 transition-all duration-500 shadow-inner">
@@ -1323,23 +1320,23 @@ export const ProductionSchedule = () => {
                   )}
                 </div>
 
-                <div className="bg-[var(--bg-root)]/20 backdrop-blur-sm rounded-[36px] border border-[var(--border-primary)]/40 overflow-hidden shadow-sm">
+                <div className="bg-[var(--bg-root)]/20 backdrop-blur-sm rounded-[24px] border border-[var(--border-primary)]/40 overflow-hidden shadow-sm">
                   {selectedPlanDetail.materials &&
                   selectedPlanDetail.materials.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left">
                         <thead>
                           <tr className="bg-[var(--bg-root)]/50">
-                            <th className="px-8 py-5 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic">
+                            <th className="px-6 py-4 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic">
                               Nguyên liệu
                             </th>
-                            <th className="px-4 py-5 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-center">
+                            <th className="px-4 py-4 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-center">
                               Yêu cầu
                             </th>
-                            <th className="px-4 py-5 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-center">
+                            <th className="px-4 py-4 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-center">
                               Khả dụng
                             </th>
-                            <th className="px-8 py-5 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-right">
+                            <th className="px-6 py-4 text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.2em] italic text-right">
                               Trạng thái
                             </th>
                           </tr>
@@ -1358,16 +1355,16 @@ export const ProductionSchedule = () => {
                                   !sufficient && "bg-red-500/[0.03]",
                                 )}
                               >
-                                <td className="px-8 py-4">
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-8 h-8 rounded-xl bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[11px] font-black text-[var(--text-secondary)]/40 group-hover/row:border-amber-500/30 group-hover/row:text-amber-500 transition-all shadow-sm italic">
+                                <td className="px-6 py-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-[var(--bg-root)] border border-[var(--border-primary)] flex items-center justify-center text-[11px] font-black text-[var(--text-secondary)]/40 group-hover/row:border-amber-500/30 group-hover/row:text-amber-500 transition-all shadow-sm italic">
                                       {mat.materialName?.charAt(0)}
                                     </div>
                                     <div className="flex flex-col">
-                                      <span className="text-sm font-black text-[var(--text-primary)] tracking-tight group-hover/row:text-amber-500 transition-colors uppercase italic">
+                                      <span className="text-[13px] font-black text-[var(--text-primary)] tracking-tight group-hover/row:text-amber-500 transition-colors uppercase italic">
                                         {mat.materialName}
                                       </span>
-                                      <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic">
+                                      <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic mt-0.5">
                                         {materialUnitsMap.get(mat.materialId) ||
                                           mat.unit ||
                                           ""}
@@ -1375,15 +1372,15 @@ export const ProductionSchedule = () => {
                                     </div>
                                   </div>
                                 </td>
-                                <td className="px-4 py-4 text-center">
-                                  <span className="text-sm font-black text-[var(--text-secondary)]/60 font-mono tracking-tighter italic">
+                                <td className="px-4 py-3 text-center">
+                                  <span className="text-[13px] font-black text-[var(--text-secondary)]/60 font-mono tracking-tighter italic">
                                     {mat.requiredQuantity}{" "}
                                     {materialUnitsMap.get(mat.materialId) ||
                                       mat.unit ||
                                       ""}
                                   </span>
                                 </td>
-                                <td className="px-4 py-4 text-center">
+                                <td className="px-4 py-3 text-center">
                                   <span
                                     className={cn(
                                       "text-sm font-black font-mono tracking-tighter px-3 py-1 rounded-xl shadow-inner",
@@ -1398,7 +1395,7 @@ export const ProductionSchedule = () => {
                                       ""}
                                   </span>
                                 </td>
-                                <td className="px-8 py-4 text-right">
+                                <td className="px-6 py-3 text-right">
                                   {sufficient ? (
                                     <div className="flex items-center justify-end gap-2 text-emerald-500">
                                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>

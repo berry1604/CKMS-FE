@@ -158,6 +158,22 @@ export const CreateProductionPlan = () => {
     }
   }, [step, selectedKitchenId, fetchOrders]);
 
+  // Auto-populate Expected Completed Date based on earliest delivery date of selected orders
+  useEffect(() => {
+    if (selectedOrderIds.size > 0 && orders.length > 0) {
+      const selected = orders.filter((o) => selectedOrderIds.has(o.orderId));
+      const earliest = selected.reduce((min, o) => {
+        if (!o.deliveryDate) return min;
+        const d = new Date(o.deliveryDate);
+        return d < min ? d : min;
+      }, new Date(8640000000000000));
+      
+      if (earliest.getTime() !== 8640000000000000) {
+        setExpectedCompletedDate(earliest.toISOString().split("T")[0]);
+      }
+    }
+  }, [selectedOrderIds, orders]);
+
   const toggleSelection = (orderId: number) => {
     const newSet = new Set(selectedOrderIds);
     if (newSet.has(orderId)) newSet.delete(orderId);
@@ -450,12 +466,57 @@ export const CreateProductionPlan = () => {
                     })}
                   </div>
                 )}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 w-full bg-[var(--bg-root)] p-4 rounded-[2rem] border border-[var(--border-primary)] shadow-inner">
+                   <div className="flex items-center gap-8 pl-4">
+                     <div className="flex items-center gap-4">
+                       <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/20 shrink-0">
+                         <ChefHat size={20} />
+                       </div>
+                       <div className="flex flex-col">
+                         <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic block mb-0.5">Trạm điều hành</span>
+                         <span className="text-xs font-black text-[var(--text-primary)] uppercase truncate italic max-w-[180px]">
+                           {kitchens.find((k) => k.kitchenId === selectedKitchenId)?.name || "Chưa xác lập"}
+                         </span>
+                       </div>
+                     </div>
+                     <div className="w-px h-10 bg-[var(--border-primary)]/20 hidden md:block"></div>
+                     <div className="flex flex-col">
+                       <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic block mb-1.5">Quy mô sản xuất</span>
+                       <div className="flex items-center gap-4">
+                           <span className="text-2xl font-black text-amber-500 italic drop-shadow-[0_0_15px_rgba(245,158,11,0.2)] leading-none">
+                             {selectedOrderIds.size}
+                           </span>
+                           <div className="h-6 w-px bg-[var(--border-primary)]/20 rotate-12" />
+                           <div className="text-left">
+                               <span className="text-[9px] font-black text-[var(--text-primary)] uppercase block italic leading-tight">Tuyển chọn</span>
+                               <span className="text-[8px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest block italic leading-none">{orders.length} Đơn chờ</span>
+                           </div>
+                       </div>
+                     </div>
+                     <div className="hidden lg:block w-[120px] bg-[var(--bg-card)] h-1.5 rounded-full overflow-hidden border border-[var(--border-primary)]/20 shadow-inner p-[2px]">
+                       <div
+                         className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-[1s]"
+                         style={{
+                           width: `${(selectedOrderIds.size / (orders.length || 1)) * 100}%`,
+                         }}
+                       ></div>
+                     </div>
+                   </div>
+
+                   <Button
+                     className="h-14 px-10 border-0 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase text-[10px] tracking-[0.3em] rounded-[1.5rem] shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.03] active:scale-95 italic flex items-center gap-3 shrink-0"
+                     onClick={() => setStep(2)}
+                     disabled={selectedOrderIds.size === 0}
+                   >
+                     Phân tích Đề xuất <ChevronRight size={16} />
+                   </Button>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-10">
-              {/* Left Column (Main Workspace) */}
-              <div className="flex-1 min-w-0">
+            <div className="flex flex-col gap-10">
+              {/* Workspace */}
+              <div className="w-full">
                 <div className="bg-[var(--bg-card)] rounded-[3rem] border border-[var(--border-primary)] overflow-hidden shadow-sm relative group/table">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent"></div>
                   
@@ -581,87 +642,7 @@ export const CreateProductionPlan = () => {
                 </div>
               </div>
 
-              {/* Sticky Selection Sidebar */}
-              <div className="lg:w-[350px] shrink-0 space-y-6">
-                <div className="bg-[var(--bg-card)] p-8 rounded-[3rem] border border-[var(--border-primary)] shadow-sm sticky top-8 group">
-                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/[0.02] blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/5 transition-all duration-700" />
-                   
-                   <h3 className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.4em] mb-8 italic">Config Overview</h3>
-                   <div className="space-y-6 relative z-10">
-                      <div className="p-6 bg-[var(--bg-root)] rounded-[2rem] border border-[var(--border-primary)] space-y-4 shadow-inner">
-                        <div className="flex items-center gap-4 border-b border-[var(--border-primary)]/10 pb-4">
-                          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/20">
-                            <ChefHat size={20} />
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic leading-none mb-1.5">Trạm điều hành</span>
-                            <span className="text-xs font-black text-[var(--text-primary)] uppercase truncate italic max-w-[180px]">
-                              {kitchens.find((k) => k.kitchenId === selectedKitchenId)?.name || "Chưa xác lập"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/20">
-                              <CalendarIcon size={20} />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic leading-none mb-1.5">Ngày sản xuất</span>
-                              <span className="text-xs font-black text-[var(--text-primary)] italic">
-                                {new Date(plannedDate).toLocaleDateString("vi-VN", { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-500/20">
-                              <CalendarIcon size={20} />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest italic leading-none mb-1.5 text-emerald-500">Dự kiến hoàn thành</span>
-                              <span className="text-xs font-black text-[var(--text-primary)] italic">
-                                {new Date(expectedCompletedDate).toLocaleDateString("vi-VN", { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
 
-                      <div className="p-8 bg-[var(--bg-root)] rounded-[2.5rem] border border-[var(--border-primary)] shadow-inner text-center">
-                        <span className="text-[10px] font-black text-[var(--text-secondary)]/40 uppercase tracking-[0.3em] italic block mb-2">Quy mô kế hoạch sản xuất</span>
-                        <div className="flex items-center justify-center gap-4">
-                            <span className="text-5xl font-black text-amber-500 italic drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                              {selectedOrderIds.size}
-                            </span>
-                            <div className="h-10 w-px bg-[var(--border-primary)]/20 rotate-12" />
-                            <div className="text-left">
-                                <span className="text-xs font-black text-[var(--text-primary)] uppercase block italic">Batch Unit</span>
-                                <span className="text-[9px] font-black text-[var(--text-secondary)]/40 uppercase tracking-widest block italic mt-1">{orders.length} Target Pool</span>
-                            </div>
-                        </div>
-                        <div className="w-full bg-[var(--bg-card)] h-1.5 rounded-full overflow-hidden border border-[var(--border-primary)]/20 shadow-inner mt-8 p-[2px]">
-                          <div
-                            className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-[1s] cubic-bezier(0.4, 0, 0.2, 1)"
-                            style={{
-                              width: `${(selectedOrderIds.size / (orders.length || 1)) * 100}%`,
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 flex flex-col gap-4">
-                        <Button
-                          className="w-full h-20 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase text-[10px] tracking-[0.3em] rounded-[2rem] shadow-xl shadow-amber-500/20 border-0 transition-all hover:scale-[1.03] active:scale-95 italic"
-                          onClick={() => setStep(2)}
-                          disabled={selectedOrderIds.size === 0}
-                        >
-                          Phân tích Đề xuất <ChevronRight size={20} className="ml-3" />
-                        </Button>
-                        <p className="text-[9px] text-[var(--text-secondary)]/40 font-black text-center px-6 italic leading-relaxed uppercase tracking-wider">Giao thức tiếp theo sẽ thực thi tổng hợp nhu cầu vĩnh cửu từ tệp đơn tuyển chọn.</p>
-                      </div>
-                   </div>
-                </div>
-              </div>
             </div>
           </div>
         )}

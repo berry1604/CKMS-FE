@@ -265,7 +265,7 @@ export const navigation: NavigationItem[] = [
         permission: PERMISSIONS.USER_MANAGEMENT,
       },
       {
-        name: "Vai trò & Quyền",
+        name: "Phân quyền",
         href: "/users/roles",
         icon: Shield,
         permission: PERMISSIONS.ROLE_PERMISSION_MANAGEMENT,
@@ -319,7 +319,7 @@ export const MainLayout: React.FC = () => {
       "Người dùng",
       "Cửa hàng",
       "Bếp trung tâm",
-      "Vai trò & Quyền",
+      "Phân quyền",
       "Lịch sản xuất",
       "Hóa đơn & Billing",
     ];
@@ -376,7 +376,7 @@ export const MainLayout: React.FC = () => {
                   <span className="text-[var(--text-primary)]">CHAIN</span>
                 </span>
                 <span className="text-[8px] font-bold text-zinc-500 tracking-[0.4em] uppercase mt-1">
-                  Management Sys
+                  HỆ THỐNG ĐIỀU HÀNH
                 </span>
               </div>
             )}
@@ -489,7 +489,12 @@ export const MainLayout: React.FC = () => {
                   {user?.name || "Người dùng"}
                 </p>
                 <p className="text-[10px] text-[var(--text-secondary)] truncate font-black uppercase tracking-widest mt-0.5">
-                  {user?.role?.replace("ROLE_", "").replace("_", " ") || ""}
+                  {(user?.role?.toUpperCase().replace("ROLE_", "") === "ADMIN" && "QUẢN TRỊ HỆ THỐNG") ||
+                    (user?.role?.toUpperCase().replace("ROLE_", "") === "MANAGER" && "Quản lý vận hành") ||
+                    (user?.role?.toUpperCase().replace("ROLE_", "") === "COORDINATOR" && "Điều phối viên") ||
+                    (user?.role?.toUpperCase().replace("ROLE_", "") === "KITCHEN_STAFF" && "Nhân viên bếp") ||
+                    (user?.role?.toUpperCase().replace("ROLE_", "") === "STORE_STAFF" && "Nhân viên cửa hàng") ||
+                    user?.role?.replace("ROLE_", "").replace("_", " ")}
                 </p>
               </div>
             )}
