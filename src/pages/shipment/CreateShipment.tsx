@@ -538,6 +538,7 @@ export const CreateShipment = () => {
                         }))
                       }
                     >
+                      {/* Stable AhaMove service IDs keep shipment creation aligned with backend contracts. */}
                       <option
                         value="SGN-BIKE"
                         className="bg-[var(--bg-card)] text-amber-500"

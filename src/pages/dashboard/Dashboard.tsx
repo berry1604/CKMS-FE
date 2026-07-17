@@ -143,6 +143,7 @@ export const Dashboard = () => {
             }
 
             // 4. Shipments - Coordinator, Kitchen, and Staff
+            // Keep this fetch lightweight so the dashboard stays responsive.
             if (role !== 'ADMIN' && role !== 'MANAGER') {
                 try {
                     const shipRes = await shipmentApi.getShipments({ size: 5, page: 0 });
@@ -198,6 +199,7 @@ export const Dashboard = () => {
         }, []);
 
         if (user?.role?.toUpperCase().replace("ROLE_", "") === "ADMIN") {
+            // Preserve the operator-friendly order for admin shortcuts.
             const adminOrder = [
                 "Tổng quan",
                 "Người dùng",
