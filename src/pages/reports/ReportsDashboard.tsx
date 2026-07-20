@@ -3,9 +3,11 @@ import {
     Download, DollarSign, ShoppingBag, Store, Activity, BarChart3,
     Target, AlertCircle, Truck, ChefHat, Users, CheckCircle2,
     Clock, RefreshCw, ShieldAlert, ChevronRight,
-    AlertTriangle, Flame, Award
+    AlertTriangle, Flame, Award, Sparkles
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { AiBriefingModal } from './components/AiBriefingModal';
+import { AiChatWidget } from './components/AiChatWidget';
 import { billingApi } from '../../services/billing.api';
 import { storeApi } from '../../services/store.api';
 import { storeOrderApi } from '../../services/storeOrderApi';
@@ -28,6 +30,8 @@ export const ReportsDashboard: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'finance' | 'ops' | 'stores_hr' | 'alerts'>('all');
+    const [isAiBriefingOpen, setIsAiBriefingOpen] = useState(false);
+    const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
     // Data States for the 8 Groups
     const [statements, setStatements] = useState<any[]>([]);
@@ -398,6 +402,13 @@ export const ReportsDashboard: React.FC = () => {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3">
+                            <Button
+                                onClick={() => setIsAiBriefingOpen(true)}
+                                className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-500 hover:from-violet-500 hover:to-indigo-500 text-white font-black px-5 h-11 rounded-xl flex items-center gap-2 active:scale-95 transition-all shadow-lg shadow-violet-500/25 border border-violet-400/30"
+                            >
+                                <Sparkles size={18} className="text-violet-200 animate-pulse" />
+                                <span>✨ AI Phân Tích & Chuẩn Đoán</span>
+                            </Button>
                             <Button
                                 onClick={() => loadData(true)}
                                 disabled={isRefreshing}
@@ -975,6 +986,17 @@ export const ReportsDashboard: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* AI Executive Cockpit Modals & Chat Widget */}
+            <AiBriefingModal
+                isOpen={isAiBriefingOpen}
+                onClose={() => setIsAiBriefingOpen(false)}
+                onOpenChat={() => setIsAiChatOpen(true)}
+            />
+            <AiChatWidget
+                isOpen={isAiChatOpen}
+                onClose={() => setIsAiChatOpen(false)}
+            />
         </div>
     );
 };

@@ -43,13 +43,8 @@ export const storeOrderApi = {
      * Security: hasAuthority('VIEW_STORE_ORDER')
      */
     getAllOrders: async (params?: OrderQueryParams): Promise<PageResponse<StoreOrderResponse>> => {
-        try {
-            const response = await axiosClient.get<PageResponse<StoreOrderResponse>>('/orders', { params });
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching all store orders:', error);
-            throw error;
-        }
+        const response = await axiosClient.get<PageResponse<StoreOrderResponse>>('/orders', { params });
+        return response.data;
     },
 
     /**
