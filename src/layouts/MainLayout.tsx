@@ -235,12 +235,10 @@ export const navigation: NavigationItem[] = [
         permission: PERMISSIONS.BILLING_MANAGEMENT,
       },
       {
-        name: "Báo cáo doanh thu",
+        name: "Báo cáo quản trị",
         href: "/reports",
         icon: BarChart,
         permission: PERMISSIONS.REVENUE_REPORTS,
-        hidden: (user) =>
-          user?.role?.toUpperCase().replace("ROLE_", "") === "ADMIN",
       },
       {
         name: "Quản lý kho bếp",

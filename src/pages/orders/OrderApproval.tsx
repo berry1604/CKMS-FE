@@ -4,14 +4,11 @@ import {
   Search,
   Eye,
   CheckCircle2,
-  AlertCircle,
   Calendar,
   Package,
-  Leaf,
   Scissors,
   Sparkles,
   X,
-  Save,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
@@ -69,7 +66,7 @@ export const OrderApproval = () => {
     date: string;
     totalQuantity: number;
   } | null>(null);
-  const [rescheduledId, setRescheduledId] = useState<number | null>(null);
+  const [rescheduledId] = useState<number | null>(null);
   const [isCoordinationModalOpen, setIsCoordinationModalOpen] = useState(false);
 
   // Capacity Analysis hook
@@ -214,10 +211,6 @@ export const OrderApproval = () => {
     if (checked) newSet.add(orderId);
     else newSet.delete(orderId);
     setSelectedOrderIds(newSet);
-  };
-
-  const isCapacityFeasibleForArray = (orderIds: number[]): boolean => {
-    return orderIds.every((id) => validationResults[id]?.isFeasible);
   };
 
   const handleApprove = async (orderIds: number[]) => {

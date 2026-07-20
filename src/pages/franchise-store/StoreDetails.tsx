@@ -12,7 +12,6 @@ import {
     LayoutDashboard,
     ExternalLink,
     Store as StoreIcon,
-    Shield,
     Loader2,
     Navigation
 } from 'lucide-react';

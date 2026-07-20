@@ -85,7 +85,6 @@ export const CreateTaskPage = () => {
             await productionPlanApi.createProductionPlan({
                 kitchenId: Number(selectedKitchenId),
                 plannedDate,
-                kitchenId: Number(selectedKitchenId),
                 storeOrderIds: Array.from(selectedOrderIds)
             });
             toast.success('Kế hoạch sản xuất đã được tạo thành công.');

@@ -217,10 +217,10 @@ export const router = createBrowserRouter([
                         ]
                     },
 
-                    // Reports Module (Manager only)
+                    // Reports Module (Manager & Admin)
                     {
                         path: 'reports',
-                        element: <ProtectedRoute allowedRoles={['MANAGER']} />, // Manager only as specified in ReportsDashboard
+                        element: <ProtectedRoute allowedRoles={['MANAGER', 'ADMIN']} />,
                         children: [
                             { index: true, element: <ReportsDashboard /> }
                         ]

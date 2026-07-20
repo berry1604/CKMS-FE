@@ -7,7 +7,8 @@ import {
     ChefHat, 
     Boxes,
     ArrowRight,
-    Info
+    Info,
+    RefreshCw
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
